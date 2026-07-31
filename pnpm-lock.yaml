@@ -58,11 +58,7 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
-  packages/config:
-    dependencies:
-      tailwindcss:
-        specifier: ^3.4.4
-        version: 3.4.19
+  packages/config: {}
 
   packages/ui:
     dependencies:
