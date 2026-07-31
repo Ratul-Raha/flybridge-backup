@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ink: #122043;
+    --body: #5B6478;
+    --brand: #1D2E6B;
+    --brand-2: #2F5FE0;
+    --brand-soft: #EAF1FF;
+    --bg: #FFFFFF;
+    --bg-soft: #F6F8FC;
+    --line: #E7EAF2;
+
+    --mint-bg: #E8F7F1; --mint-ink: #188A5D;
+    --lav-bg: #F1EEFC;  --lav-ink: #6B4CE0;
+    --peach-bg: #FFF2E4; --peach-ink: #DB8A2E;
+    --blue-bg: #EAF1FF;  --blue-ink: #2F5FE0;
+
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-display);
+    color: var(--ink);
+    background: var(--bg);
+    overflow-x: hidden;
+  }
+  a { text-decoration: none; color: inherit; }
+  ul { list-style: none; }
+  button { font-family: inherit; cursor: pointer; }
+  svg { display: block; flex-shrink: 0; }
+
+  :focus-visible { outline: 2px solid var(--brand-2); outline-offset: 3px; border-radius: 4px; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
