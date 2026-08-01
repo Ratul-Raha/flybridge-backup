@@ -20,10 +20,11 @@ const config: Config = {
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
       fontSize: {
-        "display-lg": ["clamp(36px,4.6vw,58px)", { lineHeight: "1.08", letterSpacing: "-0.02em" }],
+        "display-lg": ["clamp(38px,5vw,60px)", { lineHeight: "1.08", letterSpacing: "-0.02em" }],
         "title": ["1.25rem", { lineHeight: "1.3" }],
         "body": ["1rem", { lineHeight: "1.65" }],
         "body-lg": ["1.0625rem", { lineHeight: "1.65" }],

@@ -7,8 +7,8 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: "bg-brand text-white font-semibold",
-  success: "bg-brand-2 text-white font-semibold",
+  default: "bg-brand text-white font-medium",
+  success: "bg-brand-2 text-white font-medium",
   outline: "border border-line text-body bg-transparent",
 };
 

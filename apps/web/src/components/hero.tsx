@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { CoursePromo } from "@/components/test";
 
 const courseCards = [
   { title: "Study Visa Prep — US", meta: "12 lessons · 3h 40m", progress: "64%", color: "blue" },
@@ -18,7 +19,7 @@ const thumbColors: Record<string, { bg: string; fill: string }> = {
 
 const floatCards = [
   {
-    svg: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 4L20 12L6 20V4Z" fill="#2F5FE0"/></svg>',
+    svg: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 4L20 12L6 20V4Z" fill="#14B57E"/></svg>',
     title: "Step-by-step lessons",
     sub: "Beginner to job-ready",
     style: { top: "6%", left: "-8%" },
@@ -76,7 +77,7 @@ function CourseCard({ card }: { card: typeof courseCards[0] }) {
         </svg>
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-[12px] font-bold truncate" style={{ color: "var(--ink)" }}>{card.title}</div>
+        <div className="text-[12px] font-medium truncate" style={{ color: "var(--ink)" }}>{card.title}</div>
         <div className="text-[10.5px] mt-[2px]" style={{ color: "var(--body)" }}>{card.meta}</div>
         <div className="h-[4px] rounded-full mt-[6px] overflow-hidden" style={{ background: "var(--line)" }}>
           <span className="block h-full rounded-full" style={{ width: card.progress, background: "var(--brand-2)" }} />
@@ -131,20 +132,20 @@ export function Hero() {
         className="pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
-            "radial-gradient(700px 420px at 88% 8%, rgba(47,95,224,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
+            "radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
         }}
       >
         <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center">
           <div>
             <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-semibold tracking-[0.4px] mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6"
               style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
             >
               <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
               LEARN TODAY · BUILD TOMORROW
             </div>
 
-            <h1 className="text-display-lg font-extrabold leading-[1.08] tracking-[-0.02em] max-w-[600px]" style={{ color: "var(--ink)" }}>
+            <h1 className="font-display text-display-lg font-semibold leading-[1.08] tracking-[-0.02em] max-w-[600px]" style={{ color: "var(--ink)" }}>
               See the world you&apos;re aiming for.{" "}
               <span style={{ color: "var(--brand-2)" }}>Prepare for it here.</span>
             </h1>
@@ -156,7 +157,7 @@ export function Hero() {
             <div className="flex items-center gap-5 mt-[34px] flex-wrap">
               <a
                 href="#"
-                className="browse-btn inline-flex items-center gap-[9px] font-bold text-[15px] text-white rounded-full px-[26px] py-[15px]"
+                className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
                 style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
               >
                 Browse programs
@@ -164,7 +165,7 @@ export function Hero() {
                   <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
-              <a href="#" className="inline-flex items-center gap-3 font-semibold text-[15px]" style={{ color: "var(--ink)" }}>
+              <a href="#" className="inline-flex items-center gap-3 font-medium text-[15px]" style={{ color: "var(--ink)" }}>
                 <span className="w-[42px] h-[42px] rounded-full flex items-center justify-center border border-line bg-white">
                   <svg className="w-[12px] h-[12px] ml-[2px]" viewBox="0 0 24 24" fill="var(--brand)">
                     <path d="M6 4L20 12L6 20V4Z" />
@@ -177,14 +178,14 @@ export function Hero() {
             <div className="flex items-center gap-4 mt-[44px]">
               <div className="flex">
                 {[
-                  { initials: "SR", gradient: "linear-gradient(135deg,#2F5FE0,#6B4CE0)" },
+                  { initials: "SR", gradient: "linear-gradient(135deg,#0FA968,#6B4CE0)" },
                   { initials: "TA", gradient: "linear-gradient(135deg,#188A5D,#2FBF8F)" },
                   { initials: "MH", gradient: "linear-gradient(135deg,#DB8A2E,#F2B25C)" },
                   { initials: "NP", gradient: "linear-gradient(135deg,#6B4CE0,#9C7BFF)" },
                 ].map((a, i) => (
                   <span
                     key={a.initials}
-                    className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-[12px] font-bold text-white border-[2.5px] border-white -ml-[10px] first:ml-0"
+                    className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-[12px] font-medium text-white border-[2.5px] border-white -ml-[10px] first:ml-0"
                     style={{ background: a.gradient }}
                   >
                     {a.initials}
@@ -193,13 +194,13 @@ export function Hero() {
               </div>
               <div>
                 <div className="text-[14px] leading-[1.4]">
-                  <span className="font-bold" style={{ color: "var(--ink)" }}>
+                  <span className="font-medium" style={{ color: "var(--ink)" }}>
                     <CountUp value={10000} />
                   </span>{" "}
                   <span style={{ color: "var(--body)" }}>learners preparing right now</span>
                 </div>
                 <div className="flex items-center gap-[5px] text-[12.5px] mt-[2px]" style={{ color: "#F2B25C" }}>
-                  {"★★★★★"} <span className="font-bold" style={{ color: "var(--ink)" }}>4.9</span>
+                  {"★★★★★"} <span className="font-medium" style={{ color: "var(--ink)" }}>4.9</span>
                   <span style={{ color: "var(--body)" }}> · 1,200+ reviews</span>
                 </div>
               </div>
@@ -210,7 +211,7 @@ export function Hero() {
             <div
               className="absolute w-[380px] h-[380px] rounded-full top-[10%] right-0"
               style={{
-                background: "radial-gradient(circle, rgba(47,95,224,0.16), transparent 70%)",
+                background: "radial-gradient(circle, rgba(15,169,104,0.16), transparent 70%)",
                 filter: "blur(10px)",
               }}
             />
@@ -244,7 +245,7 @@ export function Hero() {
                   dangerouslySetInnerHTML={{ __html: fc.svg }}
                 />
                 <div>
-                  <div className="text-[12.5px] font-bold" style={{ color: "var(--ink)" }}>{fc.title}</div>
+                  <div className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>{fc.title}</div>
                   <div className="text-[10.5px] mt-[1px]" style={{ color: "var(--body)" }}>{fc.sub}</div>
                 </div>
               </div>
@@ -271,7 +272,7 @@ export function Hero() {
               >
                 <div className="px-[18px] pt-[26px] pb-[10px] shrink-0">
                   <div className="text-[11px]" style={{ color: "var(--body)" }}>Continue learning</div>
-                  <div className="text-[14.5px] font-bold mt-[2px]" style={{ color: "var(--ink)" }}>Your programs</div>
+                  <div className="text-[14.5px] font-medium mt-[2px]" style={{ color: "var(--ink)" }}>Your programs</div>
                 </div>
                 <div className="flex-1 overflow-hidden relative px-[14px] pb-[14px]">
                   <div className="flex flex-col gap-3 animate-scroll-reel hover:[animation-play-state:paused]">
@@ -301,17 +302,21 @@ export function Hero() {
               </span>
               <div>
                 {stat.value ? (
-                  <div className="font-mono font-bold text-[19px]" style={{ color: "var(--ink)" }}>
+                  <div className="font-mono font-medium text-[19px]" style={{ color: "var(--ink)" }}>
                     <CountUp value={stat.value} />
                   </div>
                 ) : (
-                  <div className="font-mono font-bold text-[15px]" style={{ color: "var(--ink)" }}>{stat.text}</div>
+                  <div className="font-mono font-medium text-[15px]" style={{ color: "var(--ink)" }}>{stat.text}</div>
                 )}
                 <div className="text-[12px] mt-[1px]" style={{ color: "var(--body)" }}>{stat.label}</div>
               </div>
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="px-[clamp(20px,4.5vw,56px)] mt-10">
+        <CoursePromo />
       </div>
 
       <style>{`
@@ -325,7 +330,7 @@ export function Hero() {
         .browse-btn:hover {
           background: var(--brand-2) !important;
           transform: translateY(-2px);
-          box-shadow: 0 18px 30px -12px rgba(47,95,224,0.5);
+          box-shadow: 0 18px 30px -12px rgba(15,169,104,0.5);
         }
         .browse-btn:hover svg {
           transform: translateX(3px);

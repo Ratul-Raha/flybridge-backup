@@ -56,7 +56,7 @@ function CourseHero({
         className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
         background:
-          "radial-gradient(700px 420px at 88% 8%, rgba(47,95,224,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(107,76,224,0.07), transparent 60%)",
+          "radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(107,76,224,0.07), transparent 60%)",
       }}
     >
       <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-[50px] items-center">
@@ -70,20 +70,20 @@ function CourseHero({
               Programs
             </Link>
             <span style={{ color: "var(--body)" }}>/</span>
-            <span className="font-semibold" style={{ color: "var(--brand-2)" }}>
+            <span className="font-medium" style={{ color: "var(--brand-2)" }}>
               {badge}
             </span>
           </div>
 
           <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-semibold tracking-[0.4px] mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6"
             style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
           >
             <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--lav-ink)" }} />
             {badge} · COURSE
           </div>
 
-          <h1 className="text-display-lg font-extrabold leading-[1.08] tracking-[-0.02em] max-w-[620px]" style={{ color: "var(--ink)" }}>
+          <h1 className="font-display text-display-lg font-semibold leading-[1.08] tracking-[-0.02em] max-w-[620px]" style={{ color: "var(--ink)" }}>
             {title}
             {subtitle && (
               <>
@@ -113,7 +113,7 @@ function CourseHero({
           <div className="flex items-center gap-4 mt-[34px] flex-wrap">
             <a
               href="#"
-              className="browse-btn inline-flex items-center gap-[9px] font-bold text-[15px] text-white rounded-full px-[26px] py-[15px]"
+              className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
               style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
             >
               Enroll now
@@ -121,7 +121,7 @@ function CourseHero({
             </a>
             <a
               href="#curriculum"
-              className="inline-flex items-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white"
+              className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white"
               style={{ color: "var(--ink)" }}
             >
               {play}
@@ -134,19 +134,19 @@ function CourseHero({
           <div className="w-full max-w-[420px] rounded-[24px] bg-white border border-line shadow-2xl overflow-hidden" style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.35)" }}>
             <div
               className="relative h-[180px] flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(47,95,224,0.9), rgba(29,46,107,0.9))" }}
+              style={{ background: "linear-gradient(135deg, rgba(15,169,104,0.9), rgba(11,94,70,0.9))" }}
             >
               <span className="w-[62px] h-[62px] rounded-full bg-white/15 border border-white/30 flex items-center justify-center text-white cursor-pointer transition-transform duration-300 hover:scale-105">
                 {play}
               </span>
               <span
-                className="absolute bottom-[14px] right-[16px] font-mono text-[10.5px] font-semibold tracking-[0.3px] text-white/90 bg-black/25 rounded-full px-[10px] py-[4px]"
+                className="absolute bottom-[14px] right-[16px] font-mono text-[10.5px] font-medium tracking-[0.3px] text-white/90 bg-black/25 rounded-full px-[10px] py-[4px]"
               >
                 30 LESSONS
               </span>
             </div>
             <div className="p-[22px]">
-              <div className="font-mono text-[10.5px] font-semibold tracking-[0.4px] mb-[8px]" style={{ color: "var(--lav-ink)" }}>
+              <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] mb-[8px]" style={{ color: "var(--lav-ink)" }}>
                 PREVIEW THE CURRICULUM
               </div>
               <div className="space-y-[10px]">
@@ -157,7 +157,7 @@ function CourseHero({
                 ].map((row) => (
                   <div key={row.n} className="flex items-center gap-3 text-[12.5px]">
                     <span
-                      className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center font-semibold text-[11px] shrink-0"
+                      className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center font-medium text-[11px] shrink-0"
                       style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
                     >
                       {row.n}
@@ -175,7 +175,7 @@ function CourseHero({
                 <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
                   + 27 more lessons
                 </span>
-                <span className="font-mono text-[11px] font-bold" style={{ color: "var(--brand-2)" }}>
+                <span className="font-mono text-[11px] font-medium" style={{ color: "var(--brand-2)" }}>
                   FREE PREVIEW
                 </span>
               </div>
@@ -200,13 +200,13 @@ function StatsBar({ stats }: { stats: { value: string; label: string }[] }) {
             className="flex-1 min-w-[160px] flex items-center gap-3 px-[22px] py-[26px] border-r border-line last:border-r-0"
           >
             <span
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-extrabold text-[17px]"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-semibold text-[17px]"
               style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
             >
               {stat.value}
             </span>
             <div>
-              <div className="text-[14.5px] font-bold leading-[1.2]" style={{ color: "var(--ink)" }}>
+              <div className="text-[14.5px] font-medium leading-[1.2]" style={{ color: "var(--ink)" }}>
                 {stat.label}
               </div>
             </div>
@@ -221,13 +221,13 @@ function SectionHeading({ eyebrow, title, desc }: { eyebrow: string; title: stri
   return (
     <div className="mb-9">
       <div
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-semibold tracking-[0.4px] mb-5"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-5"
         style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
       >
         <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
         {eyebrow}
       </div>
-      <h2 className="font-extrabold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+      <h2 className="font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
         {title}
       </h2>
       {desc && (
@@ -285,7 +285,7 @@ export default function ProgramPage({ params }: Props) {
                   className="flex items-start gap-3 rounded-[16px] bg-white border border-line p-[20px]"
                 >
                   <span
-                    className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] font-bold shrink-0"
+                    className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] font-medium shrink-0"
                     style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
                   >
                     {i + 1}
@@ -313,13 +313,13 @@ export default function ProgramPage({ params }: Props) {
                 >
                   <summary className="flex items-center gap-3 px-[22px] py-[18px] cursor-pointer list-none select-none">
                     <span
-                      className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-bold text-[13px] shrink-0"
+                      className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-medium text-[13px] shrink-0"
                       style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
                     >
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="flex-1">
-                      <span className="block text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+                      <span className="block text-[15px] font-medium" style={{ color: "var(--ink)" }}>
                         {module.title}
                       </span>
                       <span className="block text-[12px] mt-[2px] font-mono" style={{ color: "var(--body)" }}>
@@ -381,7 +381,7 @@ export default function ProgramPage({ params }: Props) {
                       <path d="M9 13H15M9 17H15" strokeLinecap="round" />
                     </svg>
                   </span>
-                  <h3 className="text-[15px] font-bold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                  <h3 className="text-[15px] font-medium leading-[1.3]" style={{ color: "var(--ink)" }}>
                     {pdf.title}
                   </h3>
                   <p className="text-[12.5px] mt-[6px] leading-[1.5] flex-1" style={{ color: "var(--body)" }}>
@@ -393,7 +393,7 @@ export default function ProgramPage({ params }: Props) {
                     </span>
                     <a
                       href="#"
-                      className="text-[12.5px] font-bold inline-flex items-center gap-[5px]"
+                      className="text-[12.5px] font-medium inline-flex items-center gap-[5px]"
                       style={{ color: "var(--brand-2)" }}
                     >
                       Download {arrow}
@@ -412,13 +412,13 @@ export default function ProgramPage({ params }: Props) {
               <div className="grid grid-cols-1 lg:grid-cols-2 items-center">
                 <div className="p-[36px] lg:p-[48px]">
                   <div
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-semibold tracking-[0.4px] mb-6"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6"
                     style={{ background: "rgba(255,255,255,0.7)", color: "var(--lav-ink)" }}
                   >
                     <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--lav-ink)" }} />
                     CERTIFICATION
                   </div>
-                  <h2 className="text-[clamp(24px,2.6vw,32px)] font-extrabold leading-[1.15] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
+                  <h2 className="text-[clamp(24px,2.6vw,32px)] font-semibold leading-[1.15] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
                     {details.certificate.title}
                   </h2>
                   <p className="text-[15px] mt-[12px] max-w-[440px] leading-[1.6]" style={{ color: "var(--body)" }}>
@@ -426,7 +426,7 @@ export default function ProgramPage({ params }: Props) {
                   </p>
                   <a
                     href="#"
-                    className="mt-[26px] inline-flex items-center gap-[9px] font-bold text-[14.5px] text-white rounded-full px-[24px] py-[13px]"
+                    className="mt-[26px] inline-flex items-center gap-[9px] font-medium text-[14.5px] text-white rounded-full px-[24px] py-[13px]"
                     style={{ background: "var(--brand)" }}
                   >
                     Start learning
@@ -440,12 +440,12 @@ export default function ProgramPage({ params }: Props) {
                         <path d="M20 4L34 30H23L20 24L17 30H6L20 4Z" fill="url(#gradMark)" />
                         <defs>
                           <linearGradient id="gradMark" x1="6" y1="4" x2="34" y2="30">
-                            <stop offset="0%" stopColor="#2F5FE0" />
-                            <stop offset="100%" stopColor="#1D2E6B" />
+                            <stop offset="0%" stopColor="#14B57E" />
+                            <stop offset="100%" stopColor="#0B5E46" />
                           </linearGradient>
                         </defs>
                       </svg>
-                      <span className="font-extrabold text-[15px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
+                      <span className="font-semibold text-[15px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
                         FlyBridge
                       </span>
                     </div>
@@ -457,19 +457,19 @@ export default function ProgramPage({ params }: Props) {
                         <path d="M20 6L9 17L4 12" />
                       </svg>
                     </div>
-                    <div className="text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+                    <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
                       Certificate of Completion
                     </div>
                     <div className="text-[12px] mt-[4px] leading-[1.5]" style={{ color: "var(--body)" }}>
                       awarded to
                     </div>
-                    <div className="text-[16px] font-extrabold mt-[10px]" style={{ color: "var(--brand-2)" }}>
+                    <div className="text-[16px] font-semibold mt-[10px]" style={{ color: "var(--brand-2)" }}>
                       Student Name
                     </div>
                     <div className="text-[12px] mt-[14px] leading-[1.5]" style={{ color: "var(--body)" }}>
                       for successfully completing
                     </div>
-                    <div className="text-[13px] font-bold mt-[4px] px-[12px]" style={{ color: "var(--ink)" }}>
+                    <div className="text-[13px] font-medium mt-[4px] px-[12px]" style={{ color: "var(--ink)" }}>
                       {details.title}
                     </div>
                     <div className="w-[160px] h-[1px] mx-auto mt-[18px]" style={{ background: "var(--line)" }} />
@@ -491,7 +491,7 @@ export default function ProgramPage({ params }: Props) {
           />
           <a
             href="/"
-            className="inline-flex items-center gap-[9px] font-bold text-[15px] text-white rounded-full px-[26px] py-[15px]"
+            className="inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
             style={{ background: "var(--brand)" }}
           >
             Back to programs
@@ -508,7 +508,7 @@ export default function ProgramPage({ params }: Props) {
             boxShadow: "0 32px 60px -28px rgba(29,46,107,0.55)",
           }}
         >
-          <h2 className="text-[clamp(24px,2.8vw,34px)] font-extrabold leading-[1.15] tracking-[-0.01em] text-white max-w-[640px] mx-auto">
+          <h2 className="text-[clamp(24px,2.8vw,34px)] font-semibold leading-[1.15] tracking-[-0.01em] text-white max-w-[640px] mx-auto">
             {details ? "Ready to speak with confidence?" : "Ready to build your international future?"}
           </h2>
           <p className="text-[15px] mt-[12px] text-white/80 max-w-[520px] mx-auto leading-[1.6]">
@@ -518,7 +518,7 @@ export default function ProgramPage({ params }: Props) {
           </p>
           <a
             href="#"
-            className="mt-[28px] inline-flex items-center gap-[9px] font-bold text-[15px] rounded-full px-[30px] py-[15px] bg-white"
+            className="mt-[28px] inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[30px] py-[15px] bg-white"
             style={{ color: "var(--brand)" }}
           >
             Get started today
@@ -534,13 +534,13 @@ export default function ProgramPage({ params }: Props) {
               <path d="M20 4L34 30H23L20 24L17 30H6L20 4Z" fill="url(#gradFoot)" />
               <defs>
                 <linearGradient id="gradFoot" x1="6" y1="4" x2="34" y2="30">
-                  <stop offset="0%" stopColor="#2F5FE0" />
-                  <stop offset="100%" stopColor="#1D2E6B" />
+                  <stop offset="0%" stopColor="#14B57E" />
+                  <stop offset="100%" stopColor="#0B5E46" />
                 </linearGradient>
               </defs>
             </svg>
             <span className="flex flex-col leading-[1.05]">
-              <span className="font-extrabold text-[15px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
+              <span className="font-semibold text-[15px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
                 FlyBridge
               </span>
               <span className="font-mono text-[8.5px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
@@ -569,7 +569,7 @@ export default function ProgramPage({ params }: Props) {
         .browse-btn:hover {
           background: var(--brand-2) !important;
           transform: translateY(-2px);
-          box-shadow: 0 18px 30px -12px rgba(47,95,224,0.5);
+          box-shadow: 0 18px 30px -12px rgba(15,169,104,0.5);
         }
         .browse-btn svg {
           transition: transform 0.25s ease;

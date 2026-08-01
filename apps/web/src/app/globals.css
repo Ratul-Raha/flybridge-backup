@@ -6,9 +6,9 @@
   :root {
     --ink: #122043;
     --body: #5B6478;
-    --brand: #1D2E6B;
-    --brand-2: #2F5FE0;
-    --brand-soft: #EAF1FF;
+    --brand: #0FA968;
+    --brand-2: #14B57E;
+    --brand-soft: #E2F6EE;
     --bg: #FFFFFF;
     --bg-soft: #F6F8FC;
     --line: #E7EAF2;
@@ -18,14 +18,17 @@
     --peach-bg: #FFF2E4; --peach-ink: #DB8A2E;
     --blue-bg: #EAF1FF;  --blue-ink: #2F5FE0;
 
-    --font-display: 'Plus Jakarta Sans', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Inter Variable', sans-serif;
+    --font-body: 'Inter Variable', sans-serif;
+    --font-mono: 'JetBrains Mono Variable', monospace;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: var(--font-display);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     color: var(--ink);
     background: var(--bg);
     overflow-x: hidden;
@@ -40,4 +43,80 @@
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
+}
+
+@keyframes fb-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.fb-marquee-track {
+  animation: fb-marquee 32s linear infinite;
+}
+
+.fb-marquee:hover .fb-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-marquee-track { animation: none; }
+}
+
+@keyframes fb-step-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fb-step-in {
+  opacity: 0;
+  animation: fb-step-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fb-workflow-line {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.fb-workflow-line {
+  transform: scaleY(0);
+  transform-origin: top;
+  animation: fb-workflow-line 2.2s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+}
+
+@keyframes fb-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.8); opacity: 0.35; }
+}
+
+.fb-pulse {
+  animation: fb-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes fb-flow {
+  from { stroke-dashoffset: 26; }
+  to { stroke-dashoffset: 0; }
+}
+
+.fb-flow {
+  stroke-dasharray: 5 8;
+  animation: fb-flow 1.5s linear infinite;
+}
+
+@keyframes fb-map-ring {
+  0% { transform: scale(0.55); opacity: 0.85; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.fb-map-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fb-map-ring 2.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-step-in { opacity: 1; animation: none; }
+  .fb-workflow-line { transform: scaleY(1); animation: none; }
+  .fb-pulse { animation: none; }
+  .fb-flow { animation: none; }
+  .fb-map-ring { animation: none; }
 }

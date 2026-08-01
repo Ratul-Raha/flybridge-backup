@@ -35,14 +35,14 @@ export function Programs() {
     <section className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
         <div>
-          <h2 className="font-extrabold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+          <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
             Popular programs
           </h2>
           <p className="text-[15px] mt-2" style={{ color: "var(--body)" }}>
             Pick a path based on where you&apos;re headed next.
           </p>
         </div>
-        <a href="#" className="view-all font-semibold text-[14px] inline-flex items-center gap-[6px]" style={{ color: "var(--brand-2)" }}>
+        <a href="#" className="view-all font-medium text-[14px] inline-flex items-center gap-[6px]" style={{ color: "var(--brand-2)" }}>
           View all programs
           <svg className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]" viewBox="0 0 24 24" fill="none">
             <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -59,19 +59,19 @@ export function Programs() {
             style={{ background: p.bg, boxShadow: "0 4px 20px -8px rgba(18,32,67,0.1)" }}
           >
             <span
-              className="font-mono text-[10.5px] font-semibold tracking-[0.4px] px-[11px] py-[5px] rounded-full inline-block mb-[14px]"
+              className="font-mono text-[10.5px] font-medium tracking-[0.4px] px-[11px] py-[5px] rounded-full inline-block mb-[14px]"
               style={{ background: "rgba(255,255,255,0.7)", color: p.badgeColor }}
             >
               {p.badge}
             </span>
-            <h3 className="text-[17.5px] font-bold leading-[1.3] max-w-[190px]" style={{ color: "var(--ink)" }}>
+            <h3 className="text-[17.5px] font-medium leading-[1.3] max-w-[190px]" style={{ color: "var(--ink)" }}>
               {p.title}
             </h3>
             <p className="text-[12.5px] mt-2 max-w-[190px] leading-[1.5]" style={{ color: "var(--body)" }}>
               {p.desc}
             </p>
             <span
-              className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-semibold opacity-70 group-hover:opacity-100 group-hover:translate-x-[2px] transition-all duration-250"
+              className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70 group-hover:opacity-100 group-hover:translate-x-[2px] transition-all duration-250"
               style={{ color: p.badgeColor }}
             >
               Explore course

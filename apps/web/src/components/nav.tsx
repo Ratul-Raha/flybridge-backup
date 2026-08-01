@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const links = [
   { label: "Programs", href: "#programs" },
-  { label: "Study Abroad", href: "#", hasCaret: true },
+  { label: "Partnership", href: "/partnership" },
   { label: "Work Abroad", href: "#", hasCaret: true },
   { label: "English", href: "#" },
   { label: "Resources", href: "#" },
@@ -41,13 +41,13 @@ export function Nav() {
             <path d="M20 4L34 30H23L20 24L17 30H6L20 4Z" fill="url(#gradMark)" />
             <defs>
               <linearGradient id="gradMark" x1="6" y1="4" x2="34" y2="30">
-                <stop offset="0%" stopColor="#2F5FE0" />
-                <stop offset="100%" stopColor="#1D2E6B" />
+                <stop offset="0%" stopColor="#14B57E" />
+                <stop offset="100%" stopColor="#0B5E46" />
               </linearGradient>
             </defs>
           </svg>
           <span className="flex flex-col leading-[1.05]">
-            <span className="font-extrabold text-[16.5px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
+            <span className="font-semibold text-[16.5px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
               FlyBridge
             </span>
             <span className="font-mono text-[9px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
@@ -90,7 +90,7 @@ export function Nav() {
 
           <a
             href="#"
-            className="hidden sm:inline-flex text-[14px] font-semibold border border-line rounded-full px-5 py-[9px] hover:border-brand-2 hover:text-brand-2 transition-all duration-250"
+            className="hidden sm:inline-flex text-[14px] font-medium border border-line rounded-full px-5 py-[9px] hover:border-brand-2 hover:text-brand-2 transition-all duration-250"
             style={{ color: "var(--ink)" }}
           >
             Log in
@@ -98,7 +98,7 @@ export function Nav() {
 
           <a
             href="#"
-            className="btn-solid-pill hidden sm:inline-flex items-center gap-2 text-[14px] font-semibold text-white rounded-full px-[22px] py-[10px] hover:translate-y-[-1px] transition-all duration-250"
+            className="btn-solid-pill hidden sm:inline-flex items-center gap-2 text-[14px] font-medium text-white rounded-full px-[22px] py-[10px] hover:translate-y-[-1px] transition-all duration-250"
             style={{ background: "var(--brand)" }}
           >
             Get started
@@ -129,7 +129,7 @@ export function Nav() {
           <a
             key={link.label}
             href={link.href}
-            className="text-[17px] font-semibold"
+            className="text-[17px] font-medium"
             style={{ color: "var(--ink)" }}
             onClick={() => setMobileOpen(false)}
           >
@@ -138,7 +138,7 @@ export function Nav() {
         ))}
         <a
           href="#"
-          className="text-center text-[14px] font-semibold border border-line rounded-full px-5 py-[9px]"
+          className="text-center text-[14px] font-medium border border-line rounded-full px-5 py-[9px]"
           style={{ color: "var(--ink)" }}
           onClick={() => setMobileOpen(false)}
         >
@@ -146,7 +146,7 @@ export function Nav() {
         </a>
         <a
           href="#"
-          className="btn-solid-pill flex items-center justify-center gap-2 text-[14px] font-semibold text-white rounded-full px-[22px] py-[10px] mt-[10px]"
+          className="btn-solid-pill flex items-center justify-center gap-2 text-[14px] font-medium text-white rounded-full px-[22px] py-[10px] mt-[10px]"
           style={{ background: "var(--brand)" }}
           onClick={() => setMobileOpen(false)}
         >
