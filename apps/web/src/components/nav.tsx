@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const links = [
   { label: "Programs", href: "#programs" },
@@ -29,30 +30,25 @@ export function Nav() {
   return (
     <>
       <nav
-        className={`navbar fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-shadow duration-300 px-[clamp(20px,4.5vw,56px)] ${
+        className={`navbar fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-shadow duration-300 px-[clamp(20px,4.5vw,56px)] py-[18px] ${
           scrolled
             ? "shadow-[0_6px_24px_-12px_rgba(18,32,67,0.12)] border-b border-line"
             : "shadow-none border-b border-transparent"
         }`}
         style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)" }}
       >
-        <a href="#" className="brand flex items-center gap-[10px]">
-          <svg className="w-[38px] h-[38px] shrink-0" viewBox="0 0 40 40" fill="none">
-            <path d="M20 4L34 30H23L20 24L17 30H6L20 4Z" fill="url(#gradMark)" />
-            <defs>
-              <linearGradient id="gradMark" x1="6" y1="4" x2="34" y2="30">
-                <stop offset="0%" stopColor="#14B57E" />
-                <stop offset="100%" stopColor="#0B5E46" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <span className="flex flex-col leading-[1.05]">
-            <span className="font-semibold text-[16.5px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
-              FlyBridge
-            </span>
-            <span className="font-mono text-[9px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
-              EDUCATION GROUP
-            </span>
+        <div className="flex w-full max-w-[1320px] mx-auto items-center justify-between">
+        <a href="#" className="brand flex flex-col items-start leading-none">
+          <Image
+            src="/logo.png"
+            alt="FlyBridge Education Group"
+            width={113}
+            height={38}
+            className="w-auto h-[34px] shrink-0 object-contain"
+            priority
+          />
+          <span className="font-mono text-[9px] tracking-[1.8px] mt-[3px]" style={{ color: "var(--body)" }}>
+            EDUCATION GROUP
           </span>
         </a>
 
@@ -116,6 +112,7 @@ export function Nav() {
             <span className={`absolute left-0 w-full h-[2px] rounded-[2px] top-[7px] transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} style={{ background: "var(--ink)" }} />
             <span className={`absolute left-0 w-full h-[2px] rounded-[2px] transition-all duration-300 ${mobileOpen ? 'top-[7px] -rotate-45' : 'top-[14px]'}`} style={{ background: "var(--ink)" }} />
           </button>
+        </div>
         </div>
       </nav>
 

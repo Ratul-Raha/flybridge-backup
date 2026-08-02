@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { CoursePromo } from "@/components/test";
 
 const courseCards = [
   { title: "Study Visa Prep — US", meta: "12 lessons · 3h 40m", progress: "64%", color: "blue" },
@@ -132,22 +131,20 @@ export function Hero() {
         className="pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
-            "radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
+            "linear-gradient(rgba(18,32,67,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.045) 1px, transparent 1px), radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
+          backgroundSize: "40px 40px, 40px 40px, auto, auto",
         }}
       >
         <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center">
           <div>
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6"
-              style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-            >
-              <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
-              LEARN TODAY · BUILD TOMORROW
+            <div className="inline-flex items-center gap-2.5 font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6" style={{ color: "var(--ink)" }}>
+              <span className="w-[22px] h-[2px] shrink-0 rounded-full" style={{ background: "linear-gradient(90deg, var(--brand), var(--brand-2))" }} />
+              LEARN HERE · FLY ANYWHERE
             </div>
 
-            <h1 className="font-display text-display-lg font-semibold leading-[1.08] tracking-[-0.02em] max-w-[600px]" style={{ color: "var(--ink)" }}>
-              See the world you&apos;re aiming for.{" "}
-              <span style={{ color: "var(--brand-2)" }}>Prepare for it here.</span>
+            <h1 className="font-display font-semibold leading-[1.08] tracking-[-0.02em] max-w-[600px]" style={{ color: "var(--ink)", fontSize: "clamp(34px,4.5vw,54px)" }}>
+              Turn your global dreams into reality in{" "}
+              <span style={{ color: "var(--brand-2)" }}>easy and practical steps</span>
             </h1>
 
             <p className="mt-[22px] max-w-[480px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
@@ -313,10 +310,6 @@ export function Hero() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="px-[clamp(20px,4.5vw,56px)] mt-10">
-        <CoursePromo />
       </div>
 
       <style>{`

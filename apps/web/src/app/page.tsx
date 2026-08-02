@@ -1,6 +1,7 @@
 import { Nav } from "@/components/nav";
 import { Hero } from "@/components/hero";
 import { Programs } from "@/components/programs";
+import { PromoPopup } from "@/components/promo-popup";
 
 export default function HomePage() {
   return (
@@ -10,6 +11,7 @@ export default function HomePage() {
         <Hero />
         <Programs />
       </main>
+      <PromoPopup />
     </>
   );
 }
