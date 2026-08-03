@@ -66,7 +66,7 @@ function CourseHero({
               Home
             </Link>
             <span style={{ color: "var(--body)" }}>/</span>
-            <Link href="/#programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">
+            <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">
               Programs
             </Link>
             <span style={{ color: "var(--body)" }}>/</span>

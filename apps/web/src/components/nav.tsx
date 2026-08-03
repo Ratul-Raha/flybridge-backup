@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const links = [
-  { label: "Programs", href: "#programs" },
+  { label: "Programs", href: "/programs" },
   { label: "Partnership", href: "/partnership" },
-  { label: "Work Abroad", href: "#", hasCaret: true },
-  { label: "English", href: "#" },
   { label: "Resources", href: "#" },
-  { label: "Success Stories", href: "#" },
+  { label: "Success Stories", href: "/success-stories" },
 ];
 
 export function Nav() {
@@ -38,7 +36,7 @@ export function Nav() {
         style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)" }}
       >
         <div className="flex w-full max-w-[1320px] mx-auto items-center justify-between">
-        <a href="#" className="brand flex flex-col items-start leading-none">
+        <a href="/" className="brand flex flex-col items-start leading-none">
           <Image
             src="/logo.png"
             alt="FlyBridge Education Group"
@@ -63,11 +61,6 @@ export function Nav() {
                 style={{ color: "var(--ink)" }}
               >
                 {link.label}
-                {link.hasCaret && (
-                  <svg className="w-[9px] h-[9px]" style={{ opacity: 0.55 }} viewBox="0 0 24 24" fill="none">
-                    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                )}
               </a>
             </li>
           ))}

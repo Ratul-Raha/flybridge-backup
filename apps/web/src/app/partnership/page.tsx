@@ -112,11 +112,11 @@ export default function PartnershipPage() {
               </div>
 
               <h1
-                className="font-display text-display-lg font-semibold leading-[1.08] tracking-[-0.02em] text-balance"
-                style={{ color: "var(--ink)" }}
+                className="font-display font-medium leading-[1.15] tracking-[-0.02em] text-balance"
+                style={{ fontSize: "clamp(28px,3.4vw,42px)", color: "var(--ink)" }}
               >
-                A trusted network,{" "}
-                <span style={{ color: "var(--brand-2)" }}>built to open the world.</span>
+                FlyBridge — Connecting Students,{" "}
+                <span style={{ color: "var(--brand-2)" }}>Universities &amp; success.</span>
               </h1>
 
               <p className="mt-[22px] max-w-[540px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
