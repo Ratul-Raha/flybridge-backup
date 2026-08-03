@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
+import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-video";
 
 export const metadata: Metadata = {
   title: "Success Stories | FlyBridge Education Group",
@@ -17,7 +18,8 @@ const stories = [
     destination: "Toronto, Canada",
     path: "Work Abroad",
     initials: "SR",
-    color: "#188A5D",
+    gradient: "linear-gradient(135deg,#0FA968,#188A5D 60%,#0B5E46)",
+    color: "#0B5E46",
   },
   {
     quote:
@@ -27,7 +29,8 @@ const stories = [
     destination: "Boston, USA",
     path: "Study Abroad",
     initials: "AP",
-    color: "#2F5FE0",
+    gradient: "linear-gradient(135deg,#4A7BFF,#2F5FE0 60%,#1E3F9E)",
+    color: "#1E3F9E",
   },
   {
     quote:
@@ -37,7 +40,8 @@ const stories = [
     destination: "Vancouver, Canada",
     path: "Career Prep",
     initials: "PS",
-    color: "#6B4CE0",
+    gradient: "linear-gradient(135deg,#8A6BF2,#6B4CE0 60%,#4A2FB8)",
+    color: "#4A2FB8",
   },
   {
     quote:
@@ -47,7 +51,8 @@ const stories = [
     destination: "Toronto, Canada",
     path: "Work Abroad",
     initials: "IH",
-    color: "#DB8A2E",
+    gradient: "linear-gradient(135deg,#E8A24B,#DB8A2E 60%,#B06218)",
+    color: "#B06218",
   },
   {
     quote:
@@ -57,7 +62,8 @@ const stories = [
     destination: "New York, USA",
     path: "Study Abroad",
     initials: "NJ",
-    color: "#2F5FE0",
+    gradient: "linear-gradient(135deg,#5E8AFF,#2F5FE0 60%,#17408F)",
+    color: "#17408F",
   },
   {
     quote:
@@ -67,7 +73,47 @@ const stories = [
     destination: "Toronto, Canada",
     path: "Career Prep",
     initials: "RA",
-    color: "#188A5D",
+    gradient: "linear-gradient(135deg,#2FBF8F,#188A5D 60%,#0E5E41)",
+    color: "#0E5E41",
+  },
+];
+
+const featuredVideo: StoryVideo = {
+  title: "From Dhaka to Toronto — Imran's permit journey",
+  duration: "2:34",
+  tag: "Work Abroad",
+  initials: "IH",
+  gradient: "linear-gradient(135deg,#2FBF8F,#188A5D 60%,#0B5E46)",
+};
+
+const videos: StoryVideo[] = [
+  {
+    title: "Landing a job in Toronto — Sadia's journey",
+    duration: "3:41",
+    tag: "Work Abroad",
+    initials: "SR",
+    gradient: "linear-gradient(135deg,#0FA968,#188A5D 60%,#0B5E46)",
+  },
+  {
+    title: "Scored 7.5 on IELTS — Arun's study path",
+    duration: "3:12",
+    tag: "Study Abroad",
+    initials: "AP",
+    gradient: "linear-gradient(135deg,#5E8AFF,#2F5FE0 60%,#17408F)",
+  },
+  {
+    title: "Nailing the visa interview — Nusrat's tips",
+    duration: "2:58",
+    tag: "Study Abroad",
+    initials: "NJ",
+    gradient: "linear-gradient(135deg,#8A6BF2,#6B4CE0 60%,#4A2FB8)",
+  },
+  {
+    title: "From nervous to hired — Rafiq's story",
+    duration: "4:05",
+    tag: "Career Prep",
+    initials: "RA",
+    gradient: "linear-gradient(135deg,#E8A24B,#DB8A2E 60%,#B06218)",
   },
 ];
 
@@ -109,8 +155,8 @@ export default function SuccessStoriesPage() {
             backgroundSize: "auto, auto, 22px 22px",
           }}
         >
-          <div className="max-w-[1320px] mx-auto">
-            <div className="max-w-[720px]">
+          <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.95fr] gap-[50px] items-center">
+            <div className="max-w-[640px]">
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6"
                 style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
@@ -127,7 +173,7 @@ export default function SuccessStoriesPage() {
                 <span style={{ color: "var(--brand-2)" }}>real learners.</span>
               </h1>
 
-              <p className="mt-[22px] max-w-[540px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
+              <p className="mt-[22px] max-w-[500px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
                 Thousands of students have studied, worked and built lives abroad with FlyBridge. Here are
                 a few of the journeys that started with one course.
               </p>
@@ -150,6 +196,39 @@ export default function SuccessStoriesPage() {
                   </svg>
                 </Link>
               </div>
+
+              <div className="flex items-center gap-6 mt-[38px]">
+                <div>
+                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
+                    10,000+
+                  </div>
+                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
+                    Learners guided
+                  </div>
+                </div>
+                <span className="w-[1px] h-[38px]" style={{ background: "var(--line)" }} />
+                <div>
+                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
+                    3,200+
+                  </div>
+                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
+                    Visa approvals
+                  </div>
+                </div>
+                <span className="w-[1px] h-[38px]" style={{ background: "var(--line)" }} />
+                <div>
+                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
+                    4.9
+                  </div>
+                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
+                    Average rating
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <HeroVideo video={featuredVideo} />
             </div>
           </div>
         </section>
@@ -194,42 +273,71 @@ export default function SuccessStoriesPage() {
               {stories.map((s) => (
                 <figure
                   key={s.name}
-                  className="rounded-3xl border border-line bg-white p-7 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                  className="rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
-                  <div className="flex items-center justify-between gap-3 mb-5">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--line)">
-                      <path d="M11 6v5H6v5h5v5H6v-5H1v-5h5V6h5zm12 0v5h-5v5h5v5h-5v-5h-5v-5h5V6h5z" />
+                  <div className="relative aspect-[4/3] overflow-hidden" style={{ background: s.gradient }}>
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
+                        backgroundSize: "18px 18px",
+                      }}
+                    />
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
+                      <path d="M30 255 C 140 205, 225 125, 370 55" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeDasharray="5 6" strokeLinecap="round" />
+                      <circle cx="30" cy="255" r="4" fill="#fff" opacity="0.95" />
+                      <circle cx="370" cy="55" r="4" fill="#fff" opacity="0.95" />
+                      <path d="M370 55 l-15 -5 7 9 -7 9 15 -5z" fill="#fff" opacity="0.95" />
                     </svg>
                     <span
-                      className="font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-3 py-[6px] rounded-full border shrink-0"
-                      style={{ color: "var(--body)", borderColor: "var(--line)" }}
+                      className="absolute top-4 left-4 font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-[11px] py-[6px] rounded-full text-white"
+                      style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}
                     >
                       {s.path}
                     </span>
+                    <span className="absolute bottom-4 left-4 w-[46px] h-[46px] rounded-full bg-white/90 flex items-center justify-center font-display font-semibold text-[13px] shadow-md" style={{ color: s.color }}>
+                      {s.initials}
+                    </span>
                   </div>
-                  <blockquote className="text-[14.5px] leading-[1.7] flex-1" style={{ color: "var(--ink)" }}>
-                    &ldquo;{s.quote}&rdquo;
-                  </blockquote>
-                  <div className="mt-6 pt-6 border-t border-line">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-display font-semibold text-[12px] text-white"
-                        style={{ background: s.color }}
-                      >
-                        {s.initials}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[14px] font-semibold truncate" style={{ color: "var(--ink)" }}>{s.name}</p>
-                        <p className="font-mono text-[10.5px] tracking-[0.3px] mt-[2px] truncate" style={{ color: "var(--body)" }}>
-                          {s.location} → {s.destination}
-                        </p>
-                      </div>
+
+                  <div className="p-7 flex flex-col flex-1">
+                    <div className="text-[13px] tracking-[1px] mb-4" style={{ color: "#F2B25C" }}>
+                      ★★★★★
+                    </div>
+                    <blockquote className="text-[14.5px] leading-[1.7] flex-1" style={{ color: "var(--ink)" }}>
+                      &ldquo;{s.quote}&rdquo;
+                    </blockquote>
+                    <div className="mt-6 pt-6 border-t border-line">
+                      <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>{s.name}</p>
+                      <p className="font-mono text-[10.5px] tracking-[0.3px] mt-[3px]" style={{ color: "var(--body)" }}>
+                        {s.location} → {s.destination}
+                      </p>
                     </div>
                   </div>
                 </figure>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px]">
+          <div className="max-w-[1320px] mx-auto">
+            <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
+              <div>
+                <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                  VIDEO STORIES
+                </div>
+                <h2 className="font-display font-semibold tracking-[-0.01em] max-w-[560px]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+                  More stories on video
+                </h2>
+              </div>
+              <p className="text-[15px] max-w-[380px]" style={{ color: "var(--body)" }}>
+                Learners tell their own stories — how they prepared, what they learned and where they are now.
+              </p>
+            </div>
+
+            <VideoGallery videos={videos} />
           </div>
         </section>
 

@@ -5,24 +5,17 @@ export type Program = {
   desc: string;
   bg: string;
   badgeColor: string;
+  upcoming?: boolean;
 };
 
 export const programs: Program[] = [
   {
     slug: "study-visa-prep-us",
     badge: "STUDY ABROAD",
-    title: "Study Visa Prep — United States",
+    title: "Study Visa Prep",
     desc: "From application to visa interview, mapped out end to end.",
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
-  },
-  {
-    slug: "work-permit-prep-canada",
-    badge: "WORK ABROAD",
-    title: "Work Permit Prep — Canada",
-    desc: "Eligibility, documentation and job-search groundwork.",
-    bg: "var(--mint-bg)",
-    badgeColor: "var(--mint-ink)",
   },
   {
     slug: "obocheton-mone-ilish-level-01",
@@ -33,12 +26,22 @@ export const programs: Program[] = [
     badgeColor: "var(--lav-ink)",
   },
   {
+    slug: "work-permit-prep-canada",
+    badge: "WORK ABROAD",
+    title: "Work Permit Prep — Canada",
+    desc: "Eligibility, documentation and job-search groundwork.",
+    bg: "var(--mint-bg)",
+    badgeColor: "var(--mint-ink)",
+    upcoming: true,
+  },
+  {
     slug: "interview-readiness",
     badge: "CAREER PREP",
     title: "Interview Readiness",
     desc: "Frameworks, mock questions and confident delivery.",
     bg: "var(--peach-bg)",
     badgeColor: "var(--peach-ink)",
+    upcoming: true,
   },
 ];
 

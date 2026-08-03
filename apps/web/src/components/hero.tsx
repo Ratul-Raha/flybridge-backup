@@ -153,7 +153,7 @@ export function Hero() {
 
             <div className="flex items-center gap-5 mt-[34px] flex-wrap">
               <a
-                href="#"
+                href="/programs"
                 className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
                 style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
               >
@@ -284,28 +284,57 @@ export function Hero() {
         </div>
       </section>
 
-      <div className="px-[clamp(20px,4.5vw,56px)] -mt-[10px]">
-        <div
-          className="max-w-[1320px] mx-auto bg-white border border-line rounded-[22px] flex flex-wrap shadow-xl overflow-hidden"
-          style={{ boxShadow: "0 24px 50px -30px rgba(18,32,67,0.18)" }}
-        >
-          {stats.map((stat, i) => (
+      <div className="px-[clamp(20px,4.5vw,56px)] -mt-[10px] relative z-10">
+        <div className="max-w-[1320px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+          {stats.map((stat) => (
             <div
               key={stat.label}
-              className="flex-1 min-w-[160px] flex items-center gap-3 px-[22px] py-[26px] border-r border-line last:border-r-0"
+              className="relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_22px_44px_-22px_rgba(18,32,67,0.3)]"
+              style={{
+                background: "rgba(255,255,255,0.55)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                borderColor: "rgba(18,32,67,0.08)",
+                boxShadow: "0 18px 40px -26px rgba(18,32,67,0.28)",
+              }}
             >
-              <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--brand-soft)" }}>
+              <div
+                className="absolute -top-8 -right-6 w-[110px] h-[110px] rounded-full pointer-events-none"
+                style={{ background: "radial-gradient(circle, rgba(15,169,104,0.18), transparent 65%)", filter: "blur(6px)" }}
+              />
+              <span
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mb-4"
+                style={{ background: "var(--brand-soft)", boxShadow: "inset 0 0 0 1px rgba(15,169,104,0.12)" }}
+              >
                 <span style={{ color: "var(--brand-2)" }} dangerouslySetInnerHTML={{ __html: stat.svg }} />
               </span>
-              <div>
+              <div className="relative">
                 {stat.value ? (
-                  <div className="font-mono font-medium text-[19px]" style={{ color: "var(--ink)" }}>
+                  <div
+                    className="font-mono font-semibold text-[22px] leading-none"
+                    style={{
+                      backgroundImage: "linear-gradient(120deg, var(--ink), var(--brand-2))",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      color: "transparent",
+                    }}
+                  >
                     <CountUp value={stat.value} />
                   </div>
                 ) : (
-                  <div className="font-mono font-medium text-[15px]" style={{ color: "var(--ink)" }}>{stat.text}</div>
+                  <div
+                    className="font-mono font-semibold text-[15px] leading-none"
+                    style={{
+                      backgroundImage: "linear-gradient(120deg, var(--ink), var(--brand-2))",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      color: "transparent",
+                    }}
+                  >
+                    {stat.text}
+                  </div>
                 )}
-                <div className="text-[12px] mt-[1px]" style={{ color: "var(--body)" }}>{stat.label}</div>
+                <div className="text-[12px] mt-[6px]" style={{ color: "var(--body)" }}>{stat.label}</div>
               </div>
             </div>
           ))}

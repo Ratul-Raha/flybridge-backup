@@ -12,18 +12,20 @@ import { ShieldCheck, ArrowRight } from "lucide-react";
  * var(--body), var(--line), font-display, font-mono.
  */
 
-export function CoursePromo() {
+export function CoursePromo({ image = true }: { image?: boolean }) {
   return (
     <div
       className="relative w-full max-w-[1320px] mx-auto rounded-[22px] overflow-hidden border border-line bg-white"
       style={{ boxShadow: "0 24px 50px -30px rgba(18,32,67,0.18)" }}
     >
       {/* Watermark visual (full-bleed background) */}
-      <img
-        src="/watermark.png"
-        alt="FlyBridge watermark"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {image && (
+        <img
+          src="/watermark.png"
+          alt="FlyBridge watermark"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
 
       <div className="relative p-8 sm:p-10 lg:p-14">
         {/* ── copy + offer + CTA ──────────────────────────── */}
@@ -85,7 +87,9 @@ export function CoursePromo() {
 
             {/* Limited time badge */}
             <div
-              className="absolute -top-5 -right-5 w-[86px] h-[86px] rounded-full flex items-center justify-center text-center text-white font-medium text-[12px] leading-[1.2] px-2"
+              className={`absolute w-[86px] h-[86px] rounded-full flex items-center justify-center text-center text-white font-medium text-[12px] leading-[1.2] px-2 ${
+                image ? "-top-5 -right-5" : "-top-5 right-3"
+              }`}
               style={{ background: "var(--brand)", boxShadow: "0 14px 26px -12px rgba(15,169,104,0.55)" }}
             >
               Limited Time Offer!

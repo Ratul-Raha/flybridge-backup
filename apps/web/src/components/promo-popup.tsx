@@ -54,7 +54,12 @@ export function PromoPopup() {
         </button>
 
         <div className="p-4 sm:p-6">
-          <CoursePromo />
+          <div className="hidden sm:block">
+            <CoursePromo />
+          </div>
+          <div className="sm:hidden">
+            <CoursePromo image={false} />
+          </div>
         </div>
       </div>
     </div>

@@ -31,18 +31,22 @@ const decos: Record<string, ReactNode> = {
 };
 
 export function ProgramCard({ p }: { p: Program }) {
-  return (
-    <Link
-      href={`/programs/${p.slug}`}
-      className="block rounded-[20px] p-[26px_22px_90px] relative overflow-hidden min-h-[230px] transition-all duration-300 hover:-translate-y-[6px] group"
-      style={{ background: p.bg, boxShadow: "0 4px 20px -8px rgba(18,32,67,0.1)" }}
-    >
+  const content = (
+    <>
       <span
         className="font-mono text-[10.5px] font-medium tracking-[0.4px] px-[11px] py-[5px] rounded-full inline-block mb-[14px]"
         style={{ background: "rgba(255,255,255,0.7)", color: p.badgeColor }}
       >
         {p.badge}
       </span>
+      {p.upcoming && (
+        <span
+          className="font-mono text-[10px] font-medium tracking-[0.4px] px-[9px] py-[5px] rounded-full inline-block ml-[6px] mb-[14px]"
+          style={{ background: p.badgeColor, color: "#fff" }}
+        >
+          UPCOMING
+        </span>
+      )}
       <h3 className="text-[17.5px] font-medium leading-[1.3] max-w-[190px]" style={{ color: "var(--ink)" }}>
         {p.title}
       </h3>
@@ -50,17 +54,42 @@ export function ProgramCard({ p }: { p: Program }) {
         {p.desc}
       </p>
       <span
-        className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70 group-hover:opacity-100 group-hover:translate-x-[2px] transition-all duration-250"
+        className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70"
         style={{ color: p.badgeColor }}
       >
-        Explore course
-        <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
-          <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {p.upcoming ? "Coming soon" : (
+          <>
+            Explore course
+            <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </>
+        )}
       </span>
       <span className="absolute right-[-18px] bottom-[-18px] w-[120px] h-[120px] flex items-center justify-center opacity-90 pointer-events-none">
         {decos[p.slug]}
       </span>
+    </>
+  );
+
+  if (p.upcoming) {
+    return (
+      <div
+        className="block rounded-[20px] p-[26px_22px_90px] relative overflow-hidden min-h-[230px] opacity-90"
+        style={{ background: p.bg, boxShadow: "0 4px 20px -8px rgba(18,32,67,0.1)" }}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/programs/${p.slug}`}
+      className="block rounded-[20px] p-[26px_22px_90px] relative overflow-hidden min-h-[230px] transition-all duration-300 hover:-translate-y-[6px] group"
+      style={{ background: p.bg, boxShadow: "0 4px 20px -8px rgba(18,32,67,0.1)" }}
+    >
+      {content}
     </Link>
   );
 }
