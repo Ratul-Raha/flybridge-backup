@@ -43,6 +43,18 @@
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
+  .fb-pop-fade { animation: fb-pop-fade 0.25s ease-out both; }
+  .fb-pop-up { animation: fb-pop-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+
+@keyframes fb-pop-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fb-pop-up {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes fb-marquee {
