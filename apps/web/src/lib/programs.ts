@@ -6,16 +6,20 @@ export type Program = {
   bg: string;
   badgeColor: string;
   upcoming?: boolean;
+  price?: string;
+  image?: string;
 };
 
 export const programs: Program[] = [
   {
     slug: "study-visa-prep-us",
     badge: "STUDY ABROAD",
-    title: "Study Visa Prep",
-    desc: "From application to visa interview, mapped out end to end.",
+    title: "Student Visa Blueprint™",
+    desc: "The complete step-by-step system to prepare your study visa application with confidence.",
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
+    price: "৳২,৯৯৯",
+    image: "/watermark.png",
   },
   {
     slug: "obocheton-mone-ilish-level-01",

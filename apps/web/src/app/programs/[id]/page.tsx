@@ -3,6 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
+import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
+import {
+  BadgeCheck,
+  Check,
+  Clock,
+  ShieldCheck,
+  ShoppingCart,
+  Star,
+  ThumbsUp,
+  Zap,
+} from "lucide-react";
+import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 
 type Props = { params: { id: string } };
@@ -38,23 +50,79 @@ const arrow = (
   </svg>
 );
 
+function Stars({ value, size = 14 }: { value: number; size?: number }) {
+  const filled = Math.round(value);
+  return (
+    <span className="inline-flex items-center gap-[2px]">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star
+          key={i}
+          style={{
+            width: size,
+            height: size,
+            color: i < filled ? "#F59E0B" : "#DCE1EA",
+            fill: i < filled ? "#F59E0B" : "transparent",
+          }}
+          strokeWidth={1.5}
+        />
+      ))}
+    </span>
+  );
+}
+
+function SectionHeading({ eyebrow, title, desc }: { eyebrow: string; title: string; desc?: string }) {
+  return (
+    <div className="mb-8">
+      <div
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4"
+        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+      >
+        <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
+        {eyebrow}
+      </div>
+      <h2 className="font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(24px,2.8vw,32px)", color: "var(--ink)" }}>
+        {title}
+      </h2>
+      {desc && (
+        <p className="text-[15px] mt-2 max-w-[560px]" style={{ color: "var(--body)" }}>
+          {desc}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function CourseHero({
   badge,
   title,
   subtitle,
   desc,
   chips,
+  price,
+  originalPrice,
+  savings,
+  access,
+  rating,
+  previewLessons,
+  lessonCount,
 }: {
   badge: string;
   title: string;
   subtitle?: string;
   desc: string;
   chips: string[];
+  price?: string;
+  originalPrice?: string;
+  savings?: string;
+  access?: string;
+  rating?: { average: number; count: number };
+  previewLessons: { title: string; duration: string }[];
+  lessonCount: number;
 }) {
   return (
-      <section
-        className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
-        style={{
+    <section
+      className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
+      style={{
         background:
           "radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(107,76,224,0.07), transparent 60%)",
       }}
@@ -93,9 +161,80 @@ function CourseHero({
             )}
           </h1>
 
+          {rating && (
+            <a
+              href="#reviews"
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-line bg-white pl-3 pr-4 py-2 hover:shadow-md transition-shadow"
+            >
+              <Stars value={rating.average} />
+              <span className="text-[13.5px] font-bold" style={{ color: "var(--ink)" }}>
+                {rating.average}
+              </span>
+              <span className="text-[12.5px]" style={{ color: "var(--body)" }}>
+                ({rating.count} reviews)
+              </span>
+            </a>
+          )}
+
+          {price && (
+            <div className="mt-5">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[34px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
+                  {price}
+                </span>
+                {originalPrice && (
+                  <span className="text-[17px] font-medium line-through" style={{ color: "var(--body)", opacity: 0.6 }}>
+                    {originalPrice}
+                  </span>
+                )}
+                {savings && (
+                  <span
+                    className="rounded-full px-2.5 py-1 text-[11px] font-bold text-white"
+                    style={{ background: "#0F9D58" }}
+                  >
+                    {savings} OFF
+                  </span>
+                )}
+              </div>
+              {access && (
+                <div className="mt-2 flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: "var(--brand-2)" }}>
+                  <Clock className="w-3.5 h-3.5" />
+                  {access}
+                </div>
+              )}
+            </div>
+          )}
+
           <p className="mt-[22px] max-w-[500px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
             {desc}
           </p>
+
+          <div className="flex items-center gap-3 mt-[26px] flex-wrap">
+            <a
+              href="#buy"
+              className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
+              style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
+            >
+              Enroll now
+              {arrow}
+            </a>
+            <a
+              href="#buy"
+              className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white"
+              style={{ color: "var(--ink)" }}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Add to cart
+            </a>
+            <a
+              href="#curriculum"
+              className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white"
+              style={{ color: "var(--ink)" }}
+            >
+              {play}
+              Preview the course
+            </a>
+          </div>
 
           <div className="flex items-center gap-3 mt-[26px] flex-wrap">
             {chips.map((chip) => (
@@ -108,25 +247,6 @@ function CourseHero({
                 {chip}
               </span>
             ))}
-          </div>
-
-          <div className="flex items-center gap-4 mt-[34px] flex-wrap">
-            <a
-              href="#"
-              className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
-              style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
-            >
-              Enroll now
-              {arrow}
-            </a>
-            <a
-              href="#curriculum"
-              className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white"
-              style={{ color: "var(--ink)" }}
-            >
-              {play}
-              Preview the course
-            </a>
           </div>
         </div>
 
@@ -142,7 +262,7 @@ function CourseHero({
               <span
                 className="absolute bottom-[14px] right-[16px] font-mono text-[10.5px] font-medium tracking-[0.3px] text-white/90 bg-black/25 rounded-full px-[10px] py-[4px]"
               >
-                30 LESSONS
+                {lessonCount} LESSONS
               </span>
             </div>
             <div className="p-[22px]">
@@ -150,30 +270,26 @@ function CourseHero({
                 PREVIEW THE CURRICULUM
               </div>
               <div className="space-y-[10px]">
-                {[
-                  { n: "1", t: "ইংরেজি উচ্চারণের মূল ধ্বনি", d: "08:12" },
-                  { n: "2", t: "Stress ও intonation বোঝা", d: "09:04" },
-                  { n: "3", t: "Common vowel sounds", d: "10:21" },
-                ].map((row) => (
-                  <div key={row.n} className="flex items-center gap-3 text-[12.5px]">
+                {previewLessons.map((row, i) => (
+                  <div key={row.title} className="flex items-center gap-3 text-[12.5px]">
                     <span
                       className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center font-medium text-[11px] shrink-0"
                       style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
                     >
-                      {row.n}
+                      {i + 1}
                     </span>
                     <span className="flex-1 font-medium truncate" style={{ color: "var(--ink)" }}>
-                      {row.t}
+                      {row.title}
                     </span>
                     <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--body)" }}>
-                      {row.d}
+                      {row.duration}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="mt-[16px] pt-[14px] border-t border-line flex items-center justify-between">
                 <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-                  + 27 more lessons
+                  + {lessonCount - previewLessons.length} more lessons
                 </span>
                 <span className="font-mono text-[11px] font-medium" style={{ color: "var(--brand-2)" }}>
                   FREE PREVIEW
@@ -187,54 +303,203 @@ function CourseHero({
   );
 }
 
-function StatsBar({ stats }: { stats: { value: string; label: string }[] }) {
+function BuyCard({ details }: { details: CourseDetails }) {
   return (
-    <div className="px-[clamp(20px,4.5vw,56px)] -mt-[10px]">
-      <div
-        className="max-w-[1320px] mx-auto bg-white border border-line rounded-[22px] flex flex-wrap shadow-xl overflow-hidden"
-        style={{ boxShadow: "0 24px 50px -30px rgba(18,32,67,0.18)" }}
-      >
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className="flex-1 min-w-[160px] flex items-center gap-3 px-[22px] py-[26px] border-r border-line last:border-r-0"
+    <div
+      className="rounded-[24px] bg-white border border-line overflow-hidden"
+      style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.28)" }}
+    >
+      <div className="p-6">
+        <div className="flex items-center justify-between">
+          <span
+            className="font-mono text-[10px] font-bold tracking-[0.4px] px-2.5 py-1 rounded-full"
+            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
           >
-            <span
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-semibold text-[17px]"
-              style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
-            >
-              {stat.value}
+            INTRO OFFER
+          </span>
+          {details.savings && (
+            <span className="text-[11.5px] font-bold" style={{ color: "#0F9D58" }}>
+              Save {details.savings}
             </span>
-            <div>
-              <div className="text-[14.5px] font-medium leading-[1.2]" style={{ color: "var(--ink)" }}>
-                {stat.label}
-              </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-end gap-2.5 flex-wrap">
+          <span className="text-[38px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
+            {details.price}
+          </span>
+          {details.originalPrice && (
+            <span className="text-[16px] font-medium line-through mb-1" style={{ color: "var(--body)", opacity: 0.6 }}>
+              {details.originalPrice}
+            </span>
+          )}
+        </div>
+        {details.access && (
+          <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: "var(--brand-2)" }}>
+            <Clock className="w-3.5 h-3.5" />
+            {details.access} · One-time payment
+          </p>
+        )}
+
+        <a
+          href="#"
+          className="mt-5 block w-full text-center rounded-full py-[14px] text-[14.5px] font-bold text-white transition-all duration-300 hover:-translate-y-[1px]"
+          style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
+        >
+          Enroll now — {details.price}
+        </a>
+        <a
+          href="#"
+          className="mt-3 flex items-center justify-center gap-[8px] w-full rounded-full py-[13px] text-[14px] font-semibold border border-line bg-white transition-colors hover:bg-[var(--bg-soft)]"
+          style={{ color: "var(--ink)" }}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          Add to cart
+        </a>
+
+        <div className="mt-6 pt-5 border-t border-line">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+            What&apos;s included
+          </p>
+          <ul className="mt-3.5 space-y-2.5">
+            {BLUEPRINT_FEATURES.map((f) => (
+              <li key={f.title} className="flex items-start gap-2.5 text-[12.5px]">
+                <span
+                  className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                >
+                  <Check className="w-[10px] h-[10px]" strokeWidth={3} />
+                </span>
+                <span className="font-medium leading-snug" style={{ color: "var(--ink)" }}>
+                  {f.title}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-line grid grid-cols-3 gap-2 text-center">
+          {[
+            { icon: ShieldCheck, label: "Live support" },
+            { icon: BadgeCheck, label: "Verified certificate" },
+            { icon: Zap, label: "Instant access" },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex flex-col items-center gap-1.5">
+              <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}>
+                <Icon className="w-4 h-4" />
+              </span>
+              <span className="text-[11px] font-medium leading-tight" style={{ color: "var(--body)" }}>
+                {label}
+              </span>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function SectionHeading({ eyebrow, title, desc }: { eyebrow: string; title: string; desc?: string }) {
+function ReviewCard({ review }: { review: Review }) {
+  const initials = review.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("");
   return (
-    <div className="mb-9">
-      <div
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] mb-5"
-        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-      >
-        <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
-        {eyebrow}
+    <div className="rounded-[20px] bg-white border border-line p-6 transition-shadow hover:shadow-lg">
+      <div className="flex items-center gap-3">
+        <span
+          className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[14px] text-white shrink-0"
+          style={{ background: "var(--lav-ink)" }}
+        >
+          {initials}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+              {review.name}
+            </span>
+            {review.verified && (
+              <span
+                className="inline-flex items-center gap-[3px] text-[10px] font-semibold px-1.5 py-[2px] rounded-full"
+                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+              >
+                <BadgeCheck className="w-3 h-3" />
+                VERIFIED BUYER
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Stars value={review.rating} size={13} />
+            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+              {review.date}
+            </span>
+          </div>
+        </div>
       </div>
-      <h2 className="font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
-        {title}
-      </h2>
-      {desc && (
-        <p className="text-[15px] mt-2 max-w-[560px]" style={{ color: "var(--body)" }}>
-          {desc}
-        </p>
-      )}
+      <p className="mt-3.5 text-[13.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
+        {review.text}
+      </p>
+      <div className="mt-3 flex items-center gap-1.5 text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+        <ThumbsUp className="w-3.5 h-3.5" />
+        {review.helpful} found this helpful
+      </div>
+    </div>
+  );
+}
+
+function RatingSummary({ details }: { details: CourseDetails }) {
+  if (!details.rating || !details.reviews?.length) return null;
+  const { average, count, distribution } = details.rating;
+  return (
+    <div className="rounded-[20px] bg-white border border-line p-6">
+      <div className="flex items-end gap-2.5">
+        <span className="text-[46px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
+          {average}
+        </span>
+        <span className="text-[14px] font-medium mb-1.5" style={{ color: "var(--body)" }}>
+          out of 5
+        </span>
+      </div>
+      <div className="mt-2.5">
+        <Stars value={average} size={16} />
+      </div>
+      <p className="mt-1.5 text-[12.5px]" style={{ color: "var(--body)" }}>
+        Based on {count} reviews
+      </p>
+
+      <div className="mt-5 space-y-2">
+        {distribution.map((n, i) => {
+          const star = 5 - i;
+          const pct = Math.round((n / count) * 100);
+          return (
+            <div key={star} className="flex items-center gap-2 text-[12px]">
+              <span className="w-3 shrink-0 font-semibold text-right" style={{ color: "var(--ink)" }}>
+                {star}
+              </span>
+              <Star className="w-3 h-3 shrink-0" color="#F59E0B" fill="#F59E0B" strokeWidth={1.5} />
+              <div className="flex-1 h-[7px] rounded-full overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#F59E0B" }} />
+              </div>
+              <span className="w-9 text-right font-mono text-[11px]" style={{ color: "var(--body)" }}>
+                {pct}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-4 flex items-center gap-1.5 text-[12px]" style={{ color: "var(--body)" }}>
+        <ShieldCheck className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--brand-2)" }} />
+        Reviews from verified enrollees
+      </p>
+      <a
+        href="#"
+        className="mt-4 block w-full text-center rounded-full py-[12px] text-[13.5px] font-semibold border border-line bg-white transition-colors hover:bg-[var(--bg-soft)]"
+        style={{ color: "var(--ink)" }}
+      >
+        Share your experience
+      </a>
     </div>
   );
 }
@@ -247,6 +512,15 @@ export default function ProgramPage({ params }: Props) {
   const chips = details
     ? [details.level, details.language, details.pace]
     : [program.badge, "Self-paced", "New lessons added regularly"];
+  const previewLessons =
+    details?.modules[0]?.lessons.slice(0, 3) ?? [
+      { title: "ইংরেজি উচ্চারণের মূল ধ্বনি", duration: "08:12" },
+      { title: "Stress ও intonation বোঝা", duration: "09:04" },
+      { title: "Common vowel sounds", duration: "10:21" },
+    ];
+  const lessonCount = details
+    ? details.modules.reduce((n, m) => n + m.lessons.length, 0)
+    : 30;
 
   return (
     <>
@@ -258,152 +532,240 @@ export default function ProgramPage({ params }: Props) {
         subtitle={details?.subtitle}
         desc={details?.desc ?? program.desc}
         chips={chips}
-      />
-
-      <StatsBar
-        stats={
-          details?.stats ?? [
-            { value: "30", label: "Video lessons" },
-            { value: "3", label: "PDF resources" },
-            { value: "1", label: "Completion certificate" },
-          ]
+        price={details?.price}
+        originalPrice={details?.originalPrice}
+        savings={details?.savings}
+        access={details?.access}
+        rating={
+          details?.rating
+            ? { average: details.rating.average, count: details.rating.count }
+            : undefined
         }
+        previewLessons={previewLessons}
+        lessonCount={lessonCount}
       />
 
       {details ? (
         <>
-          <section className="px-[clamp(20px,4.5vw,56px)] py-[90px] max-w-[1320px] mx-auto">
-            <SectionHeading
-              eyebrow="WHAT YOU WILL LEARN"
-              title="Course outcomes"
-              desc="By the end of this course you will be able to:"
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {details.outcomes.map((o, i) => (
-                <div
-                  key={o}
-                  className="flex items-start gap-3 rounded-[16px] bg-white border border-line p-[20px]"
-                >
-                  <span
-                    className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] font-medium shrink-0"
-                    style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="text-[15px] font-medium leading-[1.5]" style={{ color: "var(--ink)" }}>
-                    {o}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto" id="curriculum">
-            <SectionHeading
-              eyebrow="CURRICULUM"
-              title="What is inside"
-              desc={`${details.modules.length} modules · ${details.modules.reduce((n, m) => n + m.lessons.length, 0)} video lessons · learn at your own pace.`}
-            />
-            <div className="space-y-3">
-              {details.modules.map((module, i) => (
-                <details
-                  key={module.title}
-                  className="group rounded-[16px] bg-white border border-line overflow-hidden open:shadow-lg"
-                  open={i === 0}
-                >
-                  <summary className="flex items-center gap-3 px-[22px] py-[18px] cursor-pointer list-none select-none">
-                    <span
-                      className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-medium text-[13px] shrink-0"
-                      style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
+          {/* Product section */}
+          <section id="buy" className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
+              <div className="space-y-16">
+                {/* Key facts */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {details.stats.map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="rounded-[18px] bg-white border border-line p-[22px] flex items-center gap-4"
                     >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="flex-1">
-                      <span className="block text-[15px] font-medium" style={{ color: "var(--ink)" }}>
-                        {module.title}
+                      <span
+                        className="w-12 h-12 rounded-[14px] flex items-center justify-center font-semibold text-[18px] shrink-0"
+                        style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
+                      >
+                        {stat.value}
                       </span>
-                      <span className="block text-[12px] mt-[2px] font-mono" style={{ color: "var(--body)" }}>
-                        {module.lessons.length} lessons
+                      <span className="text-[14px] font-medium leading-[1.3]" style={{ color: "var(--ink)" }}>
+                        {stat.label}
                       </span>
-                    </span>
-                    <span className="transition-transform duration-250 group-open:rotate-180" style={{ color: "var(--body)" }}>
-                      {chevron}
-                    </span>
-                  </summary>
-                  <ul className="px-[22px] pb-[16px]">
-                    {module.lessons.map((lesson, j) => (
-                      <li
-                        key={lesson.title}
-                        className="flex items-center gap-3 py-[11px] border-t border-line text-[13.5px]"
+                    </div>
+                  ))}
+                </div>
+
+                {/* What's included — from the promo */}
+                <div>
+                  <SectionHeading
+                    eyebrow="WHAT'S INCLUDED"
+                    title="Everything you get with the Blueprint"
+                    desc="The same resources featured in our launch offer — everything you need to prepare your study visa application from home."
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {BLUEPRINT_FEATURES.map(({ icon: Icon, title, desc }) => (
+                      <div
+                        key={title}
+                        className="rounded-[18px] bg-white border border-line p-[22px] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-lg"
                       >
                         <span
-                          className="w-[24px] h-[24px] rounded-[7px] flex items-center justify-center shrink-0"
-                          style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+                          className="w-11 h-11 rounded-[12px] flex items-center justify-center mb-[14px]"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
                         >
-                          {play}
+                          <Icon className="w-5 h-5" strokeWidth={2} />
                         </span>
-                        <span className="flex-1 font-medium" style={{ color: "var(--ink)" }}>
-                          <span className="font-mono text-[11px] mr-[10px]" style={{ color: "var(--body)" }}>
-                            {i * module.lessons.length + j + 1}
-                          </span>
-                          {lesson.title}
-                        </span>
-                        <span className="font-mono text-[11.5px] shrink-0" style={{ color: "var(--body)" }}>
-                          {lesson.duration}
-                        </span>
-                      </li>
+                        <h3 className="text-[15px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                          {title}
+                        </h3>
+                        <p className="text-[12.5px] mt-[6px] leading-[1.55]" style={{ color: "var(--body)" }}>
+                          {desc}
+                        </p>
+                      </div>
                     ))}
-                  </ul>
-                </details>
-              ))}
-            </div>
-          </section>
-
-          <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
-            <SectionHeading
-              eyebrow="DOWNLOADS"
-              title="PDF resources"
-              desc="Downloadable materials that come with the course."
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {details.pdfs.map((pdf) => (
-                <div
-                  key={pdf.title}
-                  className="rounded-[20px] bg-white border border-line p-[22px] flex flex-col transition-all duration-300 hover:-translate-y-[4px] hover:shadow-lg"
-                >
-                  <span
-                    className="w-[44px] h-[44px] rounded-[12px] flex items-center justify-center mb-[16px]"
-                    style={{ background: "var(--peach-bg)", color: "var(--peach-ink)" }}
-                  >
-                    <svg className="w-[20px] h-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" strokeLinejoin="round" />
-                      <path d="M14 2V8H20" strokeLinejoin="round" />
-                      <path d="M9 13H15M9 17H15" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                  <h3 className="text-[15px] font-medium leading-[1.3]" style={{ color: "var(--ink)" }}>
-                    {pdf.title}
-                  </h3>
-                  <p className="text-[12.5px] mt-[6px] leading-[1.5] flex-1" style={{ color: "var(--body)" }}>
-                    {pdf.desc}
-                  </p>
-                  <div className="flex items-center justify-between mt-[16px] pt-[14px] border-t border-line">
-                    <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
-                      {pdf.pages} pages · {pdf.size}
-                    </span>
-                    <a
-                      href="#"
-                      className="text-[12.5px] font-medium inline-flex items-center gap-[5px]"
-                      style={{ color: "var(--brand-2)" }}
-                    >
-                      Download {arrow}
-                    </a>
                   </div>
                 </div>
-              ))}
+
+                {/* Outcomes */}
+                <div>
+                  <SectionHeading
+                    eyebrow="WHAT YOU WILL LEARN"
+                    title="Course outcomes"
+                    desc="By the end of this course you will be able to:"
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {details.outcomes.map((o) => (
+                      <div
+                        key={o}
+                        className="flex items-start gap-3 rounded-[16px] bg-white border border-line p-[18px]"
+                      >
+                        <span
+                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                        >
+                          <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+                        </span>
+                        <span className="text-[14.5px] font-medium leading-[1.5]" style={{ color: "var(--ink)" }}>
+                          {o}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Curriculum */}
+                <div id="curriculum">
+                  <SectionHeading
+                    eyebrow="CURRICULUM"
+                    title="What is inside"
+                    desc={`${details.modules.length} modules · ${details.modules.reduce((n, m) => n + m.lessons.length, 0)} video lessons · learn at your own pace.`}
+                  />
+                  <div className="space-y-3">
+                    {details.modules.map((module, i) => (
+                      <details
+                        key={module.title}
+                        className="group rounded-[16px] bg-white border border-line overflow-hidden open:shadow-lg"
+                        open={i === 0}
+                      >
+                        <summary className="flex items-center gap-3 px-[22px] py-[18px] cursor-pointer list-none select-none">
+                          <span
+                            className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-medium text-[13px] shrink-0"
+                            style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
+                          >
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <span className="flex-1">
+                            <span className="block text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+                              {module.title}
+                            </span>
+                            <span className="block text-[12px] mt-[2px] font-mono" style={{ color: "var(--body)" }}>
+                              {module.lessons.length} lessons
+                            </span>
+                          </span>
+                          <span className="transition-transform duration-250 group-open:rotate-180" style={{ color: "var(--body)" }}>
+                            {chevron}
+                          </span>
+                        </summary>
+                        <ul className="px-[22px] pb-[16px]">
+                          {module.lessons.map((lesson, j) => (
+                            <li
+                              key={lesson.title}
+                              className="flex items-center gap-3 py-[11px] border-t border-line text-[13.5px]"
+                            >
+                              <span
+                                className="w-[24px] h-[24px] rounded-[7px] flex items-center justify-center shrink-0"
+                                style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+                              >
+                                {play}
+                              </span>
+                              <span className="flex-1 font-medium" style={{ color: "var(--ink)" }}>
+                                <span className="font-mono text-[11px] mr-[10px]" style={{ color: "var(--body)" }}>
+                                  {i * module.lessons.length + j + 1}
+                                </span>
+                                {lesson.title}
+                              </span>
+                              <span className="font-mono text-[11.5px] shrink-0" style={{ color: "var(--body)" }}>
+                                {lesson.duration}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ))}
+                  </div>
+                </div>
+
+                {/* PDFs */}
+                <div>
+                  <SectionHeading
+                    eyebrow="DOWNLOADS"
+                    title="PDF resources"
+                    desc="Downloadable materials that come with the course."
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    {details.pdfs.map((pdf) => (
+                      <div
+                        key={pdf.title}
+                        className="rounded-[20px] bg-white border border-line p-[22px] flex flex-col transition-all duration-300 hover:-translate-y-[4px] hover:shadow-lg"
+                      >
+                        <span
+                          className="w-[44px] h-[44px] rounded-[12px] flex items-center justify-center mb-[16px]"
+                          style={{ background: "var(--peach-bg)", color: "var(--peach-ink)" }}
+                        >
+                          <svg className="w-[20px] h-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" strokeLinejoin="round" />
+                            <path d="M14 2V8H20" strokeLinejoin="round" />
+                            <path d="M9 13H15M9 17H15" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                        <h3 className="text-[15px] font-medium leading-[1.3]" style={{ color: "var(--ink)" }}>
+                          {pdf.title}
+                        </h3>
+                        <p className="text-[12.5px] mt-[6px] leading-[1.5] flex-1" style={{ color: "var(--body)" }}>
+                          {pdf.desc}
+                        </p>
+                        <div className="flex items-center justify-between mt-[16px] pt-[14px] border-t border-line">
+                          <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
+                            {pdf.pages} pages · {pdf.size}
+                          </span>
+                          <a
+                            href="#"
+                            className="text-[12.5px] font-medium inline-flex items-center gap-[5px]"
+                            style={{ color: "var(--brand-2)" }}
+                          >
+                            Download {arrow}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sticky purchase box */}
+              <aside className="lg:sticky lg:top-24">
+                <BuyCard details={details} />
+              </aside>
             </div>
           </section>
 
+          {/* Reviews — list on the left, summary on the right */}
+          {details.reviews?.length ? (
+            <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
+              <SectionHeading
+                eyebrow="RATINGS & REVIEWS"
+                title="What students say"
+                desc="Real experiences from enrollees who prepared their study visa application with the Blueprint."
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
+                <div className="space-y-4">
+                  {details.reviews.map((review) => (
+                    <ReviewCard key={review.name} review={review} />
+                  ))}
+                </div>
+                <aside className="lg:sticky lg:top-24">
+                  <RatingSummary details={details} />
+                </aside>
+              </div>
+            </section>
+          ) : null}
+
+          {/* Certificate */}
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
             <div
               className="rounded-[24px] overflow-hidden relative"
@@ -425,7 +787,7 @@ export default function ProgramPage({ params }: Props) {
                     {details.certificate.desc}
                   </p>
                   <a
-                    href="#"
+                    href="#buy"
                     className="mt-[26px] inline-flex items-center gap-[9px] font-medium text-[14.5px] text-white rounded-full px-[24px] py-[13px]"
                     style={{ background: "var(--brand)" }}
                   >
@@ -509,15 +871,19 @@ export default function ProgramPage({ params }: Props) {
           }}
         >
           <h2 className="text-[clamp(24px,2.8vw,34px)] font-semibold leading-[1.15] tracking-[-0.01em] text-white max-w-[640px] mx-auto">
-            {details ? "Ready to speak with confidence?" : "Ready to build your international future?"}
+            {details?.cta?.title ??
+              (details
+                ? "Ready to speak with confidence?"
+                : "Ready to build your international future?")}
           </h2>
           <p className="text-[15px] mt-[12px] text-white/80 max-w-[520px] mx-auto leading-[1.6]">
-            {details
-              ? "Enroll today and unlock all 30 video lessons, 3 PDF resources, and your completion certificate."
-              : "Explore our programs and start preparing for the opportunities waiting for you abroad."}
+            {details?.cta?.desc ??
+              (details
+                ? "Enroll today and unlock all 30 video lessons, 3 PDF resources, and your completion certificate."
+                : "Explore our programs and start preparing for the opportunities waiting for you abroad.")}
           </p>
           <a
-            href="#"
+            href="#buy"
             className="mt-[28px] inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full px-[30px] py-[15px] bg-white"
             style={{ color: "var(--brand)" }}
           >
@@ -526,6 +892,38 @@ export default function ProgramPage({ params }: Props) {
           </a>
         </div>
       </section>
+
+      {/* Mobile sticky buy bar */}
+      {details && (
+        <>
+          <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 backdrop-blur border-t border-line px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-[18px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
+                  {details.price}
+                </span>
+                {details.originalPrice && (
+                  <span className="text-[12px] line-through" style={{ color: "var(--body)", opacity: 0.6 }}>
+                    {details.originalPrice}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "var(--brand-2)" }}>
+                <Clock className="w-3 h-3" />
+                {details.access}
+              </div>
+            </div>
+            <a
+              href="#buy"
+              className="shrink-0 rounded-full px-6 py-3 text-[13.5px] font-bold text-white"
+              style={{ background: "var(--brand)" }}
+            >
+              Enroll now
+            </a>
+          </div>
+          <div className="h-[76px] md:hidden" />
+        </>
+      )}
 
       <footer className="border-t border-line" style={{ background: "var(--bg-soft)" }}>
         <div className="max-w-[1320px] mx-auto px-[clamp(20px,4.5vw,56px)] py-[48px] flex flex-col md:flex-row items-center justify-between gap-6">

@@ -33,42 +33,97 @@ const decos: Record<string, ReactNode> = {
 export function ProgramCard({ p }: { p: Program }) {
   const content = (
     <>
+      {/* Dimmed gradient background image */}
+      {p.image && (
+        <>
+          <img
+            src={p.image}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.35 }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to top right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.15) 80%)",
+            }}
+          />
+        </>
+      )}
+
       <span
-        className="font-mono text-[10.5px] font-medium tracking-[0.4px] px-[11px] py-[5px] rounded-full inline-block mb-[14px]"
+        className="relative font-mono text-[10.5px] font-medium tracking-[0.4px] px-[11px] py-[5px] rounded-full inline-block mb-[14px]"
         style={{ background: "rgba(255,255,255,0.7)", color: p.badgeColor }}
       >
         {p.badge}
       </span>
       {p.upcoming && (
         <span
-          className="font-mono text-[10px] font-medium tracking-[0.4px] px-[9px] py-[5px] rounded-full inline-block ml-[6px] mb-[14px]"
+          className="relative font-mono text-[10px] font-medium tracking-[0.4px] px-[9px] py-[5px] rounded-full inline-block ml-[6px] mb-[14px]"
           style={{ background: p.badgeColor, color: "#fff" }}
         >
           UPCOMING
         </span>
       )}
-      <h3 className="text-[17.5px] font-medium leading-[1.3] max-w-[190px]" style={{ color: "var(--ink)" }}>
+      <h3 className="relative text-[17.5px] font-medium leading-[1.3] max-w-[190px]" style={{ color: "var(--ink)" }}>
         {p.title}
       </h3>
-      <p className="text-[12.5px] mt-2 max-w-[190px] leading-[1.5]" style={{ color: "var(--body)" }}>
+      <p className="relative text-[12.5px] mt-2 max-w-[190px] leading-[1.5]" style={{ color: "var(--body)" }}>
         {p.desc}
       </p>
-      <span
-        className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70"
-        style={{ color: p.badgeColor }}
-      >
-        {p.upcoming ? "Coming soon" : (
-          <>
-            Explore course
-            <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </>
-        )}
-      </span>
-      <span className="absolute right-[-18px] bottom-[-18px] w-[120px] h-[120px] flex items-center justify-center opacity-90 pointer-events-none">
-        {decos[p.slug]}
-      </span>
+
+      {p.price ? (
+        <div className="absolute left-[22px] right-[22px] bottom-[24px] flex items-end justify-between gap-3">
+          <div>
+            <div
+              className="font-mono text-[10px] font-medium tracking-[0.3px]"
+              style={{ color: "var(--brand-2)" }}
+            >
+              INTRO OFFER
+            </div>
+            <div
+              className="font-display font-bold leading-none mt-[4px]"
+              style={{ fontSize: "23px", color: "var(--ink)" }}
+            >
+              {p.price}
+            </div>
+          </div>
+          <span
+            className="inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70 pb-[2px]"
+            style={{ color: p.badgeColor }}
+          >
+            {p.upcoming ? "Coming soon" : (
+              <>
+                Explore course
+                <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </>
+            )}
+          </span>
+        </div>
+      ) : (
+        <span
+          className="absolute left-[22px] bottom-[26px] inline-flex items-center gap-[5px] text-[12.5px] font-medium opacity-70"
+          style={{ color: p.badgeColor }}
+        >
+          {p.upcoming ? "Coming soon" : (
+            <>
+              Explore course
+              <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </>
+          )}
+        </span>
+      )}
+
+      {!p.image && (
+        <span className="absolute right-[-18px] bottom-[-18px] w-[120px] h-[120px] flex items-center justify-center opacity-90 pointer-events-none">
+          {decos[p.slug]}
+        </span>
+      )}
     </>
   );
 
