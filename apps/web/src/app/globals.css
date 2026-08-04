@@ -21,6 +21,7 @@
     --font-display: 'Inter Variable', sans-serif;
     --font-body: 'Inter Variable', sans-serif;
     --font-mono: 'JetBrains Mono Variable', monospace;
+    --font-hand: 'Caveat Variable', cursive;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }

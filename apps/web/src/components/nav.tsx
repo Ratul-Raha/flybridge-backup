@@ -78,7 +78,7 @@ export function Nav() {
           </button>
 
           <a
-            href="#"
+            href="/login"
             className="hidden sm:inline-flex text-[14px] font-medium border border-line rounded-full px-5 py-[9px] hover:border-brand-2 hover:text-brand-2 transition-all duration-250"
             style={{ color: "var(--ink)" }}
           >
@@ -86,7 +86,7 @@ export function Nav() {
           </a>
 
           <a
-            href="#"
+            href="/login?mode=register"
             className="btn-solid-pill hidden sm:inline-flex items-center gap-2 text-[14px] font-medium text-white rounded-full px-[22px] py-[10px] hover:translate-y-[-1px] transition-all duration-250"
             style={{ background: "var(--brand)" }}
           >
@@ -127,7 +127,7 @@ export function Nav() {
           </a>
         ))}
         <a
-          href="#"
+          href="/login"
           className="text-center text-[14px] font-medium border border-line rounded-full px-5 py-[9px]"
           style={{ color: "var(--ink)" }}
           onClick={() => setMobileOpen(false)}
@@ -135,7 +135,7 @@ export function Nav() {
           Log in
         </a>
         <a
-          href="#"
+          href="/login?mode=register"
           className="btn-solid-pill flex items-center justify-center gap-2 text-[14px] font-medium text-white rounded-full px-[22px] py-[10px] mt-[10px]"
           style={{ background: "var(--brand)" }}
           onClick={() => setMobileOpen(false)}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/caveat";
 import { Footer } from "@/components/footer";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";

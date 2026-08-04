@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@flybridge/ui": "workspace:*",
+    "@fontsource-variable/caveat": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/outfit": "^5.3.0",
