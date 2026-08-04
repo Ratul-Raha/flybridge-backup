@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 const courseCards = [
   { title: "Study Visa Prep — US", meta: "12 lessons · 3h 40m", progress: "64%", color: "blue" },
   { title: "Work Permit Prep — Canada", meta: "9 lessons · 2h 10m", progress: "30%", color: "mint" },
@@ -43,29 +41,6 @@ const floatCards = [
   },
 ];
 
-const stats = [
-  {
-    svg: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 20V18C17 15.79 15.21 14 13 14H7C4.79 14 3 15.79 3 18V20" stroke-linecap="round"/><circle cx="10" cy="7" r="4"/><path d="M21 20V18C20.99 16.11 19.72 14.47 17.94 14.06" stroke-linecap="round"/><path d="M15 4.13C16.78 4.55 18.05 6.19 18.05 8.08C18.05 9.97 16.78 11.61 15 12.03" stroke-linecap="round"/></svg>',
-    value: 10000, label: "Learners",
-  },
-  {
-    svg: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M10 9L15 12L10 15V9Z" fill="currentColor"/></svg>',
-    value: 40, label: "Video lessons",
-  },
-  {
-    svg: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3H14L19 8V21H6V3Z" stroke-linejoin="round"/><path d="M14 3V8H19" stroke-linejoin="round"/></svg>',
-    value: 50, label: "Guides & templates",
-  },
-  {
-    svg: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12H21M12 3C14.5 5.5 14.5 18.5 12 21C9.5 18.5 9.5 5.5 12 3Z" stroke-width="1.6"/></svg>',
-    value: 3, label: "Countries",
-  },
-  {
-    svg: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L19 6V11C19 15.5 16 19.5 12 21C8 19.5 5 15.5 5 11V6L12 3Z" stroke-linejoin="round"/></svg>',
-    value: null, label: "Trusted", text: "By learners & parents",
-  },
-];
-
 function CourseCard({ card }: { card: typeof courseCards[0] }) {
   const tc = thumbColors[card.color];
   return (
@@ -86,44 +61,6 @@ function CourseCard({ card }: { card: typeof courseCards[0] }) {
   );
 }
 
-function CountUp({ value, suffix = "+" }: { value: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated.current) {
-            hasAnimated.current = true;
-            if (prefersReduced) { el.textContent = value.toLocaleString() + suffix; return; }
-            let start = 0;
-            const duration = 1200;
-            const startTime = performance.now();
-            function tick(now: number) {
-              const progress = Math.min((now - startTime) / duration, 1);
-              const eased = 1 - Math.pow(1 - progress, 3);
-              const current = Math.floor(eased * value);
-              if (el) el.textContent = current.toLocaleString() + (progress >= 1 ? suffix : "");
-              if (progress < 1) requestAnimationFrame(tick);
-            }
-            requestAnimationFrame(tick);
-            observer.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.4 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [value, suffix]);
-
-  return <span ref={ref}>0</span>;
-}
-
 export function Hero() {
   return (
     <>
@@ -137,71 +74,28 @@ export function Hero() {
       >
         <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center">
           <div>
-            <div className="inline-flex items-center gap-2.5 font-mono text-[11.5px] font-medium tracking-[0.4px] mb-6" style={{ color: "var(--ink)" }}>
-              <span className="w-[22px] h-[2px] shrink-0 rounded-full" style={{ background: "linear-gradient(90deg, var(--brand), var(--brand-2))" }} />
-              LEARN HERE · FLY ANYWHERE
-            </div>
-
-            <h1 className="font-display font-semibold leading-[1.08] tracking-[-0.02em] max-w-[600px]" style={{ color: "var(--ink)", fontSize: "clamp(34px,4.5vw,54px)" }}>
-              Turn your global dreams into reality in{" "}
-              <span style={{ color: "var(--brand-2)" }}>easy and practical steps</span>
-            </h1>
-
-            <p className="mt-[22px] max-w-[480px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
-              Practical, self-paced video courses that walk you through studying, working, and building a career abroad — one confident step at a time.
+            <p className="font-mono text-[11.5px] tracking-[0.35em] mb-[26px]" style={{ color: "var(--brand-2)" }}>
+              FLYBRIDGE EDUCATION
             </p>
 
-            <div className="flex items-center gap-5 mt-[34px] flex-wrap">
-              <a
-                href="/programs"
-                className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
-                style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
-              >
-                Browse programs
-                <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </a>
-              <a href="#" className="inline-flex items-center gap-3 font-medium text-[15px]" style={{ color: "var(--ink)" }}>
-                <span className="w-[42px] h-[42px] rounded-full flex items-center justify-center border border-line bg-white">
-                  <svg className="w-[12px] h-[12px] ml-[2px]" viewBox="0 0 24 24" fill="var(--brand)">
-                    <path d="M6 4L20 12L6 20V4Z" />
-                  </svg>
-                </span>
-                See how it works
-              </a>
-            </div>
+            <h1 className="font-display font-medium leading-[1.12] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(32px,4vw,46px)" }}>
+              Learn the steps to study and work abroad.
+            </h1>
 
-            <div className="flex items-center gap-4 mt-[44px]">
-              <div className="flex">
-                {[
-                  { initials: "SR", gradient: "linear-gradient(135deg,#0FA968,#6B4CE0)" },
-                  { initials: "TA", gradient: "linear-gradient(135deg,#188A5D,#2FBF8F)" },
-                  { initials: "MH", gradient: "linear-gradient(135deg,#DB8A2E,#F2B25C)" },
-                  { initials: "NP", gradient: "linear-gradient(135deg,#6B4CE0,#9C7BFF)" },
-                ].map((a, i) => (
-                  <span
-                    key={a.initials}
-                    className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-[12px] font-medium text-white border-[2.5px] border-white -ml-[10px] first:ml-0"
-                    style={{ background: a.gradient }}
-                  >
-                    {a.initials}
-                  </span>
-                ))}
-              </div>
-              <div>
-                <div className="text-[14px] leading-[1.4]">
-                  <span className="font-medium" style={{ color: "var(--ink)" }}>
-                    <CountUp value={10000} />
-                  </span>{" "}
-                  <span style={{ color: "var(--body)" }}>learners preparing right now</span>
-                </div>
-                <div className="flex items-center gap-[5px] text-[12.5px] mt-[2px]" style={{ color: "#F2B25C" }}>
-                  {"★★★★★"} <span className="font-medium" style={{ color: "var(--ink)" }}>4.9</span>
-                  <span style={{ color: "var(--body)" }}> · 1,200+ reviews</span>
-                </div>
-              </div>
-            </div>
+            <p className="mt-[18px] max-w-[440px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+              Self-paced video courses that prepare you for a career beyond your borders — clear, practical, and built around real results.
+            </p>
+
+            <a
+              href="/programs"
+              className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[14px] mt-[32px]"
+              style={{ background: "var(--brand)" }}
+            >
+              Browse programs
+              <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
           </div>
 
           <div className="scene relative flex justify-center items-center h-[560px]">
@@ -283,63 +177,6 @@ export function Hero() {
           </div>
         </div>
       </section>
-
-      <div className="px-[clamp(20px,4.5vw,56px)] -mt-[10px] relative z-10">
-        <div className="max-w-[1320px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_22px_44px_-22px_rgba(18,32,67,0.3)]"
-              style={{
-                background: "rgba(255,255,255,0.55)",
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                borderColor: "rgba(18,32,67,0.08)",
-                boxShadow: "0 18px 40px -26px rgba(18,32,67,0.28)",
-              }}
-            >
-              <div
-                className="absolute -top-8 -right-6 w-[110px] h-[110px] rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(15,169,104,0.18), transparent 65%)", filter: "blur(6px)" }}
-              />
-              <span
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mb-4"
-                style={{ background: "var(--brand-soft)", boxShadow: "inset 0 0 0 1px rgba(15,169,104,0.12)" }}
-              >
-                <span style={{ color: "var(--brand-2)" }} dangerouslySetInnerHTML={{ __html: stat.svg }} />
-              </span>
-              <div className="relative">
-                {stat.value ? (
-                  <div
-                    className="font-mono font-semibold text-[22px] leading-none"
-                    style={{
-                      backgroundImage: "linear-gradient(120deg, var(--ink), var(--brand-2))",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      color: "transparent",
-                    }}
-                  >
-                    <CountUp value={stat.value} />
-                  </div>
-                ) : (
-                  <div
-                    className="font-mono font-semibold text-[15px] leading-none"
-                    style={{
-                      backgroundImage: "linear-gradient(120deg, var(--ink), var(--brand-2))",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      color: "transparent",
-                    }}
-                  >
-                    {stat.text}
-                  </div>
-                )}
-                <div className="text-[12px] mt-[6px]" style={{ color: "var(--body)" }}>{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <style>{`
         @keyframes bob {
