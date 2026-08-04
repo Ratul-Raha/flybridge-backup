@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const links = [
   { label: "Programs", href: "/programs" },
+  { label: "Seminars", href: "/seminars" },
   { label: "Partnership", href: "/partnership" },
   { label: "Resources", href: "#" },
   { label: "Success Stories", href: "/success-stories" },
@@ -13,6 +15,7 @@ const links = [
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -77,6 +80,31 @@ export function Nav() {
             </svg>
           </button>
 
+          {loading ? (
+            <div className="w-[38px] h-[38px] rounded-full" style={{ background: "var(--line)" }} />
+          ) : user ? (
+            <a
+              href="/dashboard"
+              className="flex items-center gap-2.5 rounded-full border border-line bg-white pl-[5px] pr-4 py-[5px] hover:border-brand-2 transition-all duration-250"
+              aria-label="Open dashboard"
+            >
+              {user.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt={user.name} className="w-[28px] h-[28px] rounded-full object-cover" />
+              ) : (
+                <div
+                  className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[11px] font-semibold text-white"
+                  style={{ background: "var(--brand)" }}
+                >
+                  {user.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden md:block text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                {user.name.split(" ")[0]}
+              </span>
+            </a>
+          ) : (
+            <>
           <a
             href="/login"
             className="hidden sm:inline-flex text-[14px] font-medium border border-line rounded-full px-5 py-[9px] hover:border-brand-2 hover:text-brand-2 transition-all duration-250"
@@ -95,6 +123,8 @@ export function Nav() {
               <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
+          </>
+          )}
 
           <button
             className="lg:hidden w-[22px] h-[16px] relative bg-none border-none"
@@ -126,6 +156,29 @@ export function Nav() {
             {link.label}
           </a>
         ))}
+        {user ? (
+          <a
+            href="/dashboard"
+            className="flex items-center gap-3 border border-line rounded-full pl-[6px] pr-5 py-[6px] w-fit"
+            onClick={() => setMobileOpen(false)}
+          >
+            {user.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.avatar} alt={user.name} className="w-[30px] h-[30px] rounded-full object-cover" />
+            ) : (
+              <div
+                className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[11px] font-semibold text-white"
+                style={{ background: "var(--brand)" }}
+              >
+                {user.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <span className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+              My dashboard
+            </span>
+          </a>
+        ) : (
+          <>
         <a
           href="/login"
           className="text-center text-[14px] font-medium border border-line rounded-full px-5 py-[9px]"
@@ -145,6 +198,8 @@ export function Nav() {
             <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </a>
+        </>
+        )}
       </div>
 
       {mobileOpen && (
