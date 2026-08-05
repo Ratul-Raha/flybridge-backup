@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const query = all ? {} : { dateTime: { $gte: new Date() } };
-    const seminars = await Seminar.find(query).sort({ dateTime: 1 });
+    const query = all ? {} : {};
+    const seminars = await Seminar.find(query).sort({ dateTime: -1 });
     return NextResponse.json({ seminars: await withCounts(seminars as SeminarDocLike[]) });
   } catch (error) {
     console.error("seminars GET error", error);

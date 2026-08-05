@@ -9,10 +9,13 @@ import {
   BadgeCheck,
   Check,
   Clock,
+  Maximize2,
+  Pause,
   ShieldCheck,
   ShoppingCart,
   Star,
   ThumbsUp,
+  Volume2,
   Zap,
 } from "lucide-react";
 import type { CourseDetails, Review } from "./course-data";
@@ -93,7 +96,6 @@ function CourseHero({
   savings,
   access,
   rating,
-  previewLessons,
   lessonCount,
 }: {
   badge: string;
@@ -105,7 +107,6 @@ function CourseHero({
   savings?: string;
   access?: string;
   rating?: { average: number; count: number };
-  previewLessons: { title: string; duration: string }[];
   lessonCount: number;
 }) {
   return (
@@ -211,48 +212,84 @@ function CourseHero({
         </div>
 
         <div className="relative flex justify-center items-center">
-          <div className="w-full max-w-[420px] rounded-[24px] bg-white border border-line shadow-2xl overflow-hidden" style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.35)" }}>
+          <div
+            className="w-full max-w-[430px] rounded-[24px] bg-[#101B31] overflow-hidden"
+            style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
+          >
+            {/* Player screen */}
             <div
-              className="relative h-[180px] flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(15,169,104,0.9), rgba(11,94,70,0.9))" }}
+              className="relative h-[200px]"
+              style={{
+                background:
+                  "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)",
+              }}
             >
-              <span className="w-[62px] h-[62px] rounded-full bg-white/15 border border-white/30 flex items-center justify-center text-white cursor-pointer transition-transform duration-300 hover:scale-105">
-                {play}
-              </span>
-              <span
-                className="absolute bottom-[14px] right-[16px] font-mono text-[10.5px] font-medium tracking-[0.3px] text-white/90 bg-black/25 rounded-full px-[10px] py-[4px]"
-              >
-                {lessonCount} LESSONS
-              </span>
-            </div>
-            <div className="p-[22px]">
-              <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] mb-[8px]" style={{ color: "var(--lav-ink)" }}>
-                PREVIEW THE CURRICULUM
-              </div>
-              <div className="space-y-[10px]">
-                {previewLessons.map((row, i) => (
-                  <div key={row.title} className="flex items-center gap-3 text-[12.5px]">
-                    <span
-                      className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center font-medium text-[11px] shrink-0"
-                      style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="flex-1 font-medium truncate" style={{ color: "var(--ink)" }}>
-                      {row.title}
-                    </span>
-                    <span className="font-mono text-[11px] shrink-0" style={{ color: "var(--body)" }}>
-                      {row.duration}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-[16px] pt-[14px] border-t border-line flex items-center justify-between">
-                <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-                  + {lessonCount - previewLessons.length} more lessons
+              {/* subtle glow */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 72% 24%, rgba(255,255,255,0.16), transparent 42%)",
+                }}
+              />
+              {/* top row */}
+              <div className="absolute top-0 inset-x-0 flex items-center justify-between px-[18px] pt-[16px]">
+                <span className="flex items-center gap-[7px] font-mono text-[10px] font-semibold tracking-[0.28em] text-white/80">
+                  <span className="w-[7px] h-[7px] rounded-full bg-[#FF6B5E] inline-block" />
+                  PREVIEW
                 </span>
-                <span className="font-mono text-[11px] font-medium" style={{ color: "var(--brand-2)" }}>
-                  FREE PREVIEW
+                <span className="font-mono text-[10px] font-semibold tracking-[0.18em] text-white/85 bg-white/10 border border-white/15 rounded-full px-[10px] py-[4px]">
+                  {lessonCount} LESSONS
+                </span>
+              </div>
+
+              {/* center play */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="relative flex items-center justify-center group cursor-pointer">
+                  <span className="absolute w-[92px] h-[92px] rounded-full bg-white/10" />
+                  <span className="absolute w-[68px] h-[68px] rounded-full bg-white/15 group-hover:bg-white/25 transition-colors duration-300" />
+                  <span className="relative w-[48px] h-[48px] rounded-full bg-white text-[#0B5E46] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
+                    {play}
+                  </span>
+                </span>
+              </div>
+
+              {/* center label */}
+              <div className="absolute bottom-[34px] inset-x-0 text-center">
+                <span className="text-[11.5px] font-medium text-white/75">
+                  Intro video · 01:24
+                </span>
+              </div>
+            </div>
+
+            {/* Controls bar */}
+            <div className="px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="w-[30px] h-[30px] rounded-[8px] bg-white/10 flex items-center justify-center text-white shrink-0">
+                  <Pause className="w-[13px] h-[13px]" />
+                </span>
+                <div className="flex-1">
+                  <div className="relative h-[5px] rounded-full bg-white/12 overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{
+                        width: "22%",
+                        background: "linear-gradient(90deg, #2EE6A8, #0F9D58)",
+                      }}
+                    />
+                    <span
+                      className="absolute top-1/2 -translate-y-1/2 w-[11px] h-[11px] rounded-full bg-white shadow-md"
+                      style={{ left: "22%", transform: "translate(-50%, -50%)" }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-[7px] font-mono text-[10px] text-white/60">
+                    <span>01:24</span>
+                    <span>08:12</span>
+                  </div>
+                </div>
+                <span className="text-white/70 flex items-center gap-[10px] shrink-0">
+                  <Volume2 className="w-[15px] h-[15px]" />
+                  <Maximize2 className="w-[14px] h-[14px]" />
                 </span>
               </div>
             </div>
@@ -322,7 +359,7 @@ function BuyCard({ details }: { details: CourseDetails }) {
             What&apos;s included
           </p>
           <ul className="mt-3.5 space-y-2.5">
-            {BLUEPRINT_FEATURES.map((f) => (
+            {(details.features ?? BLUEPRINT_FEATURES).map((f) => (
               <li key={f.title} className="flex items-start gap-2.5 text-[13px]">
                 <span
                   className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
@@ -413,12 +450,6 @@ export default function ProgramPage({ params }: Props) {
   if (!program) notFound();
 
   const details = courseDetails[params.id];
-  const previewLessons =
-    details?.modules[0]?.lessons.slice(0, 3) ?? [
-      { title: "ইংরেজি উচ্চারণের মূল ধ্বনি", duration: "08:12" },
-      { title: "Stress ও intonation বোঝা", duration: "09:04" },
-      { title: "Common vowel sounds", duration: "10:21" },
-    ];
   const lessonCount = details
     ? details.modules.reduce((n, m) => n + m.lessons.length, 0)
     : 30;
@@ -441,7 +472,6 @@ export default function ProgramPage({ params }: Props) {
             ? { average: details.rating.average, count: details.rating.count }
             : undefined
         }
-        previewLessons={previewLessons}
         lessonCount={lessonCount}
       />
 
@@ -498,10 +528,13 @@ export default function ProgramPage({ params }: Props) {
                   <SectionHeading
                     eyebrow="WHAT'S INCLUDED"
                     title="Everything in this program"
-                    desc="From the first video to your approval — every resource is part of the same package."
+                    desc={
+                      details.featuresDesc ??
+                      "From the first video to your approval — every resource is part of the same package."
+                    }
                   />
                   <div className="rounded-2xl border border-line bg-white overflow-hidden">
-                    {BLUEPRINT_FEATURES.map(({ icon: Icon, title, desc }, i) => (
+                    {(details.features ?? BLUEPRINT_FEATURES).map(({ icon: Icon, title, desc }, i) => (
                       <div
                         key={title}
                         className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
@@ -535,7 +568,7 @@ export default function ProgramPage({ params }: Props) {
                   <div className="rounded-2xl border border-line bg-white overflow-hidden">
                     {details.outcomes.map((o, i) => (
                       <div
-                        key={o}
+                        key={o.title}
                         className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
                       >
                         <span
@@ -544,9 +577,16 @@ export default function ProgramPage({ params }: Props) {
                         >
                           <Check className="w-[12px] h-[12px]" strokeWidth={3} />
                         </span>
-                        <span className="text-[14px] font-medium leading-[1.5]" style={{ color: "var(--ink)" }}>
-                          {o}
-                        </span>
+                        <div>
+                          <div className="text-[14px] font-medium leading-[1.5]" style={{ color: "var(--ink)" }}>
+                            {o.title}
+                          </div>
+                          {o.desc && (
+                            <div className="text-[13px] mt-[3px] leading-[1.6]" style={{ color: "var(--body)" }}>
+                              {o.desc}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -557,10 +597,13 @@ export default function ProgramPage({ params }: Props) {
                   <SectionHeading
                     eyebrow="CURRICULUM"
                     title="What is inside"
-                    desc="Everything you need to prepare with confidence, in one place."
+                    desc={
+                      details.highlightsDesc ??
+                      "Everything you need to prepare with confidence, in one place."
+                    }
                   />
                   <div className="rounded-2xl border border-line bg-white overflow-hidden">
-                    {[
+                    {(details.highlights ?? [
                       {
                         title: "10 Videos",
                         sub: "Step-by-step video lessons, at your own pace",
@@ -573,7 +616,7 @@ export default function ProgramPage({ params }: Props) {
                         title: "Resources",
                         sub: "Templates, checklists & practical tools included",
                       },
-                    ].map((item, i) => (
+                    ]).map((item, i) => (
                       <div
                         key={item.title}
                         className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 
 type Seminar = {
@@ -122,6 +123,94 @@ export function SeminarList() {
     );
   }
 
+  const now = new Date();
+  const upcoming = seminars.filter((s) => new Date(s.dateTime) >= now);
+  const recent = seminars.filter((s) => new Date(s.dateTime) < now);
+
+  const renderCard = (s: Seminar, isUpcoming: boolean) => (
+    <article
+      key={s.id}
+      className="rounded-[24px] border bg-white overflow-hidden flex flex-col"
+      style={{ borderColor: "var(--line)" }}
+    >
+      {s.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={s.image} alt={s.title} className="w-full h-[170px] object-cover" />
+      ) : (
+        <div
+          className="w-full h-[170px] flex items-center justify-center font-display text-[15px] text-white"
+          style={{
+            background:
+              s.type === "paid"
+                ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
+                : "linear-gradient(135deg,#0FA968,#18A97A)",
+          }}
+        >
+          FlyBridge Seminar
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 p-6 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
+            style={
+              s.type === "paid"
+                ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
+                : { background: "var(--brand-soft)", color: "var(--brand)" }
+            }
+          >
+            {s.type === "paid" ? `Paid${s.price ? ` · $${s.price}` : ""}` : "Free"}
+          </span>
+          <span
+            className="font-mono text-[10px] uppercase tracking-[0.08em]"
+            style={{ color: isUpcoming ? "var(--brand)" : "var(--body)" }}
+          >
+            {isUpcoming ? "Upcoming" : "Completed"}
+          </span>
+        </div>
+
+        <h3 className="font-display text-[18px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+          {s.title}
+        </h3>
+
+        <p className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
+          📅 {formatDateTime(s.dateTime)}
+        </p>
+
+        {s.description && (
+          <p className="text-[13.5px] leading-[1.6] line-clamp-3" style={{ color: "var(--body)" }}>
+            {s.description}
+          </p>
+        )}
+
+        <div className="mt-auto pt-3 flex items-center justify-between">
+          <span
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
+            style={{ color: "var(--ink)" }}
+          >
+            <Users className="w-[14px] h-[14px]" style={{ color: "var(--brand)" }} />
+            {s.registrations} joined
+          </span>
+          {isUpcoming ? (
+            <button
+              type="button"
+              onClick={() => openRegister(s)}
+              className="rounded-full text-white text-[13px] font-medium px-5 py-[9px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+              style={{ background: "var(--brand)" }}
+            >
+              Register with Gmail
+            </button>
+          ) : (
+            <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
+              Session ended
+            </span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+
   return (
     <div>
       {error && (
@@ -135,83 +224,52 @@ export function SeminarList() {
 
       {seminars.length === 0 ? (
         <p className="text-[14px] py-16 text-center" style={{ color: "var(--body)" }}>
-          No upcoming seminars right now. Check back soon!
+          No seminars right now. Check back soon!
         </p>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-[22px]">
-          {seminars.map((s) => (
-            <article
-              key={s.id}
-              className="rounded-[24px] border bg-white overflow-hidden flex flex-col"
-              style={{ borderColor: "var(--line)" }}
-            >
-              {s.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.image} alt={s.title} className="w-full h-[170px] object-cover" />
-              ) : (
-                <div
-                  className="w-full h-[170px] flex items-center justify-center font-display text-[15px] text-white"
-                  style={{
-                    background:
-                      s.type === "paid"
-                        ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
-                        : "linear-gradient(135deg,#0FA968,#18A97A)",
-                  }}
-                >
-                  FlyBridge Seminar
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3 p-6 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                    style={
-                      s.type === "paid"
-                        ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-                        : { background: "var(--brand-soft)", color: "var(--brand)" }
-                    }
+        <>
+          {upcoming.length > 0 && (
+            <section className="mb-16">
+              <div className="flex items-end justify-between flex-wrap gap-4 mb-7">
+                <div>
+                  <h2
+                    className="font-display font-semibold tracking-[-0.01em]"
+                    style={{ fontSize: "clamp(22px,2.4vw,28px)", color: "var(--ink)" }}
                   >
-                    {s.type === "paid" ? `Paid${s.price ? ` · $${s.price}` : ""}` : "Free"}
-                  </span>
-                  {s.duration && (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                      {s.duration}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="font-display text-[18px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                  {s.title}
-                </h3>
-
-                <p className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-                  📅 {formatDateTime(s.dateTime)}
-                </p>
-
-                {s.description && (
-                  <p className="text-[13.5px] leading-[1.6] line-clamp-3" style={{ color: "var(--body)" }}>
-                    {s.description}
+                    Upcoming seminars
+                  </h2>
+                  <p className="text-[14px] mt-1.5" style={{ color: "var(--body)" }}>
+                    Book your spot before the seats fill up.
                   </p>
-                )}
-
-                <div className="mt-auto pt-3 flex items-center justify-between">
-                  <span className="text-[12px]" style={{ color: "var(--body)" }}>
-                    {s.registrations} registered
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => openRegister(s)}
-                    className="rounded-full text-white text-[13px] font-medium px-5 py-[9px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
-                    style={{ background: "var(--brand)" }}
-                  >
-                    Register with Gmail
-                  </button>
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-[22px]">
+                {upcoming.map((s) => renderCard(s, true))}
+              </div>
+            </section>
+          )}
+
+          {recent.length > 0 && (
+            <section>
+              <div className="flex items-end justify-between flex-wrap gap-4 mb-7">
+                <div>
+                  <h2
+                    className="font-display font-semibold tracking-[-0.01em]"
+                    style={{ fontSize: "clamp(22px,2.4vw,28px)", color: "var(--ink)" }}
+                  >
+                    Recent seminars
+                  </h2>
+                  <p className="text-[14px] mt-1.5" style={{ color: "var(--body)" }}>
+                    Past sessions — see who joined and what was covered.
+                  </p>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-[22px]">
+                {recent.map((s) => renderCard(s, false))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {selected && (

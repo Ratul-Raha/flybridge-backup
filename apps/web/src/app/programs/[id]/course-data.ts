@@ -1,3 +1,6 @@
+import type { LucideIcon } from "lucide-react";
+import { Bot, Brain, FileText, MessageCircle, Mic, Users } from "lucide-react";
+
 export type Lesson = {
   title: string;
   duration: string;
@@ -30,6 +33,22 @@ export type RatingSummary = {
   distribution: number[];
 };
 
+export type CourseOutcome = {
+  title: string;
+  desc?: string;
+};
+
+export type CourseFeature = {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+};
+
+export type Highlight = {
+  title: string;
+  sub: string;
+};
+
 export type CourseDetails = {
   slug: string;
   badge: string;
@@ -46,7 +65,11 @@ export type CourseDetails = {
   rating?: RatingSummary;
   reviews?: Review[];
   stats: { value: string; label: string }[];
-  outcomes: string[];
+  outcomes: CourseOutcome[];
+  features?: CourseFeature[];
+  featuresDesc?: string;
+  highlights?: Highlight[];
+  highlightsDesc?: string;
   modules: Module[];
   pdfs: PdfResource[];
   certificate: { title: string; desc: string };
@@ -127,12 +150,12 @@ export const courseDetails: Record<string, CourseDetails> = {
       { value: "৬", label: "রিসোর্স ও টুলস" },
     ],
     outcomes: [
-      "Follow a clear roadmap — from preparation to visa approval",
-      "Prepare your complete application with step-by-step video guidance",
-      "Generate a perfect, personal SOP in minutes with the AI generator",
-      "Save time with ready-made document templates & practical resources",
-      "Get direct answers in live expert Q&A sessions",
-      "Have live support beside you at every step",
+      { title: "Follow a clear roadmap — from preparation to visa approval" },
+      { title: "Prepare your complete application with step-by-step video guidance" },
+      { title: "Generate a perfect, personal SOP in minutes with the AI generator" },
+      { title: "Save time with ready-made document templates & practical resources" },
+      { title: "Get direct answers in live expert Q&A sessions" },
+      { title: "Have live support beside you at every step" },
     ],
     modules: [
       {
@@ -234,8 +257,8 @@ export const courseDetails: Record<string, CourseDetails> = {
     slug: "obocheton-mone-ilish-level-01",
     badge: "ENGLISH",
     title: "অবচেতন মনে ইলিশ Level 01",
-    subtitle: "Spoken English for Success",
-    desc: "Practical, confident communication for everyday and interviews.",
+    subtitle: "Subconscious English Fluency Program",
+    desc: "A practical 30-lesson English course on pronunciation, everyday small talk, workplace communication, interviews and real listening practice — taught in বাংলা + English.",
     level: "Beginner friendly",
     language: "বাংলা + English",
     pace: "Self-paced · 30 lessons",
@@ -244,11 +267,72 @@ export const courseDetails: Record<string, CourseDetails> = {
       { value: "3", label: "PDF resources" },
       { value: "1", label: "Completion certificate" },
     ],
+    featuresDesc:
+      "প্রথম ভিডিও থেকে সাবলীলভাবে ইংরেজিতে কথা বলা — প্রতিটি রিসোর্স একই প্যাকেজের অন্তর্ভুক্ত।",
+    features: [
+      {
+        icon: Brain,
+        title: "Subconscious Method (Step-by-Step Video Guide)",
+        desc: "গ্রামার ও অনুবাদের চিন্তা ছাড়া অবচেতন মনে স্বাভাবিকভাবে ইংরেজি চিন্তা ও আয়ত্ত করার সহজ ও কার্যকরী নির্দেশিকা।",
+      },
+      {
+        icon: Mic,
+        title: "Premium Resources for Speaking",
+        desc: "কথা বলার জড়তা কাটাতে রেডি-মেড রিয়েল-লাইফ কনভারসেশন স্ক্রিপ্ট, ডেইলি ফ্রেজবুক এবং অডিও লিসেনিং ড্রিল।",
+      },
+      {
+        icon: Bot,
+        title: "AI Practice Partner",
+        desc: "যেকোনো সময় স্পোকেন প্র্যাকটিস ও তাৎক্ষণিক উচ্চারণ শোধরাতে আপনার ২৪/৭ ভার্চুয়াল প্র্যাকটিস পার্টনার।",
+      },
+      {
+        icon: FileText,
+        title: "PDF Books & Workbooks",
+        desc: "পড়াশোনা সহজ ও গোছানো করতে গুরুত্বপূর্ণ স্ট্রাকচার, ভোকাবুলারি ও ওয়ার্কবুকের কমপ্লিট পিডিএফ সংগ্রহ।",
+      },
+      {
+        icon: MessageCircle,
+        title: "Live Q&A & Speaking Sessions",
+        desc: "সরাসরি ইন্সট্রাক্টরের সাথে কথা বলার প্র্যাকটিস, ভুল শুধরে নেওয়া এবং প্রশ্ন-উত্তরের বিশেষ লাইভ সেশন।",
+      },
+      {
+        icon: Users,
+        title: "Live Support & Community",
+        desc: "প্র্যাকটিসের সময় যেকোনো সমস্যা সমাধান ও সাপোর্ট দিতে একটি একটিভ লার্নিং কম্যুনিটি।",
+      },
+    ],
     outcomes: [
-      "Speak with confidence in everyday conversations",
-      "Handle job interviews with clear, structured answers",
-      "Sound more natural with the right stress and rhythm",
-      "Understand fast speech and respond without hesitation",
+      {
+        title: "Think directly in English without translating in your head",
+        desc: "বাংলা থেকে মনে মনে অনুবাদ না করে একদম সাবলীল ও স্বতঃস্ফূর্তভাবে ইংরেজিতে কথা বলতে পারবেন।",
+      },
+      {
+        title: "Speak English naturally without fearing grammar rules",
+        desc: "গ্রামারের ভুল নিয়ে দুশ্চিন্তা না করে অবচেতন মনে সাবলীল এবং অটোমেটিক ফ্লোতে কথা বলবেন।",
+      },
+      {
+        title: "Understand native speakers and fast speech effortlessly",
+        desc: "নেটিভ স্পিকারদের দ্রুত ইংরেজি শোনামাত্র বুঝতে পারবেন এবং কোনো দ্বিধা ছাড়াই উত্তর দিতে পারবেন।",
+      },
+      {
+        title: "Overcome hesitation and boost public speaking confidence",
+        desc: "কথা বলার ভয় ও জড়তা কাটিয়ে যেকোনো রিয়েল-লাইফ কনভারসেশন ও প্রেজেন্টেশনে আত্মবিশ্বাসী থাকবেন।",
+      },
+    ],
+    highlightsDesc: "Everything you need to master English fluency with confidence, in one place.",
+    highlights: [
+      {
+        title: "50 Video Lessons",
+        sub: "Step-by-step practical video lessons to master subconscious fluency at your own pace",
+      },
+      {
+        title: "Frequent Live Q&A Sessions",
+        sub: "Ask questions directly to experts, clear your doubts, and practice live",
+      },
+      {
+        title: "Practical Resources & PDFs",
+        sub: "Conversation templates, speaking scripts, audio drills & practical workbooks included",
+      },
     ],
     modules: [
       {
