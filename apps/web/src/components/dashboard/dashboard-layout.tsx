@@ -3,19 +3,24 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import {
   LayoutDashboard,
-  UserCircle2,
   CalendarDays,
   Users,
+  BookOpen,
+  FolderOpen,
+  Settings as SettingsIcon,
   LogOut,
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { Avatar } from "@/components/dashboard/avatar";
+import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   admin: { bg: "rgba(111,76,224,0.12)", fg: "#6B4CE0", label: "Administrator" },
@@ -23,19 +28,85 @@ const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   user: { bg: "var(--brand-soft)", fg: "var(--brand)", label: "Member" },
 };
 
+type NavLink = {
+  kind: "link";
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  active: boolean;
+};
+
+type NavGroup = {
+  kind: "group";
+  label: string;
+  icon: LucideIcon;
+  children: { label: string; href: string; active: boolean }[];
+};
+
+type NavItem = NavLink | NavGroup;
+
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const isMobile = useIsMobile();
 
   const nav = useMemo(() => {
     if (!user) return [];
-    const items: { label: string; href: string; icon: typeof LayoutDashboard; active: boolean }[] = [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
-      { label: "My Profile", href: "/dashboard/profile", icon: UserCircle2, active: pathname === "/dashboard/profile" },
+    if (user.accountType === "user") {
+      return [
+        {
+          kind: "link",
+          label: "Dashboard",
+          href: "/dashboard",
+          icon: LayoutDashboard,
+          active: pathname === "/dashboard",
+        },
+        {
+          kind: "group",
+          label: "Seminars",
+          icon: CalendarDays,
+          children: [
+            { label: "All seminars", href: "/dashboard/seminars", active: pathname === "/dashboard/seminars" },
+            { label: "My seminars", href: "/dashboard/seminars/mine", active: pathname === "/dashboard/seminars/mine" },
+          ],
+        },
+        {
+          kind: "group",
+          label: "Courses",
+          icon: BookOpen,
+          children: [
+            { label: "All courses", href: "/dashboard/courses", active: pathname === "/dashboard/courses" },
+            { label: "My courses", href: "/dashboard/courses/mine", active: pathname === "/dashboard/courses/mine" },
+          ],
+        },
+        {
+          kind: "group",
+          label: "Resources",
+          icon: FolderOpen,
+          children: [
+            { label: "All resources", href: "/dashboard/resources", active: pathname === "/dashboard/resources" },
+            { label: "My resources", href: "/dashboard/resources/mine", active: pathname === "/dashboard/resources/mine" },
+          ],
+        },
+        {
+          kind: "link",
+          label: "Settings",
+          href: "/dashboard/settings",
+          icon: SettingsIcon,
+          active: pathname === "/dashboard/settings",
+        },
+      ] as NavItem[];
+    }
+
+    const items: NavItem[] = [
+      { kind: "link", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
+      { kind: "link", label: "Settings", href: "/dashboard/settings", icon: SettingsIcon, active: pathname === "/dashboard/settings" },
     ];
     if (user.accountType === "moderator" || user.accountType === "admin") {
       items.push({
+        kind: "link",
         label: "Seminars",
         href: "/dashboard/seminars",
         icon: CalendarDays,
@@ -44,6 +115,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     }
     if (user.accountType === "admin") {
       items.push({
+        kind: "link",
         label: "Users",
         href: "/dashboard/admin",
         icon: Users,
@@ -54,11 +126,94 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   }, [user, pathname]);
 
   const pageTitle = useMemo(() => {
-    const active = nav.find((n) => n.active);
-    return active?.label ?? "Dashboard";
+    for (const item of nav) {
+      if (item.kind === "link" && item.active) return item.label;
+      if (item.kind === "group") {
+        const child = item.children.find((c) => c.active);
+        if (child) return child.label;
+      }
+    }
+    return "Dashboard";
   }, [nav]);
 
   const roleStyle = ROLE_STYLES[user?.accountType ?? "user"] ?? ROLE_STYLES.user;
+
+  if (isMobile && user?.accountType === "user") {
+    return <MobileUserApp />;
+  }
+
+  const toggleGroup = (label: string) =>
+    setOpenGroups((prev) => ({ ...prev, [label]: !(prev[label] ?? false) }));
+
+  const renderItem = (item: NavItem) => {
+    if (item.kind === "link") {
+      const Icon = item.icon;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[13.5px] font-medium transition-all duration-200"
+          style={
+            item.active
+              ? { background: "var(--brand-soft)", color: "var(--brand)" }
+              : { color: "var(--body)" }
+          }
+        >
+          <Icon size={17} strokeWidth={item.active ? 2.2 : 1.8} />
+          {item.label}
+          {item.active && (
+            <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+          )}
+        </Link>
+      );
+    }
+
+    const Icon = item.icon;
+    const open = openGroups[item.label] ?? item.children.some((c) => c.active);
+    return (
+      <div key={item.label} className="flex flex-col gap-0.5">
+        <button
+          type="button"
+          onClick={() => toggleGroup(item.label)}
+          className="flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[13.5px] font-medium transition-all duration-200"
+          style={
+            open ? { background: "var(--brand-soft)", color: "var(--brand)" } : { color: "var(--body)" }
+          }
+        >
+          <Icon size={17} strokeWidth={open ? 2.2 : 1.8} />
+          {item.label}
+          {open ? (
+            <ChevronDown size={14} className="ml-auto" />
+          ) : (
+            <ChevronRight size={14} className="ml-auto" />
+          )}
+        </button>
+        {open && (
+          <div className="flex flex-col gap-0.5 ml-[22px] border-l pl-3" style={{ borderColor: "var(--line)" }}>
+            {item.children.map((child) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg px-3 py-[8px] text-[13px] font-medium transition-all duration-200"
+                style={
+                  child.active
+                    ? { background: "var(--brand-soft)", color: "var(--brand)" }
+                    : { color: "var(--body)" }
+                }
+              >
+                {child.label}
+                {child.active && (
+                  <span className="ml-auto inline-block w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const sidebarContent = (
     <>
@@ -87,30 +242,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] px-3 mb-2" style={{ color: "#A6ADC0" }}>
           Menu
         </p>
-        <nav className="flex flex-col gap-1">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[13.5px] font-medium transition-all duration-200"
-                style={
-                  item.active
-                    ? { background: "var(--brand-soft)", color: "var(--brand)" }
-                    : { color: "var(--body)" }
-                }
-              >
-                <Icon size={17} strokeWidth={item.active ? 2.2 : 1.8} />
-                {item.label}
-                {item.active && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        <nav className="flex flex-col gap-1">{nav.map(renderItem)}</nav>
       </div>
 
       <div className="mt-auto px-4 pb-6">
@@ -194,7 +326,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   >
                     {user.accountType}
                   </span>
-                  <Link href="/dashboard/profile" aria-label="My profile">
+                  <Link href="/dashboard/settings" aria-label="Settings">
                     <span className="block rounded-full border-2" style={{ borderColor: "var(--line)" }}>
                       <Avatar name={user.name} src={user.avatar} size={36} />
                     </span>

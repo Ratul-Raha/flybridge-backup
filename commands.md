@@ -43,5 +43,6 @@ Atlas blocks unknown IPs. Add your current IP:
 - Google sign-in uses `signInWithRedirect` (avoids popup/COOP issues in Chrome)
 - Public signups always create `accountType: user` / `subscription: free`
 - Roles: `admin` / `moderator` / `user` — see `apps/web/src/lib/roles.ts`
-- Dashboards: `/dashboard/profile` (all), `/dashboard/moderator` (moderator+), `/dashboard/admin` (admin only)
+- Dashboards: `/dashboard` (general user home), `/dashboard/seminars` (all / manage), `/dashboard/seminars/mine`, `/dashboard/courses`, `/dashboard/courses/mine`, `/dashboard/resources`, `/dashboard/resources/mine`, `/dashboard/settings` (profile settings), `/dashboard/moderator` (moderator+), `/dashboard/admin` (admin only)
+- General user dashboard has web and mobile versions; mobile renders as a bottom-tab app shell (`apps/web/src/components/dashboard/user/mobile-user-app.tsx`)
 - Admin can change roles/plans via the admin dashboard users table (writes directly to the `users` collection)

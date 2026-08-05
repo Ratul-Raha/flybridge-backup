@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/auth/session";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { DashboardHome } from "@/components/dashboard/user/dashboard-home";
 
 export default async function DashboardIndex() {
   const session = await readSession();
@@ -7,5 +9,14 @@ export default async function DashboardIndex() {
 
   if (session.role === "admin") redirect("/dashboard/admin");
   if (session.role === "moderator") redirect("/dashboard/seminars");
-  redirect("/dashboard/profile");
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Dashboard"
+        subtitle="Your FlyBridge learning overview."
+      />
+      <DashboardHome />
+    </div>
+  );
 }
