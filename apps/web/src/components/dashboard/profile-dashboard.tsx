@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Avatar } from "@/components/dashboard/avatar";
 
 const ADDRESS_FIELDS = [
   { key: "street", label: "Street address", placeholder: "123 Main Street" },
@@ -58,34 +60,16 @@ export function ProfileDashboard() {
     "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30" +
     " hover:border-brand-2/60";
 
-  return (
-    <div className="flex flex-col gap-7">
-        <div>
-          <h1 className="font-display text-[24px] font-semibold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-            My Profile
-          </h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--body)" }}>
-            Manage your personal information and account details.
-          </p>
-        </div>
+return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="My Profile"
+        subtitle="Manage your personal information and account details."
+      />
 
         <div className="grid md:grid-cols-[300px_1fr] gap-7">
           <div className="flex flex-col items-center gap-4 rounded-[24px] border bg-white p-7 text-center h-fit" style={{ borderColor: "var(--line)" }}>
-            {form.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={form.avatar}
-                alt={form.name}
-                className="w-[92px] h-[92px] rounded-full object-cover"
-              />
-            ) : (
-              <div
-                className="w-[92px] h-[92px] rounded-full flex items-center justify-center text-[26px] font-semibold text-white"
-                style={{ background: "var(--brand)" }}
-              >
-                {(form.name || "?").slice(0, 2).toUpperCase()}
-              </div>
-            )}
+            <Avatar name={form.name || "?"} src={form.avatar || null} size={92} />
             <div>
               <p className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
                 {form.name || "Your name"}

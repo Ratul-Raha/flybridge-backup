@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
 import "@fontsource-variable/caveat";
-import { Footer } from "@/components/footer";
+import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
@@ -23,7 +23,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           {children}
-          <Footer />
+          <FooterWithRoutes />
         </AuthProvider>
       </body>
     </html>

@@ -21,7 +21,19 @@ export async function GET(
 
     const registrations = await SeminarRegistration.find({
       seminar: seminar._id,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate("user", "name avatar email");
+
+    const avatarByEmail = new Map<string, string | null>(
+      registrations
+        .map((r) => r.user)
+        .filter((u): u is NonNullable<typeof u> => Boolean(u))
+        .map((u) => {
+          const raw = u as { email?: string; avatar?: string | null };
+          return [String(raw.email ?? "").toLowerCase(), raw.avatar ?? null];
+        })
+    );
 
     return NextResponse.json({
       seminar: {
@@ -34,6 +46,7 @@ export async function GET(
         name: r.name,
         phone: r.phone ?? null,
         email: r.email,
+        avatar: avatarByEmail.get(r.email.toLowerCase()) ?? null,
         registeredAt: r.createdAt,
       })),
     });

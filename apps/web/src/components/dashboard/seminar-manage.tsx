@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Avatar } from "@/components/dashboard/avatar";
 
 type Seminar = {
   id: string;
@@ -21,6 +23,7 @@ type Registration = {
   name: string;
   phone: string | null;
   email: string;
+  avatar: string | null;
   registeredAt: string;
 };
 
@@ -138,25 +141,21 @@ export function SeminarManage() {
   if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
 
   return (
-    <div className="flex flex-col gap-7">
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="font-display text-[24px] font-semibold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-            Seminars
-          </h1>
-          <p className="text-[13.5px] mt-1" style={{ color: "var(--body)" }}>
-            Create and manage seminars, and view who registered.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="rounded-full text-white text-[13.5px] font-medium px-6 py-[10px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
-          style={{ background: "var(--brand)" }}
-        >
-          + New seminar
-        </button>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Seminars"
+        subtitle="Create and manage seminars, and view who registered."
+        action={
+          <button
+            type="button"
+            onClick={openCreate}
+            className="rounded-full text-white text-[13.5px] font-medium px-6 py-[10px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+            style={{ background: "var(--brand)" }}
+          >
+            + New seminar
+          </button>
+        }
+      />
 
       {error && (
         <p className="text-[13px]" style={{ color: "#C0392B" }}>
@@ -429,19 +428,24 @@ export function SeminarManage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left min-w-[520px]">
                       <thead>
-                        <tr className="text-[11px] font-mono uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
-                          <th className="px-5 py-3 font-medium">Name</th>
-                          <th className="px-4 py-3 font-medium">Phone</th>
-                          <th className="px-4 py-3 font-medium">Email</th>
-                          <th className="px-5 py-3 font-medium">Registered</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {registrations.map((r) => (
-                          <tr key={r.id} className="border-t text-[13.5px]" style={{ borderColor: "var(--line)" }}>
-                            <td className="px-5 py-3 font-medium" style={{ color: "var(--ink)" }}>
-                              {r.name}
-                            </td>
+                          <tr className="text-[11px] font-mono uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
+                            <th className="px-5 py-3 font-medium">Name</th>
+                            <th className="px-4 py-3 font-medium">Phone</th>
+                            <th className="px-4 py-3 font-medium">Email</th>
+                            <th className="px-5 py-3 font-medium">Registered</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {registrations.map((r) => (
+                            <tr key={r.id} className="border-t text-[13.5px]" style={{ borderColor: "var(--line)" }}>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                  <Avatar name={r.name} src={r.avatar} size={32} />
+                                  <span className="font-medium" style={{ color: "var(--ink)" }}>
+                                    {r.name}
+                                  </span>
+                                </div>
+                              </td>
                             <td className="px-4 py-3" style={{ color: "var(--body)" }}>
                               {r.phone ?? "—"}
                             </td>
