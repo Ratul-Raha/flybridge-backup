@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
+import { sendSeminarRegistrationEmail } from "@/lib/email";
 import type { SubscriptionType } from "@/lib/roles";
 
 type RegistrationBody = {
@@ -25,9 +26,16 @@ export async function POST(
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
 
+    const phone = body.phone?.trim() ?? "";
+    if (!phone) {
+      return NextResponse.json(
+        { error: "Phone number is required" },
+        { status: 400 }
+      );
+    }
+
     let email = body.email?.toLowerCase().trim() ?? "";
     let name = body.name?.trim() ?? "";
-    let phone = body.phone?.trim() ?? "";
     let user = null;
 
     if (body.idToken) {
@@ -41,11 +49,10 @@ export async function POST(
           );
         }
         name = claims.name?.trim() ?? name;
-        phone = claims.phone_number ?? phone;
         user = await User.findOne({ email });
         if (user) {
-          if (!user.name && name) user.name = name;
-          if (!user.phone && phone) user.phone = phone;
+          user.name = name || user.name;
+          user.phone = phone || user.phone;
           if (!user.avatar && claims.picture) user.avatar = claims.picture;
           await user.save();
         } else {
@@ -54,7 +61,7 @@ export async function POST(
             name: name || email.split("@")[0],
             email,
             avatar: claims.picture,
-            phone: phone || undefined,
+            phone,
             accountType: "user",
             subscription: "free" as SubscriptionType,
           });
@@ -71,16 +78,14 @@ export async function POST(
       }
       user = await User.findOne({ email });
       if (user) {
-        if (name && (user.name !== name || (!user.phone && phone))) {
-          user.name = name || user.name;
-          if (phone) user.phone = phone;
-          await user.save();
-        }
+        if (name) user.name = name || user.name;
+        user.phone = phone || user.phone;
+        await user.save();
       } else {
         user = await User.create({
           name: name || email.split("@")[0],
           email,
-          phone: phone || undefined,
+          phone,
           accountType: "user",
           subscription: "free" as SubscriptionType,
         });
@@ -100,11 +105,28 @@ export async function POST(
       seminar: seminar._id,
       user: user._id,
       name: name || user.name,
-      phone: phone || user.phone || undefined,
+      phone,
       email,
     });
 
-    return NextResponse.json({ ok: true, registration }, { status: 201 });
+    const emailResult = await sendSeminarRegistrationEmail(
+      { name: name || user.name, email, phone },
+      {
+        title: seminar.title,
+        description: seminar.description,
+        dateTime: seminar.dateTime,
+        duration: seminar.duration,
+        type: seminar.type,
+        price: seminar.price,
+        url: seminar.url,
+        image: seminar.image,
+      }
+    );
+
+    return NextResponse.json(
+      { ok: true, registration, emailSent: emailResult.ok },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("seminar register error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

@@ -35,6 +35,8 @@ export function SeminarList() {
   const [error, setError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Seminar | null>(null);
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -57,25 +59,33 @@ export function SeminarList() {
   const openRegister = (s: Seminar) => {
     setError(null);
     setMessage(null);
+    setPhone(user?.phone ?? "");
+    setPhoneError(null);
     setSelected(s);
   };
 
   const register = useCallback(
     async (email: string) => {
       if (!selected) return false;
+      const value = phone.trim();
+      if (!value) {
+        setPhoneError("Phone number is required");
+        return false;
+      }
+      setPhoneError(null);
       setSubmitting(true);
       try {
         const res = await fetch(`/api/seminars/${selected.id}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, phone: value }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Registration failed");
         setMessage(
           data.alreadyRegistered
             ? `You're already registered for "${selected.title}".`
-            : `You're registered for "${selected.title}". Check the event link at the scheduled time.`
+            : `You're registered for "${selected.title}". A confirmation email is on its way to ${email}.`
         );
         load();
         return true;
@@ -86,7 +96,7 @@ export function SeminarList() {
         setSubmitting(false);
       }
     },
-    [selected, load]
+    [selected, phone, load]
   );
 
   const registerWithGoogle = async () => {
@@ -233,6 +243,28 @@ export function SeminarList() {
                     {error}
                   </p>
                 )}
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Phone number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+234 800 000 0000"
+                    className="w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 hover:border-brand-2/60"
+                    style={{
+                      borderColor: phoneError ? "rgba(192,57,43,0.5)" : "var(--line)",
+                      color: "var(--ink)",
+                    }}
+                  />
+                  {phoneError && (
+                    <p className="text-[12px]" style={{ color: "#C0392B" }}>
+                      {phoneError}
+                    </p>
+                  )}
+                </div>
 
                 <div
                   className="rounded-xl px-4 py-3 text-[12.5px] leading-[1.6]"
