@@ -1,15 +1,36 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Download, FileText, FileImage, Video, Music, File as FileIcon, Star, type LucideIcon } from "lucide-react";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
-import { ResourceCard, type ResourceCardData } from "./resource-card";
+import { ResourceCard, categoryGradient, formatFileSize, type ResourceCardData } from "./resource-card";
 import { ScreenError, ScreenLoading } from "./ui";
 
 type AccessFilter = "all" | "free" | "paid";
 
+const TYPE_ICONS: Record<string, LucideIcon> = {
+  pdf: FileText,
+  image: FileImage,
+  video: Video,
+  audio: Music,
+  other: FileIcon,
+};
+
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function fileHref(resource: ResourceCardData) {
+  if (resource.fileType === "image" || resource.fileType === "video") return resource.fileUrl;
+  return `/api/resources/${resource.id}/file`;
+}
 
 export function AllResources() {
   const [resources, setResources] = useState<ResourceCardData[]>([]);
@@ -52,41 +73,75 @@ export function AllResources() {
   if (loading) return <ScreenLoading label="Loading resources…" />;
   if (error) return <ScreenError message={error} />;
 
-  const featured = visible.filter((r) => r.featured);
-  const rest = visible.filter((r) => !r.featured);
-
-  const renderSection = (title: string, subtitle: string, items: ResourceCardData[]) => (
-    <section>
-      <div className="mb-4">
-        <h2 className="font-display text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
-          {title}
-        </h2>
-        <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
-          {subtitle}
-        </p>
-      </div>
-      {items.length === 0 ? (
-        <p className="text-[13.5px] py-8" style={{ color: "var(--body)" }}>
-          Nothing here yet.
-        </p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
-          {items.map((r) => (
-            <ResourceCard key={r.id} resource={r} />
-          ))}
-        </div>
-      )}
-    </section>
-  );
+  const featured = visible.find((r) => r.featured);
+  const rest = visible.filter((r) => !(r.featured && r.id === featured?.id));
+  const Icon = featured ? (TYPE_ICONS[featured.fileType] ?? FileIcon) : FileIcon;
 
   return (
     <div className="flex flex-col gap-6">
       {resources.length === 0 ? (
-        <p className="text-[14px] py-12 text-center" style={{ color: "var(--body)" }}>
-          No resources right now. Check back soon!
-        </p>
+        <div
+          className="rounded-[16px] border bg-white px-6 py-14 flex flex-col items-center text-center gap-2.5"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <p className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+            No resources right now
+          </p>
+          <p className="text-[13.5px] max-w-[360px]" style={{ color: "var(--body)" }}>
+            Guides, templates and toolkits are being prepared. Check back soon!
+          </p>
+        </div>
       ) : (
         <>
+          {/* Featured hero */}
+          {featured && (
+            <section
+              className="relative overflow-hidden rounded-[16px] px-6 py-7 md:px-8 md:py-8 text-white"
+              style={{ background: categoryGradient(featured.category) }}
+            >
+              <Icon
+                size={180}
+                strokeWidth={1}
+                className="absolute -right-6 -bottom-10 opacity-15"
+                style={{ transform: "rotate(-8deg)" }}
+              />
+              <div className="relative flex flex-col items-start gap-3 max-w-[620px]">
+                <span className="flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[11px] font-semibold" style={{ background: "rgba(255,255,255,0.18)" }}>
+                  <Star size={12} fill="currentColor" /> Featured resource · {featured.category}
+                </span>
+                <h2 className="font-display text-[clamp(20px,3vw,26px)] font-semibold leading-tight">
+                  {featured.title}
+                </h2>
+                {featured.description && (
+                  <p className="text-[13.5px] leading-[1.7] opacity-90 line-clamp-2">{featured.description}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2 text-[12px] opacity-90">
+                  <span>{TYPE_ICONS[featured.fileType] ? "File" : ""}</span>
+                  <span className="rounded-md px-2 py-[3px]" style={{ background: "rgba(255,255,255,0.16)" }}>
+                    {featured.access === "free" ? "Free" : `Members · $${featured.price || "—"}`}
+                  </span>
+                  {formatFileSize(featured.fileSize) && (
+                    <span className="rounded-md px-2 py-[3px]" style={{ background: "rgba(255,255,255,0.16)" }}>
+                      {formatFileSize(featured.fileSize)}
+                    </span>
+                  )}
+                  <span className="rounded-md px-2 py-[3px]" style={{ background: "rgba(255,255,255,0.16)" }}>
+                    {formatDate(featured.releaseDate)}
+                  </span>
+                </div>
+                <a
+                  href={fileHref(featured)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex items-center gap-2 rounded-[10px] bg-white px-4 py-[10px] text-[13px] font-semibold transition-transform duration-200 hover:scale-[1.02]"
+                  style={{ color: "var(--ink)" }}
+                >
+                  <Download size={14} /> Open resource
+                </a>
+              </div>
+            </section>
+          )}
+
           {/* Toolbar */}
           <div
             className="rounded-[14px] border bg-white p-3 flex flex-col md:flex-row gap-3"
@@ -144,9 +199,26 @@ export function AllResources() {
             </p>
           ) : (
             <>
-              {featured.length > 0 &&
-                renderSection("Featured", "Hand-picked guides and tools to get you started.", featured)}
-              {renderSection("All resources", "Guides, checklists, templates and more.", rest)}
+              <section>
+                <div className="mb-4">
+                  <h3 className="font-display text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
+                    All resources
+                  </h3>
+                  <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
+                    Guides, checklists, templates and more.
+                  </p>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+                  {rest.map((r) => (
+                    <ResourceCard key={r.id} resource={r} />
+                  ))}
+                </div>
+              </section>
+              {rest.length === 0 && (
+                <p className="text-[13.5px] py-6 text-center" style={{ color: "var(--body)" }}>
+                  Nothing else matches your filters.
+                </p>
+              )}
             </>
           )}
         </>

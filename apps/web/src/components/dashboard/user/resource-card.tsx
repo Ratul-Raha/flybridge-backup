@@ -1,4 +1,4 @@
-import { FileText, FileImage, Video, Music, File as FileIcon, Download, Lock, type LucideIcon } from "lucide-react";
+import { FileText, FileImage, Video, Music, File as FileIcon, Download, Lock, Star, type LucideIcon } from "lucide-react";
 
 export type ResourceCardData = {
   id: string;
@@ -8,6 +8,7 @@ export type ResourceCardData = {
   fileType: string;
   fileUrl: string;
   fileName: string | null;
+  fileSize: number;
   thumbnail: string | null;
   releaseDate: string;
   access: "free" | "paid";
@@ -30,6 +31,27 @@ const TYPE_LABELS: Record<string, string> = {
   audio: "Audio",
   other: "File",
 };
+
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  "Study Visa": "linear-gradient(135deg,#6B4CE0 0%,#2F5FE0 100%)",
+  "Study Abroad": "linear-gradient(135deg,#2F5FE0 0%,#12A5D8 100%)",
+  Scholarships: "linear-gradient(135deg,#E8792E 0%,#F2A53D 100%)",
+  "Career & Jobs": "linear-gradient(135deg,#0FA968 0%,#14B57E 100%)",
+  Interviews: "linear-gradient(135deg,#E8552E 0%,#EB5757 100%)",
+  "English Skills": "linear-gradient(135deg,#12A5D8 0%,#2AA9A0 100%)",
+  "Documents & Templates": "linear-gradient(135deg,#8A6FE8 0%,#5B5FE8 100%)",
+  Other: "linear-gradient(135deg,#5B6478 0%,#3A4256 100%)",
+};
+
+export function categoryGradient(category: string): string {
+  return CATEGORY_GRADIENTS[category] ?? CATEGORY_GRADIENTS.Other;
+}
+
+export function formatFileSize(bytes: number): string {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -56,80 +78,100 @@ export function ResourceCard({
   const Icon = TYPE_ICONS[resource.fileType] ?? FileIcon;
   const typeLabel = TYPE_LABELS[resource.fileType] ?? "File";
   const locked = resource.access === "paid" && !unlocked;
+  const size = formatFileSize(resource.fileSize);
+  const paid = resource.access === "paid";
 
   return (
     <article
-      className="rounded-[14px] border bg-white overflow-hidden flex flex-col"
+      className="group rounded-[14px] border bg-white overflow-hidden flex flex-col transition-all duration-250 hover:shadow-[0_10px_30px_-12px_rgba(18,32,67,0.18)] hover:translate-y-[-2px]"
       style={{ borderColor: "var(--line)" }}
     >
-      {resource.thumbnail && !locked ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={resource.thumbnail}
-          alt={resource.title}
-          className="w-full h-[150px] object-cover"
-        />
-      ) : (
-        <div
-          className="w-full h-[150px] flex items-center justify-center font-display text-[14px] text-white px-4 text-center"
-          style={{
-            background:
-              resource.access === "paid"
-                ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
-                : "linear-gradient(135deg,#0FA968,#18A97A)",
-          }}
-        >
-          {resource.category}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2.5 p-5 flex-1">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      {/* Cover */}
+      <div className="relative h-[132px] overflow-hidden" style={{ background: categoryGradient(resource.category) }}>
+        {resource.thumbnail && !locked && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={resource.thumbnail}
+            alt={resource.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
           <span
-            className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-            style={
-              resource.access === "paid"
-                ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-                : { background: "var(--brand-soft)", color: "var(--brand)" }
-            }
+            className="flex h-12 w-12 items-center justify-center rounded-2xl backdrop-blur-[2px]"
+            style={{ background: "rgba(255,255,255,0.22)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.35)" }}
           >
-            {resource.access === "paid" ? `Paid${resource.price ? ` · $${resource.price}` : ""}` : "Free"}
+            <Icon size={22} className="text-white" strokeWidth={2} />
           </span>
-          <span className="text-[12px]" style={{ color: "var(--body)" }}>
+        </div>
+
+        <span
+          className="absolute top-3 left-3 rounded-full px-2.5 py-[4px] text-[10px] font-semibold text-white"
+          style={{ background: paid ? "rgba(30,20,60,0.55)" : "rgba(10,80,50,0.55)", backdropFilter: "blur(3px)" }}
+        >
+          {paid ? `Members · $${resource.price || "—"}` : "Free"}
+        </span>
+        {resource.featured && (
+          <span
+            className="absolute top-3 right-3 flex items-center gap-1 rounded-full px-2.5 py-[4px] text-[10px] font-semibold text-[#F2C14E]"
+            style={{ background: "rgba(30,20,60,0.55)", backdropFilter: "blur(3px)" }}
+          >
+            <Star size={11} fill="currentColor" /> Featured
+          </span>
+        )}
+        <span
+          className="absolute bottom-3 right-3 rounded-md px-2 py-[3px] text-[10px] font-semibold text-white"
+          style={{ background: "rgba(12,20,40,0.45)", backdropFilter: "blur(3px)" }}
+        >
+          {typeLabel}
+          {size ? ` · ${size}` : ""}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-col gap-2 p-5 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11.5px] font-semibold" style={{ color: "var(--brand)" }}>
+            {resource.category}
+          </span>
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
             {formatDate(resource.releaseDate)}
           </span>
         </div>
 
-        <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+        <h3
+          className="font-display text-[16px] font-semibold leading-snug transition-colors duration-200 group-hover:text-[var(--brand)]"
+          style={{ color: "var(--ink)" }}
+        >
           {resource.title}
         </h3>
 
-        <p className="text-[12px] font-medium flex items-center gap-1.5" style={{ color: "var(--body)" }}>
-          <Icon size={13} style={{ color: "var(--brand)" }} />
-          {typeLabel} · {resource.category}
-        </p>
-
         {resource.description && (
-          <p className="text-[13px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
+          <p className="text-[12.5px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
             {resource.description}
           </p>
         )}
 
-        {locked ? (
-          <p className="mt-auto pt-2 text-[12px] font-semibold flex items-center gap-1.5" style={{ color: "#0FA968" }}>
-            <Lock size={13} /> Unlocked for members
-          </p>
-        ) : (
-          <a
-            href={fileHref(resource)}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-auto pt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold"
-            style={{ color: "var(--brand)" }}
-          >
-            <Download size={13} /> Open resource
-          </a>
-        )}
+        <div className="mt-auto pt-3">
+          {locked ? (
+            <span
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] border px-3 py-[9px] text-[12.5px] font-semibold"
+              style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
+            >
+              <Lock size={13} /> Members only — unlock on purchase
+            </span>
+          ) : (
+            <a
+              href={fileHref(resource)}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] px-3 py-[9px] text-[12.5px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+              style={{ background: categoryGradient(resource.category) }}
+            >
+              <Download size={13} /> Open resource
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );
