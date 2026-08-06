@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-video";
+import { successStories as stories } from "@/lib/stories";
 
 export const metadata: Metadata = {
   title: "Success Stories | FlyBridge Education Group",
@@ -9,77 +10,8 @@ export const metadata: Metadata = {
     "Real stories from real learners — students who studied, worked and built lives abroad with FlyBridge courses and guidance.",
 };
 
-const stories = [
-  {
-    quote:
-      "FlyBridge gave me the structure and confidence I needed. The career preparation course helped me land a job in Toronto within three months of completing it.",
-    name: "Sadia Rahman",
-    location: "Dhaka, Bangladesh",
-    destination: "Toronto, Canada",
-    path: "Work Abroad",
-    initials: "SR",
-    gradient: "linear-gradient(135deg,#0FA968,#188A5D 60%,#0B5E46)",
-    color: "#0B5E46",
-  },
-  {
-    quote:
-      "The Academic English course was exactly what I needed for my university application. I scored 7.5 on IELTS and got accepted to my dream program.",
-    name: "Arun Patel",
-    location: "Mumbai, India",
-    destination: "Boston, USA",
-    path: "Study Abroad",
-    initials: "AP",
-    gradient: "linear-gradient(135deg,#4A7BFF,#2F5FE0 60%,#1E3F9E)",
-    color: "#1E3F9E",
-  },
-  {
-    quote:
-      "What sets FlyBridge apart is the practical focus. Every module had real-world applications. I finally feel prepared for my international career.",
-    name: "Priya Sharma",
-    location: "Kathmandu, Nepal",
-    destination: "Vancouver, Canada",
-    path: "Career Prep",
-    initials: "PS",
-    gradient: "linear-gradient(135deg,#8A6BF2,#6B4CE0 60%,#4A2FB8)",
-    color: "#4A2FB8",
-  },
-  {
-    quote:
-      "I was overwhelmed by visa paperwork until I took the Work Permit Prep course. The checklists and templates made the whole process clear — I got my permit on the first try.",
-    name: "Imran Hossain",
-    location: "Dhaka, Bangladesh",
-    destination: "Toronto, Canada",
-    path: "Work Abroad",
-    initials: "IH",
-    gradient: "linear-gradient(135deg,#E8A24B,#DB8A2E 60%,#B06218)",
-    color: "#B06218",
-  },
-  {
-    quote:
-      "The Study Visa Prep course walked me through my visa interview step by step. The mock questions were eerily similar to the real ones — I was approved in two weeks.",
-    name: "Nusrat Jahan",
-    location: "Chittagong, Bangladesh",
-    destination: "New York, USA",
-    path: "Study Abroad",
-    initials: "NJ",
-    gradient: "linear-gradient(135deg,#5E8AFF,#2F5FE0 60%,#17408F)",
-    color: "#17408F",
-  },
-  {
-    quote:
-      "My interview skills were holding me back. After Interview Readiness, I walked into every meeting with a framework — and it changed how people responded to me.",
-    name: "Rafiq Ahmed",
-    location: "Kolkata, India",
-    destination: "Toronto, Canada",
-    path: "Career Prep",
-    initials: "RA",
-    gradient: "linear-gradient(135deg,#2FBF8F,#188A5D 60%,#0E5E41)",
-    color: "#0E5E41",
-  },
-];
-
 const featuredVideo: StoryVideo = {
-  title: "From Dhaka to Toronto — Imran's permit journey",
+  title: "From Dhaka to Toronto — a work permit journey",
   duration: "2:34",
   tag: "Work Abroad",
   initials: "IH",
@@ -88,28 +20,28 @@ const featuredVideo: StoryVideo = {
 
 const videos: StoryVideo[] = [
   {
-    title: "Landing a job in Toronto — Sadia's journey",
+    title: "Landing a job in Toronto — a graduate's journey",
     duration: "3:41",
     tag: "Work Abroad",
     initials: "SR",
     gradient: "linear-gradient(135deg,#0FA968,#188A5D 60%,#0B5E46)",
   },
   {
-    title: "Scored 7.5 on IELTS — Arun's study path",
+    title: "Scored 7.5 on IELTS — a study path",
     duration: "3:12",
     tag: "Study Abroad",
     initials: "AP",
     gradient: "linear-gradient(135deg,#5E8AFF,#2F5FE0 60%,#17408F)",
   },
   {
-    title: "Nailing the visa interview — Nusrat's tips",
+    title: "Nailing the visa interview — a learner's tips",
     duration: "2:58",
     tag: "Study Abroad",
     initials: "NJ",
     gradient: "linear-gradient(135deg,#8A6BF2,#6B4CE0 60%,#4A2FB8)",
   },
   {
-    title: "From nervous to hired — Rafiq's story",
+    title: "From nervous to hired — an interview story",
     duration: "4:05",
     tag: "Career Prep",
     initials: "RA",
@@ -272,29 +204,39 @@ export default function SuccessStoriesPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
               {stories.map((s) => (
                 <figure
-                  key={s.name}
+                  key={s.initials}
                   className="rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden" style={{ background: s.gradient }}>
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
-                        backgroundSize: "18px 18px",
-                      }}
-                    />
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
-                      <path d="M30 255 C 140 205, 225 125, 370 55" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeDasharray="5 6" strokeLinecap="round" />
-                      <circle cx="30" cy="255" r="4" fill="#fff" opacity="0.95" />
-                      <circle cx="370" cy="55" r="4" fill="#fff" opacity="0.95" />
-                      <path d="M370 55 l-15 -5 7 9 -7 9 15 -5z" fill="#fff" opacity="0.95" />
-                    </svg>
+                    {s.src ? (
+                      <img
+                        src={s.src}
+                        alt="Success story photo"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <>
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
+                            backgroundSize: "18px 18px",
+                          }}
+                        />
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
+                          <path d="M30 255 C 140 205, 225 125, 370 55" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeDasharray="5 6" strokeLinecap="round" />
+                          <circle cx="30" cy="255" r="4" fill="#fff" opacity="0.95" />
+                          <circle cx="370" cy="55" r="4" fill="#fff" opacity="0.95" />
+                          <path d="M370 55 l-15 -5 7 9 -7 9 15 -5z" fill="#fff" opacity="0.95" />
+                        </svg>
+                      </>
+                    )}
                     <span
                       className="absolute top-4 left-4 font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-[11px] py-[6px] rounded-full text-white"
                       style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}
                     >
-                      {s.path}
+                      {s.tag}
                     </span>
                     <span className="absolute bottom-4 left-4 w-[46px] h-[46px] rounded-full bg-white/90 flex items-center justify-center font-display font-semibold text-[13px] shadow-md" style={{ color: s.color }}>
                       {s.initials}
@@ -309,8 +251,7 @@ export default function SuccessStoriesPage() {
                       &ldquo;{s.quote}&rdquo;
                     </blockquote>
                     <div className="mt-6 pt-6 border-t border-line">
-                      <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>{s.name}</p>
-                      <p className="font-mono text-[10.5px] tracking-[0.3px] mt-[3px]" style={{ color: "var(--body)" }}>
+                      <p className="font-mono text-[10.5px] tracking-[0.3px]" style={{ color: "var(--body)" }}>
                         {s.location} → {s.destination}
                       </p>
                     </div>

@@ -49,6 +49,13 @@ export type Highlight = {
   sub: string;
 };
 
+export type CourseBook = {
+  title: string;
+  desc: string;
+  includedNote: string;
+  image: string;
+};
+
 export type CourseDetails = {
   slug: string;
   badge: string;
@@ -70,6 +77,7 @@ export type CourseDetails = {
   featuresDesc?: string;
   highlights?: Highlight[];
   highlightsDesc?: string;
+  book?: CourseBook;
   modules: Module[];
   pdfs: PdfResource[];
   certificate: { title: string; desc: string };
@@ -256,7 +264,7 @@ export const courseDetails: Record<string, CourseDetails> = {
   "obocheton-mone-ilish-level-01": {
     slug: "obocheton-mone-ilish-level-01",
     badge: "ENGLISH",
-    title: "অবচেতন মনে ইলিশ Level 01",
+    title: "অবচেতন মনে ইংলিশ-Level 01",
     subtitle: "Subconscious English Fluency Program",
     desc: "A practical 30-lesson English course on pronunciation, everyday small talk, workplace communication, interviews and real listening practice — taught in বাংলা + English.",
     level: "Beginner friendly",
@@ -334,6 +342,12 @@ export const courseDetails: Record<string, CourseDetails> = {
         sub: "Conversation templates, speaking scripts, audio drills & practical workbooks included",
       },
     ],
+    book: {
+      title: "অবচেতন মনে ইংলিশ — Level 01",
+      desc: "কোর্সের সাথে যুক্ত প্র্যাকটিক্যাল ইংরেজি শেখার বইটি — মডিউল অনুযায়ী সাজানো চ্যাপ্টার, ডেইলি ফ্রেজবুক, উচ্চারণ গাইড ও প্র্যাকটিস এক্সারসাইজ একই প্যাকেজের অন্তর্ভুক্ত।",
+      includedNote: "The printed course book is included free with enrollment.",
+      image: "/programs/spoken-english-book.png",
+    },
     modules: [
       {
         title: "Foundation Sounds & Rhythm",

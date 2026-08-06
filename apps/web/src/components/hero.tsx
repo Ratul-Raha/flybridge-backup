@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { successStoryImages } from "@/lib/stories";
+
 const courseCards = [
   { title: "Study Visa Prep — US", meta: "12 lessons · 3h 40m", progress: "64%", color: "blue" },
-  { title: "Work Permit Prep — Canada", meta: "9 lessons · 2h 10m", progress: "30%", color: "mint" },
+  { title: "Work Permit Blueprint - Canada", meta: "9 lessons · 2h 10m", progress: "30%", color: "mint" },
   { title: "Spoken English", meta: "20 lessons · 5h 05m", progress: "82%", color: "peach" },
   { title: "Interview Readiness", meta: "7 lessons · 1h 55m", progress: "45%", color: "lav" },
 ];
@@ -62,6 +65,7 @@ function CourseCard({ card }: { card: typeof courseCards[0] }) {
 }
 
 export function Hero() {
+  const [videoOpen, setVideoOpen] = useState(false);
   return (
     <>
       <section
@@ -74,28 +78,82 @@ export function Hero() {
       >
         <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center">
           <div>
-            <p className="font-mono text-[11.5px] tracking-[0.35em] mb-[26px]" style={{ color: "var(--brand-2)" }}>
-              FLYBRIDGE EDUCATION
+            <p className="relative inline-block mb-[28px]" style={{ color: "var(--brand-2)" }}>
+              <span className="tag-text font-mono font-medium tracking-[0.12em] uppercase text-[12.5px]" style={{ color: "var(--brand-2)" }}>
+                Learn here, fly anywhere
+              </span>
+              <svg className="tag-plane w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M2 12l19-8-6 18-4-6-9-4z" fill="var(--brand-2)" stroke="var(--brand-2)" strokeWidth="1" strokeLinejoin="round" />
+                <path d="M11 16l4-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
             </p>
 
-            <h1 className="font-display font-medium leading-[1.12] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(32px,4vw,46px)" }}>
-              Learn the steps to study and work abroad.
+            <h1 className="font-display font-semibold leading-[1.16] tracking-[-0.02em] max-w-[620px]" style={{ color: "var(--ink)", fontSize: "clamp(34px,4.2vw,48px)" }}>
+              Your Complete{" "}
+              <span style={{ color: "var(--brand-2)" }}>Blueprint</span>
+              <br className="hidden md:block" />
+              <span className="text-balance">to Studying and Working Abroad</span>
             </h1>
 
-            <p className="mt-[18px] max-w-[440px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-              Self-paced video courses that prepare you for a career beyond your borders — clear, practical, and built around real results.
+            <p className="mt-[18px] max-w-[500px] text-justify text-[15px] leading-[1.9]" style={{ color: "var(--body)" }}>
+              Master every step with expert-led video courses, live Q&amp;A sessions, immersive
+              seminars, and an interactive software system built to guide your entire journey from
+              application to arrival.
             </p>
 
-            <a
-              href="/programs"
-              className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[14px] mt-[32px]"
-              style={{ background: "var(--brand)" }}
-            >
-              Browse programs
-              <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
+            <div className="mt-[32px] flex flex-col gap-6">
+              <div className="flex items-center gap-4 flex-wrap">
+                <a
+                  href="/programs"
+                  className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[14px]"
+                  style={{ background: "var(--brand)" }}
+                >
+                  Browse programs
+                  <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setVideoOpen(true)}
+                  className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full pl-[6px] pr-[24px] py-[10px] border border-line bg-white transition-all duration-250 hover:border-brand-2/50 hover:shadow-md"
+                  style={{ color: "var(--ink)" }}
+                >
+                  <span
+                    className="w-[34px] h-[34px] rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: "var(--brand-soft)" }}
+                  >
+                    <svg className="w-[13px] h-[13px] ml-[1px]" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 4L20 12L6 20V4Z" fill="var(--brand)" />
+                    </svg>
+                  </span>
+                  See how it works
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3.5">
+                <div className="flex -space-x-3">
+                  {successStoryImages.map((s) => (
+                    <img
+                      key={s.src}
+                      src={s.src}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                      style={{ boxShadow: "0 4px 10px -4px rgba(18,32,67,0.3)" }}
+                    />
+                  ))}
+                </div>
+                <div>
+                  <div className="text-[14.5px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                    10,000+
+                  </div>
+                  <div className="text-[11.5px] mt-[4px]" style={{ color: "var(--body)" }}>
+                    people have already joined
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="scene relative flex justify-center items-center h-[560px]">
@@ -216,7 +274,73 @@ export function Hero() {
           .animate-scroll-reel { animation: none !important; }
           .float-card { animation: none !important; }
         }
+        .tag-plane {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          transform: translate(-22px, -50%);
+          animation: tag-plane-fly 6.5s ease-in-out forwards;
+        }
+        .tag-text {
+          display: inline-block;
+          opacity: 1;
+          animation: tag-reveal 6.5s ease-in-out forwards;
+        }
+        @keyframes tag-plane-fly {
+          0% { left: 0%; transform: translate(-22px, 0) rotate(0deg); opacity: 0; }
+          6% { opacity: 1; }
+          33% { left: 100%; transform: translate(-17px, 0) rotate(0deg); }
+          36% { left: 100%; transform: translate(-17px, -10px) rotate(-45deg); }
+          52% { left: 100%; transform: translate(-17px, -420px) rotate(-45deg); opacity: 1; }
+          62% { left: 100%; transform: translate(-17px, -900px) rotate(-45deg); opacity: 0; }
+          100% { left: 100%; transform: translate(-17px, -900px) rotate(-45deg); opacity: 0; }
+        }
+        @keyframes tag-reveal {
+          0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+          8% { opacity: 1; }
+          33% { clip-path: inset(0 0% 0 0); }
+          100% { clip-path: inset(0 0% 0 0); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tag-plane, .tag-text { animation: none; }
+        }
       `}</style>
+
+      {videoOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Intro video"
+        >
+          <div
+            className="absolute inset-0 bg-[rgba(18,32,67,0.75)] backdrop-blur-[4px]"
+            onClick={() => setVideoOpen(false)}
+          />
+          <div
+            className="fb-pop-up relative w-full max-w-[980px] rounded-[24px] overflow-hidden bg-black border border-white/10"
+            style={{ boxShadow: "0 50px 100px -40px rgba(0,0,0,0.7)" }}
+          >
+            <video
+              src="/videos/intro.mp4"
+              controls
+              autoPlay
+              playsInline
+              className="w-full aspect-video"
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="Close video"
+            onClick={() => setVideoOpen(false)}
+            className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-white/10 text-white backdrop-blur flex items-center justify-center transition-all duration-200 hover:bg-white hover:text-[var(--ink)]"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6L18 18" />
+            </svg>
+          </button>
+        </div>
+      )}
     </>
   );
 }

@@ -105,6 +105,19 @@
   animation: fb-pulse 2.4s ease-in-out infinite;
 }
 
+@keyframes fb-kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.fb-kenburns {
+  animation: fb-kenburns 9s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-kenburns { animation: none; }
+}
+
 @keyframes fb-flow {
   from { stroke-dashoffset: 26; }
   to { stroke-dashoffset: 0; }

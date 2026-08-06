@@ -558,6 +558,42 @@ export default function ProgramPage({ params }: Props) {
                   </div>
                 </div>
 
+                {/* Course book */}
+                {details.book && (
+                  <div>
+                    <SectionHeading
+                      eyebrow="COURSE BOOK"
+                      title="The book is included in this program"
+                      desc={details.book.desc}
+                    />
+                    <div className="rounded-2xl border border-line bg-white overflow-hidden">
+                      <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={details.book.image}
+                          alt={details.book.title}
+                          className="w-full max-w-[220px] mx-auto rounded-xl aspect-[3/4] object-cover"
+                          style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
+                        />
+                        <div className="flex flex-col gap-3">
+                          <span
+                            className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
+                            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                          >
+                            INCLUDED WITH COURSE
+                          </span>
+                          <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                            {details.book.title}
+                          </h3>
+                          <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                            {details.book.includedNote}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Outcomes */}
                 <div>
                   <SectionHeading
@@ -715,40 +751,6 @@ export default function ProgramPage({ params }: Props) {
           <div className="h-[76px] md:hidden" />
         </>
       )}
-
-      <footer className="border-t border-line" style={{ background: "var(--bg-soft)" }}>
-        <div className="max-w-[1320px] mx-auto px-[clamp(20px,4.5vw,56px)] py-[48px] flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-[10px]">
-            <svg className="w-[30px] h-[30px]" viewBox="0 0 40 40" fill="none">
-              <path d="M20 4L34 30H23L20 24L17 30H6L20 4Z" fill="url(#gradFoot)" />
-              <defs>
-                <linearGradient id="gradFoot" x1="6" y1="4" x2="34" y2="30">
-                  <stop offset="0%" stopColor="#14B57E" />
-                  <stop offset="100%" stopColor="#0B5E46" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <span className="flex flex-col leading-[1.05]">
-              <span className="font-semibold text-[15px] tracking-[0.2px]" style={{ color: "var(--brand)" }}>
-                FlyBridge
-              </span>
-              <span className="font-mono text-[8.5px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
-                EDUCATION GROUP
-              </span>
-            </span>
-          </div>
-          <p className="font-mono text-[12px]" style={{ color: "var(--body)" }}>
-            &copy; {new Date().getFullYear()} FlyBridge Education Group
-          </p>
-          <div className="flex items-center gap-5">
-            {["Privacy", "Terms", "Contact"].map((l) => (
-              <a key={l} href="#" className="text-[13px] font-medium" style={{ color: "var(--body)" }}>
-                {l}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
 
       <style>{`
         .course-page {

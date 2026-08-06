@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -73,17 +74,17 @@ export function MobileUserApp() {
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between h-14 px-5">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span
-              className="flex h-7 w-7 items-center justify-center rounded-[9px] text-white"
-              style={{ background: "var(--brand)" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M3 17L10 10L14 14L21 6" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <span className="font-display text-[16px] font-bold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-              FlyBridge
+          <Link href="/dashboard" className="brand flex flex-col items-start leading-none">
+            <Image
+              src="/logo.png"
+              alt="FlyBridge Education Group"
+              width={113}
+              height={38}
+              className="w-auto h-[30px] shrink-0 object-contain"
+              priority
+            />
+            <span className="font-mono text-[7.5px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
+              EDUCATION GROUP
             </span>
           </Link>
           <Link href="/dashboard/settings" aria-label="Settings">

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -219,20 +220,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     <>
       <div className="px-6 pt-7 pb-6">
         <Link href="/" className="brand flex flex-col items-start leading-none">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-[10px] text-white"
-              style={{ background: "var(--brand)" }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M3 17L10 10L14 14L21 6" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <span className="font-display text-[18px] font-bold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-              FlyBridge
-            </span>
-          </div>
-          <span className="font-mono text-[8.5px] tracking-[1.8px] mt-[3px] ml-[42px]" style={{ color: "var(--body)" }}>
+          <Image
+            src="/logo.png"
+            alt="FlyBridge Education Group"
+            width={113}
+            height={38}
+            className="w-auto h-[34px] shrink-0 object-contain"
+            priority
+          />
+          <span className="font-mono text-[8.5px] tracking-[1.8px] mt-[3px]" style={{ color: "var(--body)" }}>
             EDUCATION GROUP
           </span>
         </Link>

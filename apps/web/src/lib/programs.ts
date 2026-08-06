@@ -24,15 +24,16 @@ export const programs: Program[] = [
   {
     slug: "obocheton-mone-ilish-level-01",
     badge: "ENGLISH",
-    title: "অবচেতন মনে ইলিশ Level 01",
+    title: "অবচেতন মনে ইংলিশ-Level 01",
     desc: "Practical, confident communication for everyday and interviews.",
     bg: "var(--lav-bg)",
     badgeColor: "var(--lav-ink)",
+    image: "/programs/spoken-english-book.png",
   },
   {
     slug: "work-permit-prep-canada",
     badge: "WORK ABROAD",
-    title: "Work Permit Prep — Canada",
+    title: "Work Permit Blueprint - Canada",
     desc: "Eligibility, documentation and job-search groundwork.",
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",

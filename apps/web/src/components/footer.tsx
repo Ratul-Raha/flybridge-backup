@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Container } from "@flybridge/ui";
 
 const footerLinks = [
@@ -41,13 +42,18 @@ export function Footer() {
         <div className="py-14 md:py-18">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10 mb-14 md:mb-18">
             <div className="col-span-2 md:col-span-2">
-              <a href="/" className="brand flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight text-paper mb-4">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-gold-soft via-gold to-signal">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 17L10 10L14 14L21 6" stroke="#0B1420" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+              <a href="/" className="brand flex flex-col items-start leading-none mb-4">
+                <Image
+                  src="/logo.png"
+                  alt="FlyBridge Education Group"
+                  width={113}
+                  height={38}
+                  className="w-auto h-[30px] shrink-0 object-contain"
+                  priority
+                />
+                <span className="font-mono text-[9px] tracking-[1.8px] mt-[3px] text-mist-dim">
+                  EDUCATION GROUP
                 </span>
-                FlyBridge
               </a>
               <p className="text-body-sm text-mist-dim max-w-xs mb-6 leading-relaxed">
                 Helping ambitious people around the world build an international future through practical, expert-led education.
