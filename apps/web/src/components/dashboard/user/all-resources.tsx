@@ -208,7 +208,7 @@ export function AllResources() {
                     Guides, checklists, templates and more.
                   </p>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                   {rest.map((r) => (
                     <ResourceCard key={r.id} resource={r} />
                   ))}

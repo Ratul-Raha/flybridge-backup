@@ -53,9 +53,8 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string) {
+function formatDateShort(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
     month: "short",
     day: "numeric",
   });
@@ -83,11 +82,11 @@ export function ResourceCard({
 
   return (
     <article
-      className="group rounded-[14px] border bg-white overflow-hidden flex flex-col transition-all duration-250 hover:shadow-[0_10px_30px_-12px_rgba(18,32,67,0.18)] hover:translate-y-[-2px]"
+      className="group rounded-[12px] border bg-white overflow-hidden flex flex-col transition-all duration-250 hover:shadow-[0_8px_24px_-12px_rgba(18,32,67,0.18)] hover:translate-y-[-1px]"
       style={{ borderColor: "var(--line)" }}
     >
-      {/* Cover */}
-      <div className="relative h-[132px] overflow-hidden" style={{ background: categoryGradient(resource.category) }}>
+      {/* Compact cover */}
+      <div className="relative h-[76px] overflow-hidden shrink-0" style={{ background: categoryGradient(resource.category) }}>
         {resource.thumbnail && !locked && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -98,77 +97,63 @@ export function ResourceCard({
         )}
         <div className="absolute inset-0 flex items-center justify-center">
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-2xl backdrop-blur-[2px]"
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] backdrop-blur-[2px]"
             style={{ background: "rgba(255,255,255,0.22)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.35)" }}
           >
-            <Icon size={22} className="text-white" strokeWidth={2} />
+            <Icon size={17} className="text-white" strokeWidth={2} />
           </span>
         </div>
-
-        <span
-          className="absolute top-3 left-3 rounded-full px-2.5 py-[4px] text-[10px] font-semibold text-white"
-          style={{ background: paid ? "rgba(30,20,60,0.55)" : "rgba(10,80,50,0.55)", backdropFilter: "blur(3px)" }}
-        >
-          {paid ? `Members · $${resource.price || "—"}` : "Free"}
-        </span>
         {resource.featured && (
           <span
-            className="absolute top-3 right-3 flex items-center gap-1 rounded-full px-2.5 py-[4px] text-[10px] font-semibold text-[#F2C14E]"
+            className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full"
             style={{ background: "rgba(30,20,60,0.55)", backdropFilter: "blur(3px)" }}
           >
-            <Star size={11} fill="currentColor" /> Featured
+            <Star size={11} className="text-[#F2C14E]" fill="currentColor" />
           </span>
         )}
-        <span
-          className="absolute bottom-3 right-3 rounded-md px-2 py-[3px] text-[10px] font-semibold text-white"
-          style={{ background: "rgba(12,20,40,0.45)", backdropFilter: "blur(3px)" }}
-        >
-          {typeLabel}
-          {size ? ` · ${size}` : ""}
-        </span>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col gap-2 p-5 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11.5px] font-semibold" style={{ color: "var(--brand)" }}>
+      <div className="flex flex-col gap-1.5 p-3.5 flex-1">
+        <div className="flex items-center justify-between gap-1.5">
+          <span className="text-[10.5px] font-semibold truncate" style={{ color: "var(--brand)" }}>
             {resource.category}
           </span>
-          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-            {formatDate(resource.releaseDate)}
+          <span className="text-[10.5px] shrink-0" style={{ color: "var(--body)" }}>
+            {formatDateShort(resource.releaseDate)}
           </span>
         </div>
 
         <h3
-          className="font-display text-[16px] font-semibold leading-snug transition-colors duration-200 group-hover:text-[var(--brand)]"
+          className="font-display text-[13.5px] font-semibold leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-[var(--brand)]"
           style={{ color: "var(--ink)" }}
         >
           {resource.title}
         </h3>
 
-        {resource.description && (
-          <p className="text-[12.5px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
-            {resource.description}
-          </p>
-        )}
+        <p className="text-[11px] truncate" style={{ color: "var(--body)" }}>
+          {typeLabel}
+          {size ? ` · ${size}` : ""}
+          {locked ? " · Members only" : ""}
+        </p>
 
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-2">
           {locked ? (
             <span
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] border px-3 py-[9px] text-[12.5px] font-semibold"
+              className="w-full inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-[7px] text-[11px] font-semibold"
               style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
             >
-              <Lock size={13} /> Members only — unlock on purchase
+              <Lock size={11} /> Members
             </span>
           ) : (
             <a
               href={fileHref(resource)}
               target="_blank"
               rel="noreferrer"
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] px-3 py-[9px] text-[12.5px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+              className="w-full inline-flex items-center justify-center gap-1 rounded-lg px-2.5 py-[7px] text-[11px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
               style={{ background: categoryGradient(resource.category) }}
             >
-              <Download size={13} /> Open resource
+              <Download size={11} /> Open
             </a>
           )}
         </div>

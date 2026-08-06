@@ -177,7 +177,7 @@ export function MobileResources() {
           No resources match your search or filters.
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {rest.map((r) => (
             <ResourceCard key={r.id} resource={r} />
           ))}

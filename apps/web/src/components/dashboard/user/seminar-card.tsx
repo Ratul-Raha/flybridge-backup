@@ -190,7 +190,7 @@ export function SeminarCard({
           </div>
         )}
 
-        {isRegistered && seminar.url && (
+        {isRegistered && upcoming && seminar.url && (
           <a
             href={seminar.url}
             target="_blank"
