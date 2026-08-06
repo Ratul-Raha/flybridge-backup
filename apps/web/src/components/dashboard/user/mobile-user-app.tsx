@@ -18,7 +18,7 @@ import { AllSeminars } from "./all-seminars";
 import { MySeminars } from "./my-seminars";
 import { AllCourses } from "./all-courses";
 import { MyCourses } from "./my-courses";
-import { AllResources } from "./all-resources";
+import { MobileResources } from "./mobile-resources";
 import { MyResources } from "./my-resources";
 import { MobileSettings } from "./mobile-settings";
 import { SectionTabs, type SectionParent } from "./section-tabs";
@@ -105,7 +105,7 @@ export function MobileUserApp() {
 
         {tab === "seminars" && (sub === "mine" ? <MySeminars /> : <AllSeminars />)}
         {tab === "courses" && (sub === "mine" ? <MyCourses /> : <AllCourses />)}
-        {tab === "resources" && (sub === "mine" ? <MyResources /> : <AllResources />)}
+        {tab === "resources" && (sub === "mine" ? <MyResources /> : <MobileResources />)}
         {tab === "settings" && <MobileSettings />}
       </main>
 

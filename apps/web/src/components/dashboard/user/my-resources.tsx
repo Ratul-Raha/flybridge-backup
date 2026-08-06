@@ -1,57 +1,70 @@
-import {
-  BookOpen,
-  ListChecks,
-  FileText,
-  Briefcase,
-  PlayCircle,
-  type LucideIcon,
-} from "lucide-react";
-import { memberResources, type ResourceType } from "@/lib/resources";
+"use client";
 
-const TYPE_ICONS: Record<ResourceType, LucideIcon> = {
-  Guide: BookOpen,
-  Checklist: ListChecks,
-  Template: FileText,
-  Toolkit: Briefcase,
-  Video: PlayCircle,
-};
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { ResourceCard, type ResourceCardData } from "./resource-card";
+import { EmptyState, ScreenError, ScreenLoading } from "./ui";
 
 export function MyResources() {
-  return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
-      {memberResources.map((r) => {
-        const Icon = TYPE_ICONS[r.type];
-        return (
-          <div
-            key={r.id}
-            className="rounded-[24px] border bg-white p-6 flex flex-col gap-4"
-            style={{ borderColor: "var(--line)" }}
+  const [resources, setResources] = useState<ResourceCardData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/resources?mine=true", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load your resources");
+      const data = await res.json();
+      setResources(data.resources ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load your resources");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) return <ScreenLoading label="Loading your resources…" />;
+  if (error) return <ScreenError message={error} />;
+
+  if (resources.length === 0) {
+    return (
+      <EmptyState
+        title="You don't have any member resources yet"
+        desc="Member-exclusive guides, templates and toolkits will appear here once published."
+        action={
+          <Link
+            href="/dashboard/resources"
+            className="inline-block rounded-full text-white text-[13.5px] font-semibold px-6 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+            style={{ background: "var(--brand)" }}
           >
-            <span
-              className="flex h-9 w-9 items-center justify-center rounded-xl"
-              style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-            >
-              <Icon size={16} strokeWidth={2} />
-            </span>
+            Browse all resources
+          </Link>
+        }
+      />
+    );
+  }
 
-            <div className="flex flex-col gap-1.5">
-              <h3 className="font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                {r.title}
-              </h3>
-              <p className="text-[13px] leading-[1.6]" style={{ color: "var(--body)" }}>
-                {r.desc}
-              </p>
-            </div>
-
-            <span
-              className="text-[12.5px] font-medium mt-auto pt-1"
-              style={{ color: "var(--brand)" }}
-            >
-              {r.type} · Unlocked for members
-            </span>
-          </div>
-        );
-      })}
+  return (
+    <div className="flex flex-col gap-9">
+      <section>
+        <div className="mb-4">
+          <h2 className="font-display text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
+            Your resources
+          </h2>
+          <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
+            Member-only resources unlocked for you.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+          {resources.map((r) => (
+            <ResourceCard key={r.id} resource={r} unlocked />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { CalendarDays, BookOpen, FolderOpen, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { programs } from "@/lib/programs";
-import { resources } from "@/lib/resources";
 
 type Stat = {
   label: string;
@@ -17,12 +16,20 @@ type Stat = {
 export function DashboardHome() {
   const { user } = useAuth();
   const [seminarCount, setSeminarCount] = useState<number | null>(null);
+  const [resourceCount, setResourceCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/me/seminars", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => setSeminarCount((data.seminars ?? []).length))
       .catch(() => setSeminarCount(null));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/resources", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setResourceCount((data.resources ?? []).length))
+      .catch(() => setResourceCount(null));
   }, []);
 
   const firstName = user?.name?.split(" ")[0] || "there";
@@ -47,7 +54,7 @@ export function DashboardHome() {
     },
     {
       label: "Resources",
-      value: String(resources.length),
+      value: resourceCount === null ? "—" : String(resourceCount),
       icon: FolderOpen,
       href: "/dashboard/resources",
     },

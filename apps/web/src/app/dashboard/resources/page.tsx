@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionTabs } from "@/components/dashboard/user/section-tabs";
 import { AllResources } from "@/components/dashboard/user/all-resources";
+import { ResourceManage } from "@/components/dashboard/resource-manage";
 
 export const metadata: Metadata = {
   title: "Resources | FlyBridge",
@@ -12,8 +13,9 @@ export const metadata: Metadata = {
 export default async function ResourcesPage() {
   const session = await readSession();
   if (!session) redirect("/login");
+
   if (session.role === "moderator" || session.role === "admin") {
-    redirect("/dashboard");
+    return <ResourceManage />;
   }
 
   return (

@@ -114,6 +114,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         active: pathname.startsWith("/dashboard/seminars"),
       });
     }
+    if (user.accountType === "moderator" || user.accountType === "admin") {
+      items.push({
+        kind: "link",
+        label: "Resources",
+        href: "/dashboard/resources",
+        icon: FolderOpen,
+        active: pathname.startsWith("/dashboard/resources"),
+      });
+    }
     if (user.accountType === "admin") {
       items.push({
         kind: "link",
