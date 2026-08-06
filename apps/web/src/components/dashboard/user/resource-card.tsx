@@ -4,7 +4,9 @@ import {
   Video,
   Music,
   File as FileIcon,
+  Link2,
   ExternalLink,
+  Folder,
   Lock,
   Star,
   type LucideIcon,
@@ -26,57 +28,51 @@ export type ResourceCardData = {
   featured: boolean;
 };
 
-const TYPE_ICONS: Record<string, LucideIcon> = {
-  pdf: FileText,
-  image: FileImage,
-  video: Video,
-  audio: Music,
-  other: FileIcon,
+const FILE_TYPE_META: Record<string, { icon: LucideIcon; label: string; color: string; bg: string }> = {
+  pdf: { icon: FileText, label: "PDF", color: "#C0392B", bg: "rgba(192,57,43,0.10)" },
+  image: { icon: FileImage, label: "Image", color: "#2F5FE0", bg: "rgba(47,95,224,0.10)" },
+  video: { icon: Video, label: "Video", color: "#6B4CE0", bg: "rgba(107,76,224,0.10)" },
+  audio: { icon: Music, label: "Audio", color: "#E08A17", bg: "rgba(224,138,23,0.12)" },
+  other: { icon: FileIcon, label: "File", color: "#0FA968", bg: "rgba(15,169,104,0.10)" },
+  link: { icon: Link2, label: "Link", color: "#2563EB", bg: "rgba(37,99,235,0.10)" },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  pdf: "PDF",
-  image: "Image",
-  video: "Video",
-  audio: "Audio",
-  other: "File",
-};
-
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  "Study Visa": "linear-gradient(135deg,#6B4CE0 0%,#2F5FE0 100%)",
-  "Study Abroad": "linear-gradient(135deg,#2F5FE0 0%,#12A5D8 100%)",
-  Scholarships: "linear-gradient(135deg,#E8792E 0%,#F2A53D 100%)",
-  "Career & Jobs": "linear-gradient(135deg,#0FA968 0%,#14B57E 100%)",
-  Interviews: "linear-gradient(135deg,#E8552E 0%,#EB5757 100%)",
-  "English Skills": "linear-gradient(135deg,#12A5D8 0%,#2AA9A0 100%)",
-  "Documents & Templates": "linear-gradient(135deg,#8A6FE8 0%,#5B5FE8 100%)",
-  Other: "linear-gradient(135deg,#5B6478 0%,#3A4256 100%)",
-};
-
-export function categoryGradient(category: string): string {
-  return CATEGORY_GRADIENTS[category] ?? CATEGORY_GRADIENTS.Other;
+export function fileTypeMeta(fileType: string) {
+  return FILE_TYPE_META[fileType] ?? FILE_TYPE_META.other;
 }
 
 export function formatFileSize(bytes: number): string {
-  if (!bytes) return "";
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (!bytes) return "—";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  let n = bytes;
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i += 1;
+  }
+  return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
 export function formatResourceDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
 export function fileHref(resource: ResourceCardData) {
-  if (resource.fileType === "image" || resource.fileType === "video") {
+  if (
+    resource.fileType === "link" ||
+    resource.fileType === "image" ||
+    resource.fileType === "video"
+  ) {
     return resource.fileUrl;
   }
   return `/api/resources/${resource.id}/file`;
 }
+
+const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_auto]";
 
 export function ResourceList({ children }: { children: React.ReactNode }) {
   return (
@@ -89,91 +85,124 @@ export function ResourceList({ children }: { children: React.ReactNode }) {
   );
 }
 
+export function ResourceTableHeader() {
+  const cells = ["Name", "Type", "Size", "Published", "Access"];
+  return (
+    <div
+      className={`hidden md:grid gap-3 px-4 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
+      style={{ borderColor: "var(--line)" }}
+    >
+      {cells.map((c) => (
+        <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+          {c}
+        </span>
+      ))}
+      <span />
+    </div>
+  );
+}
+
 export function ResourceRow({
   resource,
   unlocked = false,
+  divider = false,
 }: {
   resource: ResourceCardData;
   unlocked?: boolean;
+  divider?: boolean;
 }) {
-  const Icon = TYPE_ICONS[resource.fileType] ?? FileIcon;
-  const typeLabel = TYPE_LABELS[resource.fileType] ?? "File";
+  const meta = fileTypeMeta(resource.fileType);
+  const Icon = meta.icon;
   const locked = resource.access === "paid" && !unlocked;
-  const size = formatFileSize(resource.fileSize);
   const paid = resource.access === "paid";
+
+  const accessBadge = (
+    <span
+      className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
+      style={
+        paid
+          ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
+          : { background: "var(--brand-soft)", color: "var(--brand)" }
+      }
+    >
+      {paid ? "Members" : "Free"}
+    </span>
+  );
 
   return (
     <div
-      className="group flex items-center gap-3.5 md:gap-4 px-4 md:px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--bg-soft)] border-t first:border-t-0"
+      className={`group md:grid items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${divider ? "border-t" : ""} ${GRID_COLS}`}
       style={{ borderColor: "var(--line)" }}
     >
-      {/* Cover tile */}
-      <div
-        className="relative h-11 w-11 md:h-12 md:w-12 shrink-0 rounded-[12px] overflow-hidden flex items-center justify-center"
-        style={{ background: categoryGradient(resource.category) }}
-      >
-        {resource.thumbnail && !locked ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={resource.thumbnail}
-            alt={resource.title}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <Icon size={18} className="text-white" strokeWidth={2} />
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <p
-            className="font-display text-[14px] md:text-[14.5px] font-semibold truncate transition-colors duration-200 group-hover:text-[var(--brand)]"
-            style={{ color: "var(--ink)" }}
-          >
+      {/* Name cell */}
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: meta.bg, color: meta.color }}
+        >
+          <Icon size={18} strokeWidth={2} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
             {resource.title}
+            {resource.featured && (
+              <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
+            )}
           </p>
-          {resource.featured && (
-            <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
-          )}
+          <p className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
+            <Folder size={11} className="shrink-0" />
+            {resource.category}
+            {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
+          </p>
+          <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+              {meta.label}
+            </span>
+            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+              {formatFileSize(resource.fileSize)}
+            </span>
+            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+              {formatResourceDate(resource.releaseDate)}
+            </span>
+            {accessBadge}
+          </div>
         </div>
-        <p className="text-[11.5px] md:text-[12px] truncate mt-0.5" style={{ color: "var(--body)" }}>
-          {resource.category} · {typeLabel}
-          {size ? ` · ${size}` : ""} · {formatResourceDate(resource.releaseDate)}
-        </p>
       </div>
 
-      {/* Access badge (desktop) */}
-      <span
-        className="hidden md:inline-flex shrink-0 text-[11px] font-semibold rounded-full px-2.5 py-[5px]"
-        style={
-          paid
-            ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-            : { background: "var(--brand-soft)", color: "var(--brand)" }
-        }
-      >
-        {paid ? "Members" : "Free"}
+      {/* Desktop cells */}
+      <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
+        {meta.label}
       </span>
+      <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
+        {formatFileSize(resource.fileSize)}
+      </span>
+      <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
+        {formatResourceDate(resource.releaseDate)}
+      </span>
+      <span className="hidden md:inline-block">{accessBadge}</span>
 
       {/* Action */}
-      {locked ? (
-        <span
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-[10px] border px-3 py-[7px] text-[12px] font-semibold"
-          style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
-        >
-          <Lock size={12} /> Members
-        </span>
-      ) : (
-        <a
-          href={fileHref(resource)}
-          target="_blank"
-          rel="noreferrer"
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-[8px] text-[12px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
-          style={{ background: categoryGradient(resource.category) }}
-        >
-          Open <ExternalLink size={12} />
-        </a>
-      )}
+      <div className="flex items-center justify-end">
+        {locked ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full border px-2.5 py-[4px] text-[10.5px] font-semibold"
+            style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
+          >
+            <Lock size={10} /> Members
+          </span>
+        ) : (
+          <a
+            href={fileHref(resource)}
+            target="_blank"
+            rel="noreferrer"
+            title="Open file"
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
+            style={{ color: "var(--body)" }}
+          >
+            <ExternalLink size={15} />
+          </a>
+        )}
+      </div>
     </div>
   );
 }

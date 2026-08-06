@@ -7,7 +7,7 @@ const resourceSchema = new Schema(
     category: { type: String, required: true, trim: true, index: true },
     fileType: {
       type: String,
-      enum: ["pdf", "image", "video", "audio", "other"],
+      enum: ["pdf", "image", "video", "audio", "other", "link"],
       default: "other",
     },
     fileUrl: { type: String, required: true, trim: true },

@@ -41,6 +41,10 @@ export async function GET(
       return NextResponse.json({ error: "No file attached" }, { status: 404 });
     }
 
+    if (resource.fileType === "link") {
+      return NextResponse.redirect(resource.fileUrl);
+    }
+
     const upstream = await fetch(resource.fileUrl, { cache: "no-store" });
     if (!upstream.ok || !upstream.body) {
       return NextResponse.json({ error: "File unavailable" }, { status: 502 });

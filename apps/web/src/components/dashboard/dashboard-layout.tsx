@@ -206,7 +206,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 key={child.href}
                 href={child.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-[8px] text-[13px] font-medium transition-all duration-200"
+                className="flex items-center gap-2 rounded-lg px-3 py-[8px] text-[13px] font-medium transition-all duration-200"
                 style={
                   child.active
                     ? { background: "var(--brand-soft)", color: "var(--brand)" }

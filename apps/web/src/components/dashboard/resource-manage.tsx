@@ -10,6 +10,7 @@ import {
   Video,
   Music,
   File as FileIcon,
+  Link2,
   UploadCloud,
   Trash2,
   ExternalLink,
@@ -52,6 +53,8 @@ type FormState = {
   access: "free" | "paid";
   price: string;
   featured: boolean;
+  mode: "file" | "link";
+  linkUrl: string;
   file: UploadedFile | null;
   thumbnail: UploadedFile | null;
 };
@@ -64,6 +67,8 @@ const emptyForm: FormState = {
   access: "free",
   price: "",
   featured: false,
+  mode: "file",
+  linkUrl: "",
   file: null,
   thumbnail: null,
 };
@@ -77,6 +82,7 @@ const FILE_TYPE_META: Record<string, { icon: LucideIcon; label: string; color: s
   video: { icon: Video, label: "Video", color: "#6B4CE0", bg: "rgba(107,76,224,0.10)" },
   audio: { icon: Music, label: "Audio", color: "#E08A17", bg: "rgba(224,138,23,0.12)" },
   other: { icon: FileIcon, label: "File", color: "#0FA968", bg: "rgba(15,169,104,0.10)" },
+  link: { icon: Link2, label: "Link", color: "#2563EB", bg: "rgba(37,99,235,0.10)" },
 };
 
 function fileTypeMeta(fileType: string) {
@@ -152,8 +158,25 @@ function formatDate(iso: string) {
 }
 
 function fileHref(r: ResourceItem) {
-  if (r.fileType === "image" || r.fileType === "video") return r.fileUrl;
+  if (r.fileType === "link" || r.fileType === "image" || r.fileType === "video") return r.fileUrl;
   return `/api/resources/${r.id}/file`;
+}
+
+function domainOf(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function isValidUrl(url: string) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 const selectClass =
@@ -254,6 +277,7 @@ export function ResourceManage() {
 
   const openEdit = (r: ResourceItem) => {
     setEditingId(r.id);
+    const isLink = r.fileType === "link";
     setForm({
       title: r.title,
       description: r.description ?? "",
@@ -262,13 +286,17 @@ export function ResourceManage() {
       access: r.access,
       price: r.price ? String(r.price) : "",
       featured: r.featured,
-      file: {
-        url: r.fileUrl,
-        publicId: "",
-        fileName: r.fileName ?? r.fileUrl.split("/").pop() ?? "",
-        fileSize: r.fileSize,
-        fileType: r.fileType,
-      },
+      mode: isLink ? "link" : "file",
+      linkUrl: isLink ? r.fileUrl : "",
+      file: isLink
+        ? null
+        : {
+            url: r.fileUrl,
+            publicId: "",
+            fileName: r.fileName ?? r.fileUrl.split("/").pop() ?? "",
+            fileSize: r.fileSize,
+            fileType: r.fileType,
+          },
       thumbnail: r.thumbnail
         ? { url: r.thumbnail, publicId: "", fileName: "cover.jpg", fileSize: 0, fileType: "image" }
         : null,
@@ -301,6 +329,15 @@ export function ResourceManage() {
       setError("Title is required");
       return;
     }
+    if (form.mode === "link") {
+      if (!isValidUrl(form.linkUrl)) {
+        setError("Enter a valid link URL (starting with http:// or https://)");
+        return;
+      }
+    } else if (!form.file) {
+      setError("A file must be uploaded");
+      return;
+    }
 
     const url = editingId ? `/api/resources/${editingId}` : "/api/resources";
     try {
@@ -315,11 +352,12 @@ export function ResourceManage() {
           access: form.access,
           price: form.price,
           featured: form.featured,
-          fileUrl: form.file?.url,
-          publicId: form.file?.publicId,
-          fileName: form.file?.fileName,
-          fileSize: form.file?.fileSize,
-          fileType: form.file?.fileType,
+          fileUrl: form.mode === "link" ? form.linkUrl.trim() : form.file?.url,
+          publicId: form.mode === "link" ? "" : form.file?.publicId,
+          fileName:
+            form.mode === "link" ? domainOf(form.linkUrl) || null : form.file?.fileName,
+          fileSize: form.mode === "link" ? 0 : form.file?.fileSize,
+          fileType: form.mode === "link" ? "link" : form.file?.fileType,
           thumbnail: form.thumbnail?.url,
           thumbnailPublicId: form.thumbnail?.publicId,
         }),
@@ -377,6 +415,25 @@ export function ResourceManage() {
           <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit resource" : "New resource"}
           </h2>
+
+          {/* Resource type toggle */}
+          <div className="flex gap-1 rounded-full border p-1 w-fit mb-5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
+            {(["file", "link"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setForm({ ...form, mode: m })}
+                className="rounded-full px-4 py-[7px] text-[13px] font-medium transition-colors duration-200"
+                style={
+                  form.mode === m
+                    ? { background: "var(--brand)", color: "#fff" }
+                    : { color: "var(--body)" }
+                }
+              >
+                {m === "file" ? "Upload file" : "Add link"}
+              </button>
+            ))}
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
@@ -470,64 +527,85 @@ export function ResourceManage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                File (PDF / image / video) *
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,image/*,video/*,audio/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) runUpload(f, "file");
-                  e.target.value = "";
-                }}
-                className="hidden"
-              />
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  disabled={uploading}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13.5px] font-medium transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  <UploadCloud size={15} />
-                  {form.file ? "Replace file" : "Upload file"}
-                </button>
-                {form.file && (
-                  <span className="flex items-center gap-2 text-[13px] min-w-0" style={{ color: "var(--body)" }}>
-                    <FileText size={15} style={{ color: "var(--brand)" }} />
-                    <span className="truncate max-w-[260px]">{form.file.fileName}</span>
-                    {form.file.fileSize > 0 && (
-                      <span className="font-mono text-[11px]">{formatBytes(form.file.fileSize)}</span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, file: null })}
-                      className="p-1 rounded-md hover:bg-black/5"
-                      aria-label="Remove file"
-                    >
-                      <Trash2 size={13} style={{ color: "#C0392B" }} />
-                    </button>
-                  </span>
+            {form.mode === "link" && (
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                  Link URL *
+                </label>
+                <input
+                  type="url"
+                  value={form.linkUrl}
+                  onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
+                  placeholder="https://example.com/article"
+                  className={inputClass}
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                />
+                <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                  The link opens in a new tab when users click the resource.
+                </p>
+              </div>
+            )}
+
+            {form.mode === "file" && (
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                  File (PDF / image / video) *
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,image/*,video/*,audio/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) runUpload(f, "file");
+                    e.target.value = "";
+                  }}
+                  className="hidden"
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13.5px] font-medium transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                  >
+                    <UploadCloud size={15} />
+                    {form.file ? "Replace file" : "Upload file"}
+                  </button>
+                  {form.file && (
+                    <span className="flex items-center gap-2 text-[13px] min-w-0" style={{ color: "var(--body)" }}>
+                      <FileText size={15} style={{ color: "var(--brand)" }} />
+                      <span className="truncate max-w-[260px]">{form.file.fileName}</span>
+                      {form.file.fileSize > 0 && (
+                        <span className="font-mono text-[11px]">{formatBytes(form.file.fileSize)}</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, file: null })}
+                        className="p-1 rounded-md hover:bg-black/5"
+                        aria-label="Remove file"
+                      >
+                        <Trash2 size={13} style={{ color: "#C0392B" }} />
+                      </button>
+                    </span>
+                  )}
+                </div>
+                {uploadingFile === "file" && (
+                  <div className="flex items-center gap-3">
+                    <div className="h-1.5 flex-1 rounded-full" style={{ background: "var(--bg-soft)" }}>
+                      <div
+                        className="h-full rounded-full transition-all duration-200"
+                        style={{ width: `${uploadProgress}%`, background: "var(--brand)" }}
+                      />
+                    </div>
+                    <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
+                      {uploadProgress}%
+                    </span>
+                  </div>
                 )}
               </div>
-              {uploadingFile === "file" && (
-                <div className="flex items-center gap-3">
-                  <div className="h-1.5 flex-1 rounded-full" style={{ background: "var(--bg-soft)" }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-200"
-                      style={{ width: `${uploadProgress}%`, background: "var(--brand)" }}
-                    />
-                  </div>
-                  <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
-                    {uploadProgress}%
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
 
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
@@ -703,6 +781,7 @@ export function ResourceManage() {
                     <option value="image">Image</option>
                     <option value="video">Video</option>
                     <option value="audio">Audio</option>
+                    <option value="link">Link</option>
                     <option value="other">File</option>
                   </select>
                   <select

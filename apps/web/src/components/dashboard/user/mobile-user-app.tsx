@@ -18,8 +18,7 @@ import { AllSeminars } from "./all-seminars";
 import { MySeminars } from "./my-seminars";
 import { AllCourses } from "./all-courses";
 import { MyCourses } from "./my-courses";
-import { MobileResources } from "./mobile-resources";
-import { MyResources } from "./my-resources";
+import { ResourceBrowser } from "./resource-browser";
 import { MobileSettings } from "./mobile-settings";
 import { SectionTabs, type SectionParent } from "./section-tabs";
 
@@ -97,7 +96,7 @@ export function MobileUserApp() {
       <main className="flex-1 px-5 pt-5 pb-28">
         {tab === "dashboard" && <DashboardHome />}
 
-        {subParent && (
+        {subParent && tab !== "resources" && (
           <div className="mb-6">
             <SectionTabs parent={subParent} active={sub ?? "all"} />
           </div>
@@ -105,7 +104,12 @@ export function MobileUserApp() {
 
         {tab === "seminars" && (sub === "mine" ? <MySeminars /> : <AllSeminars />)}
         {tab === "courses" && (sub === "mine" ? <MyCourses /> : <AllCourses />)}
-        {tab === "resources" && (sub === "mine" ? <MyResources /> : <MobileResources />)}
+        {tab === "resources" &&
+          (sub === "mine" ? (
+            <ResourceBrowser mobile initialSection="mine" />
+          ) : (
+            <ResourceBrowser mobile />
+          ))}
         {tab === "settings" && <MobileSettings />}
       </main>
 

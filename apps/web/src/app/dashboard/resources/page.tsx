@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/auth/session";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { SectionTabs } from "@/components/dashboard/user/section-tabs";
 import { AllResources } from "@/components/dashboard/user/all-resources";
 import { ResourceManage } from "@/components/dashboard/resource-manage";
 
@@ -24,7 +23,6 @@ export default async function ResourcesPage() {
         title="Resources"
         subtitle="Guides, templates and toolkits for your journey."
       />
-      <SectionTabs parent="resources" active="all" />
       <AllResources />
     </div>
   );
