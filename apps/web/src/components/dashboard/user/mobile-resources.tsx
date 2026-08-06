@@ -101,6 +101,23 @@ export function MobileResources() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Search */}
+      <div className="relative">
+        <Search
+          size={15}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2"
+          style={{ color: "var(--body)" }}
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search resources…"
+          className="w-full text-[13.5px] rounded-xl border bg-white pl-10 pr-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+        />
+      </div>
+
       {/* Featured compact banner */}
       {featured && (
         <a
@@ -123,23 +140,6 @@ export function MobileResources() {
           </span>
         </a>
       )}
-
-      {/* Search */}
-      <div className="relative">
-        <Search
-          size={15}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2"
-          style={{ color: "var(--body)" }}
-        />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search resources…"
-          className="w-full text-[13.5px] rounded-xl border bg-white pl-10 pr-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-        />
-      </div>
 
       {/* Filters */}
       <div className="grid grid-cols-2 gap-2">

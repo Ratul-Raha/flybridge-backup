@@ -7,6 +7,7 @@ import type { DashboardSeminar } from "./seminar-types";
 
 export function AllSeminars() {
   const [seminars, setSeminars] = useState<DashboardSeminar[]>([]);
+  const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +16,12 @@ export function AllSeminars() {
       const res = await fetch("/api/seminars", { cache: "no-store" });
       const data = await res.json();
       setSeminars(data.seminars ?? []);
+
+      const mine = await fetch("/api/me/seminars", { cache: "no-store" }).catch(() => null);
+      if (mine && mine.ok) {
+        const mineData = await mine.json();
+        setRegisteredIds(new Set((mineData.seminars ?? []).map((s: { id: string }) => s.id)));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load seminars");
     } finally {
@@ -25,6 +32,10 @@ export function AllSeminars() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleRegistered = useCallback((id: string) => {
+    setRegisteredIds((prev) => new Set(prev).add(id));
+  }, []);
 
   if (loading) return <ScreenLoading label="Loading seminars…" />;
   if (error) return <ScreenError message={error} />;
@@ -50,7 +61,12 @@ export function AllSeminars() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
           {items.map((s) => (
-            <SeminarCard key={s.id} seminar={s} />
+            <SeminarCard
+              key={s.id}
+              seminar={s}
+              registered={registeredIds.has(s.id)}
+              onRegistered={handleRegistered}
+            />
           ))}
         </div>
       )}
