@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, Download, Star, FolderOpen, FileText, FileImage, Video, Music, File as FileIcon, type LucideIcon } from "lucide-react";
+import { Search, ExternalLink, Star, FolderOpen, FileText, FileImage, Video, Music, File as FileIcon, type LucideIcon } from "lucide-react";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
-import { ResourceCard, categoryGradient, type ResourceCardData } from "./resource-card";
+import { ResourceList, ResourceRow, categoryGradient, fileHref, type ResourceCardData } from "./resource-card";
 import { ScreenError, ScreenLoading } from "./ui";
 
 type AccessFilter = "all" | "free" | "paid";
@@ -18,19 +18,6 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 const selectClass =
   "w-full text-[13px] rounded-xl border bg-white px-3 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function fileHref(resource: ResourceCardData) {
-  if (resource.fileType === "image" || resource.fileType === "video") return resource.fileUrl;
-  return `/api/resources/${resource.id}/file`;
-}
 
 export function MobileResources() {
   const [resources, setResources] = useState<ResourceCardData[]>([]);
@@ -118,29 +105,6 @@ export function MobileResources() {
         />
       </div>
 
-      {/* Featured compact banner */}
-      {featured && (
-        <a
-          href={fileHref(featured)}
-          target="_blank"
-          rel="noreferrer"
-          className="relative overflow-hidden rounded-[16px] px-5 py-5 text-white flex flex-col gap-2"
-          style={{ background: categoryGradient(featured.category) }}
-        >
-          <FeaturedIcon size={110} strokeWidth={1} className="absolute -right-5 -bottom-7 opacity-15" />
-          <span className="relative flex items-center gap-1.5 text-[10.5px] font-semibold" style={{ opacity: 0.95 }}>
-            <Star size={12} fill="currentColor" /> Featured · {featured.category}
-          </span>
-          <p className="relative font-display text-[16px] font-semibold leading-snug pr-10">{featured.title}</p>
-          <span
-            className="relative mt-0.5 inline-flex items-center gap-1.5 self-start rounded-[9px] bg-white px-3.5 py-[8px] text-[12px] font-semibold"
-            style={{ color: "var(--ink)" }}
-          >
-            <Download size={13} /> Open · {formatDate(featured.releaseDate)}
-          </span>
-        </a>
-      )}
-
       {/* Filters */}
       <div className="grid grid-cols-2 gap-2">
         <select
@@ -177,11 +141,42 @@ export function MobileResources() {
           No resources match your search or filters.
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {rest.map((r) => (
-            <ResourceCard key={r.id} resource={r} />
-          ))}
-        </div>
+        <>
+          {/* Featured strip */}
+          {featured && (
+            <a
+              href={fileHref(featured)}
+              target="_blank"
+              rel="noreferrer"
+              className="group relative overflow-hidden rounded-[14px] px-4 py-3.5 text-white flex items-center gap-3"
+              style={{ background: categoryGradient(featured.category) }}
+            >
+              <FeaturedIcon size={72} strokeWidth={1} className="absolute -right-3 -bottom-5 opacity-15" />
+              <span
+                className="shrink-0 flex h-8 w-8 items-center justify-center rounded-[10px]"
+                style={{ background: "rgba(255,255,255,0.18)" }}
+              >
+                <Star size={14} fill="currentColor" />
+              </span>
+              <p className="min-w-0 flex-1 font-display text-[13.5px] font-semibold truncate">
+                {featured.title}
+              </p>
+              <span
+                className="shrink-0 flex items-center justify-center h-8 w-8 rounded-[10px] bg-white"
+                style={{ color: "var(--ink)" }}
+              >
+                <ExternalLink size={13} />
+              </span>
+            </a>
+          )}
+
+          {/* List */}
+          <ResourceList>
+            {rest.map((r) => (
+              <ResourceRow key={r.id} resource={r} />
+            ))}
+          </ResourceList>
+        </>
       )}
     </div>
   );

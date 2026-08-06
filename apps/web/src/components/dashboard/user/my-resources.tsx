@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ResourceCard, type ResourceCardData } from "./resource-card";
+import { ResourceList, ResourceRow, type ResourceCardData } from "./resource-card";
 import { EmptyState, ScreenError, ScreenLoading } from "./ui";
 
 export function MyResources() {
@@ -59,11 +59,11 @@ export function MyResources() {
             Member-only resources unlocked for you.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+        <ResourceList>
           {resources.map((r) => (
-            <ResourceCard key={r.id} resource={r} unlocked />
+            <ResourceRow key={r.id} resource={r} unlocked />
           ))}
-        </div>
+        </ResourceList>
       </section>
     </div>
   );

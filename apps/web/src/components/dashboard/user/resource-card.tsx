@@ -1,4 +1,14 @@
-import { FileText, FileImage, Video, Music, File as FileIcon, Download, Lock, Star, type LucideIcon } from "lucide-react";
+import {
+  FileText,
+  FileImage,
+  Video,
+  Music,
+  File as FileIcon,
+  ExternalLink,
+  Lock,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
 
 export type ResourceCardData = {
   id: string;
@@ -53,7 +63,7 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string) {
+export function formatResourceDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -61,14 +71,25 @@ function formatDate(iso: string) {
   });
 }
 
-function fileHref(resource: ResourceCardData) {
+export function fileHref(resource: ResourceCardData) {
   if (resource.fileType === "image" || resource.fileType === "video") {
     return resource.fileUrl;
   }
   return `/api/resources/${resource.id}/file`;
 }
 
-export function ResourceCard({
+export function ResourceList({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-[14px] border bg-white overflow-hidden"
+      style={{ borderColor: "var(--line)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function ResourceRow({
   resource,
   unlocked = false,
 }: {
@@ -82,100 +103,77 @@ export function ResourceCard({
   const paid = resource.access === "paid";
 
   return (
-    <article
-      className="group rounded-[14px] border bg-white overflow-hidden flex flex-col transition-all duration-250 hover:shadow-[0_12px_32px_-16px_rgba(18,32,67,0.22)] hover:translate-y-[-2px]"
+    <div
+      className="group flex items-center gap-3.5 md:gap-4 px-4 md:px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--bg-soft)] border-t first:border-t-0"
       style={{ borderColor: "var(--line)" }}
     >
-      {/* Cover */}
+      {/* Cover tile */}
       <div
-        className="relative h-[150px] shrink-0 overflow-hidden"
+        className="relative h-11 w-11 md:h-12 md:w-12 shrink-0 rounded-[12px] overflow-hidden flex items-center justify-center"
         style={{ background: categoryGradient(resource.category) }}
       >
-        {resource.thumbnail && !locked && (
+        {resource.thumbnail && !locked ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={resource.thumbnail}
             alt={resource.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
+        ) : (
+          <Icon size={18} className="text-white" strokeWidth={2} />
         )}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span
-            className="flex h-14 w-14 items-center justify-center rounded-2xl backdrop-blur-[2px] transition-transform duration-200 group-hover:scale-110"
-            style={{ background: "rgba(255,255,255,0.22)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.35)" }}
-          >
-            <Icon size={26} className="text-white" strokeWidth={2} />
-          </span>
-        </div>
-
-        <span
-          className="absolute top-3.5 left-3.5 rounded-full px-3 py-[5px] text-[11px] font-semibold text-white"
-          style={{ background: paid ? "rgba(30,20,60,0.55)" : "rgba(10,80,50,0.55)", backdropFilter: "blur(3px)" }}
-        >
-          {paid ? `Members · $${resource.price || "—"}` : "Free"}
-        </span>
-        {resource.featured && (
-          <span
-            className="absolute top-3.5 right-3.5 flex items-center gap-1 rounded-full px-3 py-[5px] text-[10.5px] font-semibold text-[#F2C14E]"
-            style={{ background: "rgba(30,20,60,0.55)", backdropFilter: "blur(3px)" }}
-          >
-            <Star size={11} fill="currentColor" /> Featured
-          </span>
-        )}
-        <span
-          className="absolute bottom-3.5 right-3.5 rounded-md px-2.5 py-[4px] text-[10.5px] font-semibold text-white"
-          style={{ background: "rgba(12,20,40,0.45)", backdropFilter: "blur(3px)" }}
-        >
-          {typeLabel}
-          {size ? ` · ${size}` : ""}
-        </span>
       </div>
 
-      {/* Body */}
-      <div className="flex flex-col gap-2.5 p-5 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] font-semibold" style={{ color: "var(--brand)" }}>
-            {resource.category}
-          </span>
-          <span className="text-[12px]" style={{ color: "var(--body)" }}>
-            {formatDate(resource.releaseDate)}
-          </span>
-        </div>
-
-        <h3
-          className="font-display text-[17px] font-semibold leading-snug transition-colors duration-200 group-hover:text-[var(--brand)]"
-          style={{ color: "var(--ink)" }}
-        >
-          {resource.title}
-        </h3>
-
-        {resource.description && (
-          <p className="text-[13px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
-            {resource.description}
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p
+            className="font-display text-[14px] md:text-[14.5px] font-semibold truncate transition-colors duration-200 group-hover:text-[var(--brand)]"
+            style={{ color: "var(--ink)" }}
+          >
+            {resource.title}
           </p>
-        )}
-
-        <div className="mt-auto pt-2">
-          {locked ? (
-            <span
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] border px-3 py-[9px] text-[12.5px] font-semibold"
-              style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
-            >
-              <Lock size={13} /> Members only
-            </span>
-          ) : (
-            <a
-              href={fileHref(resource)}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] px-3 py-[9px] text-[12.5px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
-              style={{ background: categoryGradient(resource.category) }}
-            >
-              <Download size={13} /> Open resource
-            </a>
+          {resource.featured && (
+            <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
           )}
         </div>
+        <p className="text-[11.5px] md:text-[12px] truncate mt-0.5" style={{ color: "var(--body)" }}>
+          {resource.category} · {typeLabel}
+          {size ? ` · ${size}` : ""} · {formatResourceDate(resource.releaseDate)}
+        </p>
       </div>
-    </article>
+
+      {/* Access badge (desktop) */}
+      <span
+        className="hidden md:inline-flex shrink-0 text-[11px] font-semibold rounded-full px-2.5 py-[5px]"
+        style={
+          paid
+            ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
+            : { background: "var(--brand-soft)", color: "var(--brand)" }
+        }
+      >
+        {paid ? "Members" : "Free"}
+      </span>
+
+      {/* Action */}
+      {locked ? (
+        <span
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-[10px] border px-3 py-[7px] text-[12px] font-semibold"
+          style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
+        >
+          <Lock size={12} /> Members
+        </span>
+      ) : (
+        <a
+          href={fileHref(resource)}
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-[8px] text-[12px] font-semibold text-white transition-opacity duration-200 hover:opacity-90"
+          style={{ background: categoryGradient(resource.category) }}
+        >
+          Open <ExternalLink size={12} />
+        </a>
+      )}
+    </div>
   );
 }
