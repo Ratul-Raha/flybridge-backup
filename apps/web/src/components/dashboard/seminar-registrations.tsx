@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Search, Users } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
 
@@ -24,6 +24,22 @@ type SeminarInfo = {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
+const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_170px_240px_180px]";
+
+const PAGE_SIZES = [10, 20, 50];
+
+function pageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push("…");
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push("…");
+  pages.push(total);
+  return pages;
+}
+
 export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const [seminar, setSeminar] = useState<SeminarInfo | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -31,6 +47,8 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("newest");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +67,10 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, sort, perPage]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,6 +97,12 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
     }
     return arr;
   }, [registrations, query, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / perPage));
+  const safePage = Math.min(page, totalPages);
+  const paged = visible.slice((safePage - 1) * perPage, safePage * perPage);
+  const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
+  const to = Math.min(safePage * perPage, visible.length);
 
   if (loading) return <ScreenLoading label="Loading registrations…" />;
   if (error) return <ScreenError message={error} />;
@@ -162,7 +190,13 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
         className="rounded-[14px] border bg-white overflow-hidden"
         style={{ borderColor: "var(--line)" }}
       >
-        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_170px_250px_190px] gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)]" style={{ borderColor: "var(--line)" }}>
+        <div
+          className={`hidden md:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
+          style={{ borderColor: "var(--line)" }}
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+            #
+          </span>
           {["Name", "Phone", "Email", "Registered"].map((c) => (
             <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
               {c}
@@ -183,45 +217,139 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
           </div>
         ) : (
           <div className="flex flex-col">
-            {visible.map((r, idx) => (
-              <div
-                key={r.id}
-                className={`group md:grid grid-cols-[minmax(0,1fr)_170px_250px_190px] md:items-center gap-3 px-5 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${
-                  idx > 0 ? "border-t" : ""
-                }`}
-                style={{ borderColor: "var(--line)" }}
-              >
-                {/* Name */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={r.name} src={r.avatar} size={32} />
-                  <span className="text-[14px] font-semibold truncate" style={{ color: "var(--ink)" }}>
-                    {r.name}
+            {paged.map((r, idx) => {
+              const serial = (safePage - 1) * perPage + idx + 1;
+              return (
+                <div
+                  key={r.id}
+                  className={`group flex flex-col md:grid gap-1.5 md:gap-3 md:items-center px-5 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${
+                    (safePage - 1) * perPage + idx > 0 ? "border-t" : ""
+                  } ${GRID_COLS}`}
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  {/* Serial + name */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="font-mono text-[11.5px] shrink-0 tabular-nums"
+                      style={{ color: "#A6ADC0" }}
+                    >
+                      #{String(serial).padStart(2, "0")}
+                    </span>
+                    <Avatar name={r.name} src={r.avatar} size={32} />
+                    <span className="text-[14px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                      {r.name}
+                    </span>
+                  </div>
+
+                  <span className="hidden md:block text-[12.5px] truncate" style={{ color: "var(--body)" }}>
+                    {r.phone ?? "—"}
                   </span>
+                  <span className="hidden md:block text-[12.5px] truncate" style={{ color: "var(--body)" }}>
+                    {r.email}
+                  </span>
+                  <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
+                    {new Date(r.registeredAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+
+                  {/* Mobile meta */}
+                  <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                      {r.phone ?? "—"}
+                    </span>
+                    <span className="text-[11.5px] truncate" style={{ color: "var(--body)" }}>
+                      {r.email}
+                    </span>
+                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                      {new Date(r.registeredAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[12.5px] truncate md:mt-0" style={{ color: "var(--body)" }}>
-                  {r.phone ?? "—"}
-                </span>
-                <span className="text-[12.5px] truncate" style={{ color: "var(--body)" }}>
-                  {r.email}
-                </span>
-                <span className="text-[12.5px]" style={{ color: "var(--body)" }}>
-                  {new Date(r.registeredAt).toLocaleString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      <p className="text-[12.5px]" style={{ color: "var(--body)" }}>
-        Showing {visible.length} of {registrations.length} registrations
-      </p>
+      {/* Pagination */}
+      {visible.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <p className="text-[12.5px]" style={{ color: "var(--body)" }}>
+              Showing {from}–{to} of {visible.length}
+            </p>
+            <select
+              value={perPage}
+              onChange={(e) => setPerPage(Number(e.target.value))}
+              className={selectClass + " !py-[6px] text-[12px]"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Rows per page"
+            >
+              {PAGE_SIZES.map((n) => (
+                <option key={n} value={n}>
+                  {n} / page
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setPage(safePage - 1)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={14} />
+            </button>
+
+            {pageNumbers(safePage, totalPages).map((p, i) =>
+              p === "…" ? (
+                <span key={`gap-${i}`} className="px-1 text-[12px]" style={{ color: "var(--body)" }}>
+                  …
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className="h-8 min-w-[32px] px-1.5 rounded-lg text-[12.5px] font-semibold transition-colors duration-150"
+                  style={
+                    p === safePage
+                      ? { background: "var(--brand)", color: "#fff" }
+                      : { color: "var(--body)" }
+                  }
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(safePage + 1)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Next page"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
