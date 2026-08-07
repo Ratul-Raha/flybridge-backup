@@ -44,14 +44,14 @@ export function PromoPopup() {
           boxShadow: "0 40px 80px -30px rgba(18,32,67,0.45)",
         }}
       >
-        {/* Background image + readability overlay */}
+        {/* Background image + readability overlay (desktop only) */}
         <img
           src="/watermark.png"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="hidden sm:block absolute inset-0 w-full h-full object-cover"
         />
         <div
-          className="absolute inset-0"
+          className="hidden sm:block absolute inset-0"
           style={{
             background:
               "linear-gradient(to right, var(--bg-soft) 0%, rgba(246,248,252,0.85) 45%, rgba(246,248,252,0.35) 100%)",
