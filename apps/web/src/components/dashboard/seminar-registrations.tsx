@@ -223,14 +223,22 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
                 <div
                   key={r.id}
                   className={`group flex flex-col md:grid gap-1.5 md:gap-3 md:items-center px-5 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${
-                    (safePage - 1) * perPage + idx > 0 ? "border-t" : ""
+                    idx > 0 ? "border-t" : ""
                   } ${GRID_COLS}`}
                   style={{ borderColor: "var(--line)" }}
                 >
-                  {/* Serial + name */}
+                  {/* Serial (own cell) */}
+                  <span
+                    className="hidden md:block font-mono text-[11.5px] tabular-nums"
+                    style={{ color: "#A6ADC0" }}
+                  >
+                    #{String(serial).padStart(2, "0")}
+                  </span>
+
+                  {/* Name */}
                   <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className="font-mono text-[11.5px] shrink-0 tabular-nums"
+                      className="md:hidden font-mono text-[11.5px] shrink-0 tabular-nums"
                       style={{ color: "#A6ADC0" }}
                     >
                       #{String(serial).padStart(2, "0")}
