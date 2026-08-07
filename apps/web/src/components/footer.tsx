@@ -11,14 +11,14 @@ const footerLinks = [
       { label: "Resources", href: "/resources" },
       { label: "English", href: "#" },
       { label: "Pricing", href: "#" },
-      { label: "FAQ", href: "#" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "About", href: "/about" },
-      { label: "Blog", href: "#" },
+      { label: "Blog", href: "https://coachrasel.com" },
       { label: "Careers", href: "#" },
       { label: "Contact", href: "#" },
     ],
@@ -118,6 +118,8 @@ export function Footer() {
                     <li key={link.label}>
                       <a
                         href={link.href}
+                        target={link.href.startsWith("http") ? "_blank" : undefined}
+                        rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
                         className="text-body-sm text-mist-dim transition-colors hover:text-paper"
                       >
                         {link.label}

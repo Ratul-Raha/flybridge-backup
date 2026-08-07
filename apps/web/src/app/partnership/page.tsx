@@ -156,7 +156,15 @@ export default function PartnershipPage() {
                 </span>
                 <p className="text-[13px]" style={{ color: "var(--body)" }}>
                   Proudly backed by{" "}
-                  <span className="font-medium" style={{ color: "var(--ink)" }}>New Visa Express</span>
+                  <a
+                    href="https://newvisaexpress.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    New Visa Express
+                  </a>
                 </p>
               </div>
             </div>
@@ -398,7 +406,15 @@ export default function PartnershipPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="font-display font-semibold text-[17px]" style={{ color: "var(--ink)" }}>
-                    Backed by New Visa Express
+                    Backed by{" "}
+                    <a
+                      href="https://newvisaexpress.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      New Visa Express
+                    </a>
                   </div>
                   <span className="font-mono text-[9.5px] font-medium tracking-[0.4px] px-3 py-[6px] rounded-full uppercase" style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}>
                     Group backer
@@ -410,8 +426,8 @@ export default function PartnershipPage() {
                   support across every market we serve.
                 </p>
               </div>
-              <a href="#become-partner" className="inline-flex items-center gap-2 font-medium text-[14.5px] shrink-0 self-start md:self-auto" style={{ color: "var(--brand-2)" }}>
-                Learn more
+              <a href="https://newvisaexpress.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-medium text-[14.5px] shrink-0 self-start md:self-auto" style={{ color: "var(--brand-2)" }}>
+                Visit newvisaexpress.com
                 <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12H19M19 12L13 6M19 12L13 18" />
                 </svg>

@@ -187,7 +187,7 @@ export default function SuccessStoriesPage() {
                     {s.src ? (
                       <img
                         src={s.src}
-                        alt="Success story photo"
+                        alt={s.alt}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
@@ -207,29 +207,6 @@ export default function SuccessStoriesPage() {
                         </svg>
                       </>
                     )}
-                    <span
-                      className="absolute top-4 left-4 font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-[11px] py-[6px] rounded-full text-white"
-                      style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}
-                    >
-                      {s.tag}
-                    </span>
-                    <span className="absolute bottom-4 left-4 w-[46px] h-[46px] rounded-full bg-white/90 flex items-center justify-center font-display font-semibold text-[13px] shadow-md" style={{ color: s.color }}>
-                      {s.initials}
-                    </span>
-                  </div>
-
-                  <div className="p-7 flex flex-col flex-1">
-                    <div className="text-[13px] tracking-[1px] mb-4" style={{ color: "#F2B25C" }}>
-                      ★★★★★
-                    </div>
-                    <blockquote className="text-[14.5px] leading-[1.7] flex-1" style={{ color: "var(--ink)" }}>
-                      &ldquo;{s.quote}&rdquo;
-                    </blockquote>
-                    <div className="mt-6 pt-6 border-t border-line">
-                      <p className="font-mono text-[10.5px] tracking-[0.3px]" style={{ color: "var(--body)" }}>
-                        {s.location} → {s.destination}
-                      </p>
-                    </div>
                   </div>
                 </figure>
               ))}
