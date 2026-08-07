@@ -10,6 +10,7 @@ export type StoryVideo = {
   gradient: string;
   initials: string;
   src?: string;
+  poster?: string;
 };
 
 export function VideoModal({ video, onClose }: { video: StoryVideo; onClose: () => void }) {
@@ -70,62 +71,94 @@ export function VideoModal({ video, onClose }: { video: StoryVideo; onClose: () 
 }
 
 export function HeroVideo({ video }: { video: StoryVideo }) {
-  const [open, setOpen] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  const hasVideo = Boolean(video.src);
 
   return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        className="group text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60"
+    <div className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60">
+      <div
+        className="relative aspect-video overflow-hidden rounded-[26px] border border-line"
+        style={{ background: video.gradient, boxShadow: "0 30px 60px -25px rgba(18,32,67,0.4)" }}
       >
-        <div
-          className="relative aspect-video overflow-hidden rounded-[26px] border border-line"
-          style={{ background: video.gradient, boxShadow: "0 30px 60px -25px rgba(18,32,67,0.4)" }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
-              backgroundSize: "18px 18px",
-            }}
+        {playing && hasVideo ? (
+          <video
+            src={video.src}
+            controls
+            autoPlay
+            className="absolute inset-0 w-full h-full object-cover bg-black"
           />
-          <span className="absolute inset-0 flex items-center justify-center font-display font-semibold text-[64px] text-white/20 select-none">
-            {video.initials}
-          </span>
-          <span className="absolute inset-0 flex items-center justify-center">
-            <span className="w-[74px] h-[74px] rounded-full bg-white/95 flex items-center justify-center shadow-xl transition-transform duration-300 group-hover:scale-110">
-              <Play className="w-7 h-7 ml-[2px]" fill="var(--brand)" stroke="var(--brand)" />
-            </span>
-          </span>
-          <span
-            className="absolute top-4 left-4 font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase px-[12px] py-[6px] rounded-full text-white"
-            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}
-          >
-            FEATURED STORY
-          </span>
-          <span
-            className="absolute bottom-4 right-4 font-mono text-[11px] font-medium px-[10px] py-[5px] rounded-md text-white"
-            style={{ background: "rgba(0,0,0,0.45)" }}
-          >
-            {video.duration}
-          </span>
-        </div>
+        ) : (
+          <>
+            {hasVideo && video.poster ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={video.poster}
+                alt={video.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
+                    backgroundSize: "18px 18px",
+                  }}
+                />
+                <span className="absolute inset-0 flex items-center justify-center font-display font-semibold text-[64px] text-white/20 select-none">
+                  {video.initials}
+                </span>
+              </>
+            )}
 
-        <div className="flex items-center justify-between gap-4 mt-4 px-1">
-          <div>
-            <h3 className="text-[15.5px] font-medium" style={{ color: "var(--ink)" }}>{video.title}</h3>
-            <p className="font-mono text-[10.5px] tracking-[0.3px] uppercase mt-[3px]" style={{ color: "var(--body)" }}>
-              {video.tag} · Watch the full story
-            </p>
-          </div>
-          <span className="w-[40px] h-[40px] rounded-full border border-line bg-white flex items-center justify-center shrink-0 group-hover:bg-brand-soft group-hover:border-brand-2 transition-all duration-250">
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => setPlaying(true)}
+                aria-label={`Play ${video.title}`}
+                className="absolute inset-0 z-10 flex items-center justify-center"
+              >
+                <span className="w-[74px] h-[74px] rounded-full bg-white/95 flex items-center justify-center shadow-xl transition-transform duration-300 hover:scale-110">
+                  <Play className="w-7 h-7 ml-[2px]" fill="var(--brand)" stroke="var(--brand)" />
+                </span>
+              </button>
+            )}
+
+            <span
+              className={`absolute top-4 left-4 font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase px-[12px] py-[6px] rounded-full text-white ${
+                hasVideo ? "z-10" : ""
+              }`}
+              style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}
+            >
+              FEATURED STORY
+            </span>
+            <span
+              className={`absolute bottom-4 right-4 font-mono text-[11px] font-medium px-[10px] py-[5px] rounded-md text-white ${
+                hasVideo ? "z-10" : ""
+              }`}
+              style={{ background: "rgba(0,0,0,0.45)" }}
+            >
+              {video.duration}
+            </span>
+          </>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between gap-4 mt-4 px-1">
+        <div>
+          <h3 className="text-[15.5px] font-medium" style={{ color: "var(--ink)" }}>{video.title}</h3>
+          <p className="font-mono text-[10.5px] tracking-[0.3px] uppercase mt-[3px]" style={{ color: "var(--body)" }}>
+            {video.tag} · {hasVideo ? "Watch the full story" : "Coming soon"}
+          </p>
+        </div>
+        {!playing && (
+          <span className="w-[40px] h-[40px] rounded-full border border-line bg-white flex items-center justify-center shrink-0 transition-all duration-250">
             <Play className="w-4 h-4 ml-[1px]" fill="var(--brand)" stroke="var(--brand)" />
           </span>
-        </div>
-      </button>
-
-      {open && <VideoModal video={video} onClose={() => setOpen(false)} />}
-    </>
+        )}
+      </div>
+    </div>
   );
 }
 

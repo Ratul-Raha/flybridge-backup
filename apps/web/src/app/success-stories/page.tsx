@@ -16,6 +16,8 @@ const featuredVideo: StoryVideo = {
   tag: "Work Abroad",
   initials: "IH",
   gradient: "linear-gradient(135deg,#2FBF8F,#188A5D 60%,#0B5E46)",
+  src: "/videos/review_video.mp4",
+  poster: "/videos/review_video_poster.jpg",
 };
 
 const videos: StoryVideo[] = [
@@ -47,13 +49,6 @@ const videos: StoryVideo[] = [
     initials: "RA",
     gradient: "linear-gradient(135deg,#E8A24B,#DB8A2E 60%,#B06218)",
   },
-];
-
-const stats = [
-  { value: "10,000+", label: "Learners guided" },
-  { value: "3,200+", label: "Visa approvals" },
-  { value: "92%", label: "Course completion" },
-  { value: "40+", label: "Countries reached" },
 ];
 
 const outcomes = [
@@ -161,26 +156,6 @@ export default function SuccessStoriesPage() {
 
             <div>
               <HeroVideo video={featuredVideo} />
-            </div>
-          </div>
-        </section>
-
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px]">
-          <div className="max-w-[1320px] mx-auto rounded-[28px] border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-[36px]">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex flex-col items-center text-center px-4">
-                  <div className="flex items-baseline gap-[8px]">
-                    <span className="font-display font-semibold text-[clamp(32px,3.6vw,44px)] leading-none tracking-[-0.03em]" style={{ color: "var(--ink)" }}>
-                      {stat.value}
-                    </span>
-                    <span className="w-[7px] h-[7px] rounded-full self-center" style={{ background: "var(--brand)" }} />
-                  </div>
-                  <div className="font-mono text-[11px] font-medium tracking-[0.4px] uppercase mt-[12px]" style={{ color: "var(--body)" }}>
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>
