@@ -28,7 +28,7 @@ export const programs: Program[] = [
     desc: "Practical, confident communication for everyday and interviews.",
     bg: "var(--lav-bg)",
     badgeColor: "var(--lav-ink)",
-    image: "/programs/spoken-english-book.png",
+    image: "/programs/english.jpg",
   },
   {
     slug: "work-permit-prep-canada",
@@ -38,6 +38,7 @@ export const programs: Program[] = [
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",
     upcoming: true,
+    image: "/programs/work-permit-blueprint.png",
   },
   {
     slug: "interview-readiness",
@@ -47,6 +48,7 @@ export const programs: Program[] = [
     bg: "var(--peach-bg)",
     badgeColor: "var(--peach-ink)",
     upcoming: true,
+    image: "/programs/interview-blueprint.jpg",
   },
 ];
 
