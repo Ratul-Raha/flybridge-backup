@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
+import { Notification } from "@/lib/models/notification";
 import { sendSeminarRegistrationEmail } from "@/lib/email";
 import type { SubscriptionType } from "@/lib/roles";
 
@@ -108,6 +109,30 @@ export async function POST(
       phone,
       email,
     });
+
+    try {
+      const recipients = await User.find({
+        accountType: { $in: ["admin", "moderator"] },
+        _id: { $ne: user._id },
+      })
+        .select("_id")
+        .lean();
+      if (recipients.length > 0) {
+        const registrantName = name || user.name;
+        await Notification.insertMany(
+          recipients.map((r) => ({
+            recipient: r._id,
+            type: "seminar_registration",
+            title: "New seminar registration",
+            message: `${registrantName} registered for "${seminar.title}"`,
+            seminar: seminar._id,
+            registration: registration._id,
+          }))
+        );
+      }
+    } catch (notifError) {
+      console.error("notification creation error", notifError);
+    }
 
     const emailResult = await sendSeminarRegistrationEmail(
       { name: name || user.name, email, phone },

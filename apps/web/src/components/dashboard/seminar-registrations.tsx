@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Search, Trash2, Users } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { useAuth } from "@/lib/auth/auth-context";
 
 type Registration = {
   id: string;
@@ -24,7 +25,7 @@ type SeminarInfo = {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_170px_240px_180px]";
+const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_170px_240px_180px_44px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -41,6 +42,7 @@ function pageNumbers(current: number, total: number): (number | "…")[] {
 }
 
 export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
+  const { user } = useAuth();
   const [seminar, setSeminar] = useState<SeminarInfo | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,8 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+
+  const canDelete = user?.accountType === "admin";
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +71,26 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const remove = useCallback(
+    async (r: Registration) => {
+      if (!confirm(`Delete registration for ${r.name} (${r.email})?`)) return;
+      try {
+        const res = await fetch(
+          `/api/seminars/${seminarId}/registrations/${r.id}`,
+          { method: "DELETE" }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "Failed to delete registration");
+        }
+        setRegistrations((prev) => prev.filter((x) => x.id !== r.id));
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Failed to delete registration");
+      }
+    },
+    [seminarId]
+  );
 
   useEffect(() => {
     setPage(1);
@@ -202,6 +226,11 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
               {c}
             </span>
           ))}
+          {canDelete && (
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Actions
+            </span>
+          )}
         </div>
 
         {visible.length === 0 ? (
@@ -281,7 +310,34 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
                         minute: "2-digit",
                       })}
                     </span>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => remove(r)}
+                        className="ml-auto flex items-center gap-1.5 text-[11.5px] font-medium rounded-lg border px-2.5 py-[5px] transition-colors duration-200 hover:bg-[#FDF1F0]"
+                        style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                        aria-label={`Delete registration for ${r.name}`}
+                      >
+                        <Trash2 size={12} /> Delete
+                      </button>
+                    )}
                   </div>
+
+                  {/* Actions (desktop) */}
+                  {canDelete && (
+                    <div className="hidden md:flex items-center justify-end pr-1">
+                      <button
+                        type="button"
+                        onClick={() => remove(r)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 hover:border-[rgba(192,57,43,0.35)] hover:bg-[#FDF1F0] hover:text-[#C0392B]"
+                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                        aria-label={`Delete registration for ${r.name}`}
+                        title="Delete registration"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

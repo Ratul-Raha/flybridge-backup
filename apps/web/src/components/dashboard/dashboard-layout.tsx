@@ -10,6 +10,7 @@ import {
   Users,
   BookOpen,
   FolderOpen,
+  Bell,
   Settings as SettingsIcon,
   LogOut,
   Menu,
@@ -21,6 +22,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { Avatar } from "@/components/dashboard/avatar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
@@ -105,6 +107,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       { kind: "link", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
       { kind: "link", label: "Settings", href: "/dashboard/settings", icon: SettingsIcon, active: pathname === "/dashboard/settings" },
     ];
+    if (user.accountType === "moderator" || user.accountType === "admin") {
+      items.push({
+        kind: "link",
+        label: "Notifications",
+        href: "/dashboard/notifications",
+        icon: Bell,
+        active: pathname.startsWith("/dashboard/notifications"),
+      });
+    }
     if (user.accountType === "moderator" || user.accountType === "admin") {
       items.push({
         kind: "link",
@@ -325,6 +336,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             ) : (
               user && (
                 <div className="flex items-center gap-3">
+                  {(user.accountType === "admin" || user.accountType === "moderator") && (
+                    <NotificationBell />
+                  )}
                   <span
                     className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[6px] hidden sm:block"
                     style={{ background: roleStyle.bg, color: roleStyle.fg }}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, CheckCircle2, UserPlus, Loader2, Users } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, CheckCircle2, UserPlus, Loader2, Users, ArrowRight } from "lucide-react";
 import { formatDateTime, type DashboardSeminar } from "./seminar-types";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -105,7 +106,17 @@ export function SeminarCard({
         </div>
 
         <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-          {seminar.title}
+          {isRegistered ? (
+            <Link
+              href={`/dashboard/seminars/mine/${seminar.id}`}
+              className="inline-flex items-center gap-1.5 transition-colors duration-200 hover:text-brand-2"
+            >
+              {seminar.title}
+              <ArrowRight size={14} />
+            </Link>
+          ) : (
+            seminar.title
+          )}
         </h3>
 
         <p

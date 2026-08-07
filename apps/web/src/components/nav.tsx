@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const links = [
   { label: "Programs", href: "/programs" },
@@ -79,6 +80,10 @@ export function Nav() {
               <path d="M21 21L16.65 16.65" strokeLinecap="round" />
             </svg>
           </button>
+
+          {user && (user.accountType === "admin" || user.accountType === "moderator") && (
+            <NotificationBell />
+          )}
 
           {loading ? (
             <div className="w-[38px] h-[38px] rounded-full" style={{ background: "var(--line)" }} />

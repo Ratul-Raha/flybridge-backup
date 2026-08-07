@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -31,6 +32,7 @@ function formatDateTime(iso: string) {
 
 export function SeminarList() {
   const { user, signInWithGoogle } = useAuth();
+  const router = useRouter();
   const [seminars, setSeminars] = useState<Seminar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,17 +102,23 @@ export function SeminarList() {
     [selected, phone, load]
   );
 
+  const redirectToSeminar = () => {
+    if (selected) router.push(`/dashboard/seminars/mine/${selected.id}`);
+  };
+
   const registerWithGoogle = async () => {
     setError(null);
     setMessage(null);
     if (!selected) return;
     if (user) {
-      await register(user.email);
+      const ok = await register(user.email);
+      if (ok && user.accountType === "user") redirectToSeminar();
       return;
     }
     const email = await signInWithGoogle();
     if (!email) return;
-    await register(email);
+    const ok = await register(email);
+    if (ok) redirectToSeminar();
   };
 
   if (loading) {
