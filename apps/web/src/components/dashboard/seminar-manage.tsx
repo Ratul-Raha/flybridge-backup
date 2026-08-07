@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Avatar } from "@/components/dashboard/avatar";
 
 type Seminar = {
   id: string;
@@ -16,15 +17,6 @@ type Seminar = {
   url: string | null;
   duration: string | null;
   registrations: number;
-};
-
-type Registration = {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string;
-  avatar: string | null;
-  registeredAt: string;
 };
 
 const inputClass =
@@ -49,10 +41,6 @@ export function SeminarManage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
-
-  const [viewing, setViewing] = useState<{ id: string; title: string } | null>(null);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [regLoading, setRegLoading] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -123,20 +111,7 @@ export function SeminarManage() {
     }
   };
 
-  const viewRegistrations = async (s: Seminar) => {
-    setViewing({ id: s.id, title: s.title });
-    setRegLoading(true);
-    setRegistrations([]);
-    try {
-      const res = await fetch(`/api/seminars/${s.id}/registrations`, { cache: "no-store" });
-      const data = await res.json();
-      setRegistrations(data.registrations ?? []);
-    } catch {
-      // ignored
-    } finally {
-      setRegLoading(false);
-    }
-  };
+  const viewRegistrationsHref = (s: Seminar) => `/dashboard/seminars/${s.id}/registrations`;
 
   if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
 
@@ -367,14 +342,14 @@ export function SeminarManage() {
                   </p>
                 )}
                 <div className="flex flex-wrap items-center gap-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => viewRegistrations(s)}
-                    className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                  <Link
+                    href={viewRegistrationsHref(s)}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
                     style={{ color: "var(--ink)", borderColor: "var(--line)" }}
                   >
+                    <Users size={13} />
                     View registrations
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => openEdit(s)}
@@ -405,64 +380,6 @@ export function SeminarManage() {
                 </div>
               </div>
             </div>
-
-            {viewing?.id === s.id && (
-              <div className="border-t bg-soft" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
-                <div className="px-5 py-4 flex items-center justify-between">
-                  <p className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
-                    Registrations — {viewing.title}
-                  </p>
-                  <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
-                    {registrations.length} joinees
-                  </span>
-                </div>
-                {regLoading ? (
-                  <div className="px-5 pb-5 text-[13px]" style={{ color: "var(--body)" }}>
-                    Loading…
-                  </div>
-                ) : registrations.length === 0 ? (
-                  <div className="px-5 pb-5 text-[13px]" style={{ color: "var(--body)" }}>
-                    No registrations yet.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[520px]">
-                      <thead>
-                          <tr className="text-[11px] font-mono uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
-                            <th className="px-5 py-3 font-medium">Name</th>
-                            <th className="px-4 py-3 font-medium">Phone</th>
-                            <th className="px-4 py-3 font-medium">Email</th>
-                            <th className="px-5 py-3 font-medium">Registered</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {registrations.map((r) => (
-                            <tr key={r.id} className="border-t text-[13.5px]" style={{ borderColor: "var(--line)" }}>
-                              <td className="px-5 py-3">
-                                <div className="flex items-center gap-3">
-                                  <Avatar name={r.name} src={r.avatar} size={32} />
-                                  <span className="font-medium" style={{ color: "var(--ink)" }}>
-                                    {r.name}
-                                  </span>
-                                </div>
-                              </td>
-                            <td className="px-4 py-3" style={{ color: "var(--body)" }}>
-                              {r.phone ?? "—"}
-                            </td>
-                            <td className="px-4 py-3" style={{ color: "var(--body)" }}>
-                              {r.email}
-                            </td>
-                            <td className="px-5 py-3 text-[12.5px]" style={{ color: "var(--body)" }}>
-                              {new Date(r.registeredAt).toLocaleString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         ))}
 
