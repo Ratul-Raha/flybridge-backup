@@ -20,7 +20,7 @@
 
     --font-display: 'Inter Variable', sans-serif;
     --font-body: 'Inter Variable', sans-serif;
-    --font-mono: 'JetBrains Mono Variable', monospace;
+    --font-mono: 'Space Grotesk Variable', sans-serif;
     --font-hand: 'Caveat Variable', cursive;
   }
 
@@ -71,8 +71,18 @@
   animation-play-state: paused;
 }
 
+@keyframes fb-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.fb-bounce {
+  animation: fb-bounce 1.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fb-marquee-track { animation: none; }
+  .fb-bounce { animation: none; }
 }
 
 @keyframes fb-step-in {

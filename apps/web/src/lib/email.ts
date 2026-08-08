@@ -48,7 +48,7 @@ function shell({ eyebrow, hero, body, footerNote }: ShellOptions): string {
                 <tr>
                   <td align="left" style="vertical-align:middle;">
                     <a href="${siteUrl("/")}" style="text-decoration:none;">
-                      <img src="${siteUrl("/logo.png")}" alt="FlyBridge Education Group" width="150" style="width:150px;max-width:150px;height:auto;display:inline-block;" />
+                      <img src="${siteUrl("/logo-light.png")}" alt="FlyBridge Education Group" width="150" style="width:150px;max-width:150px;height:auto;display:inline-block;" />
                     </a>
                   </td>
                   <td align="right" style="vertical-align:middle;">
@@ -70,7 +70,7 @@ function shell({ eyebrow, hero, body, footerNote }: ShellOptions): string {
           <tr>
             <td style="background:${NAVY};padding:26px 32px;text-align:center;">
               <a href="${siteUrl("/")}" style="text-decoration:none;">
-                <img src="${siteUrl("/logo.png")}" alt="FlyBridge" width="120" style="width:120px;max-width:120px;height:auto;display:inline-block;opacity:0.92;" />
+                <img src="${siteUrl("/logo-dark.png")}" alt="FlyBridge" width="120" style="width:120px;max-width:120px;height:auto;display:inline-block;opacity:0.92;" />
               </a>
               <div style="color:${MUTED};font-size:11px;line-height:1.8;margin-top:10px;">
                 FlyBridge Education Group · Toronto, Canada<br />

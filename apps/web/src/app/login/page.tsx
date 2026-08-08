@@ -22,7 +22,7 @@ export default async function LoginPage({
         <div className="flex flex-col items-center text-center mb-10">
           <Link href="/" className="brand flex flex-col items-center leading-none" aria-label="FlyBridge home">
             <Image
-              src="/logo.png"
+              src="/logo-light.png"
               alt="FlyBridge Education Group"
               width={113}
               height={38}

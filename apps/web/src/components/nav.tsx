@@ -42,16 +42,13 @@ export function Nav() {
         <div className="flex w-full max-w-[1320px] mx-auto items-center justify-between">
         <a href="/" className="brand flex flex-col items-start leading-none">
           <Image
-            src="/logo.png"
+            src="/logo-light.png"
             alt="FlyBridge Education Group"
             width={113}
             height={38}
             className="w-auto h-[34px] shrink-0 object-contain"
             priority
           />
-          <span className="font-mono text-[9px] tracking-[1.8px] mt-[3px]" style={{ color: "var(--body)" }}>
-            EDUCATION GROUP
-          </span>
         </a>
 
         <ul className="hidden lg:flex items-center gap-[30px]">

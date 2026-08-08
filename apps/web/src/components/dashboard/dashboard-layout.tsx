@@ -241,7 +241,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="px-6 pt-7 pb-6">
         <Link href="/" className="brand flex flex-col items-start leading-none">
           <Image
-            src="/logo.png"
+            src="/logo-light.png"
             alt="FlyBridge Education Group"
             width={113}
             height={38}

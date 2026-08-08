@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
-import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/caveat";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
+import { ChatWidget } from "@/components/chat/chat-widget";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
@@ -24,6 +25,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <FooterWithRoutes />
+          <ChatWidget />
         </AuthProvider>
       </body>
     </html>
