@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { sendNewSeminarAnnouncement } from "@/lib/email";
 
 async function withCounts(seminars: SeminarDocLike[]) {
   const counts = await SeminarRegistration.aggregate([
@@ -88,6 +89,18 @@ export async function POST(request: NextRequest) {
       duration: typeof body.duration === "string" ? body.duration.trim() || undefined : undefined,
       createdBy: session.userId,
     });
+
+    sendNewSeminarAnnouncement({
+      id: seminar._id.toString(),
+      title: seminar.title,
+      description: seminar.description,
+      dateTime: seminar.dateTime,
+      duration: seminar.duration,
+      type: seminar.type,
+      price: seminar.price,
+      url: seminar.url,
+      image: seminar.image,
+    }).catch((e) => console.error("seminar announcement email error", e));
 
     return NextResponse.json({ seminar: seminar.toObject() }, { status: 201 });
   } catch (error) {
