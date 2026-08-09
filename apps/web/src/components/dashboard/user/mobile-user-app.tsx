@@ -8,6 +8,7 @@ import {
   CalendarDays,
   BookOpen,
   FolderOpen,
+  FileText,
   Settings as SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -19,16 +20,18 @@ import { MySeminars } from "./my-seminars";
 import { AllCourses } from "./all-courses";
 import { MyCourses } from "./my-courses";
 import { ResourceBrowser } from "./resource-browser";
+import { SopGenerator } from "./sop-generator";
 import { MobileSettings } from "./mobile-settings";
 import { SectionTabs, type SectionParent } from "./section-tabs";
 
-type TabId = "dashboard" | "seminars" | "courses" | "resources" | "settings";
+type TabId = "dashboard" | "seminars" | "courses" | "resources" | "sop" | "settings";
 
 const TABS: { id: TabId; label: string; icon: LucideIcon; href: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { id: "seminars", label: "Seminars", icon: CalendarDays, href: "/dashboard/seminars" },
   { id: "courses", label: "Courses", icon: BookOpen, href: "/dashboard/courses" },
   { id: "resources", label: "Resources", icon: FolderOpen, href: "/dashboard/resources" },
+  { id: "sop", label: "SOP", icon: FileText, href: "/dashboard/sop-generator" },
   { id: "settings", label: "Settings", icon: SettingsIcon, href: "/dashboard/settings" },
 ];
 
@@ -36,6 +39,7 @@ function tabFromPath(pathname: string): TabId {
   if (pathname.startsWith("/dashboard/seminars")) return "seminars";
   if (pathname.startsWith("/dashboard/courses")) return "courses";
   if (pathname.startsWith("/dashboard/resources")) return "resources";
+  if (pathname.startsWith("/dashboard/sop-generator")) return "sop";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   return "dashboard";
 }
@@ -110,6 +114,7 @@ export function MobileUserApp() {
           ) : (
             <ResourceBrowser mobile />
           ))}
+        {tab === "sop" && <SopGenerator mobile />}
         {tab === "settings" && <MobileSettings />}
       </main>
 
@@ -118,7 +123,7 @@ export function MobileUserApp() {
         className="fixed bottom-0 inset-x-0 z-40 border-t bg-white/95 backdrop-blur"
         style={{ borderColor: "var(--line)", paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;

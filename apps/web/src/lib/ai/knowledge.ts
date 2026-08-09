@@ -19,28 +19,50 @@ export type RetrievedChunk = {
   content: string;
 };
 
-const KB_CACHE = new Map<string, Promise<KnowledgeChunk[]>>();
+const KB_CACHE = new Map<string, { promise: Promise<KnowledgeChunk[]>; expiresAt: number }>();
 
-/** Loads every .md file in the knowledge base, split into heading-scoped chunks. */
+/** Dynamic sources (seminars from the database, programs from code) are
+ * regenerated at most this often, so stale warm instances self-heal. */
+const KB_TTL_MS = 60_000;
+
+/** Loads every .md file in the knowledge base plus the dynamic sources
+ * (seminars from the database, programs from code), split into
+ * heading-scoped chunks. */
 export function loadKnowledgeBase(cache = true): Promise<KnowledgeChunk[]> {
   const key = KNOWLEDGE_DIR;
-  if (cache && KB_CACHE.has(key)) return KB_CACHE.get(key)!;
+  if (cache) {
+    const entry = KB_CACHE.get(key);
+    if (entry && Date.now() < entry.expiresAt) return entry.promise;
+  }
 
   const promise = (async () => {
-    const { readdir } = await import("node:fs/promises");
-    const files = await readdir(KNOWLEDGE_DIR).catch(() => []);
-    const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
-
-    const chunks: KnowledgeChunk[] = [];
-    for (const file of mdFiles) {
-      const raw = await readFile(path.join(KNOWLEDGE_DIR, file), "utf8");
-      chunks.push(...splitMarkdown(file, raw));
-    }
-    return chunks;
+    const [staticChunks, dynamicChunks] = await Promise.all([
+      loadStaticChunks(),
+      loadDynamicChunks(),
+    ]);
+    return [...staticChunks, ...dynamicChunks];
   })();
 
-  KB_CACHE.set(key, promise);
+  KB_CACHE.set(key, { promise, expiresAt: Date.now() + KB_TTL_MS });
   return promise;
+}
+
+async function loadStaticChunks(): Promise<KnowledgeChunk[]> {
+  const { readdir } = await import("node:fs/promises");
+  const files = await readdir(KNOWLEDGE_DIR).catch(() => []);
+  const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
+
+  const chunks: KnowledgeChunk[] = [];
+  for (const file of mdFiles) {
+    const raw = await readFile(path.join(KNOWLEDGE_DIR, file), "utf8");
+    chunks.push(...splitMarkdown(file, raw));
+  }
+  return chunks;
+}
+
+async function loadDynamicChunks(): Promise<KnowledgeChunk[]> {
+  const { generateDynamicChunks } = await import("@/lib/ai/knowledge-sources");
+  return generateDynamicChunks();
 }
 
 export function reloadKnowledgeBase(): Promise<KnowledgeChunk[]> {

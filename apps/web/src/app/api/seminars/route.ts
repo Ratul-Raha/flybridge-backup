@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { sendNewSeminarAnnouncement } from "@/lib/email";
+import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
 
 async function withCounts(seminars: SeminarDocLike[]) {
   const counts = await SeminarRegistration.aggregate([
@@ -101,6 +102,8 @@ export async function POST(request: NextRequest) {
       url: seminar.url,
       image: seminar.image,
     }).catch((e) => console.error("seminar announcement email error", e));
+
+    reloadKnowledgeBase().catch((e) => console.error("knowledge base reload error", e));
 
     return NextResponse.json({ seminar: seminar.toObject() }, { status: 201 });
   } catch (error) {

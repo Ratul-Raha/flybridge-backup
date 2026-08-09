@@ -10,6 +10,7 @@ import {
   Users,
   BookOpen,
   FolderOpen,
+  FileText,
   Bell,
   Settings as SettingsIcon,
   LogOut,
@@ -95,6 +96,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         },
         {
           kind: "link",
+          label: "SOP Generator",
+          href: "/dashboard/sop-generator",
+          icon: FileText,
+          active: pathname === "/dashboard/sop-generator",
+        },
+        {
+          kind: "link",
           label: "Settings",
           href: "/dashboard/settings",
           icon: SettingsIcon,
@@ -134,6 +142,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         active: pathname.startsWith("/dashboard/resources"),
       });
     }
+    items.push({
+      kind: "link",
+      label: "SOP Generator",
+      href: "/dashboard/sop-generator",
+      icon: FileText,
+      active: pathname.startsWith("/dashboard/sop-generator"),
+    });
     if (user.accountType === "admin") {
       items.push({
         kind: "link",
