@@ -5,13 +5,13 @@ import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-vid
 import { successStories as stories } from "@/lib/stories";
 
 export const metadata: Metadata = {
-  title: "Success Stories | FlyBridge Education Group",
+  title: "Success Stories | FlyBridge",
   description:
     "Real stories from real learners — students who studied, worked and built lives abroad with FlyBridge courses and guidance.",
 };
 
 const featuredVideo: StoryVideo = {
-  title: "From Dhaka to Toronto — a work permit journey",
+  title: "From Dhaka to London — a work permit journey",
   duration: "2:34",
   tag: "Work Abroad",
   initials: "IH",

@@ -6,6 +6,8 @@ import { programs } from "@/lib/programs";
 import { courseDetails } from "@/app/programs/[id]/course-data";
 import { tokenize, type KnowledgeChunk } from "@/lib/ai/knowledge";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com";
+
 function makeChunk(source: string, heading: string, content: string): KnowledgeChunk {
   return {
     id: `${source}:${heading}`,
@@ -46,7 +48,7 @@ export async function generateSeminarChunks(): Promise<KnowledgeChunk[]> {
       ...(price ? [`- Price: ${price}`] : []),
       ...(seminar.duration ? [`- Duration: ${seminar.duration}`] : []),
       ...(seminar.url ? [`- Live session link: ${seminar.url}`] : []),
-      "- How to join: register on the Seminars page (flybridgeedu.com/seminars);",
+      `- How to join: register on the [Seminars page](${SITE_URL}/seminars);`,
       "  a confirmation email is sent automatically and the live link appears in",
       "  your dashboard.",
     ];
@@ -72,6 +74,7 @@ export function generateProgramChunks(): KnowledgeChunk[] {
 
     const lines = [
       details ? details.subtitle : program.desc,
+      `- Course page: [${program.title}](${SITE_URL}/programs/${program.slug})`,
       `- Status: ${status}`,
       ...(program.price ? [`- Price: ${program.price}`] : []),
       ...(details?.level ? [`- Level: ${details.level}`] : []),

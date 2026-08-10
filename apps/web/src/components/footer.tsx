@@ -52,9 +52,6 @@ export function Footer() {
                   className="w-auto h-[30px] shrink-0 object-contain"
                   priority
                 />
-                <span className="font-mono text-[9px] tracking-[1.8px] mt-[3px] text-mist-dim">
-                  EDUCATION GROUP
-                </span>
               </a>
               <p className="text-body-sm text-mist-dim max-w-xs mb-6 leading-relaxed">
                 Helping ambitious people around the world build an international future through practical, expert-led education.
