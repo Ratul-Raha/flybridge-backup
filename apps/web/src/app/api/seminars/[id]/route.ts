@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
-import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
+import { emitEvent } from "@/lib/events/emit";
 
 function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
@@ -54,7 +54,9 @@ export async function PATCH(
     }
 
     await seminar.save();
-    reloadKnowledgeBase().catch((e) => console.error("knowledge base reload error", e));
+    await emitEvent("seminar.updated", {
+      seminar: { id: seminar._id.toString(), title: seminar.title },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("seminars PATCH error", error);
@@ -78,7 +80,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
     await SeminarRegistration.deleteMany({ seminar: seminar._id });
-    reloadKnowledgeBase().catch((e) => console.error("knowledge base reload error", e));
+    await emitEvent("seminar.deleted", {
+      seminar: { id: seminar._id.toString(), title: seminar.title },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("seminars DELETE error", error);

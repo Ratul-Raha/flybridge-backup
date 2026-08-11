@@ -18,6 +18,8 @@ import {
   X,
   ChevronRight,
   ChevronDown,
+  Workflow,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -156,6 +158,22 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         href: "/dashboard/admin",
         icon: Users,
         active: pathname === "/dashboard/admin",
+      });
+    }
+    if (user.accountType === "admin") {
+      items.push({
+        kind: "link",
+        label: "Automation",
+        href: "/dashboard/admin/automations",
+        icon: Workflow,
+        active: pathname.startsWith("/dashboard/admin/automations"),
+      });
+      items.push({
+        kind: "link",
+        label: "Event Log",
+        href: "/dashboard/admin/events",
+        icon: ListChecks,
+        active: pathname.startsWith("/dashboard/admin/events"),
       });
     }
     return items;

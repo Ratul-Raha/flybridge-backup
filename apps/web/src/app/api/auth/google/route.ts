@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { createSession, SESSION_COOKIE } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
 
 export async function POST(request: NextRequest) {
@@ -41,6 +42,20 @@ export async function POST(request: NextRequest) {
         accountType: "user",
         subscription: "free" as SubscriptionType,
       });
+      try {
+        await emitEvent("user.registered", {
+          user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? null,
+            accountType: user.accountType,
+            subscription: user.subscription,
+          },
+        });
+      } catch (emitError) {
+        console.error("user.registered emit error", emitError);
+      }
     } else {
       user.firebaseUid = user.firebaseUid || claims.uid;
       if (!user.avatar && claims.picture) user.avatar = claims.picture;

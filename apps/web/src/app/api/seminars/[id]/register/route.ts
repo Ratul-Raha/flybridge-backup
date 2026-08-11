@@ -3,8 +3,7 @@ import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
-import { Notification } from "@/lib/models/notification";
-import { sendSeminarRegistrationEmail } from "@/lib/email";
+import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
 
 type RegistrationBody = {
@@ -38,6 +37,7 @@ export async function POST(
     let email = body.email?.toLowerCase().trim() ?? "";
     let name = body.name?.trim() ?? "";
     let user = null;
+    let userCreated = false;
 
     if (body.idToken) {
       try {
@@ -66,6 +66,7 @@ export async function POST(
             accountType: "user",
             subscription: "free" as SubscriptionType,
           });
+          userCreated = true;
         }
       } catch {
         return NextResponse.json({ error: "Invalid token" }, { status: 401 });
@@ -90,6 +91,7 @@ export async function POST(
           accountType: "user",
           subscription: "free" as SubscriptionType,
         });
+        userCreated = true;
       }
     }
 
@@ -110,46 +112,50 @@ export async function POST(
       email,
     });
 
-    try {
-      const recipients = await User.find({
-        accountType: { $in: ["admin", "moderator"] },
-        _id: { $ne: user._id },
-      })
-        .select("_id")
-        .lean();
-      if (recipients.length > 0) {
-        const registrantName = name || user.name;
-        await Notification.insertMany(
-          recipients.map((r) => ({
-            recipient: r._id,
-            type: "seminar_registration",
-            title: "New seminar registration",
-            message: `${registrantName} registered for "${seminar.title}"`,
-            seminar: seminar._id,
-            registration: registration._id,
-          }))
-        );
+    if (userCreated) {
+      try {
+        await emitEvent("user.registered", {
+          user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? null,
+            accountType: user.accountType,
+            subscription: user.subscription,
+          },
+        });
+      } catch (emitError) {
+        console.error("user.registered emit error", emitError);
       }
-    } catch (notifError) {
-      console.error("notification creation error", notifError);
     }
 
-    const emailResult = await sendSeminarRegistrationEmail(
-      { name: name || user.name, email, phone },
-      {
+    const emit = await emitEvent("seminar.registration_created", {
+      registrationId: registration._id.toString(),
+      user: {
+        id: user._id.toString(),
+        name: name || user.name,
+        email,
+        phone,
+      },
+      seminar: {
+        id: seminar._id.toString(),
         title: seminar.title,
         description: seminar.description,
-        dateTime: seminar.dateTime,
+        dateTime: seminar.dateTime.toISOString(),
         duration: seminar.duration,
         type: seminar.type,
         price: seminar.price,
         url: seminar.url,
         image: seminar.image,
-      }
-    );
+      },
+    });
 
     return NextResponse.json(
-      { ok: true, registration, emailSent: emailResult.ok },
+      {
+        ok: true,
+        registration,
+        emailSent: emit.handlers.sendRegistrationConfirmationEmail?.ok ?? false,
+      },
       { status: 201 }
     );
   } catch (error) {

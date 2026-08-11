@@ -1,4 +1,4 @@
-export type AppNotificationType = "seminar_registration";
+export type AppNotificationType = "seminar_registration" | "automation";
 
 export type AppNotification = {
   id: string;

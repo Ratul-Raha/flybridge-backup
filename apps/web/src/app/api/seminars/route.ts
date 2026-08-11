@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
-import { sendNewSeminarAnnouncement } from "@/lib/email";
-import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
+import { emitEvent } from "@/lib/events/emit";
 
 async function withCounts(seminars: SeminarDocLike[]) {
   const counts = await SeminarRegistration.aggregate([
@@ -91,19 +90,19 @@ export async function POST(request: NextRequest) {
       createdBy: session.userId,
     });
 
-    sendNewSeminarAnnouncement({
-      id: seminar._id.toString(),
-      title: seminar.title,
-      description: seminar.description,
-      dateTime: seminar.dateTime,
-      duration: seminar.duration,
-      type: seminar.type,
-      price: seminar.price,
-      url: seminar.url,
-      image: seminar.image,
-    }).catch((e) => console.error("seminar announcement email error", e));
-
-    reloadKnowledgeBase().catch((e) => console.error("knowledge base reload error", e));
+    await emitEvent("seminar.created", {
+      seminar: {
+        id: seminar._id.toString(),
+        title: seminar.title,
+        description: seminar.description,
+        dateTime: seminar.dateTime.toISOString(),
+        duration: seminar.duration,
+        type: seminar.type,
+        price: seminar.price,
+        url: seminar.url,
+        image: seminar.image,
+      },
+    });
 
     return NextResponse.json({ seminar: seminar.toObject() }, { status: 201 });
   } catch (error) {
