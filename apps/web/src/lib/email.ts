@@ -112,6 +112,14 @@ type SendEmailInput = {
   from?: string;
 };
 
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(items.slice(i, i + size));
+  }
+  return out;
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = input.from ?? process.env.EMAIL_FROM;
@@ -120,17 +128,27 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; e
     return { ok: false, error: "Email not configured" };
   }
 
+  const to = Array.isArray(input.to) ? input.to : [input.to];
+  if (to.length === 0) {
+    return { ok: false, error: "No recipients" };
+  }
+
   try {
     const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
-      from,
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-    });
-    if (error) {
-      console.error("email send error", error);
-      return { ok: false, error: error.message };
+    const results = await Promise.all(
+      chunk(to, 100).map((batch) =>
+        resend.emails.send({
+          from,
+          to: batch,
+          subject: input.subject,
+          html: input.html,
+        })
+      )
+    );
+    const firstError = results.find((r) => r.error);
+    if (firstError?.error) {
+      console.error("email send error", firstError.error);
+      return { ok: false, error: firstError.error.message };
     }
     return { ok: true };
   } catch (e) {

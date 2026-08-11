@@ -63,7 +63,12 @@ export async function emitEvent(
     }
   }
 
-  const runs = await runAutomationsForEvent(name, payload, logId);
+  let runs: AutomationRunSummary[] = [];
+  try {
+    runs = await runAutomationsForEvent(name, payload, logId);
+  } catch (error) {
+    console.error(`[events] automation execution for "${name}" failed:`, error);
+  }
 
   const handlerValues = Object.values(results);
   const hasFailure = handlerValues.some((r) => !r.ok);

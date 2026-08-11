@@ -152,9 +152,13 @@ export async function runAutomationsForEvent(
 
   const summaries: AutomationRunSummary[] = [];
   for (const automation of automations) {
-    const trigger = automation.nodes.find((n) => n.type === "trigger");
-    if (!trigger || trigger.data?.event !== event) continue;
-    summaries.push(await executeAutomation(automation, trigger, event, payload, eventLogId));
+    try {
+      const trigger = automation.nodes.find((n) => n.type === "trigger");
+      if (!trigger || trigger.data?.event !== event) continue;
+      summaries.push(await executeAutomation(automation, trigger, event, payload, eventLogId));
+    } catch (error) {
+      console.error(`[automation] "${automation.name}" (${automation._id}) failed:`, error);
+    }
   }
   return summaries;
 }
