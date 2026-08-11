@@ -1,4 +1,8 @@
-export type AppNotificationType = "seminar_registration" | "automation";
+export type AppNotificationType =
+  | "seminar_registration"
+  | "seminar_created"
+  | "course_launched"
+  | "automation";
 
 export type AppNotification = {
   id: string;
@@ -7,6 +11,7 @@ export type AppNotification = {
   message: string;
   seminarId: string | null;
   registrationId: string | null;
+  courseSlug: string | null;
   read: boolean;
   createdAt: string;
 };

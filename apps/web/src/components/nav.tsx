@@ -78,9 +78,7 @@ export function Nav() {
             </svg>
           </button>
 
-          {user && (user.accountType === "admin" || user.accountType === "moderator") && (
-            <NotificationBell />
-          )}
+          {user && <NotificationBell />}
 
           {loading ? (
             <div className="w-[38px] h-[38px] rounded-full" style={{ background: "var(--line)" }} />

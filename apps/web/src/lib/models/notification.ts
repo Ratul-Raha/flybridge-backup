@@ -10,13 +10,14 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["seminar_registration", "automation"],
+      enum: ["seminar_registration", "seminar_created", "course_launched", "automation"],
       required: true,
     },
     title: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     seminar: { type: Schema.Types.ObjectId, ref: "Seminar" },
     registration: { type: Schema.Types.ObjectId, ref: "SeminarRegistration" },
+    courseSlug: { type: String },
     read: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
@@ -24,7 +25,12 @@ const notificationSchema = new Schema(
 
 notificationSchema.index({ recipient: 1, createdAt: -1 });
 
-export const NOTIFICATION_TYPES = ["seminar_registration", "automation"] as const;
+export const NOTIFICATION_TYPES = [
+  "seminar_registration",
+  "seminar_created",
+  "course_launched",
+  "automation",
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export type NotificationDoc = InferSchemaType<typeof notificationSchema> & {

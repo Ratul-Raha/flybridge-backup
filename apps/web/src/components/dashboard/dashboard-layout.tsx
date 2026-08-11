@@ -105,6 +105,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         },
         {
           kind: "link",
+          label: "Notifications",
+          href: "/dashboard/notifications",
+          icon: Bell,
+          active: pathname.startsWith("/dashboard/notifications"),
+        },
+        {
+          kind: "link",
           label: "Settings",
           href: "/dashboard/settings",
           icon: SettingsIcon,

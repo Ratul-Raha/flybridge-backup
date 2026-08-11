@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellRing, CheckCheck, UserPlus } from "lucide-react";
+import { Bell, BellRing, CheckCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import type { AppNotification, NotificationsResponse } from "@/lib/notifications";
+import { NotificationIcon } from "@/components/notifications/notification-icon";
 import { timeAgo } from "@/lib/time";
 
 const POLL_INTERVAL = 30_000;
@@ -16,9 +17,6 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  const isStaff =
-    user && (user.accountType === "admin" || user.accountType === "moderator");
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -37,7 +35,7 @@ export function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    if (!isStaff) return;
+    if (!user) return;
     fetchNotifications();
     const interval = setInterval(fetchNotifications, POLL_INTERVAL);
     const onFocus = () => fetchNotifications();
@@ -46,7 +44,7 @@ export function NotificationBell() {
       clearInterval(interval);
       window.removeEventListener("focus", onFocus);
     };
-  }, [isStaff, fetchNotifications]);
+  }, [user, fetchNotifications]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,14 +82,18 @@ export function NotificationBell() {
     (n: AppNotification) => {
       if (!n.read) markRead(n.id);
       setOpen(false);
-      if (n.seminarId) {
+      if (n.type === "seminar_registration" && n.seminarId) {
         window.location.assign(`/dashboard/seminars/${n.seminarId}/registrations`);
+      } else if (n.type === "seminar_created") {
+        window.location.assign("/seminars");
+      } else if (n.type === "course_launched") {
+        window.location.assign(n.courseSlug ? `/programs/${n.courseSlug}` : "/programs");
       }
     },
     [markRead]
   );
 
-  if (!isStaff) return null;
+  if (!user) return null;
 
   return (
     <div className="relative" ref={rootRef}>
@@ -198,7 +200,8 @@ export function NotificationBell() {
                             : { background: "var(--brand-soft)" }
                         }
                       >
-                        <UserPlus
+                        <NotificationIcon
+                          type={n.type}
                           size={14}
                           style={{
                             color: n.read ? "var(--body)" : "var(--brand)",

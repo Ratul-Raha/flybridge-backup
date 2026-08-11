@@ -30,6 +30,7 @@ export async function GET(request: Request) {
         message: n.message,
         seminarId: n.seminar ? n.seminar.toString() : null,
         registrationId: n.registration ? n.registration.toString() : null,
+        courseSlug: n.courseSlug ?? null,
         read: n.read,
         createdAt: n.createdAt,
       })),

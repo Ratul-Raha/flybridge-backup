@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Bell, CheckCheck, UserPlus } from "lucide-react";
+import { ArrowRight, Bell, CheckCheck } from "lucide-react";
 import type { AppNotification, NotificationsResponse } from "@/lib/notifications";
+import { NotificationIcon } from "@/components/notifications/notification-icon";
 import { timeAgo } from "@/lib/time";
 
 export function NotificationCenter() {
@@ -50,8 +51,12 @@ export function NotificationCenter() {
   const openItem = useCallback(
     (n: AppNotification) => {
       if (!n.read) markRead(n.id);
-      if (n.seminarId) {
+      if (n.type === "seminar_registration" && n.seminarId) {
         window.location.assign(`/dashboard/seminars/${n.seminarId}/registrations`);
+      } else if (n.type === "seminar_created") {
+        window.location.assign("/seminars");
+      } else if (n.type === "course_launched") {
+        window.location.assign(n.courseSlug ? `/programs/${n.courseSlug}` : "/programs");
       }
     },
     [markRead]
@@ -141,7 +146,7 @@ export function NotificationCenter() {
             All caught up
           </p>
           <p className="text-[13px] leading-[1.6] max-w-[360px]" style={{ color: "var(--body)" }}>
-            When someone registers for a seminar, it lands here and takes you straight to their registration.
+            New seminars, course launches and registration activity will land here as they happen.
           </p>
         </div>
       ) : (
@@ -173,7 +178,7 @@ export function NotificationCenter() {
                         : { background: "var(--brand-soft)" }
                     }
                   >
-                    <UserPlus size={16} style={{ color: n.read ? "var(--body)" : "var(--brand)" }} />
+                    <NotificationIcon type={n.type} size={16} style={{ color: n.read ? "var(--body)" : "var(--brand)" }} />
                   </span>
 
                   <span className="min-w-0 flex-1">

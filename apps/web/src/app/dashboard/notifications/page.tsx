@@ -10,9 +10,6 @@ export const metadata: Metadata = {
 export default async function NotificationsPage() {
   const session = await readSession();
   if (!session) redirect("/login");
-  if (session.role !== "admin" && session.role !== "moderator") {
-    redirect("/dashboard");
-  }
 
   return <NotificationCenter />;
 }

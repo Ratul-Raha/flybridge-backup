@@ -294,7 +294,10 @@ export async function sendNewSeminarAnnouncement(
   const users = await mongoose
     .connection
     .collection("users")
-    .find({ email: { $regex: /@/ } }, { projection: { email: 1, _id: 0 } })
+    .find(
+      { email: { $regex: /@/ }, accountType: { $nin: ["admin", "moderator"] } },
+      { projection: { email: 1, _id: 0 } }
+    )
     .limit(500)
     .toArray();
 
@@ -350,7 +353,10 @@ export async function sendCourseLaunchEmail(
   const users = await mongoose
     .connection
     .collection("users")
-    .find({ email: { $regex: /@/ } }, { projection: { email: 1, _id: 0 } })
+    .find(
+      { email: { $regex: /@/ }, accountType: { $nin: ["admin", "moderator"] } },
+      { projection: { email: 1, _id: 0 } }
+    )
     .limit(500)
     .toArray();
 
