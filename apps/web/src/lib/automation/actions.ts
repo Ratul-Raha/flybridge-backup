@@ -29,7 +29,8 @@ async function resolveRecipients(setting: RecipientSetting, payload: EventPayloa
         .map((e) => e.trim())
         .filter(Boolean);
     case "role": {
-      const emails = await User.find({ email: { $regex: /@/ } }, { projection: { email: 1 } })
+      const emails = await User.find({ email: { $regex: /@/ } })
+        .select("email")
         .limit(500)
         .lean();
       return emails.map((u) => u.email as string);

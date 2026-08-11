@@ -288,9 +288,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             className="w-auto h-[34px] shrink-0 object-contain"
             priority
           />
-          <span className="font-mono text-[8.5px] tracking-[1.8px] mt-[3px]" style={{ color: "var(--body)" }}>
-            EDUCATION GROUP
-          </span>
         </Link>
       </div>
 
