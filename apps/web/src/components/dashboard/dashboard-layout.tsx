@@ -376,9 +376,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             ) : (
               user && (
                 <div className="flex items-center gap-3">
-                  {(user.accountType === "admin" || user.accountType === "moderator") && (
-                    <NotificationBell />
-                  )}
+                  {user && <NotificationBell />}
                   <span
                     className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[6px] hidden sm:block"
                     style={{ background: roleStyle.bg, color: roleStyle.fg }}
