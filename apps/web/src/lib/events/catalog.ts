@@ -104,6 +104,32 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       course: { slug: "study-visa-prep-us", title: "Student Visa Blueprint™", desc: "Step-by-step study visa preparation.", badge: "STUDY ABROAD", price: "৳২,৯৯৯" },
     }),
   },
+  "resource.created": {
+    name: "resource.created",
+    label: "Resource published",
+    description: "Fires when a new resource (PDF, guide, video) is published.",
+    fields: [
+      "resource.id",
+      "resource.title",
+      "resource.description",
+      "resource.category",
+      "resource.fileType",
+      "resource.thumbnail",
+      "resource.access",
+      "resource.price",
+    ],
+    samplePayload: () => ({
+      resource: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        title: "Study Visa Checklist 2026",
+        description: "Everything you need before applying.",
+        category: "visa",
+        fileType: "pdf",
+        access: "free",
+        price: 0,
+      },
+    }),
+  },
 };
 
 export const EVENT_LIST: EventCatalogEntry[] = EVENT_NAMES.map((name) => EVENT_CATALOG[name]);

@@ -5,6 +5,7 @@ export const EVENT_NAMES = [
   "seminar.updated",
   "seminar.deleted",
   "course.launched",
+  "resource.created",
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];
@@ -42,6 +43,18 @@ export type EventPayloadMap = {
   "seminar.deleted": { seminar: Pick<SeminarPayload, "id" | "title"> };
   "course.launched": {
     course: { slug: string; title: string; desc?: string; badge?: string; price?: string; image?: string };
+  };
+  "resource.created": {
+    resource: {
+      id: string;
+      title: string;
+      description?: string | null;
+      category?: string;
+      fileType?: string;
+      thumbnail?: string | null;
+      access?: "free" | "paid";
+      price?: number;
+    };
   };
 };
 

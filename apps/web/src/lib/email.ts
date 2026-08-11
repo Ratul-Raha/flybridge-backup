@@ -170,6 +170,16 @@ export type CourseEmailData = {
   image?: string;
 };
 
+export type ResourceEmailData = {
+  title: string;
+  description?: string | null;
+  category?: string;
+  fileType?: string;
+  thumbnail?: string | null;
+  access?: "free" | "paid";
+  price?: number;
+};
+
 function formatDate(d: Date) {
   return d.toLocaleString("en-US", {
     weekday: "long",
@@ -285,9 +295,7 @@ function newSeminarTemplate(seminar: SeminarEmailData): string {
   });
 }
 
-export async function sendNewSeminarAnnouncement(
-  seminar: SeminarEmailData
-): Promise<{ ok: boolean; error?: string; recipients: number }> {
+async function allSubscriberEmails(): Promise<string[]> {
   const { default: mongoose } = await import("mongoose");
   await import("@/lib/db").then((m) => m.connectDb());
 
@@ -301,17 +309,29 @@ export async function sendNewSeminarAnnouncement(
     .limit(500)
     .toArray();
 
-  const emails = users.map((u) => u.email as string);
+  return users.map((u) => u.email as string);
+}
+
+async function sendToSubscribers(
+  subject: string,
+  html: string
+): Promise<{ ok: boolean; error?: string; recipients: number }> {
+  const emails = await allSubscriberEmails();
   if (emails.length === 0) {
     return { ok: true, recipients: 0 };
   }
 
-  const result = await sendEmail({
-    to: emails,
-    subject: `New seminar — ${seminar.title} · FlyBridge`,
-    html: newSeminarTemplate(seminar),
-  });
+  const result = await sendEmail({ to: emails, subject, html });
   return { ...result, recipients: emails.length };
+}
+
+export async function sendNewSeminarAnnouncement(
+  seminar: SeminarEmailData
+): Promise<{ ok: boolean; error?: string; recipients: number }> {
+  return sendToSubscribers(
+    `New seminar — ${seminar.title} · FlyBridge`,
+    newSeminarTemplate(seminar)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -347,28 +367,62 @@ function newCourseTemplate(course: CourseEmailData): string {
 export async function sendCourseLaunchEmail(
   course: CourseEmailData
 ): Promise<{ ok: boolean; error?: string; recipients: number }> {
-  const { default: mongoose } = await import("mongoose");
-  await import("@/lib/db").then((m) => m.connectDb());
+  return sendToSubscribers(
+    `New course — ${course.title} · FlyBridge`,
+    newCourseTemplate(course)
+  );
+}
 
-  const users = await mongoose
-    .connection
-    .collection("users")
-    .find(
-      { email: { $regex: /@/ }, accountType: { $nin: ["admin", "moderator"] } },
-      { projection: { email: 1, _id: 0 } }
-    )
-    .limit(500)
-    .toArray();
+// ---------------------------------------------------------------------------
+// 4. Resource announcement (advertisement to all users)
+// ---------------------------------------------------------------------------
 
-  const emails = users.map((u) => u.email as string);
-  if (emails.length === 0) {
-    return { ok: true, recipients: 0 };
-  }
+function newResourceTemplate(resource: ResourceEmailData): string {
+  const badge =
+    resource.access === "paid"
+      ? `New resource · ${resource.price ? `$${resource.price}` : "Premium"}`
+      : "New resource · Free download";
 
-  const result = await sendEmail({
-    to: emails,
-    subject: `New course — ${course.title} · FlyBridge`,
-    html: newCourseTemplate(course),
+  const body = `
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${BRAND};margin-bottom:10px;">${badge}</div>
+    <h1 style="margin:0 0 8px 0;font-size:26px;color:${INK};letter-spacing:-0.3px;line-height:1.25;">${resource.title}</h1>
+    <div style="font-size:14px;line-height:1.7;color:${BODY};margin-bottom:22px;">${resource.description ?? "A brand new resource from FlyBridge Education Group."}</div>
+
+    ${resource.category ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_SOFT};border-radius:16px;padding:18px 20px;margin-bottom:22px;">
+      <tr>
+        <td style="padding:6px 0;font-size:13px;color:${BODY};">📂 Category</td>
+        <td style="padding:6px 0;font-size:13px;color:${INK};font-weight:600;text-align:right;">${resource.category}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;font-size:13px;color:${BODY};">📄 Format</td>
+        <td style="padding:6px 0;font-size:13px;color:${INK};font-weight:600;text-align:right;">${resource.fileType ?? "file"}</td>
+      </tr>
+    </table>` : ""}
+
+    ${ctaButton(siteUrl("/resources"), "Get the resource")}
+
+    <p style="font-size:12px;line-height:1.6;color:${MUTED};margin:22px 0 0 0;">
+      Browse all free and premium resources at
+      <a href="${siteUrl("/resources")}" style="color:${BRAND};text-decoration:none;">flybridgeedu.com/resources</a>.
+    </p>`;
+
+  return shell({
+    eyebrow: "New Resource",
+    hero: heroImage(
+      resource.thumbnail,
+      "FlyBridge Resource",
+      "linear-gradient(135deg,#F59E0B,#EF4444)"
+    ),
+    body,
+    footerNote: "You received this email because you're part of the FlyBridge community.",
   });
-  return { ...result, recipients: emails.length };
+}
+
+export async function sendNewResourceAnnouncement(
+  resource: ResourceEmailData
+): Promise<{ ok: boolean; error?: string; recipients: number }> {
+  return sendToSubscribers(
+    `New resource — ${resource.title} · FlyBridge`,
+    newResourceTemplate(resource)
+  );
 }

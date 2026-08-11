@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
 import { isResourceCategory } from "@/lib/resource-categories";
+import { emitEvent } from "@/lib/events/emit";
 
 type ResourceDto = {
   id: string;
@@ -118,6 +119,19 @@ export async function POST(request: NextRequest) {
       price: access === "paid" ? Math.max(0, Number(body.price) || 0) : 0,
       featured: body.featured === true,
       createdBy: session!.userId,
+    });
+
+    await emitEvent("resource.created", {
+      resource: {
+        id: resource._id.toString(),
+        title: resource.title,
+        description: resource.description ?? null,
+        category: resource.category,
+        fileType: resource.fileType,
+        thumbnail: resource.thumbnail ?? null,
+        access: resource.access,
+        price: resource.price,
+      },
     });
 
     return NextResponse.json({ resource: toDto(resource as ResourceDoc) }, { status: 201 });

@@ -208,7 +208,7 @@ export function AutomationList() {
       </SectionCard>
 
       <p className="text-[11.5px] px-1" style={{ color: "var(--body)" }}>
-        Events available: user registered · seminar registered · seminar launched · seminar updated · seminar deleted · course launched. You can also fire any event manually from the Event Log page to test a flow.
+        Events available: user registered · seminar registered · seminar launched · seminar updated · seminar deleted · course launched · resource published. You can also fire any event manually from the Event Log page to test a flow.
       </p>
     </div>
   );

@@ -3,8 +3,10 @@ import {
   notifyStaffOnRegistration,
   notifyAllOnSeminarCreated,
   notifyAllOnCourseLaunched,
+  notifyAllOnResourceCreated,
   sendRegistrationConfirmationEmail,
   announceNewSeminar,
+  announceNewResource,
   refreshKnowledgeBase,
   announceCourseLaunch,
 } from "./handlers";
@@ -19,4 +21,6 @@ export function registerDefaultHandlers(): void {
   on("seminar.deleted", refreshKnowledgeBase);
   on("course.launched", announceCourseLaunch);
   on("course.launched", notifyAllOnCourseLaunched);
+  on("resource.created", announceNewResource);
+  on("resource.created", notifyAllOnResourceCreated);
 }

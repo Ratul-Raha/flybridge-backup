@@ -88,6 +88,8 @@ export function NotificationBell() {
         window.location.assign("/seminars");
       } else if (n.type === "course_launched") {
         window.location.assign(n.courseSlug ? `/programs/${n.courseSlug}` : "/programs");
+      } else if (n.type === "resource_created") {
+        window.location.assign("/resources");
       }
     },
     [markRead]

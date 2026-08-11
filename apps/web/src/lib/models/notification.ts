@@ -10,7 +10,7 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["seminar_registration", "seminar_created", "course_launched", "automation"],
+      enum: ["seminar_registration", "seminar_created", "course_launched", "resource_created", "automation"],
       required: true,
     },
     title: { type: String, required: true, trim: true },
@@ -29,6 +29,7 @@ export const NOTIFICATION_TYPES = [
   "seminar_registration",
   "seminar_created",
   "course_launched",
+  "resource_created",
   "automation",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

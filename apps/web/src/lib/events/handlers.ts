@@ -4,6 +4,7 @@ import {
   sendSeminarRegistrationEmail,
   sendNewSeminarAnnouncement,
   sendCourseLaunchEmail,
+  sendNewResourceAnnouncement,
 } from "@/lib/email";
 import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
 import { User } from "@/lib/models/user";
@@ -162,6 +163,40 @@ export const announceCourseLaunch: EventHandler = {
       image: typeof c.image === "string" ? c.image : undefined,
     });
     if (!result.ok) throw new Error(result.error ?? "Course launch email failed");
+  },
+};
+
+export const notifyAllOnResourceCreated: EventHandler = {
+  name: "notifyAllOnResourceCreated",
+  run: async (payload) => {
+    const resource = (payload.resource ?? {}) as Record<string, unknown>;
+    const resourceTitle = String(resource.title ?? "");
+
+    const recipients = await User.find().select("_id").lean();
+    if (recipients.length === 0) return;
+
+    await insertNotifications(recipients, {
+      type: "resource_created",
+      title: "New resource available",
+      message: `"${resourceTitle}" has just been published — check it out.`,
+    });
+  },
+};
+
+export const announceNewResource: EventHandler = {
+  name: "announceNewResource",
+  run: async (payload) => {
+    const r = (payload.resource ?? {}) as Record<string, unknown>;
+    const result = await sendNewResourceAnnouncement({
+      title: String(r.title ?? ""),
+      description: typeof r.description === "string" ? r.description : null,
+      category: typeof r.category === "string" ? r.category : undefined,
+      fileType: typeof r.fileType === "string" ? r.fileType : undefined,
+      thumbnail: typeof r.thumbnail === "string" ? r.thumbnail : null,
+      access: r.access === "paid" ? "paid" : "free",
+      price: typeof r.price === "number" ? r.price : undefined,
+    });
+    if (!result.ok) throw new Error(result.error ?? "Resource announcement email failed");
   },
 };
 

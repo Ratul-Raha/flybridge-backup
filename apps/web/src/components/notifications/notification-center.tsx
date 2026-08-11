@@ -57,6 +57,8 @@ export function NotificationCenter() {
         window.location.assign("/seminars");
       } else if (n.type === "course_launched") {
         window.location.assign(n.courseSlug ? `/programs/${n.courseSlug}` : "/programs");
+      } else if (n.type === "resource_created") {
+        window.location.assign("/resources");
       }
     },
     [markRead]
@@ -146,7 +148,7 @@ export function NotificationCenter() {
             All caught up
           </p>
           <p className="text-[13px] leading-[1.6] max-w-[360px]" style={{ color: "var(--body)" }}>
-            New seminars, course launches and registration activity will land here as they happen.
+            New seminars, course launches, resources and registration activity will land here as they happen.
           </p>
         </div>
       ) : (
