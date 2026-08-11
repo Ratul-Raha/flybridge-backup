@@ -43,7 +43,14 @@ async function actionSendEmail(node: AutomationNode, payload: EventPayload): Pro
   const data = node.data;
   const recipients = await resolveRecipients(data.to ?? { mode: "path", value: "user.email" }, payload);
   if (recipients.length === 0) {
-    return { ok: false, error: "No recipients resolved for email action" };
+    const mode = data.to?.mode ?? "path";
+    return {
+      ok: false,
+      error:
+        mode === "path"
+          ? `No recipients resolved — payload path "${data.to?.value ?? "user.email"}" is empty for this event. Use "All registered users" or a fixed email list instead.`
+          : "No recipients resolved for email action",
+    };
   }
   const subject = renderTemplate(data.subject ?? "FlyBridge notification", payload);
   const body = renderTemplate(data.body ?? "", payload);

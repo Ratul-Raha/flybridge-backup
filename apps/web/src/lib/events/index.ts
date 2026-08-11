@@ -24,3 +24,5 @@ export function registerDefaultHandlers(): void {
   on("resource.created", notifyAllOnResourceCreated);
   on("resource.created", announceNewResource);
 }
+
+registerDefaultHandlers();
