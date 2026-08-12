@@ -51,6 +51,8 @@ type NavGroup = {
 
 type NavItem = NavLink | NavGroup;
 
+type NavSegment = { title: string; items: NavItem[] };
+
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
@@ -58,140 +60,189 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const isMobile = useIsMobile();
 
-  const nav = useMemo(() => {
+  const nav = useMemo<NavSegment[]>(() => {
     if (!user) return [];
     if (user.accountType === "user") {
       return [
         {
-          kind: "link",
-          label: "Dashboard",
-          href: "/dashboard",
-          icon: LayoutDashboard,
-          active: pathname === "/dashboard",
-        },
-        {
-          kind: "group",
-          label: "Seminars",
-          icon: CalendarDays,
-          children: [
-            { label: "All seminars", href: "/dashboard/seminars", active: pathname === "/dashboard/seminars" },
-            { label: "My seminars", href: "/dashboard/seminars/mine", active: pathname === "/dashboard/seminars/mine" },
+          title: "Overview",
+          items: [
+            {
+              kind: "link",
+              label: "Dashboard",
+              href: "/dashboard",
+              icon: LayoutDashboard,
+              active: pathname === "/dashboard",
+            },
           ],
         },
         {
-          kind: "group",
-          label: "Courses",
-          icon: BookOpen,
-          children: [
-            { label: "All courses", href: "/dashboard/courses", active: pathname === "/dashboard/courses" },
-            { label: "My courses", href: "/dashboard/courses/mine", active: pathname === "/dashboard/courses/mine" },
+          title: "Learning",
+          items: [
+            {
+              kind: "group",
+              label: "Seminars",
+              icon: CalendarDays,
+              children: [
+                { label: "All seminars", href: "/dashboard/seminars", active: pathname === "/dashboard/seminars" },
+                { label: "My seminars", href: "/dashboard/seminars/mine", active: pathname === "/dashboard/seminars/mine" },
+              ],
+            },
+            {
+              kind: "group",
+              label: "Courses",
+              icon: BookOpen,
+              children: [
+                { label: "All courses", href: "/dashboard/courses", active: pathname === "/dashboard/courses" },
+                { label: "My courses", href: "/dashboard/courses/mine", active: pathname === "/dashboard/courses/mine" },
+              ],
+            },
+            {
+              kind: "group",
+              label: "Resources",
+              icon: FolderOpen,
+              children: [
+                { label: "All resources", href: "/dashboard/resources", active: pathname === "/dashboard/resources" },
+                { label: "My resources", href: "/dashboard/resources/mine", active: pathname === "/dashboard/resources/mine" },
+              ],
+            },
           ],
         },
         {
-          kind: "group",
-          label: "Resources",
-          icon: FolderOpen,
-          children: [
-            { label: "All resources", href: "/dashboard/resources", active: pathname === "/dashboard/resources" },
-            { label: "My resources", href: "/dashboard/resources/mine", active: pathname === "/dashboard/resources/mine" },
+          title: "Tools",
+          items: [
+            {
+              kind: "link",
+              label: "SOP Generator",
+              href: "/dashboard/sop-generator",
+              icon: FileText,
+              active: pathname === "/dashboard/sop-generator",
+            },
           ],
         },
+        {
+          title: "Account",
+          items: [
+            {
+              kind: "link",
+              label: "Notifications",
+              href: "/dashboard/notifications",
+              icon: Bell,
+              active: pathname.startsWith("/dashboard/notifications"),
+            },
+            {
+              kind: "link",
+              label: "Settings",
+              href: "/dashboard/settings",
+              icon: SettingsIcon,
+              active: pathname === "/dashboard/settings",
+            },
+          ],
+        },
+      ] satisfies NavSegment[];
+    }
+
+    const segments: NavSegment[] = [
+      {
+        title: "Overview",
+        items: [
+          { kind: "link", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
+        ],
+      },
+    ];
+    if (user.accountType === "moderator" || user.accountType === "admin") {
+      segments.push({
+        title: "Content",
+        items: [
+          {
+            kind: "link",
+            label: "Seminars",
+            href: "/dashboard/seminars",
+            icon: CalendarDays,
+            active: pathname.startsWith("/dashboard/seminars"),
+          },
+          {
+            kind: "link",
+            label: "Resources",
+            href: "/dashboard/resources",
+            icon: FolderOpen,
+            active: pathname.startsWith("/dashboard/resources"),
+          },
+        ],
+      });
+    }
+    segments.push({
+      title: "Tools",
+      items: [
         {
           kind: "link",
           label: "SOP Generator",
           href: "/dashboard/sop-generator",
           icon: FileText,
-          active: pathname === "/dashboard/sop-generator",
+          active: pathname.startsWith("/dashboard/sop-generator"),
         },
-        {
-          kind: "link",
-          label: "Notifications",
-          href: "/dashboard/notifications",
-          icon: Bell,
-          active: pathname.startsWith("/dashboard/notifications"),
-        },
-        {
-          kind: "link",
-          label: "Settings",
-          href: "/dashboard/settings",
-          icon: SettingsIcon,
-          active: pathname === "/dashboard/settings",
-        },
-      ] as NavItem[];
-    }
-
-    const items: NavItem[] = [
-      { kind: "link", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
-      { kind: "link", label: "Settings", href: "/dashboard/settings", icon: SettingsIcon, active: pathname === "/dashboard/settings" },
-    ];
-    if (user.accountType === "moderator" || user.accountType === "admin") {
-      items.push({
-        kind: "link",
-        label: "Notifications",
-        href: "/dashboard/notifications",
-        icon: Bell,
-        active: pathname.startsWith("/dashboard/notifications"),
-      });
-    }
-    if (user.accountType === "moderator" || user.accountType === "admin") {
-      items.push({
-        kind: "link",
-        label: "Seminars",
-        href: "/dashboard/seminars",
-        icon: CalendarDays,
-        active: pathname.startsWith("/dashboard/seminars"),
-      });
-    }
-    if (user.accountType === "moderator" || user.accountType === "admin") {
-      items.push({
-        kind: "link",
-        label: "Resources",
-        href: "/dashboard/resources",
-        icon: FolderOpen,
-        active: pathname.startsWith("/dashboard/resources"),
-      });
-    }
-    items.push({
-      kind: "link",
-      label: "SOP Generator",
-      href: "/dashboard/sop-generator",
-      icon: FileText,
-      active: pathname.startsWith("/dashboard/sop-generator"),
+      ],
     });
-    if (user.accountType === "admin") {
-      items.push({
-        kind: "link",
-        label: "Users",
-        href: "/dashboard/admin",
-        icon: Users,
-        active: pathname === "/dashboard/admin",
+    if (user.accountType === "moderator" || user.accountType === "admin") {
+      segments.push({
+        title: "Account",
+        items: [
+          {
+            kind: "link",
+            label: "Notifications",
+            href: "/dashboard/notifications",
+            icon: Bell,
+            active: pathname.startsWith("/dashboard/notifications"),
+          },
+          {
+            kind: "link",
+            label: "Settings",
+            href: "/dashboard/settings",
+            icon: SettingsIcon,
+            active: pathname === "/dashboard/settings",
+          },
+        ],
       });
     }
     if (user.accountType === "admin") {
-      items.push({
-        kind: "link",
-        label: "Automation",
-        href: "/dashboard/admin/automations",
-        icon: Workflow,
-        active: pathname.startsWith("/dashboard/admin/automations"),
-      });
-      items.push({
-        kind: "link",
-        label: "Event Log",
-        href: "/dashboard/admin/events",
-        icon: ListChecks,
-        active: pathname.startsWith("/dashboard/admin/events"),
+      segments.push({
+        title: "Administration",
+        items: [
+          {
+            kind: "link",
+            label: "Users",
+            href: "/dashboard/admin",
+            icon: Users,
+            active: pathname === "/dashboard/admin",
+          },
+          {
+            kind: "link",
+            label: "Automation",
+            href: "/dashboard/admin/automations",
+            icon: Workflow,
+            active: pathname.startsWith("/dashboard/admin/automations"),
+          },
+          {
+            kind: "link",
+            label: "Event Log",
+            href: "/dashboard/admin/events",
+            icon: ListChecks,
+            active: pathname.startsWith("/dashboard/admin/events"),
+          },
+        ],
       });
     }
-    return items;
+    return segments;
   }, [user, pathname]);
 
   const pageTitle = useMemo(() => {
-    for (const item of nav) {
-      if (item.kind === "link" && item.active) return item.label;
-      if (item.kind === "group") {
-        const child = item.children.find((c) => c.active);
-        if (child) return child.label;
+    for (const segment of nav) {
+      for (const item of segment.items) {
+        if (item.kind === "link" && item.active) return item.label;
+        if (item.kind === "group") {
+          const child = item.children.find((c) => c.active);
+          if (child) return child.label;
+        }
       }
     }
     return "Dashboard";
@@ -291,20 +342,26 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      <div className="px-4">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] px-3 mb-2" style={{ color: "#A6ADC0" }}>
-          Menu
-        </p>
-        <nav className="flex flex-col gap-1">{nav.map(renderItem)}</nav>
+      <div className="px-4 flex flex-col gap-5">
+        {nav.map((segment) => (
+          <section key={segment.title}>
+            <p
+              className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] px-3 mb-2"
+              style={{ color: "#A6ADC0" }}
+            >
+              {segment.title}
+            </p>
+            <nav className="flex flex-col gap-1">{segment.items.map(renderItem)}</nav>
+          </section>
+        ))}
       </div>
 
       <div className="mt-auto px-4 pb-6">
         <button
           onClick={() => signOut()}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border bg-white py-[9px] text-[13px] font-medium transition-colors duration-200 hover:border-[#F3CBC7] hover:bg-[#FDF1F0] hover:text-[#C0392B]"
-          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#FDF1F0] px-3.5 py-[11px] text-[13.5px] font-semibold text-[#C0392B] transition-all duration-200 hover:bg-[#C0392B] hover:text-white hover:shadow-lg hover:shadow-[#C0392B]/25 active:scale-[0.98]"
         >
-          <LogOut size={15} strokeWidth={2} /> Sign out
+          <LogOut size={15} strokeWidth={2.2} /> Sign out
         </button>
       </div>
     </>
