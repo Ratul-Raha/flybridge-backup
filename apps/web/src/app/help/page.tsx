@@ -172,8 +172,8 @@ const contacts = [
   },
   {
     label: "WhatsApp",
-    value: "+880 1684 566 828",
-    href: "https://wa.me/8801684566828",
+    value: "+1 (778) 676-8459",
+    href: "https://wa.me/17786768459",
     icon: <MessageCircle size={20} strokeWidth={1.9} />,
     external: true,
   },

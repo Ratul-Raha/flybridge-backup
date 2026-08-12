@@ -89,7 +89,7 @@ const faqGroups = [
 const contacts = [
   { label: "Email", value: "support@flybridgeedu.com", href: "mailto:support@flybridgeedu.com" },
   { label: "Phone / WhatsApp", value: "+1 (778) 676-8459", href: "tel:+17786768459" },
-  { label: "WhatsApp CH", value: "+880 1684 566 828", href: "https://wa.me/8801684566828" },
+  { label: "WhatsApp", value: "+1 (778) 676-8459", href: "https://wa.me/17786768459" },
 ];
 
 export default function FaqPage() {
