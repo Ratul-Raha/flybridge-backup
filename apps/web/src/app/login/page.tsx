@@ -30,9 +30,6 @@ export default async function LoginPage({
               className="w-auto h-[38px] object-contain"
               priority
             />
-            <span className="font-mono text-[9px] tracking-[1.8px] mt-[5px]" style={{ color: "var(--body)" }}>
-              EDUCATION GROUP
-            </span>
           </Link>
         </div>
 
