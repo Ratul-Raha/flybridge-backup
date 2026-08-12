@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, MessageCircle, Send, Sparkles, X } from "lucide-react";
+import { Bot, Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 type ChatRole = "user" | "assistant";
 
@@ -325,9 +325,9 @@ export function ChatWidget() {
                 disabled={!input.trim() || streaming}
                 className="flex w-9 h-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 disabled:opacity-40"
                 style={{ background: "var(--brand)", color: "#fff" }}
-                aria-label="Send message"
+                aria-label={streaming ? "Sending message" : "Send message"}
               >
-                <Send size={15} />
+                {streaming ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
               </button>
             </form>
             <div className="mt-2 flex items-center gap-1.5 font-mono text-[9.5px] tracking-[0.12em] uppercase" style={{ color: "#A6ADC0" }}>

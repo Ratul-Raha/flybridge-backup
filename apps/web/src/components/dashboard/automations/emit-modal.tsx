@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { Modal, PrimaryButton, GhostButton, StatusPill, EMERALD, AMBER, ROSE } from "./ui";
 
@@ -170,6 +171,7 @@ export function EmitModal({
         <div className="flex items-center justify-end gap-2 pt-1">
           <GhostButton onClick={onClose}>Close</GhostButton>
           <PrimaryButton onClick={emit} disabled={sending}>
+            {sending ? <Loader2 size={13} className="animate-spin" /> : null}
             {sending ? "Firing…" : "Fire event"}
           </PrimaryButton>
         </div>

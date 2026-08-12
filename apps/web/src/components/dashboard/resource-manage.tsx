@@ -18,6 +18,7 @@ import {
   Search,
   Folder,
   Star,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -195,6 +196,8 @@ export function ResourceManage() {
 
   const [uploadingFile, setUploadingFile] = useState<"file" | "thumb" | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbInputRef = useRef<HTMLInputElement>(null);
 
@@ -340,6 +343,7 @@ export function ResourceManage() {
     }
 
     const url = editingId ? `/api/resources/${editingId}` : "/api/resources";
+    setSaving(true);
     try {
       const res = await fetch(url, {
         method: editingId ? "PATCH" : "POST",
@@ -369,17 +373,22 @@ export function ResourceManage() {
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
   };
 
   const remove = async (r: ResourceItem) => {
     if (!confirm(`Delete resource "${r.title}"?`)) return;
+    setDeletingId(r.id);
     try {
       const res = await fetch(`/api/resources/${r.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -668,12 +677,13 @@ export function ResourceManage() {
           <div className="flex items-center gap-3 mt-6">
             <button
               type="button"
-              disabled={uploading}
+              disabled={uploading || saving}
               onClick={save}
-              className="rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
               style={{ background: "var(--brand)" }}
             >
-              {editingId ? "Save changes" : "Create resource"}
+              {saving && <Loader2 size={15} className="animate-spin" />}
+              {saving ? "Saving…" : editingId ? "Save changes" : "Create resource"}
             </button>
             <button
               type="button"
@@ -934,12 +944,13 @@ export function ResourceManage() {
                             </button>
                             <button
                               type="button"
-                              title="Delete"
+                              title={deletingId === r.id ? "Deleting" : "Delete"}
                               onClick={() => remove(r)}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-[#FDF1F0]"
+                              disabled={deletingId === r.id}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-[#FDF1F0] disabled:opacity-50"
                               style={{ color: "#C0392B" }}
                             >
-                              <Trash2 size={15} />
+                              {deletingId === r.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                             </button>
                           </div>
                         </div>

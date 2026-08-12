@@ -1,13 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { useProfileForm, ADDRESS_FIELDS } from "@/components/dashboard/use-profile-form";
 import { Avatar } from "@/components/dashboard/avatar";
-import { Mail, MapPin, LogOut } from "lucide-react";
+import { Loader2, Mail, MapPin, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 
 export function MobileSettings() {
   const { user, form, setForm, saved, saving, error, save } = useProfileForm();
   const { signOut } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -155,11 +166,13 @@ export function MobileSettings() {
 
       <button
         type="button"
-        onClick={signOut}
-        className="flex items-center justify-center gap-2 rounded-full border px-4 py-[13px] text-[13.5px] font-medium transition-colors duration-200 hover:bg-[#FDF1F0] hover:text-[#C0392B]"
+        onClick={handleSignOut}
+        disabled={signingOut}
+        className="flex items-center justify-center gap-2 rounded-full border px-4 py-[13px] text-[13.5px] font-medium transition-colors duration-200 hover:bg-[#FDF1F0] hover:text-[#C0392B] disabled:opacity-60 disabled:pointer-events-none"
         style={{ borderColor: "var(--line)", color: "var(--body)" }}
       >
-        <LogOut size={15} /> Sign out
+        {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+        {signingOut ? "Signing out…" : "Sign out"}
       </button>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Play, Workflow } from "lucide-react";
+import { Plus, Pencil, Trash2, Play, Workflow, Loader2 } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { createNode, createEdge, triggerEventOf } from "@/lib/automation/graph";
 import type { AutomationGraph } from "@/lib/automation/types";
@@ -32,6 +32,7 @@ export function AutomationList() {
   const [items, setItems] = useState<AutomationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -56,6 +57,7 @@ export function AutomationList() {
       nodes: [trigger, end],
       edges: [createEdge(trigger.id, end.id)],
     };
+    setCreating(true);
     try {
       const res = await fetch("/api/admin/automations", {
         method: "POST",
@@ -67,6 +69,8 @@ export function AutomationList() {
       router.push(`/dashboard/admin/automations/${data.id}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to create");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -98,12 +102,15 @@ export function AutomationList() {
 
   const deleteAutomation = async (item: AutomationItem) => {
     if (!window.confirm(`Delete automation "${item.name}"? This also removes its run history.`)) return;
+    setBusy(item.id);
     try {
       const res = await fetch(`/api/admin/automations/${item.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to delete");
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -113,8 +120,9 @@ export function AutomationList() {
         title="Workflow automations"
         subtitle="When an event fires, automations run their flow step by step — conditions branch YES / NO, actions send emails, notifications or webhooks."
         action={
-          <PrimaryButton onClick={createAutomation}>
-            <Plus size={15} strokeWidth={2.5} /> New automation
+          <PrimaryButton onClick={createAutomation} disabled={creating}>
+            {creating ? <Loader2 size={15} strokeWidth={2.5} className="animate-spin" /> : <Plus size={15} strokeWidth={2.5} />}
+            {creating ? "Creating…" : "New automation"}
           </PrimaryButton>
         }
       >
@@ -137,8 +145,9 @@ export function AutomationList() {
               Create one to react to user sign-ups, seminar registrations, seminar and course launches.
             </p>
             <div className="mt-4">
-              <PrimaryButton onClick={createAutomation}>
-                <Plus size={15} strokeWidth={2.5} /> Create your first automation
+              <PrimaryButton onClick={createAutomation} disabled={creating}>
+                {creating ? <Loader2 size={15} strokeWidth={2.5} className="animate-spin" /> : <Plus size={15} strokeWidth={2.5} />}
+                {creating ? "Creating…" : "Create your first automation"}
               </PrimaryButton>
             </div>
           </div>
@@ -183,7 +192,8 @@ export function AutomationList() {
                       <Play size={13} /> Runs
                     </Link>
                     <GhostButton onClick={() => toggleActive(item)} tone={item.active ? ROSE : EMERALD} disabled={busy === item.id}>
-                      {item.active ? "Pause" : "Activate"}
+                      {busy === item.id ? <Loader2 size={13} className="animate-spin" /> : null}
+                      {busy === item.id ? "…" : item.active ? "Pause" : "Activate"}
                     </GhostButton>
                     <Link
                       href={`/dashboard/admin/automations/${item.id}`}
@@ -194,10 +204,11 @@ export function AutomationList() {
                     </Link>
                     <button
                       onClick={() => deleteAutomation(item)}
-                      className="rounded-full p-2 text-[#8B93A7] hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition"
-                      aria-label="Delete"
+                      disabled={busy === item.id}
+                      className="rounded-full p-2 text-[#8B93A7] hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition disabled:opacity-40 disabled:pointer-events-none"
+                      aria-label={busy === item.id ? "Deleting" : "Delete"}
                     >
-                      <Trash2 size={15} />
+                      {busy === item.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                     </button>
                   </div>
                 </div>

@@ -10,7 +10,6 @@ const footerLinks = [
       { label: "Programs", href: "/programs" },
       { label: "Resources", href: "/resources" },
       { label: "English", href: "#" },
-      { label: "Pricing", href: "#" },
       { label: "FAQ", href: "/faq" },
     ],
   },
@@ -19,15 +18,12 @@ const footerLinks = [
     links: [
       { label: "About", href: "/about" },
       { label: "Blog", href: "https://coachrasel.com" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
     ],
   },
   {
     title: "Support",
     links: [
       { label: "Help Center", href: "/help" },
-      { label: "Community", href: "#" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
     ],

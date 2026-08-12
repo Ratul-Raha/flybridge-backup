@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, Search, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Search, Trash2, Users } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -51,6 +51,7 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const canDelete = user?.accountType === "admin";
 
@@ -75,6 +76,7 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const remove = useCallback(
     async (r: Registration) => {
       if (!confirm(`Delete registration for ${r.name} (${r.email})?`)) return;
+      setDeletingId(r.id);
       try {
         const res = await fetch(
           `/api/seminars/${seminarId}/registrations/${r.id}`,
@@ -87,6 +89,8 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
         setRegistrations((prev) => prev.filter((x) => x.id !== r.id));
       } catch (e) {
         alert(e instanceof Error ? e.message : "Failed to delete registration");
+      } finally {
+        setDeletingId(null);
       }
     },
     [seminarId]
@@ -314,11 +318,13 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
                       <button
                         type="button"
                         onClick={() => remove(r)}
-                        className="ml-auto flex items-center gap-1.5 text-[11.5px] font-medium rounded-lg border px-2.5 py-[5px] transition-colors duration-200 hover:bg-[#FDF1F0]"
+                        disabled={deletingId === r.id}
+                        className="ml-auto flex items-center gap-1.5 text-[11.5px] font-medium rounded-lg border px-2.5 py-[5px] transition-colors duration-200 hover:bg-[#FDF1F0] disabled:opacity-50 disabled:pointer-events-none"
                         style={{ borderColor: "var(--line)", color: "#C0392B" }}
                         aria-label={`Delete registration for ${r.name}`}
                       >
-                        <Trash2 size={12} /> Delete
+                        {deletingId === r.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                        {deletingId === r.id ? "Deleting…" : "Delete"}
                       </button>
                     )}
                   </div>
@@ -329,12 +335,13 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
                       <button
                         type="button"
                         onClick={() => remove(r)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 hover:border-[rgba(192,57,43,0.35)] hover:bg-[#FDF1F0] hover:text-[#C0392B]"
+                        disabled={deletingId === r.id}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border transition-all duration-200 hover:border-[rgba(192,57,43,0.35)] hover:bg-[#FDF1F0] hover:text-[#C0392B] disabled:opacity-50 disabled:pointer-events-none"
                         style={{ borderColor: "var(--line)", color: "var(--body)" }}
                         aria-label={`Delete registration for ${r.name}`}
-                        title="Delete registration"
+                        title={deletingId === r.id ? "Deleting registration" : "Delete registration"}
                       >
-                        <Trash2 size={14} />
+                        {deletingId === r.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                       </button>
                     </div>
                   )}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
 
@@ -41,6 +41,8 @@ export function SeminarManage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -84,6 +86,7 @@ export function SeminarManage() {
       return;
     }
     const url = editingId ? `/api/seminars/${editingId}` : "/api/seminars";
+    setSaving(true);
     try {
       const res = await fetch(url, {
         method: editingId ? "PATCH" : "POST",
@@ -97,17 +100,22 @@ export function SeminarManage() {
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
   };
 
   const remove = async (s: Seminar) => {
     if (!confirm(`Delete seminar "${s.title}"? This also removes its registrations.`)) return;
+    setDeletingId(s.id);
     try {
       const res = await fetch(`/api/seminars/${s.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -265,10 +273,12 @@ export function SeminarManage() {
             <button
               type="button"
               onClick={save}
-              className="rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+              disabled={saving}
+              className="flex items-center gap-2 rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
               style={{ background: "var(--brand)" }}
             >
-              {editingId ? "Save changes" : "Create seminar"}
+              {saving && <Loader2 size={15} className="animate-spin" />}
+              {saving ? "Saving…" : editingId ? "Save changes" : "Create seminar"}
             </button>
             <button
               type="button"
@@ -361,10 +371,12 @@ export function SeminarManage() {
                   <button
                     type="button"
                     onClick={() => remove(s)}
-                    className="text-[13px] font-medium rounded-full border px-4 py-[8px] transition-all duration-200"
+                    disabled={deletingId === s.id}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] transition-all duration-200 disabled:opacity-50"
                     style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.3)" }}
                   >
-                    Delete
+                    {deletingId === s.id ? <Loader2 size={13} className="animate-spin" /> : null}
+                    {deletingId === s.id ? "Deleting…" : "Delete"}
                   </button>
                   {s.url && (
                     <a

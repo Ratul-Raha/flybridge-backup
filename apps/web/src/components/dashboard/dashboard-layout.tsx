@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Workflow,
   ListChecks,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -58,7 +59,17 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [signingOut, setSigningOut] = useState(false);
   const isMobile = useIsMobile();
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const nav = useMemo<NavSegment[]>(() => {
     if (!user) return [];
@@ -358,10 +369,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       <div className="mt-auto px-4 pb-6">
         <button
-          onClick={() => signOut()}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#FDF1F0] px-3.5 py-[11px] text-[13.5px] font-semibold text-[#C0392B] transition-all duration-200 hover:bg-[#C0392B] hover:text-white hover:shadow-lg hover:shadow-[#C0392B]/25 active:scale-[0.98]"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#FDF1F0] px-3.5 py-[11px] text-[13.5px] font-semibold text-[#C0392B] transition-all duration-200 hover:bg-[#C0392B] hover:text-white hover:shadow-lg hover:shadow-[#C0392B]/25 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
         >
-          <LogOut size={15} strokeWidth={2.2} /> Sign out
+          {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} strokeWidth={2.2} />}
+          {signingOut ? "Signing out…" : "Sign out"}
         </button>
       </div>
     </>

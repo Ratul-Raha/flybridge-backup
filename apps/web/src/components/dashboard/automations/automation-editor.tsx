@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Play, FlaskConical, History, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Play, FlaskConical, History, Trash2, Loader2 } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { createNode, createEdge, triggerEventOf, graphValidationErrors } from "@/lib/automation/graph";
 import type { AutomationGraph, AutomationNode, ActionType } from "@/lib/automation/types";
@@ -37,6 +37,7 @@ export function AutomationEditor({ id }: { id: string }) {
   const [runs, setRuns] = useState<RunItem[]>([]);
   const [testOpen, setTestOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -132,11 +133,13 @@ export function AutomationEditor({ id }: { id: string }) {
   };
 
   const removeAutomation = async () => {
+    setDeleting(true);
     try {
       const res = await fetch(`/api/admin/automations/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       router.push("/dashboard/admin/automations");
     } catch (e) {
+      setDeleting(false);
       setError(e instanceof Error ? e.message : "Delete failed");
     }
   };
@@ -334,13 +337,15 @@ export function AutomationEditor({ id }: { id: string }) {
               "{name}" will be removed along with its run history. This can't be undone.
             </p>
             <div className="mt-5 flex justify-end gap-2">
-              <GhostButton onClick={() => setConfirmDelete(false)}>Cancel</GhostButton>
+              <GhostButton onClick={() => setConfirmDelete(false)} disabled={deleting}>Cancel</GhostButton>
               <button
                 onClick={removeAutomation}
-                className="rounded-full px-4 py-2 text-[13px] font-semibold text-white"
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: ROSE }}
               >
-                Delete
+                {deleting ? <Loader2 size={13} className="animate-spin" /> : null}
+                {deleting ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>
