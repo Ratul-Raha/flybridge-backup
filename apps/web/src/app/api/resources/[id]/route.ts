@@ -9,6 +9,39 @@ function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
 }
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDb();
+    const resource = await Resource.findById(params.id);
+    if (!resource) {
+      return NextResponse.json({ error: "Resource not found" }, { status: 404 });
+    }
+    return NextResponse.json({
+      resource: {
+        id: resource._id.toString(),
+        title: resource.title,
+        description: resource.description ?? "",
+        category: resource.category,
+        fileType: resource.fileType,
+        fileUrl: resource.fileUrl,
+        fileName: resource.fileName ?? null,
+        fileSize: resource.fileSize ?? 0,
+        thumbnail: resource.thumbnail ?? null,
+        releaseDate: resource.releaseDate,
+        access: resource.access,
+        price: resource.price ?? 0,
+        featured: resource.featured ?? false,
+      },
+    });
+  } catch (error) {
+    console.error("resource GET error", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
