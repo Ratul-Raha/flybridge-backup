@@ -29,7 +29,7 @@ const footerLinks = [
       { label: "Help Center", href: "#" },
       { label: "Community", href: "#" },
       { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "#" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];
@@ -137,7 +137,7 @@ export function Footer() {
             <a href="/privacy" className="font-mono text-mono-sm text-mist-dim hover:text-paper transition-colors">
               Privacy
             </a>
-            <a href="#" className="font-mono text-mono-sm text-mist-dim hover:text-paper transition-colors">
+            <a href="/terms" className="font-mono text-mono-sm text-mist-dim hover:text-paper transition-colors">
               Terms
             </a>
           </div>

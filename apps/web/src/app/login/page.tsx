@@ -46,7 +46,7 @@ export default async function LoginPage({
             Privacy Policy
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-brand-2 transition-colors">
+          <a href="/terms" className="underline underline-offset-2 hover:text-brand-2 transition-colors">
             Terms of Service
           </a>
           .
