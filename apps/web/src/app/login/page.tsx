@@ -12,9 +12,10 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { mode?: string };
+  searchParams: { mode?: string; next?: string };
 }) {
-  const { mode } = searchParams;
+  const { mode, next } = searchParams;
+  const safeNext = next?.startsWith("/") && !next.startsWith("//") ? next : null;
 
   return (
     <main className="min-h-screen flex flex-col items-center px-[clamp(20px,4.5vw,56px)] pt-[clamp(96px,14vh,150px)] pb-16">
@@ -39,7 +40,7 @@ export default async function LoginPage({
           className="rounded-[28px] border bg-white p-[clamp(24px,5vw,40px)]"
           style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -32px rgba(18,32,67,0.18)" }}
         >
-          <AuthForm initialMode={mode === "register" ? "register" : "login"} />
+          <AuthForm initialMode={mode === "register" ? "register" : "login"} next={safeNext} />
         </div>
 
         <p className="text-center text-[12.5px] leading-[1.6] mt-6" style={{ color: "var(--body)" }}>

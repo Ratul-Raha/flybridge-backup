@@ -54,7 +54,8 @@ export async function GET(
     const ext = extOf(fileName);
     const mime = MIME[ext] ?? "application/octet-stream";
     const inlineTypes = new Set(["pdf", "mp3", "wav", "m4a", "txt"]);
-    const disposition = inlineTypes.has(ext) ? "inline" : "attachment";
+    const forceDownload = _request.nextUrl.searchParams.get("dl") === "1";
+    const disposition = forceDownload || !inlineTypes.has(ext) ? "attachment" : "inline";
 
     const headers = new Headers();
     headers.set("Content-Type", mime);

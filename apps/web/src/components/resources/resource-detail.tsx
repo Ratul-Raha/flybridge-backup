@@ -1,21 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Lock, Share2, Star } from "lucide-react";
+import { useAuth } from "@/lib/auth/auth-context";
 import {
   fileTypeMeta,
   formatFileSize,
   formatResourceDate,
-  fileHref,
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
 
-export function ResourceDetail({ resource: r }: { resource: ResourceCardData }) {
+function downloadHref(r: ResourceCardData) {
+  if (r.fileType === "link" || r.fileType === "image" || r.fileType === "video") {
+    return r.fileUrl;
+  }
+  return `/api/resources/${r.id}/file?dl=1`;
+}
+
+export function ResourceDetail({
+  resource: r,
+  wantsDownload = false,
+}: {
+  resource: ResourceCardData;
+  wantsDownload?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
   const paid = r.access === "paid";
+  const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}?download=1`)}`;
+
+  const triggerDownload = () => {
+    const href = downloadHref(r);
+    if (r.fileType === "link") {
+      window.open(href, "_blank", "noopener");
+    } else {
+      const a = document.createElement("a");
+      a.href = href;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  };
+
+  useEffect(() => {
+    if (!wantsDownload || loading) return;
+    if (paid && !user) {
+      router.replace(loginNext);
+      return;
+    }
+    triggerDownload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsDownload, loading, user, paid]);
 
   const copyLink = async () => {
     try {
@@ -112,23 +153,22 @@ export function ResourceDetail({ resource: r }: { resource: ResourceCardData }) 
           )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
-            {paid ? (
+            {paid && !user ? (
               <Link
-                href="/login"
+                href={loginNext}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
               >
-                <Lock size={15} /> Members only{r.price > 0 ? ` · $${r.price}` : ""}
+                <Lock size={15} /> Log in to download{r.price > 0 ? ` · $${r.price}` : ""}
               </Link>
             ) : (
-              <a
-                href={fileHref(r)}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={triggerDownload}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
               >
                 {r.fileType === "link" ? <ExternalLink size={15} /> : <Download size={15} />}
                 {r.fileType === "link" ? "Open link" : "Download"}
-              </a>
+              </button>
             )}
 
             <button

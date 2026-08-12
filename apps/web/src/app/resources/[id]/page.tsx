@@ -5,7 +5,7 @@ import { Resource } from "@/lib/models/resource";
 import { Nav } from "@/components/nav";
 import { ResourceDetail } from "@/components/resources/resource-detail";
 
-type Params = { params: { id: string } };
+type Params = { params: { id: string }; searchParams: { download?: string } };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   try {
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function ResourceDetailPage({ params }: Params) {
+export default async function ResourceDetailPage({ params, searchParams }: Params) {
   try {
     await connectDb();
     const resource = await Resource.findById(params.id);
@@ -33,6 +33,7 @@ export default async function ResourceDetailPage({ params }: Params) {
         <section className="px-[clamp(20px,4.5vw,56px)] pt-[clamp(110px,14vh,150px)] pb-24">
           <div className="w-full max-w-[980px] mx-auto">
             <ResourceDetail
+              wantsDownload={searchParams.download === "1"}
               resource={{
                 id: resource._id.toString(),
                 title: resource.title,

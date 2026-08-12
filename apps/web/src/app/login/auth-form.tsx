@@ -7,14 +7,14 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 type Mode = "login" | "register";
 
-export function AuthForm({ initialMode }: { initialMode: Mode }) {
+export function AuthForm({ initialMode, next }: { initialMode: Mode; next?: string | null }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const { user, error, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
+    if (user) router.replace(next ?? "/dashboard");
+  }, [user, router, next]);
 
   return (
     <div>
