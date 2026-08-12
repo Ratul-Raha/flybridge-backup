@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { EVENT_CATALOG, EVENT_LIST, isEventName } from "@/lib/events/catalog";
 import { emitEvent } from "@/lib/events/emit";
 
+export const maxDuration = 600;
+
 export async function GET() {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

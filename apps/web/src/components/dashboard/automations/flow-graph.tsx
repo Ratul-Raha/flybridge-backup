@@ -1,8 +1,9 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { Zap, GitBranch, Mail, Bell, Webhook, Flag, Plus, X } from "lucide-react";
+import { Zap, GitBranch, Mail, Bell, Webhook, Timer, Flag, Plus, X } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
+import { emailTemplateById } from "@/lib/automation/email-templates";
 import type { AutomationNode, AutomationEdge, AutomationNodeType, ActionType } from "@/lib/automation/types";
 import { EMERALD, AMBER, ACCENT, ROSE } from "./ui";
 
@@ -17,6 +18,7 @@ const ACTION_LABEL: Record<ActionType, { label: string; icon: typeof Mail }> = {
   send_email: { label: "Send email", icon: Mail },
   send_notification: { label: "Send notification", icon: Bell },
   webhook: { label: "Webhook", icon: Webhook },
+  delay: { label: "Delay", icon: Timer },
 };
 
 const OP_LABEL: Record<string, string> = {
@@ -43,6 +45,9 @@ function summaryOf(node: AutomationNode): string {
     }
     case "action": {
       const meta = ACTION_LABEL[node.data.actionType ?? "send_email"];
+      if (node.data.actionType === "delay") {
+        return `Wait ${node.data.duration ?? 0} ${node.data.unit ?? "minutes"}`;
+      }
       if (node.data.actionType === "webhook") return node.data.url ? node.data.url : "Add webhook URL";
       if (node.data.actionType === "send_email") {
         const to =
@@ -51,7 +56,8 @@ function summaryOf(node: AutomationNode): string {
             : node.data.to?.mode === "role"
               ? "all users"
               : node.data.to?.value || "recipient";
-        return `${node.data.subject || "Email"} → ${to}`.slice(0, 60);
+        const template = node.data.templateId ? emailTemplateById(node.data.templateId) : undefined;
+        return `${template?.name || node.data.subject || "Email"} → ${to}`.slice(0, 60);
       }
       return node.data.title || "Notification message";
     }
@@ -120,6 +126,7 @@ const PICKER_GROUPS: {
     items: [
       { key: "action:send_email", name: "Send email", desc: "Email users, subscribers or fixed addresses", icon: Mail },
       { key: "action:send_notification", name: "Send notification", desc: "In-app alert for admins or users", icon: Bell },
+      { key: "action:delay", name: "Delay", desc: "Pause the flow before the next step (max 10 min)", icon: Timer },
       { key: "action:webhook", name: "Webhook", desc: "POST the event payload to an external URL", icon: Webhook },
     ],
   },

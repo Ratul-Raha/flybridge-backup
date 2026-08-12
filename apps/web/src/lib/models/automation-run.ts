@@ -6,7 +6,7 @@ const runStepSchema = new Schema<AutomationRunStep>(
   {
     nodeId: { type: String, required: true },
     nodeType: { type: String, enum: ["trigger", "condition", "action", "end"], required: true },
-    actionType: { type: String, enum: ["send_email", "send_notification", "webhook"] },
+    actionType: { type: String, enum: ["send_email", "send_notification", "webhook", "delay"] },
     status: { type: String, enum: ["success", "failed", "skipped"], required: true },
     error: { type: String },
     durationMs: { type: Number },

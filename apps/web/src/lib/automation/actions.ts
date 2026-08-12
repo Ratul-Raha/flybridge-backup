@@ -6,7 +6,8 @@ import { Notification } from "@/lib/models/notification";
 import { connectDb } from "@/lib/db";
 import { resolvePath } from "./conditions";
 import { renderTemplate } from "./template";
-import type { AutomationNode, RecipientSetting } from "./types";
+import { emailTemplateById } from "./email-templates";
+import { MAX_DELAY_SECONDS, type AutomationNode, type RecipientSetting } from "./types";
 import type { EventPayload } from "@/lib/events/types";
 
 export type ActionResult = {
@@ -53,9 +54,11 @@ async function actionSendEmail(node: AutomationNode, payload: EventPayload): Pro
           : "No recipients resolved for email action",
     };
   }
-  const subject = renderTemplate(data.subject ?? "FlyBridge notification", payload);
-  const body = renderTemplate(data.body ?? "", payload);
-  const html = `<div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0FA968;border-radius:16px 16px 0 0;padding:18px 24px;color:#fff;font-weight:700;letter-spacing:0.5px;">FlyBridge</div><div style="border:1px solid #E7EAF2;border-top:none;border-radius:0 0 16px 16px;padding:24px;color:#122043;font-size:14px;line-height:1.7;white-space:pre-wrap;">${body.replace(/</g, "&lt;").replace(/\n/g, "<br/>")}</div></div>`;
+  const template = data.templateId ? emailTemplateById(data.templateId) : undefined;
+  const subject = renderTemplate(template?.subject ?? data.subject ?? "FlyBridge notification", payload);
+  const html = template
+    ? template.html(payload)
+    : `<div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0FA968;border-radius:16px 16px 0 0;padding:18px 24px;color:#fff;font-weight:700;letter-spacing:0.5px;">FlyBridge</div><div style="border:1px solid #E7EAF2;border-top:none;border-radius:0 0 16px 16px;padding:24px;color:#122043;font-size:14px;line-height:1.7;white-space:pre-wrap;">${renderTemplate(data.body ?? "", payload).replace(/</g, "&lt;").replace(/\n/g, "<br/>")}</div></div>`;
   const result = await sendEmail({ to: recipients, subject, html });
   if (!result.ok) return { ok: false, error: result.error ?? "Email send failed" };
   return { ok: true, detail: { recipients: recipients.length } };
@@ -83,6 +86,15 @@ async function actionSendNotification(node: AutomationNode, payload: EventPayloa
     }))
   );
   return { ok: true, detail: { recipients: recipients.length } };
+}
+
+async function actionDelay(node: AutomationNode): Promise<ActionResult> {
+  const duration = Math.max(0, Number(node.data.duration ?? 0));
+  if (duration <= 0) return { ok: false, error: "Delay duration must be greater than zero" };
+  const unit = node.data.unit === "seconds" ? 1000 : 60 * 1000;
+  const ms = Math.min(duration * unit, MAX_DELAY_SECONDS * 1000);
+  await new Promise((resolve) => setTimeout(resolve, ms));
+  return { ok: true, detail: { waitedMs: ms, duration, unit: node.data.unit ?? "minutes" } };
 }
 
 async function actionWebhook(node: AutomationNode, payload: EventPayload): Promise<ActionResult> {
@@ -120,6 +132,8 @@ export async function executeAction(node: AutomationNode, payload: EventPayload)
       return actionSendNotification(node, payload);
     case "webhook":
       return actionWebhook(node, payload);
+    case "delay":
+      return actionDelay(node);
     default:
       return { ok: false, error: `Unknown action type: ${node.data.actionType ?? "none"}` };
   }

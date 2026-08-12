@@ -82,8 +82,10 @@ export function AutomationEditor({ id }: { id: string }) {
     const newNodes: AutomationNode[] = items.map((item) => {
       const node = createNode(item.type);
       if (item.type === "action") {
-        node.data.actionType = item.actionType ?? "send_email";
-        node.data.to = { mode: "path", value: "user.email" };
+        if (item.actionType) node.data.actionType = item.actionType;
+        if (item.actionType === "send_email" && !node.data.to) {
+          node.data.to = { mode: "path", value: "user.email" };
+        }
       }
       return node;
     });

@@ -2,7 +2,9 @@
 
 import { EVENT_LIST } from "@/lib/events/catalog";
 import { triggerEventOf } from "@/lib/automation/graph";
-import type { AutomationNode, AutomationGraph, ActionType, ConditionOperator, RecipientSetting } from "@/lib/automation/types";
+import { EMAIL_TEMPLATES, emailTemplateById, emailTemplatesForEvent } from "@/lib/automation/email-templates";
+import { MAX_DELAY_SECONDS } from "@/lib/automation/types";
+import type { AutomationNode, AutomationGraph, ActionType, ConditionOperator, DelayUnit, RecipientSetting } from "@/lib/automation/types";
 import { Label, fieldClass } from "./ui";
 
 const OPERATORS: { value: ConditionOperator; label: string }[] = [
@@ -19,6 +21,7 @@ const OPERATORS: { value: ConditionOperator; label: string }[] = [
 function actionTypeLabel(t: ActionType) {
   if (t === "send_email") return "Send email";
   if (t === "send_notification") return "Send notification";
+  if (t === "delay") return "Delay";
   return "Webhook";
 }
 
@@ -40,6 +43,10 @@ export function NodeConfig({
     const entry = event ? EVENT_LIST.find((e) => e.name === event) : null;
     return entry?.fields ?? [];
   })();
+
+  const fitTemplates = emailTemplatesForEvent(triggerEventOf(graph));
+  const otherTemplates = EMAIL_TEMPLATES.filter((t) => !fitTemplates.includes(t));
+  const selectedTemplate = node.data.templateId ? emailTemplateById(node.data.templateId) : null;
 
   if (node.type === "trigger") {
     return (
@@ -123,8 +130,8 @@ export function NodeConfig({
       <div className="space-y-4">
         <div>
           <Label>Action type</Label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {(["send_email", "send_notification", "webhook"] as ActionType[]).map((t) => (
+          <div className="grid grid-cols-2 gap-1.5">
+            {(["send_email", "send_notification", "delay", "webhook"] as ActionType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setData({ actionType: t })}
@@ -143,6 +150,48 @@ export function NodeConfig({
 
         {actionType === "send_email" && (
           <>
+            <div>
+              <Label>Email template</Label>
+              <div className="space-y-1.5">
+                <select
+                  className={fieldClass()}
+                  value={node.data.templateId ?? ""}
+                  onChange={(e) => {
+                    const t = EMAIL_TEMPLATES.find((x) => x.id === e.target.value);
+                    if (t) setData({ templateId: t.id, subject: t.subject });
+                    if (e.target.value === "") setData({ templateId: "", subject: "" });
+                  }}
+                >
+                  <option value="">— no template —</option>
+                  {fitTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                  {otherTemplates.length > 0 && (
+                    <optgroup label="Other templates">
+                      {otherTemplates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+                <p className="text-[11px] leading-relaxed" style={{ color: "var(--body)" }}>
+                  Templates matching the automation's trigger event are listed first. The subject, message and design come
+                  from the selected template.
+                </p>
+                {selectedTemplate && (
+                  <div className="rounded-xl border p-3 text-[12px] leading-relaxed" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                    <span className="block font-semibold" style={{ color: "var(--ink)" }}>
+                      {selectedTemplate.subject}
+                    </span>
+                    <span className="mt-1 block whitespace-pre-wrap">{selectedTemplate.previewBody}</span>
+                  </div>
+                )}
+              </div>
+            </div>
             <div>
               <Label>Recipients</Label>
               <select
@@ -170,24 +219,36 @@ export function NodeConfig({
                 </p>
               )}
             </div>
+          </>
+        )}
+
+        {actionType === "delay" && (
+          <>
             <div>
-              <Label>Subject</Label>
+              <Label>Duration</Label>
               <input
+                type="number"
+                min={1}
                 className={fieldClass()}
-                placeholder="You're registered — {{seminar.title}}"
-                value={node.data.subject ?? ""}
-                onChange={(e) => setData({ subject: e.target.value })}
+                value={node.data.duration ?? 5}
+                onChange={(e) => setData({ duration: Number(e.target.value) })}
               />
             </div>
             <div>
-              <Label>{"Message body ({{payload.path}} templates work)"}</Label>
-              <textarea
-                className={`${fieldClass()} min-h-[110px] resize-y leading-relaxed`}
-                placeholder={`Hi {{user.name}},\n\nThank you for registering for "{{seminar.title}}" on {{seminar.dateTime}}.\n\nSee you there!`}
-                value={node.data.body ?? ""}
-                onChange={(e) => setData({ body: e.target.value })}
-              />
+              <Label>Unit</Label>
+              <select
+                className={fieldClass()}
+                value={node.data.unit ?? "minutes"}
+                onChange={(e) => setData({ unit: e.target.value as DelayUnit })}
+              >
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+              </select>
             </div>
+            <p className="text-[11.5px] leading-relaxed" style={{ color: "var(--body)" }}>
+              The flow pauses here before continuing. Maximum {MAX_DELAY_SECONDS / 60} minutes — the step runs inside
+              the event request, so longer delays need a queue system.
+            </p>
           </>
         )}
 

@@ -1,6 +1,6 @@
 import type { EventName } from "@/lib/events/types";
 import { EVENT_NAMES } from "@/lib/events/types";
-import type { AutomationGraph, AutomationNode, AutomationEdge } from "./types";
+import { MAX_DELAY_SECONDS, type AutomationGraph, type AutomationNode, type AutomationEdge } from "./types";
 
 export function makeId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -25,10 +25,9 @@ export function createNode(type: AutomationNode["type"], event?: EventName): Aut
         id: makeId("action"),
         type: "action",
         data: {
-          actionType: "send_email",
-          to: { mode: "path", value: "user.email" },
-          subject: "",
-          body: "",
+          actionType: "delay",
+          duration: 5,
+          unit: "minutes",
         },
       };
     case "end":
@@ -84,6 +83,14 @@ export function graphValidationErrors(graph: AutomationGraph): string[] {
       if (actionType === "send_email") {
         const to = node.data.to;
         if (!to || !to.value) errors.push("An email action needs recipients configured.");
+      }
+      if (actionType === "delay") {
+        const duration = Number(node.data.duration ?? 0);
+        if (!(duration > 0)) errors.push("A delay action needs a duration greater than zero.");
+        const seconds = duration * (node.data.unit === "seconds" ? 1 : 60);
+        if (seconds > MAX_DELAY_SECONDS) {
+          errors.push(`A delay can be at most ${MAX_DELAY_SECONDS} seconds (${MAX_DELAY_SECONDS / 60} minutes).`);
+        }
       }
     }
     if (node.type === "condition") {

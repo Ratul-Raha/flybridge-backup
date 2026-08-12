@@ -12,7 +12,11 @@ export type ConditionOperator =
   | "gt"
   | "lt";
 
-export type ActionType = "send_email" | "send_notification" | "webhook";
+export type ActionType = "send_email" | "send_notification" | "webhook" | "delay";
+
+export type DelayUnit = "seconds" | "minutes";
+
+export const MAX_DELAY_SECONDS = 600;
 
 export type RecipientSetting = {
   mode: "path" | "fixed" | "role";
@@ -26,6 +30,7 @@ export type AutomationNodeData = {
   value?: string;
   actionType?: ActionType;
   to?: RecipientSetting;
+  templateId?: string;
   subject?: string;
   body?: string;
   title?: string;
@@ -34,6 +39,8 @@ export type AutomationNodeData = {
   url?: string;
   method?: "POST" | "GET";
   headers?: string;
+  duration?: number;
+  unit?: DelayUnit;
 };
 
 export type AutomationNode = {

@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { Automation } from "@/lib/models/automation";
 import { AutomationRun } from "@/lib/models/automation-run";
 import { graphValidationErrors } from "@/lib/automation/graph";
+import { seedDefaultAutomations } from "@/lib/automation/seed";
 import type { AutomationGraph } from "@/lib/automation/types";
 
 type AutomationBody = {
@@ -37,6 +38,7 @@ export async function GET() {
 
   try {
     await connectDb();
+    await seedDefaultAutomations();
     const automations = await Automation.find()
       .sort({ createdAt: -1 })
       .lean();
