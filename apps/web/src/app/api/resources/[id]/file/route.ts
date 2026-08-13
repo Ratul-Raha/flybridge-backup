@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
+import { ResourceDownload } from "@/lib/models/resource-download";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -43,6 +45,13 @@ export async function GET(
 
     if (resource.fileType === "link") {
       return NextResponse.redirect(resource.fileUrl);
+    }
+
+    const session = await readSession();
+    if (session) {
+      ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
+        console.error("resource download tracking error", e)
+      );
     }
 
     const upstream = await fetch(resource.fileUrl, { cache: "no-store" });

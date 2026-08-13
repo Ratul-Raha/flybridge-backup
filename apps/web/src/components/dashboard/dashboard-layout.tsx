@@ -221,10 +221,17 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         items: [
           {
             kind: "link",
-            label: "Users",
+            label: "Overview",
             href: "/dashboard/admin",
-            icon: Users,
+            icon: LayoutDashboard,
             active: pathname === "/dashboard/admin",
+          },
+          {
+            kind: "link",
+            label: "Users",
+            href: "/dashboard/admin/users",
+            icon: Users,
+            active: pathname.startsWith("/dashboard/admin/users"),
           },
           {
             kind: "link",
