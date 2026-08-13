@@ -31,6 +31,30 @@ async function insertNotifications(
   );
 }
 
+export const notifyStaffOnUserRegistered: EventHandler = {
+  name: "notifyStaffOnUserRegistered",
+  run: async (payload) => {
+    const user = (payload.user ?? {}) as Record<string, unknown>;
+    const userId = typeof user.id === "string" ? user.id : undefined;
+
+    const recipients = await User.find({
+      accountType: { $in: ["admin", "moderator"] },
+      ...(userId ? { _id: { $ne: userId } } : {}),
+    })
+      .select("_id")
+      .lean();
+    if (recipients.length === 0) return;
+
+    const newUserName = String(user.name ?? "");
+    const email = String(user.email ?? "");
+    await insertNotifications(recipients, {
+      type: "user_registered",
+      title: "New user registered",
+      message: `${newUserName}${email ? ` (${email})` : ""} just created a FlyBridge account.`,
+    });
+  },
+};
+
 export const notifyStaffOnRegistration: EventHandler = {
   name: "notifyStaffOnRegistration",
   run: async (payload) => {

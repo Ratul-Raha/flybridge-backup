@@ -10,7 +10,7 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["seminar_registration", "seminar_created", "course_launched", "resource_created", "automation"],
+      enum: ["user_registered", "seminar_registration", "seminar_created", "course_launched", "resource_created", "automation"],
       required: true,
     },
     title: { type: String, required: true, trim: true },
@@ -26,6 +26,7 @@ const notificationSchema = new Schema(
 notificationSchema.index({ recipient: 1, createdAt: -1 });
 
 export const NOTIFICATION_TYPES = [
+  "user_registered",
   "seminar_registration",
   "seminar_created",
   "course_launched",

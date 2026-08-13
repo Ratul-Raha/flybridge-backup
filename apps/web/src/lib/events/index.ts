@@ -1,5 +1,6 @@
 import { on } from "./registry";
 import {
+  notifyStaffOnUserRegistered,
   notifyStaffOnRegistration,
   notifyAllOnSeminarCreated,
   notifyAllOnCourseLaunched,
@@ -8,6 +9,7 @@ import {
 } from "./handlers";
 
 export function registerDefaultHandlers(): void {
+  on("user.registered", notifyStaffOnUserRegistered);
   on("seminar.registration_created", notifyStaffOnRegistration);
   on("seminar.created", notifyAllOnSeminarCreated);
   on("seminar.created", refreshKnowledgeBase);

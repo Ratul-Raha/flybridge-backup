@@ -1,4 +1,5 @@
 export type AppNotificationType =
+  | "user_registered"
   | "seminar_registration"
   | "seminar_created"
   | "course_launched"

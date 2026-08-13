@@ -3,6 +3,7 @@ import { BookOpen, FolderOpen, Megaphone, UserPlus, Zap } from "lucide-react";
 import type { AppNotificationType } from "@/lib/notifications";
 
 const ICONS: Record<AppNotificationType, typeof Megaphone> = {
+  user_registered: UserPlus,
   seminar_registration: UserPlus,
   seminar_created: Megaphone,
   course_launched: BookOpen,
