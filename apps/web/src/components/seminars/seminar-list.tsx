@@ -1,9 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Users } from "lucide-react";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import Link from "next/link";
+import { Check, Share2, Users } from "lucide-react";
+import {
+  SeminarRegisterModal,
+  formatDateTime,
+  type SeminarLike,
+} from "@/components/seminars/seminar-register-modal";
 
 type Seminar = {
   id: string;
@@ -18,30 +22,49 @@ type Seminar = {
   registrations: number;
 };
 
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function ShareButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/seminars/${id}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      title={copied ? "Copied!" : "Copy seminar link"}
+      aria-label={copied ? "Copied!" : "Copy seminar link"}
+      onClick={copyLink}
+      className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+      style={{
+        background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)",
+      }}
+    >
+      {copied ? (
+        <Check size={14} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+      ) : (
+        <Share2 size={14} style={{ color: "var(--body)" }} />
+      )}
+    </button>
+  );
 }
 
 export function SeminarList() {
-  const { user, signInWithGoogle } = useAuth();
-  const router = useRouter();
   const [seminars, setSeminars] = useState<Seminar[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Seminar | null>(null);
-  const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -59,67 +82,9 @@ export function SeminarList() {
     load();
   }, [load]);
 
-  const openRegister = (s: Seminar) => {
-    setError(null);
-    setMessage(null);
-    setPhone(user?.phone ?? "");
-    setPhoneError(null);
-    setSelected(s);
-  };
-
-  const register = useCallback(
-    async (email: string) => {
-      if (!selected) return false;
-      const value = phone.trim();
-      if (!value) {
-        setPhoneError("Phone number is required");
-        return false;
-      }
-      setPhoneError(null);
-      setSubmitting(true);
-      try {
-        const res = await fetch(`/api/seminars/${selected.id}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, phone: value }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error ?? "Registration failed");
-        setMessage(
-          data.alreadyRegistered
-            ? `You're already registered for "${selected.title}".`
-            : `You're registered for "${selected.title}". A confirmation email is on its way to ${email}.`
-        );
-        load();
-        return true;
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Registration failed");
-        return false;
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [selected, phone, load]
-  );
-
-  const redirectToSeminar = () => {
-    if (selected) router.push(`/dashboard/seminars/mine/${selected.id}`);
-  };
-
-  const registerWithGoogle = async () => {
-    setError(null);
-    setMessage(null);
-    if (!selected) return;
-    if (user) {
-      const ok = await register(user.email);
-      if (ok && user.accountType === "user") redirectToSeminar();
-      return;
-    }
-    const email = await signInWithGoogle();
-    if (!email) return;
-    const ok = await register(email);
-    if (ok) redirectToSeminar();
-  };
+  const handleRegistered = useCallback(() => {
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -136,10 +101,11 @@ export function SeminarList() {
   const recent = seminars.filter((s) => new Date(s.dateTime) < now);
 
   const renderCard = (s: Seminar, isUpcoming: boolean) => (
-    <article
+    <Link
       key={s.id}
-      className="rounded-[24px] border bg-white overflow-hidden flex flex-col"
-      style={{ borderColor: "var(--line)" }}
+      href={`/seminars/${s.id}`}
+      className="group flex flex-col overflow-hidden rounded-[24px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
     >
       {s.image ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -178,7 +144,10 @@ export function SeminarList() {
           </span>
         </div>
 
-        <h3 className="font-display text-[18px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+        <h3
+          className="font-display text-[18px] font-semibold leading-snug"
+          style={{ color: "var(--ink)" }}
+        >
           {s.title}
         </h3>
 
@@ -187,12 +156,15 @@ export function SeminarList() {
         </p>
 
         {s.description && (
-          <p className="text-[13.5px] leading-[1.6] line-clamp-3" style={{ color: "var(--body)" }}>
+          <p
+            className="text-[13.5px] leading-[1.6] line-clamp-3"
+            style={{ color: "var(--body)" }}
+          >
             {s.description}
           </p>
         )}
 
-        <div className="mt-auto pt-3 flex items-center justify-between">
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2">
           <span
             className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
             style={{ color: "var(--ink)" }}
@@ -200,23 +172,33 @@ export function SeminarList() {
             <Users className="w-[14px] h-[14px]" style={{ color: "var(--brand)" }} />
             {s.registrations} joined
           </span>
-          {isUpcoming ? (
-            <button
-              type="button"
-              onClick={() => openRegister(s)}
-              className="rounded-full text-white text-[13px] font-medium px-5 py-[9px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
-              style={{ background: "var(--brand)" }}
-            >
-              Register with Gmail
-            </button>
-          ) : (
-            <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-              Session ended
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <ShareButton id={s.id} />
+            {isUpcoming ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelected(s);
+                }}
+                className="rounded-full text-white text-[13px] font-medium px-5 py-[9px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+                style={{ background: "var(--brand)" }}
+              >
+                Register with Gmail
+              </button>
+            ) : (
+              <span
+                className="text-[12px] font-medium"
+                style={{ color: "var(--body)" }}
+              >
+                Session ended
+              </span>
+            )}
+          </div>
         </div>
       </div>
-    </article>
+    </Link>
   );
 
   return (
@@ -281,87 +263,11 @@ export function SeminarList() {
       )}
 
       {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-5"
-          style={{ background: "rgba(10,20,45,0.5)" }}
-          onClick={() => !submitting && setSelected(null)}
-        >
-          <div
-            className="w-full max-w-[440px] rounded-[24px] bg-white p-[clamp(22px,4vw,32px)]"
-            onClick={(e) => e.stopPropagation()}
-            style={{ boxShadow: "0 32px 80px -24px rgba(18,32,67,0.4)" }}
-          >
-            <h3 className="font-display text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
-              Register for seminar
-            </h3>
-            <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
-              {selected.title} · {formatDateTime(selected.dateTime)}
-            </p>
-
-            {message ? (
-              <div className="mt-6 text-[14px] leading-[1.6]" style={{ color: "var(--brand)" }}>
-                {message}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 mt-6">
-                {error && (
-                  <p className="text-[12.5px]" style={{ color: "#C0392B" }}>
-                    {error}
-                  </p>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                    Phone number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+234 800 000 0000"
-                    className="w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 hover:border-brand-2/60"
-                    style={{
-                      borderColor: phoneError ? "rgba(192,57,43,0.5)" : "var(--line)",
-                      color: "var(--ink)",
-                    }}
-                  />
-                  {phoneError && (
-                    <p className="text-[12px]" style={{ color: "#C0392B" }}>
-                      {phoneError}
-                    </p>
-                  )}
-                </div>
-
-                <div
-                  className="rounded-xl px-4 py-3 text-[12.5px] leading-[1.6]"
-                  style={{ background: "var(--bg-soft)", color: "var(--body)" }}
-                >
-                  {user
-                    ? `Registered as ${user.email} — your FlyBridge account is linked automatically.`
-                    : "Sign in with Gmail to register. Your FlyBridge account is created automatically."}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={registerWithGoogle}
-                  disabled={submitting}
-                  className="flex items-center justify-center gap-2.5 rounded-full text-white text-[14px] font-medium py-[13px] mt-1 transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60"
-                  style={{ background: "var(--brand)" }}
-                >
-                  <svg className="w-[16px] h-[16px]" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-                    <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
-                    <path fill="#fff" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
-                    <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  {submitting
-                    ? "Registering…"
-                    : "Register with Gmail"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <SeminarRegisterModal
+          seminar={selected as SeminarLike}
+          onClose={() => setSelected(null)}
+          onRegistered={handleRegistered}
+        />
       )}
     </div>
   );
