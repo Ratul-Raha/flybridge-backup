@@ -1,17 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ProgramCard } from "@/components/program-card";
 import { programs } from "@/lib/programs";
-
-export const metadata: Metadata = {
-  title: "Programs | FlyBridge Education Group",
-  description:
-    "Practical, self-paced courses covering study visas, work permits, English and interview readiness — every step of your journey abroad.",
-};
 
 const tracks = [
   { label: "Study abroad", desc: "Visa prep, university applications and documentation for the US, Canada and beyond." },
