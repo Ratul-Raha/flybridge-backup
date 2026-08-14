@@ -8,6 +8,7 @@ const footerLinks = [
     title: "Learn",
     links: [
       { label: "Programs", href: "/programs" },
+      { label: "Check Eligibility", href: "/readiness" },
       { label: "Resources", href: "/resources" },
       { label: "English", href: "#" },
       { label: "FAQ", href: "/faq" },
