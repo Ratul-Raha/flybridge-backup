@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { ReadinessRun } from "@/lib/models/readiness-run";
 
 export type ReportContext = { days: number };
 
@@ -29,10 +30,11 @@ function lastNDays(n: number) {
 
 async function reportOverview() {
   await connectDb();
-  const [totalUsers, activeSubscriptions, courseEnrollment] = await Promise.all([
+  const [totalUsers, activeSubscriptions, courseEnrollment, readinessRuns] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ subscription: "paid" }),
     SeminarRegistration.countDocuments(),
+    ReadinessRun.countDocuments(),
   ]);
 
   const paidRegs = await SeminarRegistration.aggregate([
@@ -54,7 +56,7 @@ async function reportOverview() {
     activeSubscriptions,
     totalOrders: paidRegs[0]?.n ?? 0,
     courseEnrollment,
-    completionRate: null,
+    readinessRuns,
   };
 }
 

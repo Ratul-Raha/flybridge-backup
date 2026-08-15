@@ -31,9 +31,11 @@ import {
 } from "@/lib/readiness/questions";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
+  makeRunId,
   READINESS_STORAGE_KEY,
   ReadinessCard,
   ReadinessResultView,
+  saveReadinessRun,
   SignInGate,
   type StoredReadiness,
 } from "./readiness-result";
@@ -87,6 +89,7 @@ export function ReadinessWizard() {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const userRef = useRef(user);
   const answersRef = useRef(answers);
+  const runIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     userRef.current = user;
@@ -98,10 +101,16 @@ export function ReadinessWizard() {
 
   useEffect(() => {
     if (!result || !report) return;
+    if (!runIdRef.current) runIdRef.current = makeRunId();
     try {
       sessionStorage.setItem(
         READINESS_STORAGE_KEY,
-        JSON.stringify({ result, report } satisfies StoredReadiness)
+        JSON.stringify({
+          result,
+          report,
+          answers: answersRef.current,
+          runId: runIdRef.current,
+        } satisfies StoredReadiness)
       );
     } catch {
       // storage unavailable
@@ -193,6 +202,7 @@ export function ReadinessWizard() {
   };
 
   const start = () => {
+    runIdRef.current = null;
     setAnswers({});
     setStep(0);
     setResult(null);
@@ -206,6 +216,10 @@ export function ReadinessWizard() {
     setReport("");
     setError(null);
     setGenerating(true);
+
+    let finalResult: ReadinessResult | null = null;
+    let finalReport = "";
+    if (!runIdRef.current) runIdRef.current = makeRunId();
 
     try {
       const res = await fetch("/api/readiness", {
@@ -247,10 +261,12 @@ export function ReadinessWizard() {
               text?: string;
             };
             if (parsed.score) {
+              finalResult = parsed.score;
               setResult(parsed.score);
               setPhase(userRef.current ? "result" : "gate");
             }
             if (parsed.text) {
+              finalReport += parsed.text;
               setReport((prev) => prev + parsed.text);
             }
           }
@@ -260,6 +276,13 @@ export function ReadinessWizard() {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setGenerating(false);
+      if (
+        userRef.current &&
+        finalResult &&
+        runIdRef.current
+      ) {
+        void saveReadinessRun(answersRef.current, finalReport, runIdRef.current);
+      }
     }
   }, []);
 
@@ -274,6 +297,7 @@ export function ReadinessWizard() {
     } catch {
       // ignore
     }
+    runIdRef.current = null;
     setAnswers({});
     setStep(0);
     setResult(null);

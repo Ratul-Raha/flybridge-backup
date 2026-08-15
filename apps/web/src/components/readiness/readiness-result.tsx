@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -21,14 +21,41 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { generateReadinessPdf } from "@/lib/readiness/pdf";
-import type { CategoryScore, ReadinessResult } from "@/lib/readiness/questions";
+import type {
+  CategoryScore,
+  ReadinessAnswers,
+  ReadinessResult,
+} from "@/lib/readiness/questions";
 
 export const READINESS_STORAGE_KEY = "flybridge-readiness-result";
 
 export type StoredReadiness = {
   result: ReadinessResult;
   report: string;
+  answers: ReadinessAnswers;
+  runId?: string;
 };
+
+export function makeRunId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `run_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function saveReadinessRun(
+  answers: ReadinessAnswers,
+  report: string,
+  runId: string
+): Promise<boolean> {
+  return fetch("/api/me/readiness", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ runId, answers, report }),
+  })
+    .then((res) => res.ok)
+    .catch(() => false);
+}
 
 const CATEGORY_ICONS: Record<string, typeof GraduationCap> = {
   academic: GraduationCap,
@@ -562,6 +589,7 @@ export function SignInGate({ onSignedIn }: { onSignedIn: () => void }) {
 export function ReadinessResultClient() {
   const { user, loading } = useAuth();
   const [data, setData] = useState<StoredReadiness | null>(null);
+  const savedRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -571,6 +599,12 @@ export function ReadinessResultClient() {
       // storage unavailable or malformed
     }
   }, []);
+
+  useEffect(() => {
+    if (loading || !user || !data || savedRef.current) return;
+    savedRef.current = true;
+    void saveReadinessRun(data.answers, data.report, data.runId ?? makeRunId());
+  }, [loading, user, data]);
 
   const retake = () => {
     try {

@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { ReadinessRun } from "@/lib/models/readiness-run";
 import { ACCOUNT_TYPES, SUBSCRIPTION_TYPES } from "@/lib/roles";
 
 export async function GET(
@@ -23,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const [registrations, downloads] = await Promise.all([
+    const [registrations, downloads, readiness] = await Promise.all([
       SeminarRegistration.find({ user: user._id })
         .sort({ createdAt: -1 })
         .limit(100)
@@ -34,6 +35,7 @@ export async function GET(
         .limit(100)
         .populate("resource", "title fileType fileUrl")
         .lean(),
+      ReadinessRun.find({ user: user._id }).sort({ createdAt: -1 }).limit(100).lean(),
     ]);
 
     return NextResponse.json({
@@ -50,6 +52,7 @@ export async function GET(
       stats: {
         totalSeminars: registrations.length,
         totalDownloads: downloads.length,
+        totalReadiness: readiness.length,
       },
       seminars: registrations.map((r) => ({
         id: r._id.toString(),
@@ -75,6 +78,21 @@ export async function GET(
             }
           : null,
         createdAt: d.createdAt,
+      })),
+      readiness: readiness.map((r) => ({
+        id: r._id.toString(),
+        score: r.score,
+        label: r.label ?? "",
+        country: r.country ?? "",
+        degreeLevel: r.degreeLevel ?? "",
+        createdAt: r.createdAt,
+        categories:
+          ((r.result as { categories?: { id: string; label?: string; pct?: number }[] })
+            .categories ?? []).map((c) => ({
+              id: c.id,
+              label: c.label ?? "",
+              pct: c.pct ?? 0,
+            })),
       })),
     });
   } catch (error) {

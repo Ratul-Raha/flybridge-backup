@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Crown, ShoppingCart, BookOpen, GraduationCap } from "lucide-react";
+import { Users, Crown, ShoppingCart, BookOpen, Gauge } from "lucide-react";
 
 type Overview = {
   totalUsers: number;
   activeSubscriptions: number;
   totalOrders: number;
   courseEnrollment: number;
-  completionRate: number | null;
+  readinessRuns: number;
 };
 
 const CARDS: {
@@ -48,11 +48,11 @@ const CARDS: {
     caption: () => "Seminar registrations",
   },
   {
-    key: "completionRate",
-    label: "Completion rate",
-    icon: GraduationCap,
+    key: "readinessRuns",
+    label: "Readiness checks",
+    icon: Gauge,
     gradient: "linear-gradient(135deg,#F43F5E,#FB7185)",
-    caption: () => "Coming soon",
+    caption: () => "Study abroad assessments run",
   },
 ];
 

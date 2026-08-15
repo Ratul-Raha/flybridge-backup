@@ -9,6 +9,7 @@ import {
   Crown,
   Download,
   Eye,
+  Gauge,
   Loader2,
   Mail,
   Phone,
@@ -33,6 +34,8 @@ type UserRow = {
   createdAt: string;
   seminars: number;
   downloads: number;
+  readiness: number | null;
+  readinessRuns: number;
 };
 
 type Stats = {
@@ -42,6 +45,7 @@ type Stats = {
   admins: number;
   moderators: number;
   newThisWeek: number;
+  totalReadiness: number;
 };
 
 type DetailSeminar = {
@@ -56,19 +60,37 @@ type DetailDownload = {
   createdAt: string;
 };
 
+type DetailReadiness = {
+  id: string;
+  score: number;
+  label: string;
+  country: string;
+  degreeLevel: string;
+  createdAt: string;
+  categories: { id: string; label: string; pct: number }[];
+};
+
 type DetailData = {
   user: UserRow;
-  stats: { totalSeminars: number; totalDownloads: number };
+  stats: { totalSeminars: number; totalDownloads: number; totalReadiness: number };
   seminars: DetailSeminar[];
   downloads: DetailDownload[];
+  readiness: DetailReadiness[];
+};
+
+const scoreColor = (score: number): string => {
+  if (score >= 80) return "#0FA968";
+  if (score >= 60) return "#2F5FE0";
+  if (score >= 40) return "#DB8A2E";
+  return "#C0392B";
 };
 
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_44px]";
+const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_62px_44px]";
 
-const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_44px]";
+const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_62px_44px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -398,7 +420,7 @@ export function UserManage() {
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
             >
-              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Files", "View"].map((c) => (
+              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Files", "Readiness", "View"].map((c) => (
                 <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                   {c}
                 </span>
@@ -456,6 +478,21 @@ export function UserManage() {
                     </span>
                     <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
                       {u.downloads}
+                    </span>
+                    <span className="hidden lg:flex items-center justify-center">
+                      {u.readiness === null ? (
+                        <span className="text-[12px] text-center" style={{ color: "#A6ADC0" }}>
+                          —
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center justify-center rounded-lg font-display text-[12.5px] font-semibold tabular-nums px-1.5 py-[3px] min-w-[34px]"
+                          style={{ background: `${scoreColor(u.readiness)}1f`, color: scoreColor(u.readiness) }}
+                          title={`${u.readinessRuns} assessment run${u.readinessRuns === 1 ? "" : "s"}`}
+                        >
+                          {u.readiness}
+                        </span>
+                      )}
                     </span>
                     <span
                       className="hidden lg:flex items-center justify-end transition-colors duration-150 group-hover:text-[var(--brand)]"
@@ -653,7 +690,7 @@ export function UserManage() {
                   )}
 
                   {/* Activity summary */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen size={14} style={{ color: "var(--brand)" }} />
@@ -674,6 +711,17 @@ export function UserManage() {
                       </div>
                       <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
                         {detail.stats.totalDownloads}
+                      </p>
+                    </div>
+                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Gauge size={14} style={{ color: "var(--brand)" }} />
+                        <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
+                          Readiness
+                        </p>
+                      </div>
+                      <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+                        {detail.stats.totalReadiness}
                       </p>
                     </div>
                   </div>
@@ -726,6 +774,64 @@ export function UserManage() {
                             </p>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Readiness assessments */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2" style={{ color: "var(--body)" }}>
+                      Readiness assessments
+                    </p>
+                    {detail.readiness.length === 0 ? (
+                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                        No assessments run yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {detail.readiness.map((r) => {
+                          const color = scoreColor(r.score);
+                          return (
+                            <div key={r.id} className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                              <div className="flex items-center justify-between gap-3">
+                                <span
+                                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-[15px] font-bold tabular-nums"
+                                  style={{ background: `${color}1f`, color }}
+                                >
+                                  {r.score}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                                    {r.label}
+                                  </p>
+                                  <p className="text-[11.5px] mt-0.5 truncate" style={{ color: "var(--body)" }}>
+                                    {[r.country, r.degreeLevel].filter(Boolean).join(" · ") || "Study abroad"}
+                                  </p>
+                                </div>
+                                <span className="text-[11px] shrink-0" style={{ color: "var(--body)" }}>
+                                  {fmtDate(r.createdAt)}
+                                </span>
+                              </div>
+                              {r.categories.length > 0 && (
+                                <div className="flex flex-col gap-1.5 mt-3">
+                                  {r.categories.map((c) => (
+                                    <div key={c.id} className="flex items-center gap-2">
+                                      <span className="text-[11px] w-[34%] truncate" style={{ color: "var(--body)" }}>
+                                        {c.label}
+                                      </span>
+                                      <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+                                        <div className="h-full rounded-full" style={{ width: `${c.pct}%`, background: scoreColor(c.pct) }} />
+                                      </div>
+                                      <span className="text-[10.5px] tabular-nums w-[26px] text-right" style={{ color: "var(--body)" }}>
+                                        {c.pct}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
