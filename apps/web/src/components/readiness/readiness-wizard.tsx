@@ -1,22 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  BadgeCheck,
   Briefcase,
   CalendarClock,
   Check,
   ChevronLeft,
   Compass,
-  Copy,
-  Download,
   FileText,
   Gauge,
   Globe,
   GraduationCap,
   Languages,
-  LoaderCircle,
   RotateCcw,
   Sparkles,
   Target,
@@ -26,11 +23,18 @@ import {
 import {
   CATEGORY_LABELS,
   READINESS_QUESTIONS,
-  type CategoryScore,
   type ReadinessAnswers,
   type ReadinessQuestionId,
   type ReadinessResult,
 } from "@/lib/readiness/questions";
+import { useAuth } from "@/lib/auth/auth-context";
+import {
+  READINESS_STORAGE_KEY,
+  ReadinessCard,
+  ReadinessResultView,
+  SignInGate,
+  type StoredReadiness,
+} from "./readiness-result";
 
 const QUESTION_ICONS: Record<ReadinessQuestionId, LucideIcon> = {
   education: GraduationCap,
@@ -42,161 +46,6 @@ const QUESTION_ICONS: Record<ReadinessQuestionId, LucideIcon> = {
   goals: Target,
   targetCountry: Globe,
 };
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  academic: GraduationCap,
-  language: Languages,
-  funding: Wallet,
-  profile: Briefcase,
-  planning: CalendarClock,
-};
-
-function scoreColor(score: number): string {
-  if (score >= 80) return "#0FA968";
-  if (score >= 60) return "#2F5FE0";
-  if (score >= 40) return "#DB8A2E";
-  return "#C0392B";
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function renderRich(text: string): string {
-  const escaped = escapeHtml(text);
-  return escaped
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline font-medium" style="color:var(--brand-2)">$1</a>')
-    .replace(/`([^`]+)`/g, '<code class="px-[5px] py-[1px] rounded-[6px] font-mono text-[12px]" style="background:var(--bg-soft);color:var(--ink)">$1</code>')
-    .replace(/^#{1,4}\s+(.+)$/gm, '<h3 class="font-display font-semibold text-[15.5px] mt-6 mb-2 first:mt-0" style="color:var(--ink)">$1</h3>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 flex gap-2"><span style="color:var(--brand)">•</span><span>$1</span></div>')
-    .replace(/^- \[ \]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] border shrink-0" style="border-color:var(--brand-2)"></span><span>$1</span></div>')
-    .replace(/^- \[x\]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] shrink-0 flex items-center justify-center text-white" style="background:var(--brand)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 13L10 18L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>$1</span></div>')
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\n/g, "<br/>");
-}
-
-function downloadText(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function useCountUp(target: number, duration = 1400): number {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min((t - t0) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setValue(Math.round(eased * target));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return value;
-}
-
-function ScoreRing({ result }: { result: ReadinessResult }) {
-  const score = result.score;
-  const display = useCountUp(score);
-  const color = scoreColor(score);
-  const R = 82;
-  const C = 2 * Math.PI * R;
-
-  return (
-    <div className="relative w-[220px] h-[220px] mx-auto">
-      <div
-        className="absolute inset-[-18px] rounded-full opacity-60 blur-2xl"
-        style={{ background: `radial-gradient(circle, ${color}33, transparent 70%)` }}
-      />
-      <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
-        <circle
-          cx="100"
-          cy="100"
-          r={R}
-          fill="none"
-          strokeWidth="12"
-          style={{ stroke: "var(--bg-soft)" }}
-        />
-        <circle
-          cx="100"
-          cy="100"
-          r={R}
-          fill="none"
-          strokeWidth="12"
-          strokeLinecap="round"
-          stroke={color}
-          strokeDasharray={C}
-          strokeDashoffset={C * (1 - score / 100)}
-          style={{
-            transition: "stroke-dashoffset 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
-            filter: `drop-shadow(0 0 14px ${color}66)`,
-          }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span
-          className="font-display text-[52px] font-bold leading-none tracking-[-0.04em]"
-          style={{ color: "var(--ink)" }}
-        >
-          {display}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] mt-1" style={{ color: "var(--body)" }}>
-          / 100
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function CategoryBars({ categories }: { categories: CategoryScore[] }) {
-  return (
-    <div className="flex flex-col gap-4">
-      {categories.map((c) => {
-        const Icon = CATEGORY_ICONS[c.id] ?? Gauge;
-        const color = scoreColor(c.pct);
-        return (
-          <div key={c.id}>
-            <div className="flex items-center justify-between gap-3 mb-1.5">
-              <span className="flex items-center gap-2 text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                <Icon size={13} style={{ color }} />
-                {c.label}
-              </span>
-              <span className="font-mono text-[11.5px] font-semibold" style={{ color }}>
-                {c.pct}%
-              </span>
-            </div>
-            <div
-              className="h-[7px] rounded-full overflow-hidden"
-              style={{ background: "var(--bg-soft)" }}
-            >
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${c.pct}%`,
-                  background: `linear-gradient(90deg, ${color}88, ${color})`,
-                  transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 const THINKING_STEPS = [
   "Reading your answers…",
@@ -213,7 +62,7 @@ const CHIPS = [
   { label: "AI-powered report", icon: Sparkles },
 ];
 
-type Phase = "intro" | "quiz" | "thinking" | "result";
+type Phase = "intro" | "quiz" | "thinking" | "gate" | "result";
 
 export function ReadinessWizard() {
   const [phase, setPhase] = useState<Phase>("intro");
@@ -227,10 +76,28 @@ export function ReadinessWizard() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thinkingIndex, setThinkingIndex] = useState(0);
-  const [copied, setCopied] = useState(false);
 
+  const { user } = useAuth();
+  const router = useRouter();
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    if (!result || !report) return;
+    try {
+      sessionStorage.setItem(
+        READINESS_STORAGE_KEY,
+        JSON.stringify({ result, report } satisfies StoredReadiness)
+      );
+    } catch {
+      // storage unavailable
+    }
+  }, [result, report]);
 
   const total = READINESS_QUESTIONS.length;
   const question = READINESS_QUESTIONS[step];
@@ -342,7 +209,7 @@ export function ReadinessWizard() {
             };
             if (parsed.score) {
               setResult(parsed.score);
-              setPhase("result");
+              setPhase(userRef.current ? "result" : "gate");
             }
             if (parsed.text) {
               setReport((prev) => prev + parsed.text);
@@ -362,26 +229,12 @@ export function ReadinessWizard() {
     generate();
   };
 
-  const copy = async () => {
-    if (!report) return;
-    try {
-      await navigator.clipboard.writeText(report);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable
-    }
-  };
-
-  const download = () => {
-    if (!report) return;
-    downloadText(
-      `FlyBridge Study Abroad Readiness Report\n\nScore: ${result?.score ?? 0}/100 (${result?.label ?? ""})\n\n${report}`,
-      "flybridge-readiness-report.txt"
-    );
-  };
-
   const retake = () => {
+    try {
+      sessionStorage.removeItem(READINESS_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
     setAnswers({});
     setStep(0);
     setResult(null);
@@ -412,18 +265,7 @@ export function ReadinessWizard() {
         </p>
       </div>
 
-      <div className="relative">
-        <div
-          className="absolute inset-0 rounded-[32px] opacity-70 blur-3xl pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(600px 200px at 20% 0%, rgba(15,169,104,0.10), transparent 60%), radial-gradient(600px 200px at 80% 100%, rgba(47,95,224,0.10), transparent 60%)",
-          }}
-        />
-        <div
-          className="relative rounded-[28px] border bg-white p-[clamp(22px,4vw,40px)]"
-          style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -24px rgba(18,32,67,0.18)" }}
-        >
+      <ReadinessCard>
           {phase === "intro" && (
             <div className="fb-step-in">
               <div className="flex justify-center mb-8">
@@ -676,122 +518,20 @@ export function ReadinessWizard() {
             </div>
           )}
 
-          {phase === "result" && result && (
-            <div className="fb-step-in">
-              <div className="text-center">
-                <span
-                  className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] rounded-full px-4 py-[7px]"
-                  style={{ background: "var(--bg-soft)", color: scoreColor(result.score) }}
-                >
-                  <BadgeCheck size={13} />
-                  {result.label}
-                </span>
-
-                <div className="mt-6">
-                  <ScoreRing result={result} />
-                </div>
-
-                <p className="text-[13.5px] leading-[1.65] mt-5 max-w-[440px] mx-auto" style={{ color: "var(--body)" }}>
-                  {result.tagline}
-                </p>
-              </div>
-
-              <div className="mt-8 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
-                <h4 className="font-display text-[14px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
-                  How you scored by area
-                </h4>
-                <CategoryBars categories={result.categories} />
-              </div>
-
-              <div className="mt-6 rounded-[20px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-                <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--line)" }}>
-                  <div className="flex items-center gap-2">
-                    {generating ? (
-                      <LoaderCircle size={14} className="animate-spin" style={{ color: "var(--brand)" }} />
-                    ) : (
-                      <Sparkles size={14} style={{ color: "var(--brand)" }} />
-                    )}
-                    <h4 className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                      Your readiness report
-                    </h4>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={copy}
-                      disabled={!report}
-                      className="flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3.5 py-[7px] transition-colors duration-200 disabled:opacity-40"
-                      style={{ background: "var(--bg-soft)", color: "var(--ink)" }}
-                    >
-                      <Copy size={13} /> {copied ? "Copied" : "Copy"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={download}
-                      disabled={!report}
-                      className="flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3.5 py-[7px] text-white transition-colors duration-200 disabled:opacity-40"
-                      style={{ background: "var(--brand)" }}
-                    >
-                      <Download size={13} /> .txt
-                    </button>
-                  </div>
-                </div>
-
-                <div className="px-5 py-4 min-h-[160px]">
-                  {!report && generating && (
-                    <div className="flex flex-col gap-2.5 py-6">
-                      {[92, 100, 84, 96, 64].map((w, i) => (
-                        <div key={i} className="h-[12px] rounded-md fb-shimmer" style={{ width: `${w}%` }} />
-                      ))}
-                      <p className="text-[12px] flex items-center gap-2 mt-2" style={{ color: "var(--body)" }}>
-                        <LoaderCircle size={13} className="animate-spin" style={{ color: "var(--brand)" }} />
-                        Writing your personalized report…
-                      </p>
-                    </div>
-                  )}
-                  {report && (
-                    <div
-                      className="text-[13.5px] leading-[1.75] break-words whitespace-pre-wrap"
-                      style={{ color: "var(--ink)" }}
-                      dangerouslySetInnerHTML={{ __html: renderRich(report) }}
-                    />
-                  )}
-                  {!report && !generating && error && (
-                    <p className="text-[12.5px]" style={{ color: "#C0392B" }}>
-                      {error}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-                <button
-                  type="button"
-                  onClick={retake}
-                  className="inline-flex items-center gap-2 rounded-full text-[13.5px] font-semibold px-6 py-[12px] transition-all duration-200 hover:opacity-85"
-                  style={{ background: "var(--brand)", color: "#fff", boxShadow: "0 10px 24px -12px rgba(15,169,104,0.5)" }}
-                >
-                  <RotateCcw size={14} />
-                  Retake assessment
-                </button>
-                <a
-                  href="/programs"
-                  className="inline-flex items-center gap-2 rounded-full text-[13.5px] font-semibold px-6 py-[12px] border transition-all duration-200 hover:bg-[var(--bg-soft)]"
-                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                >
-                  Explore programs
-                  <ArrowRight size={14} />
-                </a>
-              </div>
-
-              <p className="text-center text-[11px] mt-6" style={{ color: "#A6ADC0" }}>
-                This score is an advisory estimate — official eligibility depends on each
-                university and visa office.
-              </p>
-            </div>
+          {phase === "gate" && (
+            <SignInGate onSignedIn={() => router.push("/readiness/result")} />
           )}
-        </div>
-      </div>
+
+          {phase === "result" && result && (
+            <ReadinessResultView
+              result={result}
+              report={report}
+              generating={generating}
+              error={error}
+              onRetake={retake}
+            />
+          )}
+        </ReadinessCard>
     </div>
   );
 }
