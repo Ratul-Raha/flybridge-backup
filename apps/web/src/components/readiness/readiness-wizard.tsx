@@ -494,7 +494,7 @@ export function ReadinessWizard() {
                 </span>
               </div>
 
-              <div className="h-[6px] rounded-full mb-8 overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+              <div className="h-[6px] rounded-full mb-4 overflow-hidden" style={{ background: "var(--bg-soft)" }}>
                 <div
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
@@ -502,6 +502,33 @@ export function ReadinessWizard() {
                     background: "linear-gradient(90deg, var(--brand), var(--brand-2))",
                   }}
                 />
+              </div>
+
+              <div className="flex items-center justify-center gap-[7px] mb-8">
+                {READINESS_QUESTIONS.map((q, i) => {
+                  const answered = answers[q.id] !== undefined;
+                  const current = i === step;
+                  const reachable = i < step && answered;
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => reachable && setStep(i)}
+                      aria-label={`Question ${i + 1}`}
+                      className="h-[7px] rounded-full transition-all duration-300"
+                      style={{
+                        width: current ? 26 : 7,
+                        background: current
+                          ? "var(--brand)"
+                          : answered
+                            ? "var(--brand-2)"
+                            : "var(--line)",
+                        cursor: reachable ? "pointer" : "default",
+                        boxShadow: current ? "0 0 0 3px var(--brand-soft)" : "none",
+                      }}
+                    />
+                  );
+                })}
               </div>
 
               <div key={step} className="fb-step-in">
