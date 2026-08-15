@@ -15,7 +15,9 @@ import {
   GraduationCap,
   Languages,
   RotateCcw,
+  School,
   Sparkles,
+  Stamp,
   Target,
   Wallet,
   type LucideIcon,
@@ -44,7 +46,9 @@ const QUESTION_ICONS: Record<ReadinessQuestionId, LucideIcon> = {
   experience: Briefcase,
   timeline: CalendarClock,
   goals: Target,
+  visa: Stamp,
   targetCountry: Globe,
+  degreeLevel: School,
 };
 
 const THINKING_STEPS = [
@@ -57,8 +61,8 @@ const THINKING_STEPS = [
 ];
 
 const CHIPS = [
-  { label: "8 questions", icon: FileText },
-  { label: "~2 minutes", icon: Compass },
+  { label: "10 questions", icon: FileText },
+  { label: "~3 minutes", icon: Compass },
   { label: "AI-powered report", icon: Sparkles },
 ];
 
@@ -101,6 +105,10 @@ export function ReadinessWizard() {
 
   const total = READINESS_QUESTIONS.length;
   const question = READINESS_QUESTIONS[step];
+  const isMulti = question.multiSelect === true;
+
+  const multiSelected = (): string[] =>
+    Array.isArray(answers[question.id]) ? (answers[question.id] as string[]) : [];
 
   useEffect(() => {
     if (phase === "thinking") {
@@ -128,6 +136,16 @@ export function ReadinessWizard() {
 
   const pick = (value: string) => {
     if (advancing) return;
+
+    if (isMulti) {
+      const current = multiSelected();
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      setAnswers((prev) => ({ ...prev, [question.id]: next }));
+      return;
+    }
+
     setPicked(value);
     setAdvancing(true);
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
@@ -142,6 +160,22 @@ export function ReadinessWizard() {
       setAdvancing(false);
       advanceTimer.current = null;
     }, 480);
+  };
+
+  const continueNext = () => {
+    if (advancing) return;
+    if (isMulti && multiSelected().length === 0) return;
+    setAdvancing(true);
+    advanceTimer.current = setTimeout(() => {
+      if (step === total - 1) {
+        setPhase("thinking");
+        generate();
+      } else {
+        setStep((s) => s + 1);
+      }
+      setAdvancing(false);
+      advanceTimer.current = null;
+    }, 320);
   };
 
   const back = () => {
@@ -290,7 +324,7 @@ export function ReadinessWizard() {
                 How ready are you to study abroad?
               </h2>
               <p className="text-center text-[13.5px] leading-[1.7] mt-2 max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
-                Answer 8 quick questions about your academics, English, funding and
+                Answer 10 quick questions about your academics, English, funding and
                 plans. We&apos;ll score your readiness and give you a tailored report
                 with clear next steps.
               </p>
@@ -396,7 +430,9 @@ export function ReadinessWizard() {
 
                 <div className="flex flex-col gap-3">
                   {question.options.map((option) => {
-                    const active = picked === option.value || answers[question.id] === option.value;
+                    const active = isMulti
+                      ? multiSelected().includes(option.value)
+                      : picked === option.value || answers[question.id] === option.value;
                     return (
                       <button
                         key={option.value}
@@ -421,7 +457,9 @@ export function ReadinessWizard() {
                           )}
                         </span>
                         <span
-                          className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border transition-all duration-200"
+                          className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center border transition-all duration-200 ${
+                            isMulti ? "rounded-[7px]" : "rounded-full"
+                          }`}
                           style={{
                             borderColor: active ? "var(--brand)" : "var(--line)",
                             background: active ? "var(--brand)" : "transparent",
@@ -445,11 +483,22 @@ export function ReadinessWizard() {
                   <ChevronLeft size={15} />
                   Back
                 </button>
-                {step < total - 1 && (
+                {isMulti ? (
+                  <button
+                    type="button"
+                    onClick={continueNext}
+                    disabled={advancing || multiSelected().length === 0}
+                    className="inline-flex items-center gap-2 rounded-full text-white text-[13.5px] font-semibold px-6 py-[11px] transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ background: "var(--brand)" }}
+                  >
+                    Continue
+                    <ArrowRight size={15} />
+                  </button>
+                ) : step < total - 1 ? (
                   <span className="text-[11.5px]" style={{ color: "#A6ADC0" }}>
                     Pick an answer to continue
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           )}

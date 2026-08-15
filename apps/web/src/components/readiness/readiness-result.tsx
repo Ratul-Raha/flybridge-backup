@@ -264,6 +264,43 @@ export function ReadinessResultView({
         <CategoryBars categories={result.categories} />
       </div>
 
+      {result.priorityAreas.length > 0 && (
+        <div className="mt-6 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
+          <h4 className="font-display text-[14px] font-semibold mb-1" style={{ color: "var(--ink)" }}>
+            Priority focus areas
+          </h4>
+          <p className="text-[12.5px] mb-4" style={{ color: "var(--body)" }}>
+            These are the dimensions holding your score back the most — start here.
+          </p>
+          <div className="flex flex-col gap-3">
+            {result.priorityAreas.map((p) => {
+              const color = scoreColor(p.pct);
+              return (
+                <div key={p.questionId}>
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <span className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                      {p.label}
+                    </span>
+                    <span className="font-mono text-[11.5px] font-semibold" style={{ color }}>
+                      {p.pct}%
+                    </span>
+                  </div>
+                  <div className="h-[7px] rounded-full overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${p.pct}%`,
+                        background: `linear-gradient(90deg, ${color}88, ${color})`,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="mt-6 rounded-[20px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--line)" }}>
           <div className="flex items-center gap-2">

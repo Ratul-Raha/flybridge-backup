@@ -5,7 +5,7 @@ import { ReadinessWizard } from "@/components/readiness/readiness-wizard";
 export const metadata: Metadata = {
   title: "Study Abroad Readiness Score | FlyBridge Education Group",
   description:
-    "Answer 8 quick questions and get your personalized study abroad readiness score — plus an AI-built action plan to boost your chances.",
+    "Answer 10 quick questions and get your personalized study abroad readiness score — plus an AI-built action plan to boost your chances.",
 };
 
 export default function ReadinessPage() {

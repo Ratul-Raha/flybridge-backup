@@ -21,6 +21,8 @@ export function buildReadinessPrompt(
     "  no test scores, universities, documents or deadlines that were not given.",
     "- Be honest but encouraging. If the score is low, stay constructive and focus",
     "  on exactly what the student should do next.",
+    "- Lead '## What needs attention' with the student's priority focus areas — the",
+    "  lowest-scoring dimensions — and be specific about how to improve each one.",
     "- Format the report in markdown with these exact sections:",
     "  1. `## Overview` — 2–3 sentences summarising where the student stands.",
     "  2. `## What's working well` — 3–5 bullets on their strengths.",
@@ -37,6 +39,9 @@ export function buildReadinessPrompt(
   const categories = result.categories
     .map((c) => `- ${c.label}: ${c.pct}%`)
     .join("\n");
+  const priorityAreas = result.priorityAreas.length
+    ? result.priorityAreas.map((p) => `- ${p.label}: ${p.pct}%`).join("\n")
+    : "- None — evenly balanced across dimensions";
 
   const user = [
     "Write the readiness report for this student.",
@@ -48,6 +53,9 @@ export function buildReadinessPrompt(
     "",
     "## Category scores",
     categories,
+    "",
+    "## Priority focus areas",
+    priorityAreas,
   ].join("\n");
 
   return { system, user };
