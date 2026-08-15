@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,6 +20,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { generateReadinessPdf } from "@/lib/readiness/pdf";
 import type { CategoryScore, ReadinessResult } from "@/lib/readiness/questions";
 
 export const READINESS_STORAGE_KEY = "flybridge-readiness-result";
@@ -64,18 +66,6 @@ function renderRich(text: string): string {
     .replace(/\n/g, "<br/>");
 }
 
-function downloadText(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 function useCountUp(target: number, duration = 1400): number {
   const [value, setValue] = useState(0);
   useEffect(() => {
@@ -93,10 +83,16 @@ function useCountUp(target: number, duration = 1400): number {
   return value;
 }
 
-function ScoreRing({ result }: { result: ReadinessResult }) {
+function ScoreRing({
+  result,
+  onDark = false,
+}: {
+  result: ReadinessResult;
+  onDark?: boolean;
+}) {
   const score = result.score;
   const display = useCountUp(score);
-  const color = scoreColor(score);
+  const color = onDark ? "#FFFFFF" : scoreColor(score);
   const R = 82;
   const C = 2 * Math.PI * R;
 
@@ -113,7 +109,7 @@ function ScoreRing({ result }: { result: ReadinessResult }) {
           r={R}
           fill="none"
           strokeWidth="12"
-          style={{ stroke: "var(--bg-soft)" }}
+          style={{ stroke: onDark ? "rgba(255,255,255,0.18)" : "var(--bg-soft)" }}
         />
         <circle
           cx="100"
@@ -134,11 +130,14 @@ function ScoreRing({ result }: { result: ReadinessResult }) {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="font-display text-[52px] font-bold leading-none tracking-[-0.04em]"
-          style={{ color: "var(--ink)" }}
+          style={{ color: onDark ? "#FFFFFF" : "var(--ink)" }}
         >
           {display}
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] mt-1" style={{ color: "var(--body)" }}>
+        <span
+          className="font-mono text-[10px] uppercase tracking-[0.2em] mt-1"
+          style={{ color: onDark ? "rgba(255,255,255,0.65)" : "var(--body)" }}
+        >
           / 100
         </span>
       </div>
@@ -217,6 +216,7 @@ export function ReadinessResultView({
   onRetake: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const copy = async () => {
     if (!report) return;
@@ -229,38 +229,79 @@ export function ReadinessResultView({
     }
   };
 
-  const download = () => {
-    if (!report) return;
-    downloadText(
-      `FlyBridge Study Abroad Readiness Report\n\nScore: ${result.score}/100 (${result.label})\n\n${report}`,
-      "flybridge-readiness-report.txt"
-    );
+  const download = async () => {
+    if (!report || downloading) return;
+    setDownloading(true);
+    try {
+      await generateReadinessPdf(result, report);
+    } finally {
+      setDownloading(false);
+    }
   };
+
+  const today = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <div className="fb-step-in">
-      <div className="text-center">
+      <div className="flex items-center justify-between gap-4 mb-8 pb-6 border-b" style={{ borderColor: "var(--line)" }}>
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
+            <Image src="/logo.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
+          </div>
+          <div>
+            <p className="font-display text-[14px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
+              FlyBridge Education Group
+            </p>
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.16em]" style={{ color: "var(--brand)" }}>
+              Study Abroad Readiness
+            </p>
+          </div>
+        </div>
+        <span className="hidden sm:block font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
+          {today}
+        </span>
+      </div>
+
+      <div
+        className="relative overflow-hidden rounded-[26px] px-[clamp(20px,4vw,36px)] pt-[clamp(28px,4vw,40px)] pb-[clamp(24px,4vw,36px)] text-center"
+        style={{
+          background: "linear-gradient(135deg, #0A3D2C 0%, #0FA968 52%, #2F5FE0 130%)",
+          boxShadow: "0 24px 50px -20px rgba(15,169,104,0.45)",
+        }}
+      >
+        <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }} />
+        <div className="pointer-events-none absolute -bottom-16 -left-10 h-56 w-56 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+
         <span
-          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] rounded-full px-4 py-[7px]"
-          style={{ background: "var(--bg-soft)", color: scoreColor(result.score) }}
+          className="relative inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] rounded-full px-4 py-[7px]"
+          style={{ background: "rgba(255,255,255,0.16)", color: "#FFFFFF" }}
         >
           <BadgeCheck size={13} />
           {result.label}
         </span>
 
-        <div className="mt-6">
-          <ScoreRing result={result} />
+        <div className="relative mt-5">
+          <ScoreRing result={result} onDark />
         </div>
 
-        <p className="text-[13.5px] leading-[1.65] mt-5 max-w-[440px] mx-auto" style={{ color: "var(--body)" }}>
+        <p className="relative text-[13.5px] leading-[1.7] mt-5 max-w-[440px] mx-auto" style={{ color: "rgba(255,255,255,0.85)" }}>
           {result.tagline}
         </p>
       </div>
 
-      <div className="mt-8 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
-        <h4 className="font-display text-[14px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
-          How you scored by area
-        </h4>
+      <div className="mt-6 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
+        <div className="flex items-center justify-between mb-5">
+          <h4 className="font-display text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+            How you scored by area
+          </h4>
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
+            {result.score}/100 overall
+          </span>
+        </div>
         <CategoryBars categories={result.categories} />
       </div>
 
@@ -326,11 +367,16 @@ export function ReadinessResultView({
             <button
               type="button"
               onClick={download}
-              disabled={!report}
+              disabled={!report || downloading}
               className="flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3.5 py-[7px] text-white transition-colors duration-200 disabled:opacity-40"
               style={{ background: "var(--brand)" }}
             >
-              <Download size={13} /> .txt
+              {downloading ? (
+                <LoaderCircle size={13} className="animate-spin" />
+              ) : (
+                <Download size={13} />
+              )}
+              {downloading ? "Preparing…" : "Download PDF"}
             </button>
           </div>
         </div>
@@ -382,7 +428,26 @@ export function ReadinessResultView({
         </a>
       </div>
 
-      <p className="text-center text-[11px] mt-6" style={{ color: "#A6ADC0" }}>
+      <div className="mt-6 rounded-[20px] border p-5 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
+        <div className="flex items-center gap-3">
+          <Image src="/logo.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
+          <div>
+            <p className="font-display text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+              FlyBridge Education Group
+            </p>
+            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+              Study, work and build a career abroad — one confident step at a time.
+            </p>
+          </div>
+        </div>
+        <div className="text-[11px] text-center sm:text-right leading-relaxed" style={{ color: "var(--body)" }}>
+          +1 778 676 8459
+          <br />
+          <span style={{ color: "var(--brand)" }}>flybridgeedu.com</span>
+        </div>
+      </div>
+
+      <p className="text-center text-[11px] mt-5" style={{ color: "#A6ADC0" }}>
         This score is an advisory estimate — official eligibility depends on each
         university and visa office.
       </p>

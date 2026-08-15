@@ -86,10 +86,15 @@ export function ReadinessWizard() {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const userRef = useRef(user);
+  const answersRef = useRef(answers);
 
   useEffect(() => {
     userRef.current = user;
   }, [user]);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   useEffect(() => {
     if (!result || !report) return;
@@ -121,7 +126,7 @@ export function ReadinessWizard() {
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "quiz" || phase === "thinking" || phase === "result") {
+    if (phase === "quiz" || phase === "thinking" || phase === "gate" || phase === "result") {
       cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [phase]);
@@ -152,7 +157,7 @@ export function ReadinessWizard() {
     advanceTimer.current = setTimeout(() => {
       if (step === total - 1) {
         setPhase("thinking");
-        generate();
+        generate({ ...answersRef.current, [question.id]: value });
       } else {
         setStep((s) => s + 1);
       }
@@ -169,7 +174,7 @@ export function ReadinessWizard() {
     advanceTimer.current = setTimeout(() => {
       if (step === total - 1) {
         setPhase("thinking");
-        generate();
+        generate(answersRef.current);
       } else {
         setStep((s) => s + 1);
       }
@@ -196,7 +201,7 @@ export function ReadinessWizard() {
     setPhase("quiz");
   };
 
-  const generate = useCallback(async () => {
+  const generate = useCallback(async (payload?: ReadinessAnswers) => {
     setResult(null);
     setReport("");
     setError(null);
@@ -206,7 +211,7 @@ export function ReadinessWizard() {
       const res = await fetch("/api/readiness", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers: payload ?? answersRef.current }),
       });
 
       if (!res.ok) {
@@ -256,7 +261,7 @@ export function ReadinessWizard() {
     } finally {
       setGenerating(false);
     }
-  }, [answers]);
+  }, []);
 
   const retry = () => {
     setPhase("thinking");
