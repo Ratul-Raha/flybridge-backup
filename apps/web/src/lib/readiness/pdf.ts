@@ -104,7 +104,11 @@ export async function generateReadinessPdf(
   pdf.roundedRect(M, y, contentW, 116, 14, 14, "F");
   pdf.setFillColor("#FFFFFF");
   pdf.saveGraphicsState();
-  (pdf as unknown as { setGlobalAlpha: (a: number) => void }).setGlobalAlpha(0.09);
+  pdf.setGState(
+    new (pdf as unknown as { GState: new (o: { opacity: number }) => object }).GState({
+      opacity: 0.09,
+    })
+  );
   pdf.circle(W - M - 30, y + 6, 58, "F");
   pdf.circle(M + 34, y + 118, 52, "F");
   pdf.restoreGraphicsState();

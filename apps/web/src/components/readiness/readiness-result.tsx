@@ -217,6 +217,7 @@ export function ReadinessResultView({
 }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const copy = async () => {
     if (!report) return;
@@ -232,8 +233,14 @@ export function ReadinessResultView({
   const download = async () => {
     if (!report || downloading) return;
     setDownloading(true);
+    setDownloadError(null);
     try {
       await generateReadinessPdf(result, report);
+    } catch (e) {
+      console.error("readiness pdf download failed", e);
+      setDownloadError(
+        e instanceof Error ? e.message : "Couldn't generate the PDF. Try again."
+      );
     } finally {
       setDownloading(false);
     }
@@ -406,6 +413,11 @@ export function ReadinessResultView({
             </p>
           )}
         </div>
+        {downloadError && (
+          <p className="px-5 pb-4 text-[12px]" style={{ color: "#C0392B" }}>
+            {downloadError}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
