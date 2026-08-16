@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/auth/session";
+import { CourseManage } from "@/components/dashboard/course-manage";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionTabs } from "@/components/dashboard/user/section-tabs";
 import { AllCourses } from "@/components/dashboard/user/all-courses";
@@ -12,8 +13,9 @@ export const metadata: Metadata = {
 export default async function CoursesPage() {
   const session = await readSession();
   if (!session) redirect("/login");
+
   if (session.role === "moderator" || session.role === "admin") {
-    redirect("/dashboard");
+    return <CourseManage />;
   }
 
   return (

@@ -27,6 +27,7 @@ export function ResourceDetail({
   wantsDownload?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [payNote, setPayNote] = useState(false);
   const { user, loading } = useAuth();
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
@@ -50,7 +51,11 @@ export function ResourceDetail({
 
   useEffect(() => {
     if (!wantsDownload || loading) return;
-    if (paid && !user) {
+    if (paid) {
+      setPayNote(true);
+      return;
+    }
+    if (!user) {
       router.replace(loginNext);
       return;
     }
@@ -153,13 +158,22 @@ export function ResourceDetail({
           )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
-            {paid && !user ? (
-              <Link
-                href={loginNext}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
-              >
-                <Lock size={15} /> Log in to download{r.price > 0 ? ` · $${r.price}` : ""}
-              </Link>
+            {paid ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPayNote((v) => !v)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
+                >
+                  <Lock size={15} />
+                  Buy now{r.price > 0 ? ` · $${r.price}` : ""}
+                </button>
+                {payNote && (
+                  <span className="text-[12.5px] max-w-[280px]" style={{ color: "var(--body)" }}>
+                    Payment for this resource is coming soon — you can download it for free once it launches.
+                  </span>
+                )}
+              </div>
             ) : (
               <button
                 type="button"

@@ -4,6 +4,9 @@ import { Seminar, SeminarRegistration } from "./models/seminar";
 import { ResourceDownload } from "./models/resource-download";
 import { Resource } from "./models/resource";
 import { ReadinessRun } from "./models/readiness-run";
+import { Course } from "./models/course";
+import { Order } from "./models/order";
+import { CourseEnrollment } from "./models/enrollment";
 
 void User;
 void Seminar;
@@ -11,6 +14,9 @@ void SeminarRegistration;
 void ResourceDownload;
 void Resource;
 void ReadinessRun;
+void Course;
+void Order;
+void CourseEnrollment;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";
@@ -28,6 +34,11 @@ export async function connectDb(): Promise<mongoose.Connection> {
   if (!cached.promise) {
     cached.promise = mongoose.connect(uri, { dbName }).then((m) => m.connection);
   }
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.promise = null;
+    throw error;
+  }
   return cached.conn;
 }

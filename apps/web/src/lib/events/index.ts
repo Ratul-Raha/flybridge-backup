@@ -16,6 +16,9 @@ export function registerDefaultHandlers(): void {
   on("seminar.updated", refreshKnowledgeBase);
   on("seminar.deleted", refreshKnowledgeBase);
   on("course.launched", notifyAllOnCourseLaunched);
+  on("course.created", refreshKnowledgeBase);
+  on("course.updated", refreshKnowledgeBase);
+  on("course.deleted", refreshKnowledgeBase);
   on("resource.created", notifyAllOnResourceCreated);
 }
 

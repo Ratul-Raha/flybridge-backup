@@ -5,6 +5,11 @@ import { Nav } from "@/components/nav";
 import { ProgramCard } from "@/components/program-card";
 import { getProgram, programs } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
+import { connectDb } from "@/lib/db";
+import { Course } from "@/lib/models/course";
+import { CourseEnrollment } from "@/lib/models/enrollment";
+import { readSession } from "@/lib/auth/session";
+import { CourseEnrollButton } from "@/components/programs/course-enroll-button";
 import {
   BadgeCheck,
   Check,
@@ -21,15 +26,20 @@ import {
 import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 
-type Props = { params: { id: string } };
+type Props = { params: { slug: string } };
 
-export function generateStaticParams() {
-  return programs.map((p) => ({ id: p.slug }));
-}
+export const dynamic = "force-dynamic";
+
+type CourseCta = {
+  courseId: string;
+  slug: string;
+  enrolled: boolean;
+  paid: boolean;
+};
 
 export function generateMetadata({ params }: Props): Metadata {
-  const program = getProgram(params.id);
-  const details = courseDetails[params.id];
+  const program = getProgram(params.slug);
+  const details = courseDetails[params.slug];
   return {
     title: `${details?.title ?? program?.title ?? "Program"} | FlyBridge Education Group`,
     description: details?.desc ?? program?.desc,
@@ -97,6 +107,7 @@ function CourseHero({
   access,
   rating,
   lessonCount,
+  cta,
 }: {
   badge: string;
   title: string;
@@ -108,6 +119,7 @@ function CourseHero({
   access?: string;
   rating?: { average: number; count: number };
   lessonCount: number;
+  cta?: CourseCta;
 }) {
   return (
     <section
@@ -183,22 +195,33 @@ function CourseHero({
           </p>
 
           <div className="flex items-center gap-3 mt-6 flex-wrap">
-            <a
-              href="#buy"
-              className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-              style={{ background: "var(--brand)" }}
-            >
-              Enroll now
-              {arrow}
-            </a>
-            <a
-              href="#buy"
-              className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white flex-1 sm:flex-none"
-              style={{ color: "var(--ink)" }}
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Add to cart
-            </a>
+            {cta ? (
+              <CourseEnrollButton
+                courseId={cta.courseId}
+                slug={cta.slug}
+                enrolled={cta.enrolled}
+                paid={cta.paid}
+              />
+            ) : (
+              <>
+                <a
+                  href="#buy"
+                  className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
+                  style={{ background: "var(--brand)" }}
+                >
+                  Enroll now
+                  {arrow}
+                </a>
+                <a
+                  href="#buy"
+                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white flex-1 sm:flex-none"
+                  style={{ color: "var(--ink)" }}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Add to cart
+                </a>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
@@ -300,7 +323,7 @@ function CourseHero({
   );
 }
 
-function BuyCard({ details }: { details: CourseDetails }) {
+function BuyCard({ details, cta }: { details: CourseDetails; cta?: CourseCta }) {
   return (
     <div
       className="rounded-[24px] bg-white border border-line overflow-hidden"
@@ -338,13 +361,25 @@ function BuyCard({ details }: { details: CourseDetails }) {
           </p>
         )}
 
-        <a
-          href="#"
-          className="mt-5 block w-full text-center rounded-full py-[14px] text-[14.5px] font-bold text-white transition-all duration-300 hover:-translate-y-[1px]"
-          style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
-        >
-          Enroll now — {details.price}
-        </a>
+        {cta ? (
+          <div className="mt-5">
+            <CourseEnrollButton
+              courseId={cta.courseId}
+              slug={cta.slug}
+              enrolled={cta.enrolled}
+              paid={cta.paid}
+              block
+            />
+          </div>
+        ) : (
+          <a
+            href="#"
+            className="mt-5 block w-full text-center rounded-full py-[14px] text-[14.5px] font-bold text-white transition-all duration-300 hover:-translate-y-[1px]"
+            style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
+          >
+            Enroll now — {details.price}
+          </a>
+        )}
         <a
           href="#"
           className="mt-3 flex items-center justify-center gap-[8px] w-full rounded-full py-[13px] text-[14px] font-semibold border border-line bg-white transition-colors hover:bg-[var(--bg-soft)]"
@@ -445,14 +480,34 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-export default function ProgramPage({ params }: Props) {
-  const program = getProgram(params.id);
+export default async function ProgramPage({ params }: Props) {
+  const program = getProgram(params.slug);
   if (!program) notFound();
 
-  const details = courseDetails[params.id];
+  const details = courseDetails[params.slug];
   const lessonCount = details
     ? details.modules.reduce((n, m) => n + m.lessons.length, 0)
     : 30;
+
+  await connectDb();
+  const course = await Course.findOne({ slug: params.slug, published: true });
+  let cta: CourseCta | undefined;
+  if (course) {
+    const session = await readSession();
+    const enrolled =
+      session?.userId &&
+      (await CourseEnrollment.exists({
+        user: session.userId,
+        course: course._id,
+        status: "active",
+      }));
+    cta = {
+      courseId: course._id.toString(),
+      slug: course.slug,
+      enrolled: Boolean(enrolled),
+      paid: (course.price ?? 0) > 0,
+    };
+  }
 
   return (
     <div className="course-page">
@@ -473,6 +528,7 @@ export default function ProgramPage({ params }: Props) {
             : undefined
         }
         lessonCount={lessonCount}
+        cta={cta}
       />
 
       {/* Other programs */}
@@ -496,7 +552,7 @@ export default function ProgramPage({ params }: Props) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {programs
-            .filter((p) => p.slug !== params.id)
+            .filter((p) => p.slug !== params.slug)
             .map((p) => (
               <ProgramCard key={p.slug} p={p} />
             ))}
@@ -679,7 +735,7 @@ export default function ProgramPage({ params }: Props) {
 
               {/* Sticky purchase box */}
               <aside className="lg:sticky lg:top-24">
-                <BuyCard details={details} />
+                <BuyCard details={details} cta={cta} />
               </aside>
             </div>
           </section>
@@ -740,13 +796,25 @@ export default function ProgramPage({ params }: Props) {
                 {details.access}
               </div>
             </div>
-            <a
-              href="#buy"
-              className="shrink-0 rounded-full px-6 py-3 text-[13.5px] font-bold text-white"
-              style={{ background: "var(--brand)" }}
-            >
-              Enroll now
-            </a>
+            {cta ? (
+              <div className="shrink-0 w-[150px]">
+                <CourseEnrollButton
+                  courseId={cta.courseId}
+                  slug={cta.slug}
+                  enrolled={cta.enrolled}
+                  paid={cta.paid}
+                  block
+                />
+              </div>
+            ) : (
+              <a
+                href="#buy"
+                className="shrink-0 rounded-full px-6 py-3 text-[13.5px] font-bold text-white"
+                style={{ background: "var(--brand)" }}
+              >
+                Enroll now
+              </a>
+            )}
           </div>
           <div className="h-[76px] md:hidden" />
         </>

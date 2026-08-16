@@ -2,8 +2,9 @@ import "server-only";
 
 import { connectDb } from "@/lib/db";
 import { Seminar } from "@/lib/models/seminar";
+import { Course } from "@/lib/models/course";
 import { programs } from "@/lib/programs";
-import { courseDetails } from "@/app/programs/[id]/course-data";
+import { courseDetails } from "@/app/programs/[slug]/course-data";
 import { tokenize, type KnowledgeChunk } from "@/lib/ai/knowledge";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com";
@@ -106,13 +107,60 @@ export function generateProgramChunks(): KnowledgeChunk[] {
   return chunks;
 }
 
+export async function generateCourseChunks(): Promise<KnowledgeChunk[]> {
+  await connectDb();
+  const courses = await Course.find().sort({ createdAt: 1 }).lean();
+
+  const chunks: KnowledgeChunk[] = [];
+  const overview: string[] = [];
+
+  for (const course of courses) {
+    const price =
+      course.price && course.price > 0 ? `${course.currency ?? "BDT"} ${course.price}` : "Free";
+    const status = course.published ? "Available now" : "Not published yet";
+
+    const lines = [
+      ...(course.subtitle ? [course.subtitle] : []),
+      ...(course.description ? [course.description] : []),
+      `- Course page: [${course.title}](${SITE_URL}/programs/${course.slug})`,
+      `- Status: ${status}`,
+      `- Price: ${price}`,
+      ...(course.level ? [`- Level: ${course.level}`] : []),
+      ...(course.language ? [`- Language: ${course.language}`] : []),
+      ...(course.pace ? [`- Pace: ${course.pace}`] : []),
+    ];
+
+    if (course.modules.length > 0) {
+      lines.push("- Modules:");
+      for (const module of course.modules) {
+        lines.push(`  - ${module.title}`);
+        for (const lesson of module.lessons) {
+          lines.push(`    - ${lesson.title}`);
+        }
+      }
+    }
+
+    chunks.push(makeChunk("courses.md", course.title, lines.join("\n")));
+    overview.push(
+      `- ${course.title} — ${course.subtitle ?? course.description} (${status}, ${price})`
+    );
+  }
+
+  if (overview.length > 0) {
+    chunks.push(makeChunk("courses.md", "Course list", overview.join("\n")));
+  }
+
+  return chunks;
+}
+
 export async function generateDynamicChunks(): Promise<KnowledgeChunk[]> {
   try {
-    const [seminarChunks, programChunks] = await Promise.all([
+    const [seminarChunks, programChunks, courseChunks] = await Promise.all([
       generateSeminarChunks(),
       Promise.resolve(generateProgramChunks()),
+      generateCourseChunks(),
     ]);
-    return [...seminarChunks, ...programChunks];
+    return [...seminarChunks, ...programChunks, ...courseChunks];
   } catch (error) {
     console.error("dynamic knowledge generation error", error);
     return [];

@@ -4,6 +4,7 @@ import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
+import { createOrder } from "@/lib/orders";
 import type { SubscriptionType } from "@/lib/roles";
 
 type RegistrationBody = {
@@ -24,6 +25,13 @@ export async function POST(
     const seminar = await Seminar.findById(params.id);
     if (!seminar) {
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
+    }
+
+    if (seminar.type === "paid" && (seminar.price ?? 0) > 0) {
+      return NextResponse.json(
+        { error: "Payment for this seminar is coming soon." },
+        { status: 400 }
+      );
     }
 
     const phone = body.phone?.trim() ?? "";
@@ -104,14 +112,6 @@ export async function POST(
       });
     }
 
-    const registration = await SeminarRegistration.create({
-      seminar: seminar._id,
-      user: user._id,
-      name: name || user.name,
-      phone,
-      email,
-    });
-
     if (userCreated) {
       try {
         await emitEvent("user.registered", {
@@ -129,32 +129,28 @@ export async function POST(
       }
     }
 
-    const emit = await emitEvent("seminar.registration_created", {
-      registrationId: registration._id.toString(),
+    const { order } = await createOrder({
       user: {
         id: user._id.toString(),
         name: name || user.name,
         email,
         phone,
       },
-      seminar: {
-        id: seminar._id.toString(),
-        title: seminar.title,
-        description: seminar.description,
-        dateTime: seminar.dateTime.toISOString(),
-        duration: seminar.duration,
-        type: seminar.type,
-        price: seminar.price,
-        url: seminar.url,
-        image: seminar.image,
-      },
+      itemType: "seminar",
+      itemId: seminar._id.toString(),
+    });
+
+    const registration = await SeminarRegistration.findOne({
+      seminar: seminar._id,
+      email,
     });
 
     return NextResponse.json(
       {
         ok: true,
         registration,
-        emailSent: emit.handlers.sendRegistrationConfirmationEmail?.ok ?? false,
+        orderId: order._id.toString(),
+        requiresPayment: order.total > 0,
       },
       { status: 201 }
     );

@@ -49,14 +49,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const scope = request.nextUrl.searchParams.get("scope") === "courses" ? "courses" : "resources";
+    const base =
+      scope === "courses" ? "flybridge/courses" : "flybridge/resources";
+
     const folder =
       kind === "image"
-        ? "flybridge/resources/thumbnails"
+        ? `${base}/thumbnails`
         : kind === "video"
-        ? "flybridge/resources/videos"
+        ? `${base}/videos`
         : kind === "pdf"
-        ? "flybridge/resources/pdfs"
-        : "flybridge/resources";
+        ? `${base}/pdfs`
+        : base;
 
     const resourceType =
       kind === "image" ? "image" : kind === "video" ? "video" : "raw";

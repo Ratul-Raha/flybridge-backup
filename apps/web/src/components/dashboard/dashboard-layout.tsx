@@ -21,6 +21,7 @@ import {
   Workflow,
   ListChecks,
   Gauge,
+  ShoppingCart,
   Loader2,
   type LucideIcon,
 } from "lucide-react";
@@ -182,6 +183,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           },
           {
             kind: "link",
+            label: "Courses",
+            href: "/dashboard/courses",
+            icon: BookOpen,
+            active: pathname.startsWith("/dashboard/courses"),
+          },
+          {
+            kind: "link",
             label: "Resources",
             href: "/dashboard/resources",
             icon: FolderOpen,
@@ -240,6 +248,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/users",
             icon: Users,
             active: pathname.startsWith("/dashboard/admin/users"),
+          },
+          {
+            kind: "link",
+            label: "Orders",
+            href: "/dashboard/admin/orders",
+            icon: ShoppingCart,
+            active: pathname.startsWith("/dashboard/admin/orders"),
           },
           {
             kind: "link",

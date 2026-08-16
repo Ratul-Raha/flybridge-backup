@@ -104,6 +104,76 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       course: { slug: "study-visa-prep-us", title: "Student Visa Blueprint™", desc: "Step-by-step study visa preparation.", badge: "STUDY ABROAD", price: "৳২,৯৯৯" },
     }),
   },
+  "course.created": {
+    name: "course.created",
+    label: "Course published",
+    description: "Fires when a new course is created in the admin console.",
+    fields: ["course.id", "course.slug", "course.title", "course.badge", "course.price", "course.image"],
+    samplePayload: () => ({
+      course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "study-visa-prep-us", title: "Student Visa Blueprint™", badge: "STUDY ABROAD", price: 2999 },
+    }),
+  },
+  "course.updated": {
+    name: "course.updated",
+    label: "Course updated",
+    description: "Fires when an existing course is edited.",
+    fields: ["course.id", "course.slug", "course.title"],
+    samplePayload: () => ({
+      course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "study-visa-prep-us", title: "Student Visa Blueprint™" },
+    }),
+  },
+  "course.deleted": {
+    name: "course.deleted",
+    label: "Course deleted",
+    description: "Fires when a course is deleted.",
+    fields: ["course.id", "course.slug", "course.title"],
+    samplePayload: () => ({
+      course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "study-visa-prep-us", title: "Student Visa Blueprint™" },
+    }),
+  },
+  "course.enrolled": {
+    name: "course.enrolled",
+    label: "Course enrolled",
+    description: "Fires when a user is enrolled in a course (via a fulfilled order).",
+    fields: ["enrollmentId", "user.id", "user.name", "user.email", "course.id", "course.slug", "course.title", "course.price"],
+    samplePayload: () => ({
+      ...sampleUser(),
+      enrollmentId: "665f1c2a9e3b1c0012ab34cd",
+      course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "study-visa-prep-us", title: "Student Visa Blueprint™", price: 2999 },
+    }),
+  },
+  "order.created": {
+    name: "order.created",
+    label: "Order created",
+    description: "Fires when a new order is created (any product type).",
+    fields: ["order.id", "order.total", "order.currency", "order.status", "order.items", "user.id", "user.name", "user.email"],
+    samplePayload: () => ({
+      ...sampleUser(),
+      order: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        total: 2999,
+        currency: "BDT",
+        status: "pending",
+        items: [{ itemType: "course", itemId: "665f1c2a9e3b1c0012ab34cd", title: "Student Visa Blueprint™", price: 2999 }],
+      },
+    }),
+  },
+  "order.fulfilled": {
+    name: "order.fulfilled",
+    label: "Order fulfilled",
+    description: "Fires when an order is paid and access is granted.",
+    fields: ["order.id", "order.total", "order.currency", "order.status", "order.items", "user.id", "user.name", "user.email"],
+    samplePayload: () => ({
+      ...sampleUser(),
+      order: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        total: 0,
+        currency: "BDT",
+        status: "paid",
+        items: [{ itemType: "seminar", itemId: "665f1c2a9e3b1c0012ab34cd", title: "Student Visa Blueprint — Live Q&A", price: 0 }],
+      },
+    }),
+  },
   "resource.created": {
     name: "resource.created",
     label: "Resource published",
