@@ -50,10 +50,10 @@ function shell(inner: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>FlyBridge</title>
 </head>
-<body style="margin:0;padding:0;background:#EEF2F9;">
+<body style="margin:0;padding:0;background:#EEF2F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2F9;padding:28px 0;">
 <tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E3E8F1;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E3E8F1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <tr>
     <td style="background:#122043;padding:22px 28px;">
       <a href="${SITE_URL}" style="text-decoration:none;">
@@ -127,6 +127,24 @@ function seminarChips(s: SeminarPayload): Chip[] {
     { label: "Duration", value: s.duration ?? "" },
     { label: "Type", value: s.type === "paid" ? `Paid · ${s.price ?? ""}` : s.type === "free" ? "Free" : "" },
   ];
+}
+
+function firstName(name?: string | null): string {
+  const first = (name ?? "").trim().split(/\s+/)[0];
+  return first || "there";
+}
+
+function welcomeCard(emoji: string, title: string, desc: string, href: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="border:1px solid #E5EAF3;border-radius:16px;padding:22px 12px 18px;background:#FFFFFF;">
+        <span style="display:inline-block;width:44px;height:44px;line-height:46px;border-radius:14px;background:#EEF4FE;font-size:21px;">${emoji}</span>
+        <p style="margin:12px 0 5px;color:#102A43;font-size:14px;font-weight:800;">${esc(title)}</p>
+        <p style="margin:0;color:#5B6B8C;font-size:12px;line-height:1.6;">${esc(desc)}</p>
+        <p style="margin:10px 0 0;"><a href="${href}" style="color:#2563EB;font-size:12px;font-weight:700;text-decoration:none;">Learn more →</a></p>
+      </td>
+    </tr>
+  </table>`;
 }
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -260,19 +278,51 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
     name: "Welcome",
     description: "Welcome a brand new user to FlyBridge.",
     events: ["user.registered"],
-    subject: "Welcome to FlyBridge, {{user.name}}",
-    previewBody: "A warm welcome message with links to programs and seminars.",
+    subject: "Welcome to FlyBridge, {{user.name}}! Let's get started",
+    previewBody: "A warm, branded welcome with quick links to programs, live seminars and free resources.",
     html: (payload: EventPayload) => {
       const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
       return shell(
-        textBlock(
-          "Welcome aboard",
-          `Welcome to FlyBridge, ${u.name}!`,
-          "We help students worldwide reach their goals — explore our programs, join live seminars and unlock free resources to get started."
-        ) +
-          cta(`${SITE_URL}/programs`, "Explore programs") +
-          note("Want to meet us live? Head to the seminars page and grab a seat.") +
-          spacer()
+        `<tr><td style="height:6px;background:#10B981;padding:0;"></td></tr>` +
+          `<tr><td align="center" style="padding:44px 40px 0;">
+            <p style="margin:0 0 12px;color:#10B981;font-size:11px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;">Welcome to FlyBridge</p>
+            <h1 style="margin:0;color:#102A43;font-size:27px;font-weight:800;line-height:1.3;letter-spacing:-0.01em;">Welcome aboard, ${esc(who)}! 👋</h1>
+          </td></tr>` +
+          `<tr><td align="center" style="padding:16px 46px 0;">
+            <p style="margin:0;color:#4A5570;font-size:15px;line-height:1.8;">
+              You're now part of a global community of ambitious students. FlyBridge helps you build an
+              international future through practical, step-by-step education — learn at your own pace,
+              wherever you are.
+            </p>
+          </td></tr>` +
+          `<tr><td style="padding:32px 26px 0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="32%" style="vertical-align:top;padding:0;">
+                  ${welcomeCard("🎓", "Programs", "Structured courses to prepare for studying and working abroad.", `${SITE_URL}/programs`)}
+                </td>
+                <td width="2%"></td>
+                <td width="32%" style="vertical-align:top;padding:0;">
+                  ${welcomeCard("🎥", "Live seminars", "Free expert sessions — join live or catch the replay.", `${SITE_URL}/seminars`)}
+                </td>
+                <td width="2%"></td>
+                <td width="32%" style="vertical-align:top;padding:0;">
+                  ${welcomeCard("📚", "Resources", "Guides, checklists and tools — free for members.", `${SITE_URL}/resources`)}
+                </td>
+              </tr>
+            </table>
+          </td></tr>` +
+          `<tr><td align="center" style="padding:36px 40px 0;">
+            <a href="${SITE_URL}/programs" style="display:inline-block;background:#10B981;color:#ffffff;text-decoration:none;font-weight:800;font-size:15px;padding:15px 34px;border-radius:12px;box-shadow:0 6px 16px -6px rgba(16,185,129,0.5);">Start exploring programs</a>
+          </td></tr>` +
+          `<tr><td align="center" style="padding:14px 40px 0;">
+            <p style="margin:0;color:#5B6B8C;font-size:13px;">Prefer to meet us live? <a href="${SITE_URL}/seminars" style="color:#2563EB;font-weight:700;text-decoration:none;">Browse upcoming seminars →</a></p>
+          </td></tr>` +
+          `<tr><td align="center" style="padding:22px 40px 0;">
+            <p style="margin:0;color:#8B93A7;font-size:12px;line-height:1.6;">Questions? Just reply to this email — our team is happy to help you get started.</p>
+          </td></tr>` +
+          `<tr><td style="height:44px;"></td></tr>`
       );
     },
   },
