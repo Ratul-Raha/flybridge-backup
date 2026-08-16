@@ -5,6 +5,7 @@ import { User } from "@/lib/models/user";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
+import { Notification } from "@/lib/models/notification";
 import { ACCOUNT_TYPES, SUBSCRIPTION_TYPES } from "@/lib/roles";
 
 export async function GET(
@@ -130,6 +131,42 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("admin/users PATCH error", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await readSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    await connectDb();
+
+    const user = await User.findById(params.id);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    if (session.userId && user._id.toString() === session.userId) {
+      return NextResponse.json({ error: "You cannot delete your own account" }, { status: 400 });
+    }
+
+    const userId = user._id;
+    await Promise.all([
+      SeminarRegistration.deleteMany({ user: userId }),
+      ResourceDownload.deleteMany({ user: userId }),
+      ReadinessRun.deleteMany({ user: userId }),
+      Notification.deleteMany({ recipient: userId }),
+    ]);
+    await User.deleteOne({ _id: userId });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("admin/users DELETE error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }

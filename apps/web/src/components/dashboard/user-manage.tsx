@@ -15,6 +15,7 @@ import {
   Phone,
   Search,
   Shield,
+  Trash2,
   UserPlus,
   Users,
   X,
@@ -171,6 +172,7 @@ export function UserManage() {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [savingRole, setSavingRole] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const savingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const debouncedQuery = useDebounced(query, 350);
@@ -254,6 +256,32 @@ export function UserManage() {
     },
     [detail, load]
   );
+
+  const deleteUser = useCallback(async () => {
+    if (!detail || !isAdmin) return;
+    const confirmed = window.confirm(
+      `Delete ${detail.user.name} (${detail.user.email})?\n\nThis permanently removes their account, seminar registrations, downloads, readiness assessments and notifications. This cannot be undone.`
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${detail.user.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to delete user");
+      }
+      closeDetail();
+      if (page > 1 && users.length === 1) {
+        setPage(page - 1);
+      } else {
+        load();
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to delete user");
+    } finally {
+      setDeleting(false);
+    }
+  }, [detail, isAdmin, closeDetail, page, users.length, load]);
 
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.perPage));
   const safePage = Math.min(page, totalPages);
@@ -686,6 +714,37 @@ export function UserManage() {
                       <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
                         {savingRole ? "Saving changes…" : "Changes apply immediately."}
                       </p>
+                    </div>
+                  )}
+
+                  {isAdmin && (
+                    <div
+                      className="rounded-[14px] border p-4 flex flex-col gap-3"
+                      style={{ borderColor: "rgba(192,57,43,0.35)", background: "rgba(192,57,43,0.045)" }}
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#C0392B" }}>
+                        Danger zone
+                      </p>
+                      <p className="text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
+                        Permanently remove this account and all of its activity (registrations, downloads,
+                        assessments, notifications).
+                      </p>
+                      {me?.id === detail.user.id ? (
+                        <p className="text-[12px] font-semibold" style={{ color: "var(--body)" }}>
+                          You can't delete your own account.
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={deleteUser}
+                          disabled={deleting}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-[10px] text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
+                          style={{ background: "#C0392B" }}
+                        >
+                          {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                          {deleting ? "Deleting…" : "Delete user"}
+                        </button>
+                      )}
                     </div>
                   )}
 

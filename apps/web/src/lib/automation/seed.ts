@@ -7,7 +7,7 @@ import { makeId } from "./graph";
 import type { AutomationGraph, AutomationNode, ActionType } from "./types";
 import type { EventName } from "@/lib/events/types";
 
-const SEED_KEY = "automations-v2";
+const SEED_KEY = "automations-v3";
 
 function actionNode(actionType: ActionType, data: Record<string, unknown>): AutomationNode {
   return { id: makeId("action"), type: "action", data: { actionType, ...data } };
@@ -41,6 +41,17 @@ const DEFAULT_AUTOMATIONS: {
   event: EventName;
   steps: AutomationNode[];
 }[] = [
+  {
+    name: "Welcome email",
+    description: "Email a warm welcome when a brand new account registers.",
+    event: "user.registered",
+    steps: [
+      actionNode("send_email", {
+        to: { mode: "path", value: "user.email" },
+        templateId: "welcome",
+      }),
+    ],
+  },
   {
     name: "Registration confirmation",
     description: "Email the registrant a confirmation when they register for a seminar.",
