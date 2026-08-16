@@ -29,9 +29,18 @@ function plainText(md: string): string {
     .trim();
 }
 
-async function loadLogo(): Promise<string | null> {
+function isDarkBackground(hex: string): boolean {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = (n >> 16) & 0xff;
+  const g = (n >> 8) & 0xff;
+  const b = n & 0xff;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
+
+async function loadLogo(background: string): Promise<string | null> {
+  const file = isDarkBackground(background) ? "/transparent-logo-light.png" : "/logo-dark.png";
   try {
-    const res = await fetch("/logo-light.png");
+    const res = await fetch(file);
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise<string | null>((resolve) => {
@@ -40,6 +49,20 @@ async function loadLogo(): Promise<string | null> {
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
+  } catch {
+    return null;
+  }
+}
+
+function pngSize(dataUrl: string): { w: number; h: number } | null {
+  try {
+    const buf = atob(dataUrl.split(",")[1]);
+    const w =
+      (buf.charCodeAt(16) << 24) | (buf.charCodeAt(17) << 16) | (buf.charCodeAt(18) << 8) | buf.charCodeAt(19);
+    const h =
+      (buf.charCodeAt(20) << 24) | (buf.charCodeAt(21) << 16) | (buf.charCodeAt(22) << 8) | buf.charCodeAt(23);
+    if (!w || !h) return null;
+    return { w, h };
   } catch {
     return null;
   }
@@ -71,12 +94,15 @@ export async function generateReadinessPdf(
   pdf.setFillColor(INK);
   pdf.rect(0, 6, W, 74, "F");
 
-  const logo = await loadLogo();
+  const LOGO_H = 32;
+  const logo = await loadLogo(INK);
   let titleX = M;
   if (logo) {
     try {
-      pdf.addImage(logo, "PNG", M, 22, 42, 42);
-      titleX = M + 58;
+      const size = pngSize(logo);
+      const logoW = size ? (LOGO_H * size.w) / size.h : LOGO_H * 2.57;
+      pdf.addImage(logo, "PNG", M, 6 + (74 - LOGO_H) / 2, logoW, LOGO_H);
+      titleX = M + logoW + 14;
     } catch {
       // logo embed failed — fall back to text header
     }
