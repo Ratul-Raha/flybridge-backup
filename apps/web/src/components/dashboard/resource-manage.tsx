@@ -857,46 +857,54 @@ export function ResourceManage() {
                         >
                           {/* Name cell */}
                           <div className="flex items-center gap-3 min-w-0">
-                            <span
-                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                              style={{ background: meta.bg, color: meta.color }}
+                            <a
+                              href={fileHref(r)}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Open file"
+                              className="flex items-center gap-3 min-w-0"
                             >
-                              <Icon size={18} strokeWidth={2} />
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
-                                {r.title}
-                                {r.featured && (
-                                  <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
-                                )}
-                              </p>
-                              <p className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
-                                <Folder size={11} className="shrink-0" />
-                                {r.category}
-                                {r.fileName && <span className="truncate">· {r.fileName}</span>}
-                              </p>
-                              <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                                <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                                  {meta.label}
+                              <span
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                                style={{ background: meta.bg, color: meta.color }}
+                              >
+                                <Icon size={18} strokeWidth={2} />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
+                                  {r.title}
+                                  {r.featured && (
+                                    <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
+                                  )}
                                 </span>
-                                <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                                  {formatBytes(r.fileSize)}
+                                <span className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
+                                  <Folder size={11} className="shrink-0" />
+                                  {r.category}
+                                  {r.fileName && <span className="truncate">· {r.fileName}</span>}
                                 </span>
-                                <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                                  {formatDate(r.releaseDate)}
+                                <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                                    {meta.label}
+                                  </span>
+                                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                                    {formatBytes(r.fileSize)}
+                                  </span>
+                                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                                    {formatDate(r.releaseDate)}
+                                  </span>
+                                  <span
+                                    className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
+                                    style={
+                                      r.access === "paid"
+                                        ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
+                                        : { background: "var(--brand-soft)", color: "var(--brand)" }
+                                    }
+                                  >
+                                    {r.access === "paid" ? "Members" : "Free"}
+                                  </span>
                                 </span>
-                                <span
-                                  className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
-                                  style={
-                                    r.access === "paid"
-                                      ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-                                      : { background: "var(--brand-soft)", color: "var(--brand)" }
-                                  }
-                                >
-                                  {r.access === "paid" ? "Members" : "Free"}
-                                </span>
-                              </div>
-                            </div>
+                              </span>
+                            </a>
                           </div>
 
                           <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
