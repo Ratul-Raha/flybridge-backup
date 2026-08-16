@@ -5,6 +5,7 @@ export const RESOURCE_CATEGORIES = [
   "Career & Jobs",
   "Interviews",
   "English Skills",
+  "IELTS",
   "Documents & Templates",
   "Other",
 ] as const;

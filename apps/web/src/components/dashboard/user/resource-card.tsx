@@ -136,37 +136,46 @@ export function ResourceRow({
     >
       {/* Name cell */}
       <div className="flex items-center gap-3 min-w-0">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: meta.bg, color: meta.color }}
+        <a
+          href={locked ? undefined : fileHref(resource)}
+          target={locked ? undefined : "_blank"}
+          rel={locked ? undefined : "noreferrer"}
+          title={locked ? resource.title : "Open file"}
+          className="flex items-center gap-3 min-w-0"
+          aria-disabled={locked}
         >
-          <Icon size={18} strokeWidth={2} />
-        </span>
-        <div className="min-w-0">
-          <p className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
-            {resource.title}
-            {resource.featured && (
-              <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
-            )}
-          </p>
-          <p className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
-            <Folder size={11} className="shrink-0" />
-            {resource.category}
-            {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
-          </p>
-          <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-              {meta.label}
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+            style={{ background: meta.bg, color: meta.color }}
+          >
+            <Icon size={18} strokeWidth={2} />
+          </span>
+          <span className="min-w-0">
+            <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
+              {resource.title}
+              {resource.featured && (
+                <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
+              )}
             </span>
-            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-              {formatFileSize(resource.fileSize)}
+            <span className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
+              <Folder size={11} className="shrink-0" />
+              {resource.category}
+              {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
             </span>
-            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-              {formatResourceDate(resource.releaseDate)}
+            <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                {meta.label}
+              </span>
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                {formatFileSize(resource.fileSize)}
+              </span>
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                {formatResourceDate(resource.releaseDate)}
+              </span>
+              {accessBadge}
             </span>
-            {accessBadge}
-          </div>
-        </div>
+          </span>
+        </a>
       </div>
 
       {/* Desktop cells */}
