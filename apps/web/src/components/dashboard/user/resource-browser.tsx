@@ -118,8 +118,6 @@ export function ResourceBrowser({
   if (loading) return <ScreenLoading label="Loading resources…" />;
   if (error) return <ScreenError message={error} />;
 
-  const unlocked = section === "mine";
-
   const searchInput = (
     <div className="relative flex-1">
       <Search
@@ -197,7 +195,7 @@ export function ResourceBrowser({
       ) : (
         <div className="flex flex-col">
           {visible.map((r, idx) => (
-            <ResourceRow key={r.id} resource={r} unlocked={unlocked} divider={idx > 0} />
+            <ResourceRow key={r.id} resource={r} divider={idx > 0} />
           ))}
         </div>
       )}

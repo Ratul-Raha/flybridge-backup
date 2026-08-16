@@ -7,7 +7,6 @@ import {
   Link2,
   ExternalLink,
   Folder,
-  Lock,
   Star,
   type LucideIcon,
 } from "lucide-react";
@@ -72,7 +71,7 @@ export function fileHref(resource: ResourceCardData) {
   return `/api/resources/${resource.id}/file`;
 }
 
-const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_auto]";
+const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_auto]";
 
 export function ResourceList({ children }: { children: React.ReactNode }) {
   return (
@@ -86,7 +85,7 @@ export function ResourceList({ children }: { children: React.ReactNode }) {
 }
 
 export function ResourceTableHeader() {
-  const cells = ["Name", "Type", "Size", "Published", "Access"];
+  const cells = ["Name", "Type", "Size", "Published"];
   return (
     <div
       className={`hidden md:grid gap-3 px-4 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
@@ -104,30 +103,13 @@ export function ResourceTableHeader() {
 
 export function ResourceRow({
   resource,
-  unlocked = false,
   divider = false,
 }: {
   resource: ResourceCardData;
-  unlocked?: boolean;
   divider?: boolean;
 }) {
   const meta = fileTypeMeta(resource.fileType);
   const Icon = meta.icon;
-  const locked = resource.access === "paid" && !unlocked;
-  const paid = resource.access === "paid";
-
-  const accessBadge = (
-    <span
-      className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
-      style={
-        paid
-          ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-          : { background: "var(--brand-soft)", color: "var(--brand)" }
-      }
-    >
-      {paid ? "Members" : "Free"}
-    </span>
-  );
 
   return (
     <div
@@ -137,12 +119,11 @@ export function ResourceRow({
       {/* Name cell */}
       <div className="flex items-center gap-3 min-w-0">
         <a
-          href={locked ? undefined : fileHref(resource)}
-          target={locked ? undefined : "_blank"}
-          rel={locked ? undefined : "noreferrer"}
-          title={locked ? resource.title : "Open file"}
+          href={fileHref(resource)}
+          target="_blank"
+          rel="noreferrer"
+          title="Open file"
           className="flex items-center gap-3 min-w-0"
-          aria-disabled={locked}
         >
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -172,7 +153,6 @@ export function ResourceRow({
               <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
                 {formatResourceDate(resource.releaseDate)}
               </span>
-              {accessBadge}
             </span>
           </span>
         </a>
@@ -188,29 +168,19 @@ export function ResourceRow({
       <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
         {formatResourceDate(resource.releaseDate)}
       </span>
-      <span className="hidden md:inline-block">{accessBadge}</span>
 
       {/* Action */}
       <div className="flex items-center justify-end">
-        {locked ? (
-          <span
-            className="inline-flex items-center gap-1 rounded-full border px-2.5 py-[4px] text-[10.5px] font-semibold"
-            style={{ borderColor: "rgba(111,76,224,0.3)", color: "#6B4CE0", background: "rgba(111,76,224,0.06)" }}
-          >
-            <Lock size={10} /> Members
-          </span>
-        ) : (
-          <a
-            href={fileHref(resource)}
-            target="_blank"
-            rel="noreferrer"
-            title="Open file"
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
-            style={{ color: "var(--body)" }}
-          >
-            <ExternalLink size={15} />
-          </a>
-        )}
+        <a
+          href={fileHref(resource)}
+          target="_blank"
+          rel="noreferrer"
+          title="Open file"
+          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
+          style={{ color: "var(--body)" }}
+        >
+          <ExternalLink size={15} />
+        </a>
       </div>
     </div>
   );
