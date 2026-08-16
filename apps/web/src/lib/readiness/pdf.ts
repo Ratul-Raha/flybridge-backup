@@ -14,13 +14,20 @@ function scoreColor(score: number): string {
   return "#C0392B";
 }
 
+const CHECK = "\u0001";
+const UNCHECK = "\u0002";
+
 function plainText(md: string): string {
   return md
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
-    .replace(/^- \[x\]\s*/gm, "[X]  ")
-    .replace(/^- \[ \]\s*/gm, "[ ]  ")
+    .replace(/^- \[x\]\s*/gm, `${CHECK}  `)
+    .replace(/^- \[ \]\s*/gm, `${UNCHECK}  `)
+    .replace(/^- ✅\s*/gm, `${CHECK}  `)
+    .replace(/^- ☑\s*/gm, `${CHECK}  `)
+    .replace(/^- ☐\s*/gm, `${UNCHECK}  `)
+    .replace(/^- ☒\s*/gm, `${CHECK}  `)
     .replace(/^[-*]\s+/gm, "•  ")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
@@ -211,6 +218,7 @@ export async function generateReadinessPdf(
   sectionHeader(pdf, "Your readiness report", M, y);
   y += 26;
 
+  const BOX = 9;
   const paragraphs = plainText(report)
     .split(/\n{2,}/)
     .filter((p) => p.trim());
@@ -224,8 +232,36 @@ export async function generateReadinessPdf(
         pdf.addPage();
         y = 60;
       }
-      pdf.text(line, M, y);
-      y += 14;
+      const isCheck = line.startsWith(CHECK);
+      const isUncheck = line.startsWith(UNCHECK);
+      if (isCheck || isUncheck) {
+        const text = line.slice(1).trimStart();
+        const lx = M + 2;
+        const ly = y - BOX - 1;
+        if (isCheck) {
+          pdf.setFillColor(BRAND);
+          pdf.roundedRect(lx, ly, BOX, BOX, 2, 2, "F");
+          pdf.setFont("zapfdingbats");
+          pdf.setFontSize(9);
+          pdf.setTextColor("#FFFFFF");
+          pdf.text("4", lx + 1.5, y - 1.5);
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(10);
+          pdf.setTextColor(INK);
+        } else {
+          pdf.setDrawColor(TRACK);
+          pdf.setLineWidth(1.2);
+          pdf.roundedRect(lx, ly, BOX, BOX, 2, 2, "S");
+        }
+        const rest = pdf.splitTextToSize(text, contentW - BOX - 8) as string[];
+        for (const r of rest) {
+          pdf.text(r, M + BOX + 8, y);
+          y += 14;
+        }
+      } else {
+        pdf.text(line, M, y);
+        y += 14;
+      }
     }
     y += 10;
   }
