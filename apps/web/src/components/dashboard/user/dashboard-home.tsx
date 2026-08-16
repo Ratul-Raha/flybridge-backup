@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, BookOpen, FolderOpen, ArrowUpRight } from "lucide-react";
+import { CalendarDays, BookOpen, FolderOpen, ArrowUpRight, Gauge } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { programs } from "@/lib/programs";
 
@@ -17,6 +17,16 @@ export function DashboardHome() {
   const { user } = useAuth();
   const [seminarCount, setSeminarCount] = useState<number | null>(null);
   const [resourceCount, setResourceCount] = useState<number | null>(null);
+  const [readinessScore, setReadinessScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me/readiness", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { assessment?: { score?: number } | null }) =>
+        setReadinessScore(data.assessment?.score ?? null)
+      )
+      .catch(() => setReadinessScore(null));
+  }, []);
 
   useEffect(() => {
     fetch("/api/me/seminars", { cache: "no-store" })
@@ -58,6 +68,12 @@ export function DashboardHome() {
       icon: FolderOpen,
       href: "/dashboard/resources",
     },
+    {
+      label: "Readiness score",
+      value: readinessScore === null ? "—" : String(readinessScore),
+      icon: Gauge,
+      href: "/dashboard/readiness",
+    },
   ];
 
   const quickLinks = [
@@ -85,6 +101,12 @@ export function DashboardHome() {
       href: "/dashboard/resources",
       icon: FolderOpen,
     },
+    {
+      label: "Readiness score",
+      desc: "Eligibility score & AI report",
+      href: "/dashboard/readiness",
+      icon: Gauge,
+    },
   ];
 
   return (
@@ -101,7 +123,7 @@ export function DashboardHome() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {stats.map((s) => (
           <Link
             key={s.label}

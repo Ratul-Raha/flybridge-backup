@@ -31,7 +31,7 @@ function plainText(md: string): string {
 
 async function loadLogo(): Promise<string | null> {
   try {
-    const res = await fetch("/logo.png");
+    const res = await fetch("/logo-light.png");
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise<string | null>((resolve) => {

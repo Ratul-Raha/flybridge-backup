@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Workflow,
   ListChecks,
+  Gauge,
   Loader2,
   type LucideIcon,
 } from "lucide-react";
@@ -128,6 +129,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               href: "/dashboard/sop-generator",
               icon: FileText,
               active: pathname === "/dashboard/sop-generator",
+            },
+            {
+              kind: "link",
+              label: "Readiness Score",
+              href: "/dashboard/readiness",
+              icon: Gauge,
+              active: pathname.startsWith("/dashboard/readiness"),
             },
           ],
         },

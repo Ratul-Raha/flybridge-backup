@@ -1,4 +1,16 @@
 import mongoose from "mongoose";
+import { User } from "./models/user";
+import { Seminar, SeminarRegistration } from "./models/seminar";
+import { ResourceDownload } from "./models/resource-download";
+import { Resource } from "./models/resource";
+import { ReadinessRun } from "./models/readiness-run";
+
+void User;
+void Seminar;
+void SeminarRegistration;
+void ResourceDownload;
+void Resource;
+void ReadinessRun;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

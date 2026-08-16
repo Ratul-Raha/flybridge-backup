@@ -21,6 +21,27 @@ function optionLabel(questionId: string, value: unknown): string {
   return q.options.find((o) => o.value === value)?.label ?? "";
 }
 
+export async function GET() {
+  const session = await readSession();
+  if (!session || !session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await connectDb();
+    const latest = await ReadinessRun.findOne({ user: session.userId }).sort({
+      createdAt: -1,
+    });
+    if (!latest) {
+      return NextResponse.json({ assessment: null });
+    }
+    return NextResponse.json({ assessment: serializeReadinessRun(latest) });
+  } catch (error) {
+    console.error("readiness run fetch error", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const session = await readSession();
   if (!session || !session.userId) {

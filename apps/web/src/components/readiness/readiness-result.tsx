@@ -85,9 +85,9 @@ function renderRich(text: string): string {
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline font-medium" style="color:var(--brand-2)">$1</a>')
     .replace(/`([^`]+)`/g, '<code class="px-[5px] py-[1px] rounded-[6px] font-mono text-[12px]" style="background:var(--bg-soft);color:var(--ink)">$1</code>')
     .replace(/^#{1,4}\s+(.+)$/gm, '<h3 class="font-display font-semibold text-[15.5px] mt-6 mb-2 first:mt-0" style="color:var(--ink)">$1</h3>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 flex gap-2"><span style="color:var(--brand)">•</span><span>$1</span></div>')
     .replace(/^- \[ \]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] border shrink-0" style="border-color:var(--brand-2)"></span><span>$1</span></div>')
     .replace(/^- \[x\]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] shrink-0 flex items-center justify-center text-white" style="background:var(--brand)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 13L10 18L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>$1</span></div>')
+    .replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 flex gap-2"><span style="color:var(--brand)">•</span><span>$1</span></div>')
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
     .replace(/\n/g, "<br/>");
@@ -284,7 +284,7 @@ export function ReadinessResultView({
       <div className="flex items-center justify-between gap-4 mb-8 pb-6 border-b" style={{ borderColor: "var(--line)" }}>
         <div className="flex items-center gap-3">
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
-            <Image src="/logo.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
+            <Image src="/logo-light.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
           </div>
           <div>
             <p className="font-display text-[14px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
@@ -469,7 +469,7 @@ export function ReadinessResultView({
 
       <div className="mt-6 rounded-[20px] border p-5 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
         <div className="flex items-center gap-3">
-          <Image src="/logo.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
+          <Image src="/logo-light.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
           <div>
             <p className="font-display text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
               FlyBridge Education Group

@@ -87,8 +87,8 @@ export async function GET(
         degreeLevel: r.degreeLevel ?? "",
         createdAt: r.createdAt,
         categories:
-          ((r.result as { categories?: { id: string; label?: string; pct?: number }[] })
-            .categories ?? []).map((c) => ({
+          ((r.result as { categories?: { id: string; label?: string; pct?: number }[] } | null)
+            ?.categories ?? []).map((c) => ({
               id: c.id,
               label: c.label ?? "",
               pct: c.pct ?? 0,
