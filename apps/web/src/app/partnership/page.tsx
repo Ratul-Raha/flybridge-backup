@@ -467,7 +467,7 @@ export default function PartnershipPage() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-9">
                   <a
-                    href="tel:+8801700000000"
+                    href="tel:+17786768459"
                     className="inline-flex items-center gap-2.5 font-medium text-[15px] rounded-full px-[28px] py-[14px] transition-all duration-250 hover:translate-y-[-1px]"
                     style={{ background: "#ffffff", color: "#0B5E46", boxShadow: "0 16px 28px -14px rgba(0,0,0,0.4)" }}
                   >
@@ -495,7 +495,7 @@ export default function PartnershipPage() {
                     We respond within 24 hours
                   </span>
                   <span className="hidden sm:block" style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
-                  <span>+880 1700-000000</span>
+                  <span>+1 778 676 8459</span>
                   <span className="hidden sm:block" style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
                   <span>partnership@flybridge.com</span>
                 </div>
