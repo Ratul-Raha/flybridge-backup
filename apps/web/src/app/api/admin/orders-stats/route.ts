@@ -12,28 +12,50 @@ export async function GET() {
   try {
     await connectDb();
 
-    const [totalOrders, paidOrders, pendingOrders, failedOrders, freeOrders, revenueAgg, dailyAgg] =
-      await Promise.all([
-        Order.countDocuments(),
-        Order.countDocuments({ status: "paid" }),
-        Order.countDocuments({ status: "pending" }),
-        Order.countDocuments({ status: { $in: ["failed", "cancelled"] } }),
-        Order.countDocuments({ total: 0 }),
-        Order.aggregate([
-          { $match: { status: "paid" } },
-          { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
-        ]),
-        Order.aggregate([
-          {
-            $group: {
-              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-              count: { $sum: 1 },
-              revenue: { $sum: "$total" },
-            },
+    const [
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+      failedOrders,
+      freeOrders,
+      revenueAgg,
+      dailyAgg,
+      topItems,
+    ] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ status: "paid" }),
+      Order.countDocuments({ status: "pending" }),
+      Order.countDocuments({ status: { $in: ["failed", "cancelled"] } }),
+      Order.countDocuments({ total: 0 }),
+      Order.aggregate([
+        { $match: { status: "paid" } },
+        { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
+      ]),
+      Order.aggregate([
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+            revenue: { $sum: "$total" },
           },
-          { $sort: { _id: 1 } },
-        ]),
-      ]);
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $unwind: "$items" },
+        { $match: { status: "paid" } },
+        {
+          $group: {
+            _id: { title: "$items.title", itemType: "$items.itemType" },
+            orders: { $sum: 1 },
+            revenue: { $sum: "$items.price" },
+            avgPrice: { $avg: "$items.price" },
+          },
+        },
+        { $sort: { orders: -1 } },
+        { $limit: 8 },
+      ]),
+    ]);
 
     const now = new Date();
     const days = 30;
@@ -61,8 +83,16 @@ export async function GET() {
       pendingOrders,
       failedOrders,
       freeOrders,
+      completedOrders: paidOrders + freeOrders,
       totalRevenue: revenueAgg[0]?.total ?? 0,
       avgOrderValue: Math.round(revenueAgg[0]?.avg ?? 0),
+      topItems: topItems.map((t) => ({
+        title: t._id.title || "Untitled",
+        itemType: t._id.itemType,
+        orders: t.orders,
+        revenue: t.revenue,
+        avgPrice: Math.round(t.avgPrice),
+      })),
       chart: { labels, counts, revenues },
     });
   } catch (error) {

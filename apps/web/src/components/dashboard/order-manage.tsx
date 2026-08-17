@@ -14,6 +14,8 @@ import {
   Clock,
   AlertTriangle,
   Gift,
+  CheckCircle2,
+  TrendingUp,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card } from "@/components/dashboard/reports/card";
@@ -45,8 +47,10 @@ type OrderStats = {
   pendingOrders: number;
   failedOrders: number;
   freeOrders: number;
+  completedOrders: number;
   totalRevenue: number;
   avgOrderValue: number;
+  topItems: { title: string; itemType: string; orders: number; revenue: number; avgPrice: number }[];
   chart: { labels: string[]; counts: number[]; revenues: number[] };
 };
 
@@ -294,7 +298,7 @@ export function OrderManage() {
         </>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
               label="Total orders"
               value={stats?.totalOrders ?? orders.length}
@@ -303,15 +307,9 @@ export function OrderManage() {
             />
             <StatCard
               label="Total revenue"
-              value={stats ? `${orders[0]?.currency ?? "BDT"} ${stats.totalRevenue.toLocaleString()}` : "—"}
+              value={stats ? `${orders[0]?.currency ?? "BDT"} ${stats.totalRevenue.toLocaleString()}` : "\u2014"}
               icon={DollarSign}
               gradient="linear-gradient(135deg,#10B981,#34D399)"
-            />
-            <StatCard
-              label="Paid orders"
-              value={stats?.paidOrders ?? 0}
-              icon={Clock}
-              gradient="linear-gradient(135deg,#6E4CFF,#8B5CF6)"
             />
             <StatCard
               label="Pending"
@@ -320,14 +318,159 @@ export function OrderManage() {
               gradient="linear-gradient(135deg,#F59E0B,#F97316)"
             />
             <StatCard
-              label="Free enrollments"
-              value={stats?.freeOrders ?? 0}
-              icon={Gift}
-              gradient="linear-gradient(135deg,#F43F5E,#FB7185)"
+              label="Failed / Cancelled"
+              value={stats?.failedOrders ?? 0}
+              icon={AlertTriangle}
+              gradient="linear-gradient(135deg,#EF4444,#F87171)"
             />
           </div>
 
+          {/* Completed Orders — compound card */}
+          <div
+            className="relative rounded-[22px] border bg-white p-5 overflow-hidden"
+            style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
+          >
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08]" style={{ background: "linear-gradient(135deg,#6E4CFF,#8B5CF6)" }} />
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
+                style={{ background: "linear-gradient(135deg,#6E4CFF,#8B5CF6)" }}
+              >
+                <CheckCircle2 size={18} strokeWidth={2.2} />
+              </div>
+              <div>
+                <p className="font-display text-[22px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                  {stats?.completedOrders ?? 0}
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
+                  Completed orders
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-6 pl-[52px]">
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
+                  style={{ background: "rgba(16,185,129,0.12)", color: "#047857" }}
+                >
+                  Paid
+                </span>
+                <span className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {stats?.paidOrders ?? 0}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
+                  style={{ background: "rgba(244,63,94,0.12)", color: "#E11D48" }}
+                >
+                  Free
+                </span>
+                <span className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {stats?.freeOrders ?? 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {stats?.chart && <OrdersChart data={stats.chart} />}
+
+          {/* Top Selling Items */}
+          {stats?.topItems && stats.topItems.length > 0 && (
+            <div
+              className="rounded-[22px] border bg-white p-[clamp(18px,2.5vw,26px)]"
+              style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Top selling items
+                  </h2>
+                  <p className="text-[12.5px] mt-0.5" style={{ color: "var(--body)" }}>
+                    Best performing products by order count
+                  </p>
+                </div>
+                <TrendingUp size={16} style={{ color: "var(--body)" }} />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: "var(--body)" }}>
+                        #
+                      </th>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: "var(--body)" }}>
+                        Item
+                      </th>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold" style={{ color: "var(--body)" }}>
+                        Type
+                      </th>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold text-right" style={{ color: "var(--body)" }}>
+                        Orders
+                      </th>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold text-right" style={{ color: "var(--body)" }}>
+                        Revenue
+                      </th>
+                      <th className="pb-2.5 font-mono text-[10px] uppercase tracking-[0.12em] font-semibold text-right" style={{ color: "var(--body)" }}>
+                        Avg price
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.topItems.map((item, i) => (
+                      <tr key={`${item.title}-${i}`} style={{ borderBottom: "1px solid var(--line)" }}>
+                        <td className="py-3 pr-4">
+                          <span
+                            className="font-mono text-[10px] font-semibold w-5 h-5 rounded-full inline-flex items-center justify-center"
+                            style={{
+                              background: i < 3 ? "var(--brand-soft)" : "var(--bg-soft)",
+                              color: i < 3 ? "var(--brand)" : "var(--body)",
+                            }}
+                          >
+                            {i + 1}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <span className="text-[13px] font-medium truncate max-w-[240px] block" style={{ color: "var(--ink)" }}>
+                            {item.title}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <span
+                            className="font-mono text-[10px] font-semibold uppercase tracking-[0.06em] rounded-full px-2.5 py-[3px]"
+                            style={
+                              item.itemType === "course"
+                                ? { background: "rgba(16,185,129,0.12)", color: "#047857" }
+                                : item.itemType === "seminar"
+                                ? { background: "rgba(14,165,233,0.12)", color: "#0369A1" }
+                                : { background: "rgba(139,92,246,0.12)", color: "#6D28D9" }
+                            }
+                          >
+                            {item.itemType}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4 text-right">
+                          <span className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                            {item.orders}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4 text-right">
+                          <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                            BDT {item.revenue.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <span className="text-[12.5px]" style={{ color: "var(--body)" }}>
+                            BDT {item.avgPrice.toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1 max-w-md">
