@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { ProgramCard } from "@/components/program-card";
+import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { getProgram, programs } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
@@ -648,6 +649,31 @@ export default async function ProgramPage({ params }: Props) {
     }
   }
 
+  const otherDbCourses = (
+    await Course.find({
+      slug: { $ne: params.slug },
+      $or: [{ published: true }, { upcoming: true }],
+    })
+      .sort({ createdAt: -1 })
+      .limit(4)
+  ).map((c) => ({
+    id: c._id.toString(),
+    slug: c.slug,
+    title: c.title,
+    badge: c.badge ?? "",
+    subtitle: c.subtitle ?? "",
+    description: c.description ?? "",
+    price: c.price ?? 0,
+    currency: c.currency ?? "BDT",
+    image: c.image ?? null,
+    level: c.level ?? "",
+    upcoming: c.upcoming ?? false,
+    modules: (c.modules ?? []).map((m) => ({
+      title: m.title,
+      lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+    })),
+  })) as DbCourse[];
+
   return (
     <div className="course-page">
       <Nav />
@@ -695,6 +721,9 @@ export default async function ProgramPage({ params }: Props) {
             .map((p) => (
               <ProgramCard key={p.slug} p={p} />
             ))}
+          {otherDbCourses.map((c) => (
+            <DbCourseCard key={c.id} course={c} />
+          ))}
         </div>
       </section>
 

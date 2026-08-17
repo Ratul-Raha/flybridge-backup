@@ -1,8 +1,42 @@
 import Link from "next/link";
+import { connectDb } from "@/lib/db";
+import { Course } from "@/lib/models/course";
 import { programs } from "@/lib/programs";
 import { ProgramCard } from "./program-card";
+import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
 
-export function Programs() {
+async function getDbCourses(): Promise<DbCourse[]> {
+  try {
+    await connectDb();
+    const courses = await Course.find({
+      $or: [{ published: true }, { upcoming: true }],
+    }).sort({ createdAt: -1 });
+    return courses.map((c) => ({
+      id: c._id.toString(),
+      slug: c.slug,
+      title: c.title,
+      badge: c.badge ?? "",
+      subtitle: c.subtitle ?? "",
+      description: c.description ?? "",
+      price: c.price ?? 0,
+      currency: c.currency ?? "BDT",
+      image: c.image ?? null,
+      level: c.level ?? "",
+      upcoming: c.upcoming ?? false,
+      modules: (c.modules ?? []).map((m) => ({
+        title: m.title,
+        lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+      })),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function Programs() {
+  const dbCourses = await getDbCourses();
+  const hasDbCourses = dbCourses.length > 0;
+
   return (
     <section id="programs" className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
@@ -54,10 +88,13 @@ export function Programs() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {programs
-          .filter((p) => !p.hasDb)
+          .filter((p) => !(p.hasDb && hasDbCourses))
           .map((p) => (
             <ProgramCard key={p.slug} p={p} />
           ))}
+        {dbCourses.map((c) => (
+          <DbCourseCard key={c.id} course={c} />
+        ))}
       </div>
     </section>
   );
