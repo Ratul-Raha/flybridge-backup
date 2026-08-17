@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Loader2, PlayCircle } from "lucide-react";
+import { BookOpen, Loader2, PlayCircle, Award } from "lucide-react";
 import { EmptyState } from "./ui";
 
 type Course = {
@@ -16,6 +16,12 @@ type Course = {
   currency: string;
   image: string | null;
   modules: { title: string; lessons: { title: string; duration: string; videoUrl: string; pdfUrl: string }[] }[];
+  progress: {
+    percentage: number;
+    completedQuizzes: number;
+    totalQuizzes: number;
+    passed: boolean;
+  } | null;
 };
 
 export function MyCourses() {
@@ -71,60 +77,115 @@ export function MyCourses() {
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
       {courses.map((c) => {
         const lessonCount = c.modules.reduce((n, m) => n + m.lessons.length, 0);
+        const prog = c.progress;
+        const pct = prog?.percentage ?? 0;
+        const quizDone = prog?.completedQuizzes ?? 0;
+        const quizTotal = prog?.totalQuizzes ?? lessonCount;
+
         return (
-          <div
+          <Link
             key={c.id}
-            className="group rounded-lg border bg-white overflow-hidden flex flex-col transition-all duration-250 hover:translate-y-[-2px]"
-            style={{ borderColor: "var(--line)", boxShadow: "0 4px 20px -8px rgba(18,32,67,0.1)" }}
+            href={`/programs/${c.slug}/learn`}
+            className="flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+            style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
           >
             {/* Thumbnail */}
             <div
-              className="relative h-[150px] flex items-center justify-center overflow-hidden"
+              className="relative h-[178px] flex items-center justify-center overflow-hidden"
               style={{ background: "var(--brand-soft)" }}
             >
               {c.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.image} alt={c.title} className="absolute inset-0 w-full h-full object-cover" />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.image} alt={c.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(to top, rgba(18,32,67,0.34), rgba(18,32,67,0.06) 42%)" }}
+                  />
+                </>
               ) : (
-                <BookOpen size={32} style={{ color: "var(--brand)", opacity: 0.4 }} />
+                <BookOpen size={32} className="text-white/50" />
               )}
               <span
-                className="absolute left-3 top-3 font-mono text-[10px] font-semibold tracking-[0.08em] rounded-full px-3 py-[5px]"
+                className="absolute left-3.5 top-3.5 font-mono text-[10px] font-semibold tracking-[0.4px] px-[11px] py-[5px] rounded-full"
                 style={{ background: "rgba(255,255,255,0.92)", color: "var(--brand)" }}
               >
                 {c.badge || "COURSE"}
               </span>
-            </div>
-
-            {/* Body */}
-            <div className="flex flex-col flex-1 gap-2 p-5">
-              <h3 className="font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                {c.title}
-              </h3>
-              {c.subtitle && (
-                <p className="text-[12.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
-                  {c.subtitle}
-                </p>
-              )}
-              {lessonCount > 0 && (
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                  {lessonCount} lessons
+              {prog?.passed && (
+                <span
+                  className="absolute right-3.5 top-3.5 flex items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.06em] rounded-full px-3 py-[5px]"
+                  style={{ background: "rgba(46,230,168,0.92)", color: "#fff" }}
+                >
+                  <Award size={12} />
+                  PASSED
                 </span>
               )}
             </div>
 
-            {/* Footer */}
-            <div className="px-5 pb-5 mt-auto">
-              <Link
-                href={`/programs/${c.slug}/learn`}
-                className="flex items-center justify-center gap-2 w-full rounded-full py-[11px] text-[13.5px] font-semibold transition-opacity hover:opacity-90"
-                style={{ background: "var(--brand)", color: "#fff" }}
-              >
-                <PlayCircle size={15} />
-                Open Player
-              </Link>
+            {/* Body */}
+            <div className="flex flex-col flex-1 gap-2.5 p-5">
+              <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                {c.title}
+              </h3>
+              <p className="text-[12.5px] leading-[1.55]" style={{ color: "var(--body)" }}>
+                {c.subtitle || c.description}
+              </p>
+
+              {/* Meta */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {lessonCount > 0 && (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    {lessonCount} lessons
+                  </span>
+                )}
+                {quizTotal > 0 && (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    {quizDone}/{quizTotal} quizzes
+                  </span>
+                )}
+              </div>
+
+              {/* Progress footer */}
+              <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+                <div className="flex items-end justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                        Progress
+                      </span>
+                      <span className="font-mono text-[11px] font-semibold" style={{ color: "var(--brand)" }}>
+                        {pct}%
+                      </span>
+                    </div>
+                    <div
+                      className="w-full h-[6px] rounded-full overflow-hidden"
+                      style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${pct}%`,
+                          background: pct >= 60
+                            ? "linear-gradient(90deg, #2EE6A8, #34D399)"
+                            : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span
+                    className="inline-flex items-center gap-[5px] text-[12.5px] font-medium shrink-0"
+                    style={{ color: "var(--brand)" }}
+                  >
+                    <PlayCircle size={13} />
+                    <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>

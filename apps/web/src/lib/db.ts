@@ -7,6 +7,8 @@ import { ReadinessRun } from "./models/readiness-run";
 import { Course } from "./models/course";
 import { Order } from "./models/order";
 import { CourseEnrollment } from "./models/enrollment";
+import { CourseProgress } from "./models/course-progress";
+import { QuizAttempt } from "./models/quiz-attempt";
 
 void User;
 void Seminar;
@@ -17,6 +19,8 @@ void ReadinessRun;
 void Course;
 void Order;
 void CourseEnrollment;
+void CourseProgress;
+void QuizAttempt;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizAttempt } from "@/lib/models/quiz-attempt";
+import { CourseProgress } from "@/lib/models/course-progress";
 import type { QuizQuestion } from "@/lib/ai/quiz";
 
 /* ------------------------------------------------------------------ */
@@ -165,6 +166,79 @@ export async function POST(
       totalQuestions,
       correctCount,
     });
+
+    // Update CourseProgress with quiz score (replace on retake)
+    const totalLessons = (course.modules ?? []).reduce(
+      (n, m) => n + (m.lessons?.length ?? 0),
+      0
+    );
+
+    const existingProgress = await CourseProgress.findOne({
+      user: session.userId,
+      course: course._id,
+    });
+
+    let quizScores = (existingProgress?.quizScores as {
+      moduleIndex: number;
+      lessonIndex: number;
+      score: number;
+      totalQuestions: number;
+      correctCount: number;
+      attempts: number;
+    }[]) ?? [];
+
+    const existingIdx = quizScores.findIndex(
+      (s) => s.moduleIndex === moduleIndex && s.lessonIndex === lessonIndex
+    );
+
+    if (existingIdx >= 0) {
+      quizScores[existingIdx] = {
+        moduleIndex,
+        lessonIndex,
+        score,
+        totalQuestions,
+        correctCount,
+        attempts: (quizScores[existingIdx].attempts ?? 1) + 1,
+      };
+    } else {
+      quizScores.push({
+        moduleIndex,
+        lessonIndex,
+        score,
+        totalQuestions,
+        correctCount,
+        attempts: 1,
+      });
+    }
+
+    const avgScore =
+      quizScores.length > 0
+        ? Math.round(
+            quizScores.reduce((sum, q) => sum + q.score, 0) /
+              quizScores.length
+          )
+        : 0;
+
+    const passed = avgScore >= 60 && quizScores.length === totalLessons;
+
+    await CourseProgress.findOneAndUpdate(
+      { user: session.userId, course: course._id },
+      {
+        $setOnInsert: {
+          user: session.userId,
+          course: course._id,
+          courseSlug: course.slug,
+          totalQuizzes: totalLessons,
+        },
+        $set: {
+          quizScores,
+          overallPercentage: avgScore,
+          completedQuizzes: quizScores.length,
+          passed,
+        },
+      },
+      { upsert: true }
+    );
 
     return NextResponse.json({ score, totalQuestions, correctCount, results });
   } catch (error) {

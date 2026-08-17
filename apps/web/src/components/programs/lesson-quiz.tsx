@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, RotateCcw, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -40,16 +40,19 @@ export function LessonQuiz({
   courseId,
   moduleIndex,
   lessonIndex,
+  onScoreUpdate,
 }: {
   courseId: string;
   moduleIndex: number;
   lessonIndex: number;
+  onScoreUpdate?: (entry: { moduleIndex: number; lessonIndex: number; score: number; correctCount: number; totalQuestions: number }) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<ResultsData | null>(null);
   const [error, setError] = useState("");
+  const [showRetakeWarning, setShowRetakeWarning] = useState(false);
 
   const startQuiz = async () => {
     setPhase("loading");
@@ -93,6 +96,7 @@ export function LessonQuiz({
       if (!res.ok) throw new Error(data.error || "Failed to submit quiz");
       setResults(data);
       setPhase("results");
+      onScoreUpdate?.({ moduleIndex, lessonIndex, score: data.score, correctCount: data.correctCount, totalQuestions: data.totalQuestions });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setPhase("taking");
@@ -248,7 +252,7 @@ export function LessonQuiz({
         <div className="flex justify-center pt-2">
           <button
             type="button"
-            onClick={resetQuiz}
+            onClick={() => setShowRetakeWarning(true)}
             className="inline-flex items-center gap-2 rounded-full px-6 py-[11px] text-[13.5px] font-medium border transition-colors hover:bg-white/5"
             style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
           >
@@ -256,6 +260,61 @@ export function LessonQuiz({
             Retake Quiz
           </button>
         </div>
+
+        {/* Retake warning modal */}
+        {showRetakeWarning && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          >
+            <div
+              className="rounded-2xl p-6 max-w-[400px] w-full"
+              style={{ background: "#151E2F", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(251,191,36,0.15)" }}
+                >
+                  <AlertTriangle size={20} style={{ color: "#FBBF24" }} />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-white/90">
+                    Retake this quiz?
+                  </p>
+                  <p className="text-[12px] text-white/50">
+                    Your current score of {results?.score}% will be replaced.
+                  </p>
+                </div>
+              </div>
+              <p className="text-[13px] text-white/50 mb-5 leading-relaxed">
+                Retaking this quiz will generate a new set of questions. Your previous score will be
+                overwritten in your overall grade calculation. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRetakeWarning(false)}
+                  className="flex-1 rounded-full py-2.5 text-[13px] font-medium border transition-colors hover:bg-white/5"
+                  style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
+                >
+                  Keep current score
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRetakeWarning(false);
+                    resetQuiz();
+                  }}
+                  className="flex-1 rounded-full py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: "rgba(239,68,68,0.9)", color: "#fff" }}
+                >
+                  Retake quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

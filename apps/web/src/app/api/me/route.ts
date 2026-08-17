@@ -5,6 +5,34 @@ import { User } from "@/lib/models/user";
 
 const ADDRESS_KEYS = ["street", "city", "state", "country", "postalCode"] as const;
 
+export async function GET() {
+  const session = await readSession();
+  if (!session || !session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await connectDb();
+    const user = await User.findById(session.userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      name: user.name,
+      email: user.email,
+      phone: user.phone ?? null,
+      avatar: user.avatar ?? null,
+      address: user.address ?? {},
+      accountType: session.role,
+      subscription: user.subscription,
+    });
+  } catch (error) {
+    console.error("me GET error", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   const session = await readSession();
   if (!session || !session.userId) {

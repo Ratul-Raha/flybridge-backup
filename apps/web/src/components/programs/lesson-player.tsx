@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  ArrowRight,
   ChevronDown,
   ChevronRight,
   FileText,
   PlayCircle,
   CheckCircle2,
   HelpCircle,
+  Award,
 } from "lucide-react";
 import { LessonQuiz } from "./lesson-quiz";
 
@@ -30,6 +30,24 @@ type FlatLesson = {
   duration: string;
   videoUrl: string;
   pdfUrl: string;
+};
+
+type GradeData = {
+  percentage: number;
+  grade: string;
+  englishLevel: string;
+  passed: boolean;
+  totalQuizzes: number;
+  completedQuizzes: number;
+};
+
+type QuizScoreEntry = {
+  moduleIndex: number;
+  lessonIndex: number;
+  score: number;
+  totalQuestions: number;
+  correctCount: number;
+  attempts: number;
 };
 
 function getYouTubeId(url: string): string | null {
@@ -97,6 +115,8 @@ export function LessonPlayer({
   const [watched, setWatched] = useState<Set<number>>(new Set());
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
   const [tab, setTab] = useState<"video" | "quiz">("video");
+  const [grade, setGrade] = useState<GradeData | null>(null);
+  const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
 
   const current = lessons[index];
 
@@ -113,6 +133,20 @@ export function LessonPlayer({
     return { moduleIndex: 0, lessonIndex: 0 };
   }, [index, course.modules]);
 
+  // Load progress from server
+  useEffect(() => {
+    fetch(`/api/courses/${course.id}/progress`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setWatched(new Set<number>(data.watchedLessons ?? []));
+          setGrade(data.grade ?? null);
+          setQuizScores(data.quizScores ?? []);
+        }
+      })
+      .catch(() => {});
+  }, [course.id]);
+
   const goTo = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
     setIndex(i);
@@ -120,18 +154,29 @@ export function LessonPlayer({
     router.replace(`/programs/${course.slug}/learn?lesson=${i}`);
   };
 
-  const markWatched = (i: number) => {
+  const markWatched = useCallback((i: number) => {
     if (lessons[i]?.videoUrl) {
       setWatched((prev) => {
+        if (prev.has(i)) return prev;
         const next = new Set(prev);
         next.add(i);
+        // Persist to server
+        fetch(`/api/courses/${course.id}/progress`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ watchedLesson: i }),
+        }).catch(() => {});
         return next;
       });
     }
-  };
+  }, [lessons, course.id]);
 
   const toggleModule = (title: string) =>
     setOpenModules((prev) => ({ ...prev, [title]: !(prev[title] ?? true) }));
+
+  const totalLessons = lessons.length;
+  const watchedCount = watched.size;
+  const progressPct = totalLessons > 0 ? Math.round((watchedCount / totalLessons) * 100) : 0;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0B1220" }}>
@@ -140,12 +185,12 @@ export function LessonPlayer({
         <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link
-              href="/programs"
+              href="/dashboard/courses"
               className="shrink-0 inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-white/10"
               style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
             >
               <ArrowLeft size={14} />
-              <span className="hidden sm:inline">Programs</span>
+              <span className="hidden sm:inline">My Courses</span>
             </Link>
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/40 truncate">
@@ -158,18 +203,72 @@ export function LessonPlayer({
               )}
             </div>
           </div>
-          <span
-            className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-[6px]"
-            style={{ background: "rgba(46,230,168,0.14)", color: "#2EE6A8" }}
-          >
-            Player
-          </span>
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Progress indicator */}
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${progressPct}%`,
+                    background: grade?.passed
+                      ? "linear-gradient(90deg, #2EE6A8, #34D399)"
+                      : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
+                  }}
+                />
+              </div>
+              <span className="font-mono text-[10px] font-semibold text-white/60">{progressPct}%</span>
+            </div>
+            <Link
+              href={`/programs/${course.slug}/certificate`}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-white/10"
+              style={{ color: grade?.passed ? "#2EE6A8" : "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
+            >
+              <Award size={13} />
+              <span className="hidden sm:inline">Certificate</span>
+            </Link>
+            <span
+              className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-[6px]"
+              style={{ background: "rgba(46,230,168,0.14)", color: "#2EE6A8" }}
+            >
+              Player
+            </span>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1320px] w-full mx-auto">
         {/* Sidebar */}
         <aside className="lg:w-[340px] lg:shrink-0 lg:border-r flex flex-col lg:max-h-[calc(100vh-64px)] lg:sticky lg:top-16 overflow-y-auto" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          {/* Progress summary */}
+          <div className="px-4 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
+                Course Progress
+              </span>
+              <span className="font-mono text-[12px] font-semibold" style={{ color: grade?.passed ? "#2EE6A8" : "#A78BFA" }}>
+                {progressPct}%
+              </span>
+            </div>
+            <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${progressPct}%`,
+                  background: grade?.passed
+                    ? "linear-gradient(90deg, #2EE6A8, #34D399)"
+                    : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
+                }}
+              />
+            </div>
+            <p className="text-[11px] mt-1.5 text-white/40">
+              {watchedCount}/{totalLessons} lessons watched
+              {grade && grade.completedQuizzes > 0 && (
+                <> · Avg: {grade.percentage}%</>
+              )}
+            </p>
+          </div>
+
           <div className="px-4 py-4 flex flex-col gap-1">
             {course.modules.map((m, mi) => {
               const open = openModules[m.title] ?? true;
@@ -198,6 +297,9 @@ export function LessonPlayer({
                           .reduce((n, x) => n + x.lessons.length, 0) + li;
                         const isCurrent = globalIndex === index;
                         const isWatched = watched.has(globalIndex);
+                        const quizScore = quizScores.find(
+                          (s) => s.moduleIndex === mi && s.lessonIndex === li
+                        );
                         return (
                           <button
                             key={`${li}-${l.title}`}
@@ -219,7 +321,7 @@ export function LessonPlayer({
                               />
                             )}
                             <span
-                              className="text-[13px] leading-snug"
+                              className="text-[13px] leading-snug flex-1 min-w-0"
                               style={{
                                 color: isCurrent ? "#E8ECF4" : isWatched ? "#9FD7BE" : "#8B93A7",
                                 fontWeight: isCurrent ? 600 : 400,
@@ -227,6 +329,19 @@ export function LessonPlayer({
                             >
                               {l.title}
                             </span>
+                            {quizScore && (
+                              <span
+                                className="font-mono text-[10px] font-semibold shrink-0 rounded-full px-2 py-0.5"
+                                style={{
+                                  background: quizScore.score >= 60
+                                    ? "rgba(46,230,168,0.15)"
+                                    : "rgba(248,113,113,0.15)",
+                                  color: quizScore.score >= 60 ? "#2EE6A8" : "#F87171",
+                                }}
+                              >
+                                {quizScore.score}%
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -323,35 +438,22 @@ export function LessonPlayer({
                       courseId={course.id}
                       moduleIndex={moduleIndex}
                       lessonIndex={lessonIndex}
+                      onScoreUpdate={(entry) => {
+                        setQuizScores((prev) => {
+                          const idx = prev.findIndex(
+                            (s) => s.moduleIndex === entry.moduleIndex && s.lessonIndex === entry.lessonIndex
+                          );
+                          if (idx >= 0) {
+                            const next = [...prev];
+                            next[idx] = { ...entry, attempts: (next[idx].attempts ?? 1) + 1 };
+                            return next;
+                          }
+                          return [...prev, { ...entry, attempts: 1 }];
+                        });
+                      }}
                     />
                   </div>
                 )}
-              </div>
-
-              <div className="px-4 sm:px-8 pb-8 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => goTo(index - 1)}
-                  disabled={index === 0}
-                  className="inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13.5px] font-medium transition-colors disabled:opacity-35 disabled:pointer-events-none hover:bg-white/5"
-                  style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
-                >
-                  <ArrowLeft size={15} />
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    markWatched(index);
-                    goTo(index + 1);
-                  }}
-                  disabled={index >= lessons.length - 1}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-[10px] text-[13.5px] font-semibold transition-opacity disabled:opacity-35 disabled:pointer-events-none hover:opacity-90"
-                  style={{ background: "var(--brand)", color: "#fff" }}
-                >
-                  Next lesson
-                  <ArrowRight size={15} />
-                </button>
               </div>
             </>
           ) : (
