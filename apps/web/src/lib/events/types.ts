@@ -65,6 +65,7 @@ export type EventPayloadMap = {
   "order.fulfilled": {
     order: { id: string; total: number; currency: string; status: string; items: { itemType: string; itemId: string; title?: string; price?: number }[] };
     user: UserPayload;
+    course?: { slug: string; title: string };
   };
   "resource.created": {
     resource: {

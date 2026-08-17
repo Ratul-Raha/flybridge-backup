@@ -81,6 +81,17 @@ const DEFAULT_AUTOMATIONS: {
     event: "course.launched",
     steps: [emailToAllUsers("course-announcement")],
   },
+  {
+    name: "Order confirmation",
+    description: "Email the customer when their order is fulfilled.",
+    event: "order.fulfilled",
+    steps: [
+      actionNode("send_email", {
+        to: { mode: "path", value: "user.email" },
+        templateId: "order-fulfilled",
+      }),
+    ],
+  },
 ];
 
 export async function seedDefaultAutomations(): Promise<void> {

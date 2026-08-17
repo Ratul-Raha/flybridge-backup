@@ -169,8 +169,20 @@ export async function fulfillOrder(
   order.status = "paid";
   await order.save();
 
-  await emitEvent("order.fulfilled", {
+  const fulfilledPayload: EventPayload = {
     order: serializeOrder(order),
     user: userPayload(buyer),
-  });
+  };
+
+  if (item.itemType === "course") {
+    const courseDoc = await Course.findById(item.itemId).select("slug title").lean();
+    if (courseDoc) {
+      (fulfilledPayload as Record<string, unknown>).course = {
+        slug: courseDoc.slug,
+        title: courseDoc.title,
+      };
+    }
+  }
+
+  await emitEvent("order.fulfilled", fulfilledPayload);
 }

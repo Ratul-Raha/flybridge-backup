@@ -1,5 +1,13 @@
 import type { EventName, EventPayload, SeminarPayload, UserPayload } from "@/lib/events/types";
 
+type OrderPayload = {
+  id: string;
+  total: number;
+  currency: string;
+  status: string;
+  items: { itemType: string; itemId: string; title?: string; price?: number }[];
+};
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com";
 
 export type EmailTemplate = {
@@ -270,6 +278,144 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
           cta(c.slug ? `${SITE_URL}/programs/${c.slug}` : `${SITE_URL}/programs`, "Explore the course") +
           note("Start learning today and take the next step toward your dream.") +
           spacer()
+      );
+    },
+  },
+  {
+    id: "order-fulfilled",
+    name: "Order confirmation",
+    description: "Confirm an order and thank the customer after payment or free enrollment.",
+    events: ["order.fulfilled"],
+    subject: "Order confirmed \u2014 {{order.id}}",
+    previewBody:
+      "Confirms the order with a success banner, item list, total paid, and a start-learning CTA button.",
+    html: (payload: EventPayload) => {
+      const o = (payload.order ?? {}) as OrderPayload;
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      const isFree = o.total === 0;
+      const orderId = (o.id ?? "").slice(-8).toUpperCase();
+      const items = o.items ?? [];
+
+      const itemRows = items
+        .map(
+          (item) =>
+            `<tr>
+              <td style="padding:14px 24px;border-bottom:1px solid #F1F4FB;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="color:#122043;font-size:14px;font-weight:600;">${esc(item.title ?? item.itemType)}</td>
+                    <td align="right" style="color:#122043;font-size:14px;font-weight:700;white-space:nowrap;padding-left:16px;">
+                      ${item.price === 0 ? '<span style="color:#10B981;">Free</span>' : `${esc(o.currency)} ${(item.price ?? 0).toLocaleString()}`}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-top:4px;">
+                      <span style="display:inline-block;background:#F1F4FB;border:1px solid #E3E8F1;border-radius:999px;font-size:10.5px;color:#5B6478;padding:3px 8px;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">${esc(item.itemType)}</span>
+                    </td>
+                    <td></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`
+        )
+        .join("");
+
+      const totalRow = isFree
+        ? ""
+        : `<tr>
+            <td style="padding:16px 24px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color:#5B6478;font-size:13px;font-weight:500;">Total paid</td>
+                  <td align="right" style="color:#122043;font-size:18px;font-weight:800;">${esc(o.currency)} ${(o.total ?? 0).toLocaleString()}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+
+      const learnUrl = items[0]?.itemType === "course"
+        ? (() => {
+            const course = (payload as Record<string, unknown>).course as { slug?: string } | undefined;
+            return course?.slug ? `${SITE_URL}/programs/${course.slug}/learn` : `${SITE_URL}/dashboard`;
+          })()
+        : `${SITE_URL}/dashboard`;
+
+      const ctaLabel = items.some((i) => i.itemType === "course") ? "Start learning" : "Go to dashboard";
+
+      return shell(
+        // Success banner
+        `<tr><td style="background:linear-gradient(135deg,#10B981,#059669);padding:40px 28px 36px;text-align:center;">
+          <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.2);margin:0 auto 16px;line-height:56px;font-size:28px;text-align:center;">
+            &#10003;
+          </div>
+          <p style="margin:0 0 4px;color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Order confirmed</p>
+          <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;line-height:1.3;">
+            Thank you, ${esc(who)}!
+          </h1>
+        </td></tr>` +
+
+        // Body
+        textBlock(
+          "",
+          isFree
+            ? "Your enrollment is confirmed"
+            : "Your payment was successful",
+          `Your order is complete and confirmed. Below you'll find everything you need to get started right away.`
+        ) +
+
+        // Order ID chip
+        `<tr><td style="padding:20px 28px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFB;border:1px solid #E3E8F1;border-radius:14px;overflow:hidden;">
+            <tr>
+              <td style="padding:16px 24px;">
+                <p style="margin:0 0 3px;color:#8B93A7;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Order ID</p>
+                <p style="margin:0;color:#122043;font-size:14px;font-weight:700;font-family:'Courier New',monospace;">#${esc(orderId)}</p>
+              </td>
+              <td align="right" style="padding:16px 24px;">
+                <p style="margin:0 0 3px;color:#8B93A7;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Date</p>
+                <p style="margin:0;color:#122043;font-size:13px;font-weight:600;">${fmtDate(new Date().toISOString())}</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>` +
+
+        // Items list
+        (items.length > 0
+          ? `<tr><td style="padding:24px 28px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E3E8F1;border-radius:14px;overflow:hidden;">
+                <tr>
+                  <td style="background:#F8FAFB;padding:12px 24px;border-bottom:1px solid #E3E8F1;">
+                    <p style="margin:0;color:#8B93A7;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Items</p>
+                  </td>
+                </tr>
+                ${itemRows}
+                ${totalRow}
+              </table>
+            </td></tr>`
+          : "") +
+
+        // CTA
+        `<tr><td align="center" style="padding:30px 28px 0;">
+          <a href="${learnUrl}" style="display:inline-block;background:#10B981;color:#ffffff;text-decoration:none;font-weight:800;font-size:15px;padding:15px 40px;border-radius:12px;box-shadow:0 6px 16px -6px rgba(16,185,129,0.5);">${esc(ctaLabel)}</a>
+        </td></tr>` +
+
+        // What's next
+        `<tr><td style="padding:28px 28px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F0FDF8;border:1px solid #D1FAE5;border-radius:14px;">
+            <tr>
+              <td style="padding:20px 22px;">
+                <p style="margin:0 0 8px;color:#122043;font-size:13px;font-weight:700;">What's next?</p>
+                <p style="margin:0;color:#4A5570;font-size:12.5px;line-height:1.7;">
+                  Head to your dashboard to access your courses, track your progress, and manage your account. You can revisit your materials anytime.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>` +
+
+        note("If you have any questions about your order, reply to this email or visit flybridgeedu.com for help.") +
+        spacer()
       );
     },
   },
