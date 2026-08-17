@@ -218,10 +218,11 @@ export function ResourceDetail({
                   type="button"
                   onClick={handleGetForFree}
                   disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98] disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: "#6B4CE0" }}
                 >
                   {submitting && <Loader2 size={15} className="animate-spin" />}
-                  {submitting ? "Getting…" : "Get it for free"}
+                  {submitting ? "Processing…" : "Get it for free"}
                 </button>
                 {error && (
                   <span className="text-[12.5px] max-w-[280px]" style={{ color: "#C0392B" }}>
