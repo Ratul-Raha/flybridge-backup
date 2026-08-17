@@ -109,7 +109,7 @@ export default async function CheckoutPage({ params }: Props) {
             <div className="rounded-2xl border border-line bg-white overflow-hidden">
               <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                 <div
-                  className="relative h-[180px] sm:h-auto flex items-center justify-center overflow-hidden"
+                  className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
                   style={{ background: "var(--brand-soft)" }}
                 >
                   {checkoutCourse.image ? (

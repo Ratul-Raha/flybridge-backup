@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
@@ -28,7 +28,7 @@ export function CheckoutForm({ course }: { course: Props }) {
   const isUpcoming = course.upcoming;
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -36,6 +36,14 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [cardName, setCardName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setName((prev) => prev || user.name || "");
+      setEmail((prev) => prev || user.email || "");
+      setPhone((prev) => prev || user.phone || "");
+    }
+  }, [user]);
 
   const formatCard = (v: string) => {
     const digits = v.replace(/\D/g, "").slice(0, 16);
@@ -68,7 +76,13 @@ export function CheckoutForm({ course }: { course: Props }) {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemType: "course", itemId: course.courseId }),
+        body: JSON.stringify({
+          itemType: "course",
+          itemId: course.courseId,
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
@@ -224,7 +238,7 @@ export function CheckoutForm({ course }: { course: Props }) {
           {submitting
             ? "Processing…"
             : isFree
-              ? "Complete enrollment"
+              ? "Get it for free"
               : `Pay ${course.currency} ${course.price.toLocaleString()}`}
         </button>
       )}

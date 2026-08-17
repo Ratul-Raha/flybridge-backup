@@ -70,10 +70,16 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    if (typeof body.name === "string" && body.name.trim() && body.name.trim() !== user.name) {
+      user.name = body.name.trim();
+    }
     if (typeof body.phone === "string" && body.phone.trim()) {
       user.phone = body.phone.trim();
-      await user.save();
     }
+    if (typeof body.email === "string" && body.email.trim() && body.email.trim() !== user.email) {
+      user.email = body.email.trim().toLowerCase();
+    }
+    await user.save();
 
     const { order, requiresPayment } = await createOrder({
       user: {
