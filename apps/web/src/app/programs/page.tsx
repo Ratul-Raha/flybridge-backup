@@ -1,17 +1,17 @@
-"use client";
-
-import { useState } from "react";
-import Link from "next/link";
+import type { Metadata } from "next";
+import { connectDb } from "@/lib/db";
+import { Course } from "@/lib/models/course";
 import { Nav } from "@/components/nav";
 import { ProgramCard } from "@/components/program-card";
+import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
+import { TrackAccordion } from "@/components/programs/track-accordion";
 import { programs } from "@/lib/programs";
 
-const tracks = [
-  { label: "Study abroad", desc: "Visa prep, university applications and documentation for the US, Canada and beyond." },
-  { label: "Work abroad", desc: "Permits, eligibility and job-search groundwork for international careers." },
-  { label: "English", desc: "Practical, confident communication for everyday life, interviews and exams." },
-  { label: "Career prep", desc: "Interview frameworks, mock questions and professional delivery." },
-];
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Programs | FlyBridge",
+};
 
 const included = [
   {
@@ -32,8 +32,30 @@ const included = [
   },
 ];
 
-export default function ProgramsPage() {
-  const [openTrack, setOpenTrack] = useState<number | null>(null);
+async function getPublishedCourses(): Promise<DbCourse[]> {
+  await connectDb();
+  const courses = await Course.find({ published: true }).sort({ createdAt: -1 });
+  return courses.map((c) => ({
+    id: c._id.toString(),
+    slug: c.slug,
+    title: c.title,
+    badge: c.badge ?? "",
+    subtitle: c.subtitle ?? "",
+    description: c.description ?? "",
+    price: c.price ?? 0,
+    currency: c.currency ?? "BDT",
+    image: c.image ?? null,
+    level: c.level ?? "",
+    modules: (c.modules ?? []).map((m) => ({
+      title: m.title,
+      lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+    })),
+  }));
+}
+
+export default async function ProgramsPage() {
+  const dbCourses = await getPublishedCourses();
+  const hasDbCourses = dbCourses.length > 0;
 
   return (
     <>
@@ -64,49 +86,7 @@ export default function ProgramsPage() {
                 </p>
               </div>
 
-              {/* Track index — expandable orientation list */}
-              <div className="lg:w-[300px] shrink-0">
-                <div className="flex flex-col">
-                  {tracks.map((t, i) => {
-                    const open = openTrack === i;
-                    return (
-                      <div
-                        key={t.label}
-                        className="border-t last:border-b"
-                        style={{ borderColor: "var(--line)" }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setOpenTrack(open ? null : i)}
-                          aria-expanded={open}
-                          className="group flex w-full items-center justify-between gap-6 py-4 text-left transition-colors"
-                        >
-                          <span
-                            className="text-[14.5px] font-medium transition-colors"
-                            style={{ color: "var(--ink)" }}
-                          >
-                            {t.label}
-                          </span>
-                          <span
-                            className={`w-[7px] h-[7px] rounded-full shrink-0 opacity-30 group-hover:opacity-100 transition-opacity ${
-                              open ? "opacity-100" : ""
-                            }`}
-                            style={{ background: "var(--brand-2)" }}
-                          />
-                        </button>
-                        {open && (
-                          <p
-                            className="pb-4 pr-6 text-[13px] leading-[1.65]"
-                            style={{ color: "var(--body)" }}
-                          >
-                            {t.desc}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <TrackAccordion />
             </div>
           </div>
         </section>
@@ -115,9 +95,9 @@ export default function ProgramsPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {programs.map((p) => (
-                <ProgramCard key={p.slug} p={p} />
-              ))}
+              {hasDbCourses
+                ? dbCourses.map((c) => <DbCourseCard key={c.id} course={c} />)
+                : programs.map((p) => <ProgramCard key={p.slug} p={p} />)}
             </div>
           </div>
         </section>
@@ -190,7 +170,7 @@ export default function ProgramsPage() {
                     </svg>
                     Call us
                   </a>
-                  <Link
+                  <a
                     href="/success-stories"
                     className="inline-flex items-center gap-1.5 font-medium text-[14.5px] transition-opacity hover:opacity-70"
                     style={{ color: "rgba(255,255,255,0.85)" }}
@@ -199,7 +179,7 @@ export default function ProgramsPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>
