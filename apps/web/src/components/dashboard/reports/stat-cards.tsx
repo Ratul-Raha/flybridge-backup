@@ -38,14 +38,14 @@ const CARDS: {
     label: "Total orders",
     icon: ShoppingCart,
     gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)",
-    caption: () => "Paid seminar registrations",
+    caption: () => "All orders placed",
   },
   {
     key: "courseEnrollment",
     label: "Course enrollment",
     icon: BookOpen,
     gradient: "linear-gradient(135deg,#10B981,#34D399)",
-    caption: () => "Seminar registrations",
+    caption: () => "Active course enrollments",
   },
   {
     key: "readinessRuns",

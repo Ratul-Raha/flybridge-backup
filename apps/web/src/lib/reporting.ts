@@ -3,8 +3,10 @@ import "server-only";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { Order } from "@/lib/models/order";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { ReadinessRun } from "@/lib/models/readiness-run";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 
 export type ReportContext = { days: number };
 
@@ -30,31 +32,18 @@ function lastNDays(n: number) {
 
 async function reportOverview() {
   await connectDb();
-  const [totalUsers, activeSubscriptions, courseEnrollment, readinessRuns] = await Promise.all([
+  const [totalUsers, activeSubscriptions, totalOrders, courseEnrollment, readinessRuns] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ subscription: "paid" }),
-    SeminarRegistration.countDocuments(),
+    Order.countDocuments(),
+    CourseEnrollment.countDocuments(),
     ReadinessRun.countDocuments(),
-  ]);
-
-  const paidRegs = await SeminarRegistration.aggregate([
-    {
-      $lookup: {
-        from: Seminar.collection.name,
-        localField: "seminar",
-        foreignField: "_id",
-        as: "sem",
-      },
-    },
-    { $unwind: { path: "$sem", preserveNullAndEmptyArrays: true } },
-    { $match: { "sem.type": "paid" } },
-    { $count: "n" },
   ]);
 
   return {
     totalUsers,
     activeSubscriptions,
-    totalOrders: paidRegs[0]?.n ?? 0,
+    totalOrders,
     courseEnrollment,
     readinessRuns,
   };

@@ -7,7 +7,6 @@ import { GrowthChart } from "@/components/dashboard/reports/growth-chart";
 import { TopCourses } from "@/components/dashboard/reports/top-courses";
 import { SubscriptionPie } from "@/components/dashboard/reports/subscription-pie";
 import { RecentSignups } from "@/components/dashboard/reports/recent-signups";
-import { RecentOrders } from "@/components/dashboard/reports/recent-orders";
 import { PlatformActivity } from "@/components/dashboard/reports/platform-activity";
 import { OrderOverview } from "@/components/dashboard/reports/order-overview";
 
@@ -30,9 +29,8 @@ export function AdminDashboard() {
         <SubscriptionPie />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
+      <div className="grid lg:grid-cols-2 gap-5">
         <RecentSignups />
-        <RecentOrders />
         <PlatformActivity />
       </div>
     </div>
