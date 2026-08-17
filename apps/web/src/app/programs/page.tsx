@@ -58,6 +58,7 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
 
 export default async function ProgramsPage() {
   const dbCourses = await getPublishedCourses();
+  const hasDbCourses = dbCourses.length > 0;
 
   return (
     <>
@@ -97,9 +98,11 @@ export default async function ProgramsPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {programs.map((p) => (
-                <ProgramCard key={p.slug} p={p} />
-              ))}
+              {programs
+                .filter((p) => !(p.hasDb && hasDbCourses))
+                .map((p) => (
+                  <ProgramCard key={p.slug} p={p} />
+                ))}
               {dbCourses.map((c) => (
                 <DbCourseCard key={c.id} course={c} />
               ))}
