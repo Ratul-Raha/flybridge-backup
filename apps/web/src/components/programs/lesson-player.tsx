@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -12,6 +11,8 @@ import {
   CheckCircle2,
   HelpCircle,
   Award,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { LessonQuiz } from "./lesson-quiz";
 
@@ -117,10 +118,10 @@ export function LessonPlayer({
   const [tab, setTab] = useState<"video" | "quiz">("video");
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const current = lessons[index];
 
-  // Derive moduleIndex and lessonIndex from flat index
   const { moduleIndex, lessonIndex } = useMemo(() => {
     let remaining = index;
     for (let mi = 0; mi < course.modules.length; mi++) {
@@ -133,7 +134,6 @@ export function LessonPlayer({
     return { moduleIndex: 0, lessonIndex: 0 };
   }, [index, course.modules]);
 
-  // Load progress from server
   useEffect(() => {
     fetch(`/api/courses/${course.id}/progress`)
       .then((r) => (r.ok ? r.json() : null))
@@ -152,6 +152,10 @@ export function LessonPlayer({
     setIndex(i);
     setTab("video");
     router.replace(`/dashboard/courses/${course.slug}/learn?lesson=${i}`);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const markWatched = useCallback((i: number) => {
@@ -160,7 +164,6 @@ export function LessonPlayer({
         if (prev.has(i)) return prev;
         const next = new Set(prev);
         next.add(i);
-        // Persist to server
         fetch(`/api/courses/${course.id}/progress`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -179,34 +182,36 @@ export function LessonPlayer({
   const progressPct = totalLessons > 0 ? Math.round((watchedCount / totalLessons) * 100) : 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0B1220" }}>
-      {/* Top bar */}
-      <header className="sticky top-0 z-20 border-b bg-[#0B1220]/95 backdrop-blur" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      {/* Header */}
+      <header className="sticky top-0 z-20 border-b bg-white/95 backdrop-blur" style={{ borderColor: "var(--line)" }}>
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Link
-              href="/dashboard/courses"
-              className="shrink-0 inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-white/10"
-              style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((p) => !p)}
+              className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-black/5 lg:hidden"
+              style={{ color: "var(--ink)" }}
             >
-              <ArrowLeft size={14} />
-              <span className="hidden sm:inline">My Courses</span>
-            </Link>
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/40 truncate">
+              {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+            </button>
+            <div className="flex items-center gap-2 text-[13px] min-w-0">
+              <Link href="/dashboard" className="shrink-0 font-medium transition-colors hover:opacity-70" style={{ color: "var(--body)" }}>
+                Dashboard
+              </Link>
+              <ChevronRight size={12} style={{ color: "var(--body)" }} />
+              <Link href="/dashboard/courses/mine" className="shrink-0 font-medium transition-colors hover:opacity-70" style={{ color: "var(--body)" }}>
+                My Courses
+              </Link>
+              <ChevronRight size={12} style={{ color: "var(--body)" }} />
+              <span className="font-semibold truncate" style={{ color: "var(--ink)" }}>
                 {course.title}
-              </p>
-              {current && (
-                <p className="text-[13.5px] font-medium text-white/90 truncate">
-                  Lesson {index + 1} of {lessons.length} · {current.title}
-                </p>
-              )}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {/* Progress indicator */}
             <div className="hidden sm:flex items-center gap-2">
-              <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
@@ -217,40 +222,44 @@ export function LessonPlayer({
                   }}
                 />
               </div>
-              <span className="font-mono text-[10px] font-semibold text-white/60">{progressPct}%</span>
+              <span className="font-mono text-[10px] font-semibold" style={{ color: "var(--body)" }}>{progressPct}%</span>
             </div>
             <Link
               href={`/dashboard/courses/${course.slug}/certificate`}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-white/10"
-              style={{ color: grade?.passed ? "#2EE6A8" : "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-black/5"
+              style={{ color: grade?.passed ? "#16a34a" : "var(--ink)", borderColor: "var(--line)" }}
             >
               <Award size={13} />
               <span className="hidden sm:inline">Certificate</span>
             </Link>
-            <span
-              className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-[6px]"
-              style={{ background: "rgba(46,230,168,0.14)", color: "#2EE6A8" }}
-            >
-              Player
-            </span>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1320px] w-full mx-auto">
+      <div className="flex-1 flex flex-col lg:flex-row max-w-[1400px] w-full mx-auto">
         {/* Sidebar */}
-        <aside className="lg:w-[340px] lg:shrink-0 lg:border-r flex flex-col lg:max-h-[calc(100vh-64px)] lg:sticky lg:top-16 overflow-y-auto" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+        <aside
+          className={`
+            fixed lg:sticky top-14 left-0 z-30 lg:z-auto
+            w-[300px] lg:w-[320px] lg:shrink-0
+            h-[calc(100vh-56px)] lg:h-auto
+            border-r bg-white overflow-y-auto
+            transition-transform duration-200 ease-in-out
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          `}
+          style={{ borderColor: "var(--line)" }}
+        >
           {/* Progress summary */}
-          <div className="px-4 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <div className="px-4 py-4 border-b sticky top-0 bg-white z-10" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
                 Course Progress
               </span>
-              <span className="font-mono text-[12px] font-semibold" style={{ color: grade?.passed ? "#2EE6A8" : "#A78BFA" }}>
+              <span className="font-mono text-[12px] font-semibold" style={{ color: grade?.passed ? "#16a34a" : "var(--brand)" }}>
                 {progressPct}%
               </span>
             </div>
-            <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -261,7 +270,7 @@ export function LessonPlayer({
                 }}
               />
             </div>
-            <p className="text-[11px] mt-1.5 text-white/40">
+            <p className="text-[11px] mt-1.5" style={{ color: "var(--body)" }}>
               {watchedCount}/{totalLessons} lessons watched
               {grade && grade.completedQuizzes > 0 && (
                 <> · Avg: {grade.percentage}%</>
@@ -277,17 +286,17 @@ export function LessonPlayer({
                   <button
                     type="button"
                     onClick={() => toggleModule(m.title)}
-                    className="flex items-center gap-2 px-2 py-2.5 text-left rounded-lg hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-2 px-2 py-2.5 text-left rounded-lg hover:bg-black/5 transition-colors"
                   >
                     {open ? (
-                      <ChevronDown size={14} style={{ color: "#8B93A7" }} />
+                      <ChevronDown size={14} style={{ color: "var(--body)" }} />
                     ) : (
-                      <ChevronRight size={14} style={{ color: "#8B93A7" }} />
+                      <ChevronRight size={14} style={{ color: "var(--body)" }} />
                     )}
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-white/40">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
                       Module {mi + 1}
                     </span>
-                    <span className="text-[13px] font-medium text-white/85 truncate">{m.title}</span>
+                    <span className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>{m.title}</span>
                   </button>
                   {open && (
                     <div className="flex flex-col gap-0.5 ml-[22px]">
@@ -308,22 +317,22 @@ export function LessonPlayer({
                             className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition-colors"
                             style={
                               isCurrent
-                                ? { background: "rgba(46,230,168,0.12)" }
+                                ? { background: "var(--brand-soft, rgba(107,76,224,0.06))" }
                                 : { background: "transparent" }
                             }
                           >
                             {isWatched ? (
-                              <CheckCircle2 size={15} style={{ color: "#2EE6A8" }} />
+                              <CheckCircle2 size={15} style={{ color: "#16a34a" }} />
                             ) : (
                               <PlayCircle
                                 size={15}
-                                style={{ color: isCurrent ? "#2EE6A8" : "#5B6478" }}
+                                style={{ color: isCurrent ? "var(--brand)" : "var(--body)" }}
                               />
                             )}
                             <span
                               className="text-[13px] leading-snug flex-1 min-w-0"
                               style={{
-                                color: isCurrent ? "#E8ECF4" : isWatched ? "#9FD7BE" : "#8B93A7",
+                                color: isCurrent ? "var(--ink)" : "var(--body)",
                                 fontWeight: isCurrent ? 600 : 400,
                               }}
                             >
@@ -334,9 +343,9 @@ export function LessonPlayer({
                                 className="font-mono text-[10px] font-semibold shrink-0 rounded-full px-2 py-0.5"
                                 style={{
                                   background: quizScore.score >= 60
-                                    ? "rgba(46,230,168,0.15)"
-                                    : "rgba(248,113,113,0.15)",
-                                  color: quizScore.score >= 60 ? "#2EE6A8" : "#F87171",
+                                    ? "rgba(22,163,74,0.1)"
+                                    : "rgba(239,68,68,0.1)",
+                                  color: quizScore.score >= 60 ? "#16a34a" : "#dc2626",
                                 }}
                               >
                                 {quizScore.score}%
@@ -351,122 +360,134 @@ export function LessonPlayer({
               );
             })}
             {course.modules.length === 0 && (
-              <p className="text-[13px] px-2 py-4" style={{ color: "#8B93A7" }}>
+              <p className="text-[13px] px-2 py-4" style={{ color: "var(--body)" }}>
                 No lessons published yet.
               </p>
             )}
           </div>
         </aside>
 
+        {/* Overlay for mobile sidebar */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/20 z-20 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Player */}
         <main className="flex-1 min-w-0 flex flex-col">
           {current ? (
-            <>
-              <div className="px-4 sm:px-8 py-6 flex-1 flex flex-col">
-                <h1 className="font-display text-[19px] sm:text-[22px] font-semibold text-white/95 leading-snug">
+            <div className="px-4 sm:px-8 py-6 flex flex-col">
+              {/* Video player at top */}
+              {tab === "video" && current.videoUrl && (
+                <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--line)", background: "#000" }}>
+                  <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
+                </div>
+              )}
+              {tab === "video" && !current.videoUrl && (
+                <div
+                  className="rounded-xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
+                  style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
+                >
+                  <PlayCircle size={34} style={{ color: "var(--body)" }} />
+                  <p className="text-[14px]" style={{ color: "var(--body)" }}>
+                    This lesson has no video yet.
+                  </p>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="flex gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: "var(--bg-soft, rgba(0,0,0,0.03))" }}>
+                <button
+                  type="button"
+                  onClick={() => setTab("video")}
+                  className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                  style={
+                    tab === "video"
+                      ? { background: "white", color: "var(--ink)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
+                      : { color: "var(--body)" }
+                  }
+                >
+                  <PlayCircle size={14} />
+                  Video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab("quiz")}
+                  className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                  style={
+                    tab === "quiz"
+                      ? { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
+                      : { color: "var(--body)" }
+                  }
+                >
+                  <HelpCircle size={14} />
+                  Quiz
+                </button>
+              </div>
+
+              {/* Lesson title & meta */}
+              <div className="mt-5">
+                <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
                   {current.title}
                 </h1>
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "#8B93A7" }}>
+                <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
                   {current.moduleTitle}
                   {current.duration ? ` · ${current.duration}` : ""}
                 </p>
-
-                {/* Video / Quiz tabs */}
-                <div className="flex gap-1 mt-4 p-1 rounded-xl w-fit" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <button
-                    type="button"
-                    onClick={() => setTab("video")}
-                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
-                    style={
-                      tab === "video"
-                        ? { background: "rgba(255,255,255,0.08)", color: "#E8ECF4" }
-                        : { color: "#5B6478" }
-                    }
-                  >
-                    <PlayCircle size={14} />
-                    Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab("quiz")}
-                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
-                    style={
-                      tab === "quiz"
-                        ? { background: "rgba(107,76,224,0.15)", color: "#A78BFA" }
-                        : { color: "#5B6478" }
-                    }
-                  >
-                    <HelpCircle size={14} />
-                    Quiz
-                  </button>
-                </div>
-
-                {tab === "video" ? (
-                  <>
-                    {current.videoUrl ? (
-                      <div className="mt-5 rounded-2xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.1)", background: "#000" }}>
-                        <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
-                      </div>
-                    ) : (
-                      <div
-                        className="mt-5 rounded-2xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
-                        style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}
-                      >
-                        <PlayCircle size={34} style={{ color: "#5B6478" }} />
-                        <p className="text-[14px]" style={{ color: "#8B93A7" }}>
-                          This lesson has no video yet.
-                        </p>
-                      </div>
-                    )}
-
-                    {current.pdfUrl && (
-                      <a
-                        href={current.pdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-4 self-start inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13px] font-medium transition-colors hover:bg-white/5"
-                        style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
-                      >
-                        <FileText size={14} />
-                        Open lesson notes (PDF)
-                      </a>
-                    )}
-                  </>
-                ) : (
-                  <div className="mt-5">
-                    <LessonQuiz
-                      courseId={course.id}
-                      moduleIndex={moduleIndex}
-                      lessonIndex={lessonIndex}
-                      onScoreUpdate={(entry) => {
-                        setQuizScores((prev) => {
-                          const idx = prev.findIndex(
-                            (s) => s.moduleIndex === entry.moduleIndex && s.lessonIndex === entry.lessonIndex
-                          );
-                          if (idx >= 0) {
-                            const next = [...prev];
-                            next[idx] = { ...entry, attempts: (next[idx].attempts ?? 1) + 1 };
-                            return next;
-                          }
-                          return [...prev, { ...entry, attempts: 1 }];
-                        });
-                      }}
-                    />
-                  </div>
-                )}
               </div>
-            </>
+
+              {/* Content area */}
+              {tab === "video" ? (
+                <>
+                  {current.pdfUrl && (
+                    <a
+                      href={current.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 self-start inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13px] font-medium transition-colors hover:bg-black/5"
+                      style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                    >
+                      <FileText size={14} />
+                      Open lesson notes (PDF)
+                    </a>
+                  )}
+                </>
+              ) : (
+                <div className="mt-5">
+                  <LessonQuiz
+                    courseId={course.id}
+                    moduleIndex={moduleIndex}
+                    lessonIndex={lessonIndex}
+                    onScoreUpdate={(entry) => {
+                      setQuizScores((prev) => {
+                        const idx = prev.findIndex(
+                          (s) => s.moduleIndex === entry.moduleIndex && s.lessonIndex === entry.lessonIndex
+                        );
+                        if (idx >= 0) {
+                          const next = [...prev];
+                          next[idx] = { ...entry, attempts: (next[idx].attempts ?? 1) + 1 };
+                          return next;
+                        }
+                        return [...prev, { ...entry, attempts: 1 }];
+                      });
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 py-24 px-6 text-center">
-              <p className="text-[15px]" style={{ color: "#8B93A7" }}>
+              <p className="text-[15px]" style={{ color: "var(--body)" }}>
                 No lessons in this course yet.
               </p>
               <Link
-                href="/programs"
+                href="/dashboard/courses"
                 className="rounded-full text-white text-[13.5px] font-medium px-5 py-[10px] hover:opacity-90 transition-opacity"
                 style={{ background: "var(--brand)" }}
               >
-                Browse programs
+                Browse courses
               </Link>
             </div>
           )}

@@ -139,39 +139,33 @@ export function MyCourses() {
                     {lessonCount} lessons
                   </span>
                 )}
-                {quizTotal > 0 && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                    {quizDone}/{quizTotal} quizzes
-                  </span>
-                )}
               </div>
 
-              {/* Progress footer */}
+              {/* Stats footer */}
               <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--line)" }}>
-                <div className="flex items-end justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                        Progress
-                      </span>
-                      <span className="font-mono text-[11px] font-semibold" style={{ color: "var(--brand)" }}>
-                        {pct}%
-                      </span>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                        Quizzes
+                      </p>
+                      <p className="font-mono text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                        {quizDone}/{quizTotal}
+                      </p>
                     </div>
-                    <div
-                      className="w-full h-[6px] rounded-full overflow-hidden"
-                      style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}
-                    >
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${pct}%`,
-                          background: pct >= 60
-                            ? "linear-gradient(90deg, #2EE6A8, #34D399)"
-                            : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
-                        }}
-                      />
-                    </div>
+                    {quizDone > 0 && (
+                      <div className="w-px h-8" style={{ background: "var(--line)" }} />
+                    )}
+                    {quizDone > 0 && (
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                          Avg Score
+                        </p>
+                        <p className="font-mono text-[13px] font-semibold" style={{ color: pct >= 60 ? "#2EE6A8" : "#F87171" }}>
+                          {pct}%
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <span
                     className="inline-flex items-center gap-[5px] text-[12.5px] font-medium shrink-0"
