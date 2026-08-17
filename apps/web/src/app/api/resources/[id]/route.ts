@@ -95,12 +95,12 @@ export async function PATCH(
       const releaseDate = new Date(body.releaseDate);
       if (!isNaN(releaseDate.getTime())) resource.releaseDate = releaseDate;
     }
-    if (body.access === "free" || body.access === "paid") {
+    if (body.access === "public" || body.access === "members") {
       resource.access = body.access;
-      if (body.access === "paid" && typeof body.price === "number") {
+      if (body.access === "members" && typeof body.price === "number") {
         resource.price = Math.max(0, body.price);
       }
-      if (body.access === "free") resource.price = 0;
+      if (body.access === "public") resource.price = 0;
     }
     if (typeof body.featured === "boolean") {
       resource.featured = body.featured;

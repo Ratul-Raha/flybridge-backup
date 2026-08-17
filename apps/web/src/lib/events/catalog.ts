@@ -169,7 +169,7 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
         id: "665f1c2a9e3b1c0012ab34cd",
         total: 0,
         currency: "BDT",
-        status: "paid",
+        status: "completed",
         items: [{ itemType: "seminar", itemId: "665f1c2a9e3b1c0012ab34cd", title: "Student Visa Blueprint — Live Q&A", price: 0 }],
       },
     }),

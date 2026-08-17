@@ -12,7 +12,7 @@ import {
 import { ScreenError, ScreenLoading } from "./ui";
 
 type Section = "all" | "mine";
-type AccessFilter = "all" | "free" | "paid";
+type AccessFilter = "all" | "public" | "members";
 
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
@@ -74,7 +74,7 @@ export function ResourceBrowser({
   }, [resources]);
 
   const mineCount = useMemo(
-    () => resources.filter((r) => r.access === "paid").length,
+    () => resources.filter((r) => r.access === "members").length,
     [resources]
   );
 
@@ -161,8 +161,8 @@ export function ResourceBrowser({
       style={{ borderColor: "var(--line)", color: "var(--ink)" }}
     >
       <option value="all">All access</option>
-      <option value="free">Free</option>
-      <option value="paid">Members</option>
+      <option value="public">Public</option>
+      <option value="members">Members</option>
     </select>
   );
 

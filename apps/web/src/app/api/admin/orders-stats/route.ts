@@ -14,7 +14,7 @@ export async function GET() {
 
     const [
       totalOrders,
-      paidOrders,
+      completedOrders,
       pendingOrders,
       failedOrders,
       cancelledOrders,
@@ -29,14 +29,14 @@ export async function GET() {
       lastMonthOrders,
     ] = await Promise.all([
       Order.countDocuments(),
-      Order.countDocuments({ status: "paid" }),
+      Order.countDocuments({ status: "completed" }),
       Order.countDocuments({ status: "pending" }),
       Order.countDocuments({ status: "failed" }),
       Order.countDocuments({ status: "cancelled" }),
       Order.countDocuments({ status: "refunded" }),
-      Order.countDocuments({ total: 0, status: "paid" }),
+      Order.countDocuments({ total: 0, status: "completed" }),
       Order.aggregate([
-        { $match: { status: "paid" } },
+        { $match: { status: "completed" } },
         { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
       ]),
       Order.aggregate([
@@ -51,7 +51,7 @@ export async function GET() {
       ]),
       Order.aggregate([
         { $unwind: "$items" },
-        { $match: { status: "paid" } },
+        { $match: { status: "completed" } },
         {
           $group: {
             _id: { title: "$items.title", itemType: "$items.itemType" },
@@ -114,13 +114,12 @@ export async function GET() {
 
     return NextResponse.json({
       totalOrders,
-      paidOrders,
+      completedOrders,
       pendingOrders,
       failedOrders,
       cancelledOrders,
       refundedOrders,
       freeOrders,
-      completedOrders: paidOrders + freeOrders,
       totalRevenue: revenueAgg[0]?.total ?? 0,
       avgOrderValue: Math.round(revenueAgg[0]?.avg ?? 0),
       thisMonthOrders,

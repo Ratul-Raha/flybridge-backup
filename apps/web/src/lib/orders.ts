@@ -53,6 +53,33 @@ export async function createOrder(input: {
   const product = await resolveProduct(input.itemType, input.itemId);
   if (!product) throw new Error("Product not found");
 
+  if (product.price === 0) {
+    const order = await Order.create({
+      user: input.user.id,
+      email: input.user.email,
+      items: [
+        {
+          itemType: product.itemType,
+          itemId: product.itemId,
+          title: product.title,
+          price: 0,
+        },
+      ],
+      total: 0,
+      currency: product.currency,
+      status: "completed",
+    });
+
+    await emitEvent("order.created", {
+      order: serializeOrder(order),
+      user: userPayload(input.user),
+    });
+
+    await fulfillOrder(order, input.user);
+
+    return { order, requiresPayment: false };
+  }
+
   const order = await Order.create({
     user: input.user.id,
     email: input.user.email,
@@ -74,11 +101,7 @@ export async function createOrder(input: {
     user: userPayload(input.user),
   });
 
-  if (product.price === 0) {
-    await fulfillOrder(order, input.user);
-  }
-
-  return { order, requiresPayment: product.price > 0 };
+  return { order, requiresPayment: true };
 }
 
 export async function fulfillOrder(
@@ -87,7 +110,7 @@ export async function fulfillOrder(
 ): Promise<void> {
   await connectDb();
 
-  if (order.status === "paid") return;
+  if (order.status === "completed") return;
   const item = order.items[0];
   if (!item) return;
 
@@ -172,7 +195,7 @@ export async function fulfillOrder(
     });
   }
 
-  order.status = "paid";
+  order.status = "completed";
   await order.save();
 
   const fulfilledPayload: EventPayload = {

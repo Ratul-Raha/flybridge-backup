@@ -22,7 +22,7 @@ export type ResourceCardData = {
   fileSize: number;
   thumbnail: string | null;
   releaseDate: string;
-  access: "free" | "paid";
+  access: "public" | "members";
   price: number;
   featured: boolean;
 };

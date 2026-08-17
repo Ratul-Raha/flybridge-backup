@@ -75,7 +75,7 @@ export type EventPayloadMap = {
       category?: string;
       fileType?: string;
       thumbnail?: string | null;
-      access?: "free" | "paid";
+      access?: "public" | "members";
       price?: number;
     };
   };

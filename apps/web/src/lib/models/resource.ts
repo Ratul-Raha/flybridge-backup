@@ -17,7 +17,7 @@ const resourceSchema = new Schema(
     thumbnail: { type: String, trim: true },
     thumbnailPublicId: { type: String, trim: true },
     releaseDate: { type: Date, default: Date.now, index: true },
-    access: { type: String, enum: ["free", "paid"], default: "free", index: true },
+    access: { type: String, enum: ["public", "members"], default: "public", index: true },
     price: { type: Number, min: 0, default: 0 },
     featured: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

@@ -40,13 +40,12 @@ type Order = {
 
 type OrderStats = {
   totalOrders: number;
-  paidOrders: number;
+  completedOrders: number;
   pendingOrders: number;
   failedOrders: number;
   cancelledOrders: number;
   refundedOrders: number;
   freeOrders: number;
-  completedOrders: number;
   totalRevenue: number;
   avgOrderValue: number;
   thisMonthOrders: number;
@@ -68,14 +67,14 @@ type OrderStats = {
 };
 
 const STATUS_COLORS: Record<string, { bg: string; fg: string; dot: string }> = {
-  paid: { bg: "rgba(16,185,129,0.10)", fg: "#047857", dot: "#10B981" },
+  completed: { bg: "rgba(16,185,129,0.10)", fg: "#047857", dot: "#10B981" },
   pending: { bg: "rgba(245,158,11,0.10)", fg: "#92400E", dot: "#F59E0B" },
   failed: { bg: "rgba(239,68,68,0.10)", fg: "#991B1B", dot: "#EF4444" },
   cancelled: { bg: "rgba(107,114,128,0.10)", fg: "#374151", dot: "#6B7280" },
   refunded: { bg: "rgba(139,92,246,0.10)", fg: "#5B21B6", dot: "#8B5CF6" },
 };
 
-const STATUS_OPTIONS = ["all", "paid", "pending", "failed", "cancelled", "refunded"] as const;
+const STATUS_OPTIONS = ["all", "completed", "pending", "failed", "cancelled", "refunded"] as const;
 const PAGE_SIZE = 10;
 type SortKey = "date" | "total" | "status";
 type SortDir = "asc" | "desc";
@@ -221,7 +220,7 @@ function StatusDonut({ data }: { data: OrderStats["statusDistribution"] }) {
   const option = useMemo<EChartsOption>(() => {
     if (!data || data.length === 0) return {};
     const colorMap: Record<string, string> = {
-      paid: "#10B981",
+      completed: "#10B981",
       pending: "#F59E0B",
       failed: "#EF4444",
       cancelled: "#6B7280",
@@ -517,7 +516,7 @@ export function OrderManage() {
             <MetricCard
               label="Total revenue"
               value={`${orders[0]?.currency ?? "BDT"} ${(stats?.totalRevenue ?? 0).toLocaleString()}`}
-              sub={`${stats?.paidOrders ?? 0} paid orders`}
+              sub={`${stats?.completedOrders ?? 0} completed orders`}
               icon={DollarSign}
               iconBg="var(--mint-bg)"
             />

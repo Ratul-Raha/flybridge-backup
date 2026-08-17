@@ -15,11 +15,10 @@ import { Card } from "./card";
 
 type OrderStats = {
   totalOrders: number;
-  paidOrders: number;
+  completedOrders: number;
   pendingOrders: number;
   failedOrders: number;
   freeOrders: number;
-  completedOrders: number;
   totalRevenue: number;
   avgOrderValue: number;
   thisMonthOrders: number;
@@ -38,7 +37,7 @@ type OrderStats = {
 };
 
 const STATUS_DOT: Record<string, string> = {
-  paid: "#10B981",
+  completed: "#10B981",
   pending: "#F59E0B",
   failed: "#EF4444",
   cancelled: "#6B7280",

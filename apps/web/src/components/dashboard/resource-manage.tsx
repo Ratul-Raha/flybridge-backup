@@ -33,7 +33,7 @@ type ResourceItem = {
   fileSize: number;
   thumbnail: string | null;
   releaseDate: string;
-  access: "free" | "paid";
+  access: "public" | "members";
   price: number;
   featured: boolean;
 };
@@ -51,7 +51,7 @@ type FormState = {
   description: string;
   category: string;
   releaseDate: string;
-  access: "free" | "paid";
+  access: "public" | "members";
   price: string;
   featured: boolean;
   mode: "file" | "link";
@@ -65,7 +65,7 @@ const emptyForm: FormState = {
   description: "",
   category: RESOURCE_CATEGORIES[0],
   releaseDate: new Date().toISOString().slice(0, 10),
-  access: "free",
+  access: "public",
   price: "",
   featured: false,
   mode: "file",
@@ -509,16 +509,16 @@ export function ResourceManage() {
               </label>
               <select
                 value={form.access}
-                onChange={(e) => setForm({ ...form, access: e.target.value as "free" | "paid" })}
+                onChange={(e) => setForm({ ...form, access: e.target.value as "public" | "members" })}
                 className={inputClass}
                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
               >
-                <option value="free">Free</option>
-                <option value="paid">Paid (members only)</option>
+                <option value="public">Public — anyone can access</option>
+                <option value="members">Members only</option>
               </select>
             </div>
 
-            {form.access === "paid" && (
+            {form.access === "members" && (
               <div className="flex flex-col gap-2">
                 <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                   Price (USD)
@@ -801,8 +801,8 @@ export function ResourceManage() {
                     style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                   >
                     <option value="all">All access</option>
-                    <option value="free">Free</option>
-                    <option value="paid">Members</option>
+                    <option value="public">Public</option>
+                    <option value="members">Members</option>
                   </select>
                   <select
                     value={sort}
@@ -895,12 +895,12 @@ export function ResourceManage() {
                                   <span
                                     className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
                                     style={
-                                      r.access === "paid"
+                                      r.access === "members"
                                         ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
                                         : { background: "var(--brand-soft)", color: "var(--brand)" }
                                     }
                                   >
-                                    {r.access === "paid" ? "Members" : "Free"}
+                                    {r.access === "members" ? "Members" : "Public"}
                                   </span>
                                 </span>
                               </span>
@@ -920,12 +920,12 @@ export function ResourceManage() {
                             <span
                               className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
                               style={
-                                r.access === "paid"
+                                r.access === "members"
                                   ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
                                   : { background: "var(--brand-soft)", color: "var(--brand)" }
                               }
                             >
-                              {r.access === "paid" ? "Members" : "Free"}
+                              {r.access === "members" ? "Members" : "Public"}
                             </span>
                           </span>
 

@@ -236,7 +236,9 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
         category?: string;
         fileType?: string;
         thumbnail?: string | null;
-        access?: "free" | "paid";
+        access?: "public" | "members";
+
+
         price?: number;
       };
       return shell(
@@ -247,7 +249,7 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
             { label: "Type", value: (r.fileType ?? "").toUpperCase() },
             {
               label: "Access",
-              value: r.access === "paid" ? `Paid · ${r.price ?? ""}` : r.access === "free" ? "Free" : "",
+              value: r.access === "members" ? `Members · $${r.price ?? 0}` : r.access === "public" ? "Public" : "",
             },
           ]) +
           cta(`${SITE_URL}/resources`, "View resource") +

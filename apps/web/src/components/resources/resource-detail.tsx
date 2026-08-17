@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, ExternalLink, Lock, Loader2, Share2, Star } from "lucide-react";
+import { ArrowLeft, Check, Download, ExternalLink, Lock, Loader2, Share2, Star, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
   fileTypeMeta,
@@ -37,8 +37,11 @@ export function ResourceDetail({
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
   const isFree = (r.price ?? 0) <= 0;
-  const paid = r.access === "paid" && !isFree;
-  const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}?get=1`)}`;
+  const isMembersOnly = r.access === "members";
+  const needsLogin = isMembersOnly && isFree && !user;
+  const needsPayment = isMembersOnly && !isFree;
+  const isPublic = r.access === "public";
+  const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}`)}`;
 
   const triggerDownload = () => {
     const href = downloadHref(r);
@@ -89,17 +92,17 @@ export function ResourceDetail({
 
   useEffect(() => {
     if (!wantsDownload || loading) return;
-    if (paid) {
+    if (needsPayment) {
       setPayNote(true);
       return;
     }
-    if (!user) {
+    if (isMembersOnly && !user) {
       router.replace(loginNext);
       return;
     }
     triggerDownload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wantsDownload, loading, user, paid]);
+  }, [wantsDownload, loading, user]);
 
   const copyLink = async () => {
     try {
@@ -150,12 +153,12 @@ export function ResourceDetail({
           >
             {meta.label.toUpperCase()}
           </span>
-          {paid ? (
+          {isMembersOnly ? (
             <span
               className="absolute right-5 top-5 inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-[0.3px] px-[12px] py-[6px] rounded-full"
               style={{ background: "#6B4CE0", color: "#fff" }}
             >
-              <Lock size={10} /> MEMBERS
+              <Users size={10} /> MEMBERS
             </span>
           ) : r.featured ? (
             <span
@@ -196,12 +199,13 @@ export function ResourceDetail({
           )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
-            {paid ? (
+            {needsPayment ? (
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => setPayNote((v) => !v)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "var(--brand)" }}
                 >
                   <Lock size={15} />
                   Buy now{r.price > 0 ? ` · $${r.price}` : ""}
@@ -212,17 +216,27 @@ export function ResourceDetail({
                   </span>
                 )}
               </div>
+            ) : needsLogin ? (
+              <button
+                type="button"
+                onClick={() => router.push(loginNext)}
+                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                style={{ background: "var(--brand)" }}
+              >
+                <Lock size={15} />
+                Sign in to download
+              </button>
             ) : isFree ? (
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={handleGetForFree}
+                  onClick={isPublic ? triggerDownload : handleGetForFree}
                   disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98] disabled:opacity-60"
-                  style={{ background: "#6B4CE0" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: "var(--brand)" }}
                 >
                   {submitting && <Loader2 size={15} className="animate-spin" />}
-                  {submitting ? "Processing…" : "Get it for free"}
+                  {submitting ? "Processing…" : isPublic ? "Download" : "Get it for free"}
                 </button>
                 {error && (
                   <span className="text-[12.5px] max-w-[280px]" style={{ color: "#C0392B" }}>
@@ -234,7 +248,8 @@ export function ResourceDetail({
               <button
                 type="button"
                 onClick={triggerDownload}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                style={{ background: "var(--brand)" }}
               >
                 {r.fileType === "link" ? <ExternalLink size={15} /> : <Download size={15} />}
                 {r.fileType === "link" ? "Open link" : "Download"}

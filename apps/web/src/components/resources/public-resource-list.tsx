@@ -15,7 +15,7 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
   const [copied, setCopied] = useState(false);
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
-  const paid = r.access === "paid";
+  const membersOnly = r.access === "members";
 
   const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -63,7 +63,7 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
         {meta.label.toUpperCase()}
       </span>
 
-      {paid ? (
+      {membersOnly ? (
         <span
           className="absolute right-3.5 top-3.5 inline-flex items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.3px] px-[10px] py-[5px] rounded-full"
           style={{ background: "#6B4CE0", color: "#fff" }}
@@ -81,7 +81,7 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
     </div>
   );
 
-  const footer = paid ? (
+  const footer = membersOnly ? (
     <span
       className="inline-flex items-center gap-2 text-[12.5px] font-medium"
       style={{ color: "#6B4CE0" }}

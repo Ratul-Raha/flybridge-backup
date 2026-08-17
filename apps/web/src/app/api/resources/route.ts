@@ -16,7 +16,7 @@ type ResourceDto = {
   fileSize: number;
   thumbnail: string | null;
   releaseDate: Date;
-  access: "free" | "paid";
+  access: "public" | "members";
   price: number;
   featured: boolean;
 };
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       if (!session || !session.userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      const resources = await Resource.find({ access: "paid" }).sort({ releaseDate: -1 });
+      const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
       return NextResponse.json({ resources: resources.map(toDto) });
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "A valid category is required" }, { status: 400 });
     }
 
-    const access = body.access === "paid" ? "paid" : "free";
+    const access = body.access === "members" ? "members" : "public";
     const releaseDate = body.releaseDate ? new Date(body.releaseDate) : new Date();
     if (isNaN(releaseDate.getTime())) {
       return NextResponse.json({ error: "Invalid published date" }, { status: 400 });
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
         typeof body.thumbnailPublicId === "string" ? body.thumbnailPublicId.trim() || undefined : undefined,
       releaseDate,
       access,
-      price: access === "paid" ? Math.max(0, Number(body.price) || 0) : 0,
+      price: access === "members" ? Math.max(0, Number(body.price) || 0) : 0,
       featured: body.featured === true,
       createdBy: session!.userId,
     });
