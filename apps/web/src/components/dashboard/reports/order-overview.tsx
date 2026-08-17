@@ -105,7 +105,7 @@ export function OrderOverview() {
     <div className="grid lg:grid-cols-5 gap-4">
       {/* Metrics grid */}
       <div
-        className="lg:col-span-3 rounded-2xl border bg-white p-5"
+        className="lg:col-span-3 rounded-lg border bg-white p-5"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -163,7 +163,7 @@ export function OrderOverview() {
 
       {/* Recent orders */}
       <div
-        className="lg:col-span-2 rounded-2xl border bg-white p-5 flex flex-col"
+        className="lg:col-span-2 rounded-lg border bg-white p-5 flex flex-col"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between mb-4">

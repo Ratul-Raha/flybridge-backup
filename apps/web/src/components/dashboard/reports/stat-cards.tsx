@@ -71,12 +71,12 @@ function StatCard({
 }) {
   return (
     <div
-      className="relative rounded-[22px] border bg-white p-5 overflow-hidden transition-transform duration-250 hover:translate-y-[-2px]"
+      className="relative rounded-lg border bg-white p-5 overflow-hidden transition-transform duration-250 hover:translate-y-[-2px]"
       style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
     >
       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08]" style={{ background: gradient }} />
       <div
-        className="w-11 h-11 rounded-2xl flex items-center justify-center text-white mb-4"
+        className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4"
         style={{ background: gradient, boxShadow: `0 8px 18px -6px ${gradient}66` }}
       >
         <Icon size={19} strokeWidth={2.2} />
@@ -110,8 +110,8 @@ export function StatCards() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         {CARDS.map((c) => (
-          <div key={c.key} className="rounded-[22px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
-            <div className="w-11 h-11 rounded-2xl mb-4" style={{ background: "var(--line)" }} />
+          <div key={c.key} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+            <div className="w-11 h-11 rounded-lg mb-4" style={{ background: "var(--line)" }} />
             <div className="h-[26px] w-16 rounded-lg mb-2" style={{ background: "var(--line)" }} />
             <div className="h-[10px] w-24 rounded" style={{ background: "var(--line)" }} />
           </div>

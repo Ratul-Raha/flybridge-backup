@@ -3,62 +3,71 @@
 import { useEffect, useState } from "react";
 import { Card } from "./card";
 
-type Course = {
-  id: string;
+type TopItem = {
   title: string;
-  joinees: number;
-  paid: number;
+  itemType: string;
+  orders: number;
+  revenue: number;
+  avgPrice: number;
+};
+
+const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
+  course: { bg: "rgba(14,165,233,0.10)", fg: "#0369A1" },
+  program: { bg: "rgba(110,76,255,0.10)", fg: "#6E4CFF" },
+  subscription: { bg: "rgba(245,158,11,0.10)", fg: "#B45309" },
 };
 
 export function TopCourses() {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [items, setItems] = useState<TopItem[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/reports/top-courses", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => setCourses(res.data?.courses ?? []))
+    fetch("/api/admin/orders-stats", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => setItems(res?.topItems ?? []))
       .catch(() => {});
   }, []);
 
   return (
-    <Card title="Top selling courses" subtitle="Course name, joinees and paid users">
-      {courses.length === 0 ? (
+    <Card title="Top selling items" subtitle="Most purchased items by order count">
+      {items.length === 0 ? (
         <p className="text-[13.5px] text-center py-12" style={{ color: "var(--body)" }}>
-          No registrations yet — top courses will appear here.
+          No paid orders yet — top items will appear here.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="text-[11px] font-mono uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
-                <th className="pb-3 font-medium">Course</th>
-                <th className="pb-3 font-medium text-right">Joinees</th>
-                <th className="pb-3 font-medium text-right">Paid</th>
+                <th className="pb-3 font-medium">Item</th>
+                <th className="pb-3 font-medium text-right">Orders</th>
+                <th className="pb-3 font-medium text-right">Revenue</th>
               </tr>
             </thead>
             <tbody>
-              {courses.map((c) => (
-                <tr key={c.id} className="border-t text-[13.5px]" style={{ borderColor: "var(--line)" }}>
-                  <td className="py-3 pr-4 font-medium truncate max-w-[180px]" style={{ color: "var(--ink)" }}>
-                    {c.title}
-                  </td>
-                  <td className="py-3 text-right font-semibold" style={{ color: "var(--ink)" }}>
-                    {c.joinees}
-                  </td>
-                  <td className="py-3 text-right">
-                    <span
-                      className="font-mono text-[10px] font-semibold rounded-full px-2.5 py-1"
-                      style={
-                        c.paid > 0
-                          ? { background: "rgba(245,158,11,0.12)", color: "#B45309" }
-                          : { background: "rgba(14,165,233,0.12)", color: "#0369A1" }
-                      }
-                    >
-                      {c.paid}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {items.map((item, i) => {
+                const badge = TYPE_BADGE[item.itemType] ?? TYPE_BADGE.course;
+                return (
+                  <tr key={i} className="border-t text-[13.5px]" style={{ borderColor: "var(--line)" }}>
+                    <td className="py-3 pr-4">
+                      <p className="font-medium truncate max-w-[180px]" style={{ color: "var(--ink)" }}>
+                        {item.title}
+                      </p>
+                      <span
+                        className="font-mono text-[9.5px] font-semibold uppercase px-1.5 py-0.5 rounded"
+                        style={{ background: badge.bg, color: badge.fg }}
+                      >
+                        {item.itemType}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right font-semibold" style={{ color: "var(--ink)" }}>
+                      {item.orders}
+                    </td>
+                    <td className="py-3 text-right font-medium" style={{ color: "var(--ink)" }}>
+                      BDT {item.revenue.toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
