@@ -51,7 +51,7 @@ type Props = {
 export default async function LearnPage({ params, searchParams }: Props) {
   const session = await readSession();
   if (!session || !session.userId) {
-    redirect(`/login?next=${encodeURIComponent(`/programs/${params.slug}/learn`)}`);
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/courses/${params.slug}/learn`)}`);
   }
 
   await connectDb();
@@ -62,8 +62,8 @@ export default async function LearnPage({ params, searchParams }: Props) {
       <LockedScreen
         title="This course isn&apos;t live yet"
         desc="The lesson player opens as soon as the course is published. Check back soon."
-        href="/programs"
-        label="Browse programs"
+        href="/dashboard/courses"
+        label="Browse courses"
       />
     );
   }
@@ -82,8 +82,8 @@ export default async function LearnPage({ params, searchParams }: Props) {
       <LockedScreen
         title="This course isn&apos;t live yet"
         desc="The lesson player opens as soon as the course is published. Check back soon."
-        href="/programs"
-        label="Browse programs"
+        href="/dashboard/courses"
+        label="Browse courses"
       />
     );
   }

@@ -206,7 +206,7 @@ function CourseHero({
           <div className="flex items-center gap-3 mt-6 flex-wrap">
             {cta?.enrolled ? (
               <Link
-                href={`/programs/${cta.slug}/learn`}
+                href={`/dashboard/courses/${cta.slug}/learn`}
                 className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
                 style={{ background: "var(--brand)" }}
               >
@@ -440,7 +440,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
                 {lessonCount} lessons across {moduleCount} modules ready for you.
               </p>
               <Link
-                href={`/programs/${checkoutCourse.slug}/learn`}
+                href={`/dashboard/courses/${checkoutCourse.slug}/learn`}
                 className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] hover:opacity-90 transition-opacity"
                 style={{ background: "var(--brand)" }}
               >

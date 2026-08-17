@@ -86,7 +86,7 @@ export function CheckoutForm({ course }: { course: Props }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
-      router.push(`/programs/${course.slug}/learn`);
+      router.push(`/dashboard/courses/${course.slug}/learn`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

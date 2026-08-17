@@ -151,7 +151,7 @@ export function LessonPlayer({
     if (i < 0 || i >= lessons.length) return;
     setIndex(i);
     setTab("video");
-    router.replace(`/programs/${course.slug}/learn?lesson=${i}`);
+    router.replace(`/dashboard/courses/${course.slug}/learn?lesson=${i}`);
   };
 
   const markWatched = useCallback((i: number) => {
@@ -220,7 +220,7 @@ export function LessonPlayer({
               <span className="font-mono text-[10px] font-semibold text-white/60">{progressPct}%</span>
             </div>
             <Link
-              href={`/programs/${course.slug}/certificate`}
+              href={`/dashboard/courses/${course.slug}/certificate`}
               className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-white/10"
               style={{ color: grade?.passed ? "#2EE6A8" : "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
             >

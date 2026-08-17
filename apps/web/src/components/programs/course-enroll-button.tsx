@@ -24,7 +24,7 @@ export function CourseEnrollButton({
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
-  const learnHref = `/programs/${slug}/learn`;
+  const learnHref = `/dashboard/courses/${slug}/learn`;
   const baseClass =
     "inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60";
   const heroClass = "px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]";

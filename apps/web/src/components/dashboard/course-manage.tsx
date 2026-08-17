@@ -704,7 +704,7 @@ export function CourseManage() {
                   <div className="flex flex-wrap items-center gap-3 mt-4">
                     {c.published && (
                       <Link
-                        href={`/programs/${c.slug}/learn`}
+                        href={`/dashboard/courses/${c.slug}/learn`}
                         className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
                         style={{ color: "var(--ink)", borderColor: "var(--line)" }}
                       >

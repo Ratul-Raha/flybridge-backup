@@ -313,7 +313,7 @@ export default function CertificatePage({
     >
       <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10">
         <Link
-          href={`/programs/${params.slug}/learn`}
+          href={`/dashboard/courses/${params.slug}/learn`}
           className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-black/5 mb-8"
           style={{ color: "var(--ink)", borderColor: "var(--line)" }}
         >

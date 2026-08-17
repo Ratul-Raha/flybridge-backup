@@ -48,7 +48,7 @@ export function AllCourses() {
 
   const enroll = async (course: Course) => {
     if (!user) {
-      router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}/learn`)}`);
+      router.push(`/login?next=${encodeURIComponent(`/dashboard/courses/${course.slug}/learn`)}`);
       return;
     }
     setEnrolling(course.id);
@@ -62,7 +62,7 @@ export function AllCourses() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
       setEnrolled((prev) => new Set(prev).add(course.id));
-      router.push(`/programs/${course.slug}/learn`);
+      router.push(`/dashboard/courses/${course.slug}/learn`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Enrollment failed");
     } finally {
