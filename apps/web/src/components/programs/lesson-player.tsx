@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -29,6 +29,51 @@ type FlatLesson = {
   videoUrl: string;
   pdfUrl: string;
 };
+
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("/")[0] || null;
+    if (u.hostname.includes("youtube.com")) {
+      if (u.pathname.startsWith("/embed/")) return u.pathname.split("/embed/")[1]?.split("?")[0] || null;
+      return u.searchParams.get("v") || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function VideoPlayer({ url, onEnded }: { url: string; onEnded?: () => void }) {
+  const ytId = useMemo(() => getYouTubeId(url), [url]);
+
+  if (ytId) {
+    return (
+      <div className="w-full aspect-video">
+        <iframe
+          src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+          title="YouTube video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+          onLoad={() => onEnded?.()}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <video
+      key={url}
+      controls
+      playsInline
+      className="w-full aspect-video"
+      onEnded={onEnded}
+    >
+      <source src={url} />
+    </video>
+  );
+}
 
 export function LessonPlayer({
   course,
@@ -196,15 +241,7 @@ export function LessonPlayer({
 
                 {current.videoUrl ? (
                   <div className="mt-5 rounded-2xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.1)", background: "#000" }}>
-                    <video
-                      key={index}
-                      controls
-                      playsInline
-                      className="w-full aspect-video"
-                      onEnded={() => markWatched(index)}
-                    >
-                      <source src={current.videoUrl} />
-                    </video>
+                    <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
                   </div>
                 ) : (
                   <div
