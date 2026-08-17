@@ -53,7 +53,7 @@ export function CheckoutForm({ course }: { course: Props }) {
     if (isUpcoming) return;
 
     if (!user) {
-      router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}`)}`);
+      router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}/checkout`)}`);
       return;
     }
 

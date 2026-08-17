@@ -9,19 +9,15 @@ import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { readSession } from "@/lib/auth/session";
-import { CourseEnrollButton } from "@/components/programs/course-enroll-button";
 import {
   BadgeCheck,
   BookOpen,
   Check,
   Clock,
-  FileText,
   Lock,
   Maximize2,
   Pause,
-  PlayCircle,
   ShieldCheck,
-  ShoppingCart,
   Star,
   ThumbsUp,
   Volume2,
@@ -37,10 +33,11 @@ type Props = { params: { slug: string } };
 export const dynamic = "force-dynamic";
 
 type CourseCta = {
-  courseId: string;
+  courseId?: string;
   slug: string;
   enrolled: boolean;
   paid: boolean;
+  hasDb?: boolean;
 };
 
 export function generateMetadata({ params }: Props): Metadata {
@@ -207,30 +204,33 @@ function CourseHero({
 
           <div className="flex items-center gap-3 mt-6 flex-wrap">
             {cta ? (
-              <CourseEnrollButton
-                courseId={cta.courseId}
-                slug={cta.slug}
-                enrolled={cta.enrolled}
-                paid={cta.paid}
-              />
-            ) : (
-              <>
-                <a
-                  href="#buy"
+              cta.hasDb ? (
+                <Link
+                  href={`/programs/${cta.slug}/checkout`}
                   className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
                   style={{ background: "var(--brand)" }}
                 >
                   Enroll now
                   {arrow}
-                </a>
-                <a
-                  href="#buy"
-                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[15px] border border-line bg-white flex-1 sm:flex-none"
-                  style={{ color: "var(--ink)" }}
+                </Link>
+              ) : (
+                <span
+                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
+                  style={{ background: "var(--brand)", opacity: 0.5 }}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  Add to cart
-                </a>
+                  Enroll now
+                  {arrow}
+                </span>
+              )
+            ) : (
+              <>
+                <span
+                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
+                  style={{ background: "var(--brand)", opacity: 0.5 }}
+                >
+                  Enroll now
+                  {arrow}
+                </span>
               </>
             )}
           </div>
@@ -331,114 +331,6 @@ function CourseHero({
         </div>
       </div>
     </section>
-  );
-}
-
-function BuyCard({ details, cta }: { details: CourseDetails; cta?: CourseCta }) {
-  return (
-    <div
-      className="rounded-[24px] bg-white border border-line overflow-hidden"
-      style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.28)" }}
-    >
-      <div className="p-6">
-        <div className="flex items-center justify-between">
-          <span
-            className="font-mono text-[10px] font-bold tracking-[0.4px] px-2.5 py-1 rounded-full"
-            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-          >
-            INTRO OFFER
-          </span>
-          {details.savings && (
-            <span className="text-[11.5px] font-bold" style={{ color: "#0F9D58" }}>
-              Save {details.savings}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-4 flex items-end gap-2.5 flex-wrap">
-          <span className="text-[38px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
-            {details.price}
-          </span>
-          {details.originalPrice && (
-            <span className="text-[16px] font-medium line-through mb-1" style={{ color: "var(--body)", opacity: 0.6 }}>
-              {details.originalPrice}
-            </span>
-          )}
-        </div>
-        {details.access && (
-          <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: "var(--brand-2)" }}>
-            <Clock className="w-3.5 h-3.5" />
-            {details.access} · One-time payment
-          </p>
-        )}
-
-        {cta ? (
-          <div className="mt-5">
-            <CourseEnrollButton
-              courseId={cta.courseId}
-              slug={cta.slug}
-              enrolled={cta.enrolled}
-              paid={cta.paid}
-              block
-            />
-          </div>
-        ) : (
-          <a
-            href="#"
-            className="mt-5 block w-full text-center rounded-full py-[14px] text-[14.5px] font-bold text-white transition-all duration-300 hover:-translate-y-[1px]"
-            style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
-          >
-            Enroll now — {details.price}
-          </a>
-        )}
-        <a
-          href="#"
-          className="mt-3 flex items-center justify-center gap-[8px] w-full rounded-full py-[13px] text-[14px] font-semibold border border-line bg-white transition-colors hover:bg-[var(--bg-soft)]"
-          style={{ color: "var(--ink)" }}
-        >
-          <ShoppingCart className="w-4 h-4" />
-          Add to cart
-        </a>
-
-        <div className="mt-6 pt-5 border-t border-line">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-            What&apos;s included
-          </p>
-          <ul className="mt-3.5 space-y-2.5">
-            {(details.features ?? BLUEPRINT_FEATURES).map((f) => (
-              <li key={f.title} className="flex items-start gap-2.5 text-[13px]">
-                <span
-                  className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <Check className="w-[10px] h-[10px]" strokeWidth={3} />
-                </span>
-                <span className="font-medium leading-snug" style={{ color: "var(--ink)" }}>
-                  {f.title}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-6 pt-5 border-t border-line grid grid-cols-3 gap-2 text-center">
-          {[
-            { icon: ShieldCheck, label: "Live support" },
-            { icon: BadgeCheck, label: "Verified certificate" },
-            { icon: Zap, label: "Instant access" },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1.5">
-              <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}>
-                <Icon className="w-4 h-4" />
-              </span>
-              <span className="text-[11px] font-medium leading-tight" style={{ color: "var(--body)" }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -734,24 +626,26 @@ export default async function ProgramPage({ params }: Props) {
     ? details.modules.reduce((n, m) => n + m.lessons.length, 0)
     : 30;
 
-  await connectDb();
-  const course = await Course.findOne({ slug: params.slug, published: true });
   let cta: CourseCta | undefined;
-  if (course) {
-    const session = await readSession();
-    const enrolled =
-      session?.userId &&
-      (await CourseEnrollment.exists({
-        user: session.userId,
-        course: course._id,
-        status: "active",
-      }));
-    cta = {
-      courseId: course._id.toString(),
-      slug: course.slug,
-      enrolled: Boolean(enrolled),
-      paid: (course.price ?? 0) > 0,
-    };
+  if (program.hasDb) {
+    const course = await Course.findOne({ slug: params.slug, published: true });
+    if (course) {
+      const session = await readSession();
+      const enrolled =
+        session?.userId &&
+        (await CourseEnrollment.exists({
+          user: session.userId,
+          course: course._id,
+          status: "active",
+        }));
+      cta = {
+        courseId: course._id.toString(),
+        slug: course.slug,
+        enrolled: Boolean(enrolled),
+        paid: (course.price ?? 0) > 0,
+        hasDb: true,
+      };
+    }
   }
 
   return (
@@ -807,9 +701,8 @@ export default async function ProgramPage({ params }: Props) {
       {details ? (
         <>
           {/* Product section */}
-          <section id="buy" className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
-              <div className="space-y-12">
+          <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
+            <div className="space-y-12">
                 {/* Facilities */}
                 <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
                   {details.stats.map((stat) => (
@@ -976,12 +869,6 @@ export default async function ProgramPage({ params }: Props) {
                     ))}
                   </div>
                 </div>
-              </div>
-
-              {/* Sticky purchase box */}
-              <aside className="lg:sticky lg:top-24">
-                <BuyCard details={details} cta={cta} />
-              </aside>
             </div>
           </section>
 
@@ -1019,50 +906,6 @@ export default async function ProgramPage({ params }: Props) {
             {arrow}
           </a>
         </section>
-      )}
-
-      {/* Mobile sticky buy bar */}
-      {details && (
-        <>
-          <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 backdrop-blur border-t border-line px-4 py-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-[18px] font-extrabold leading-none" style={{ color: "var(--ink)" }}>
-                  {details.price}
-                </span>
-                {details.originalPrice && (
-                  <span className="text-[12px] line-through" style={{ color: "var(--body)", opacity: 0.6 }}>
-                    {details.originalPrice}
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 flex items-center gap-1.5 text-[11px] font-medium" style={{ color: "var(--brand-2)" }}>
-                <Clock className="w-3 h-3" />
-                {details.access}
-              </div>
-            </div>
-            {cta ? (
-              <div className="shrink-0 w-[150px]">
-                <CourseEnrollButton
-                  courseId={cta.courseId}
-                  slug={cta.slug}
-                  enrolled={cta.enrolled}
-                  paid={cta.paid}
-                  block
-                />
-              </div>
-            ) : (
-              <a
-                href="#buy"
-                className="shrink-0 rounded-full px-6 py-3 text-[13.5px] font-bold text-white"
-                style={{ background: "var(--brand)" }}
-              >
-                Enroll now
-              </a>
-            )}
-          </div>
-          <div className="h-[76px] md:hidden" />
-        </>
       )}
 
       <style>{`

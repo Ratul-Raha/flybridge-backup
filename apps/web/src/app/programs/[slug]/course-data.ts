@@ -435,4 +435,206 @@ export const courseDetails: Record<string, CourseDetails> = {
       desc: "Earn a verified FlyBridge certificate when you finish all 30 lessons.",
     },
   },
+  "easy-smart-spoken-english": {
+    slug: "easy-smart-spoken-english",
+    badge: "ENGLISH",
+    title: "Easy & Smart Spoken English",
+    subtitle: "Speak English with Confidence in Real Life",
+    desc: "A practical spoken English course built around real conversations, daily phrases and confident speaking — designed for beginners who want to think and speak in English naturally.",
+    level: "Beginner friendly",
+    language: "বাংলা + English",
+    pace: "Self-paced · 6-week program",
+    rating: {
+      average: 4.8,
+      count: 64,
+      distribution: [52, 8, 3, 1, 0],
+    },
+    reviews: [
+      {
+        name: "Tasnim Rahman",
+        rating: 5,
+        date: "৩ সপ্তাহ আগে",
+        text: "ক্লাসে যে স্ক্রিপ্ট ও ড্রিল দেওয়া হয়, সেগুলো ফলো করে এখন অফিসেও ইংরেজিতে কথা বলতে পারি। আগে একদম ভয় পেতাম, এখন কনফিডেন্স বেড়েছে।",
+        helpful: 18,
+        verified: true,
+      },
+      {
+        name: "Sakib Hasan",
+        rating: 5,
+        date: "১ মাস আগে",
+        text: "প্রতিটি লেসন ছোট ছোট ও সহজ — রোজ ২০ মিনিট করে শিখতে পারি। Daily Phrase Book টা অসাধারণ।",
+        helpful: 14,
+        verified: true,
+      },
+      {
+        name: "Nusrat Jahan",
+        rating: 5,
+        date: "২ সপ্তাহ আগে",
+        text: "AI Practice Partner দিয়ে প্র্যাকটিস করে ইন্টারভিউতে ইংরেজিতে উত্তর দিতে পেরেছি। এটাই আমার জন্য সবচেয়ে বড় সাফল্য।",
+        helpful: 11,
+        verified: true,
+      },
+      {
+        name: "Rafiq Uddin",
+        rating: 4,
+        date: "২ মাস আগে",
+        text: "কোর্সটি খুবই কার্যকর। শুধু একটু বেশি লাইভ সেশন থাকলে আরও ভালো হতো। তবে overall অনেক উপকার হয়েছে।",
+        helpful: 8,
+      },
+    ],
+    stats: [
+      { value: "৬", label: "সপ্তাহের প্রোগ্রাম" },
+      { value: "২৪", label: "ভিডিও লেসন" },
+      { value: "৩", label: "PDF রিসোর্স" },
+    ],
+    outcomes: [
+      { title: "Think in English and speak without translating in your head" },
+      { title: "Handle everyday conversations — greetings, shopping, travel, office" },
+      { title: "Speak confidently in job interviews and professional settings" },
+      { title: "Understand native speakers and respond naturally" },
+      { title: "Build a daily English habit that lasts beyond the course" },
+      { title: "Use proper pronunciation and natural intonation" },
+    ],
+    features: [
+      {
+        icon: Mic,
+        title: "Real Conversation Scripts",
+        desc: "রিয়েল-লাইফ পরিস্থিতিতে ব্যবহৃত কথোপকথনের স্ক্রিপ্ট — অফিস, কফিশপ, ইন্টারভিউ ও ভ্রমণে সরাসরি ব্যবহার করুন।",
+      },
+      {
+        icon: Brain,
+        title: "Smart Fluency Method",
+        desc: "গ্রামার রটনো ছাড়াই অবচেতন মনে ইংরেজি চিন্তা ও কথা বলার সহজ পদ্ধতি।",
+      },
+      {
+        icon: Bot,
+        title: "AI Practice Partner",
+        desc: "যেকোনো সময় ২৪/৭ AI প্র্যাকটিস পার্টনারের সাথে কথা বলুন ও উচ্চারণ শুধরুন।",
+      },
+      {
+        icon: FileText,
+        title: "Daily Phrase Book & PDFs",
+        desc: "প্রতিদিনের ব্যবহার্য ফ্রেজ, ভোকাবুলারি ও ওয়ার্কশিটের কমপ্লিট PDF সংগ্রহ।",
+      },
+      {
+        icon: MessageCircle,
+        title: "Live Speaking Sessions",
+        desc: "সরাসরি ইন্সট্রাক্টরের সাথে প্র্যাকটিস সেশনে কথা বলুন ও ভুল শুধরে নিন।",
+      },
+      {
+        icon: Users,
+        title: "Community Support",
+        desc: "একটিভ লার্নিং কম্যুনিটিতে অন্যদের সাথে প্র্যাকটিস করুন ও সাপোর্ট পান।",
+      },
+    ],
+    featuresDesc:
+      "প্রথম লেসন থেকেই কথা বলা শুরু করুন — প্রতিটি রিসোর্স একই প্যাকেজের অন্তর্ভুক্ত।",
+    highlightsDesc: "Everything you need to start speaking English with confidence, in one place.",
+    highlights: [
+      {
+        title: "24 Video Lessons",
+        sub: "Short, practical lessons you can finish in 15–20 minutes each",
+      },
+      {
+        title: "Live Speaking Practice",
+        sub: "Weekly live sessions to practice real conversations with instructors",
+      },
+      {
+        title: "Daily Phrase Book & PDFs",
+        sub: "Ready-to-use conversation scripts, vocabulary lists and worksheets",
+      },
+    ],
+    book: {
+      title: "Easy & Smart Spoken English — Course Book",
+      desc: "কোর্সের সাথে যুক্ত প্র্যাকটিক্যাল স্পোকেন ইংলিশ বইটি — ডেইলি ফ্রেজ, কনভারসেশন স্ক্রিপ্ট, উচ্চারণ গাইড ও প্র্যাকটিস এক্সারসাইজ একই প্যাকেজে।",
+      includedNote: "The course book is included free with enrollment.",
+      image: "/programs/easy-smart-spoken-english-book.png",
+    },
+    modules: [
+      {
+        title: "Getting Started — Your English Foundation",
+        lessons: [
+          { title: "কোর্সের পরিচিতি ও কীভাবে ফলো করবেন", duration: "05:10" },
+          { title: "ইংরেজি ভয় ছাড়ার সহজ কৌশল", duration: "08:20" },
+          { title: "Basic greetings ও introductions", duration: "07:45" },
+          { title: "Daily routine নিয়ে কথা বলা", duration: "09:30" },
+          { title: "Practice: নিজের সম্পর্কে ২ মিনিট কথা বলুন", duration: "10:00" },
+        ],
+      },
+      {
+        title: "Everyday Conversations",
+        lessons: [
+          { title: "কফিশপে অর্ডার করা ও ছোট কথা বলা", duration: "08:15" },
+          { title: "Market & shopping conversations", duration: "09:40" },
+          { title: "Asking for directions & getting around", duration: "07:55" },
+          { title: "Talking about your day & hobbies", duration: "08:30" },
+          { title: "Practice: role-play — ৫ মিনিট ডায়ালগ", duration: "11:20" },
+        ],
+      },
+      {
+        title: "Workplace & Professional English",
+        lessons: [
+          { title: "Office introductions & small talk", duration: "08:50" },
+          { title: "Emails: writing clearly and politely", duration: "12:10" },
+          { title: "Phone calls & video meetings", duration: "09:45" },
+          { title: "Giving updates & asking for help", duration: "07:30" },
+          { title: "Practice: mock office conversation", duration: "13:15" },
+        ],
+      },
+      {
+        title: "Interview & Confidence Building",
+        lessons: [
+          { title: "Common interview questions & answers", duration: "14:00" },
+          { title: '"Tell me about yourself" — frame your story', duration: "12:25" },
+          { title: "Answering with STAR method in English", duration: "15:30" },
+          { title: "Handling tricky questions calmly", duration: "10:40" },
+          { title: "Practice: full mock interview", duration: "18:10" },
+        ],
+      },
+      {
+        title: "Pronunciation & Natural Flow",
+        lessons: [
+          { title: "Common sounds Bangladeshi speakers struggle with", duration: "11:20" },
+          { title: "Stress, rhythm & intonation basics", duration: "09:55" },
+          { title: "Linking words naturally in fast speech", duration: "08:40" },
+          { title: "Shadowing technique for better pronunciation", duration: "10:15" },
+          { title: "Practice: record & compare your speech", duration: "12:30" },
+        ],
+      },
+      {
+        title: "Real-World Speaking Mastery",
+        lessons: [
+          { title: "Travel English — airport, hotel, restaurant", duration: "10:00" },
+          { title: "Social situations — parties, networking, events", duration: "09:20" },
+          { title: "Expressing opinions & disagreeing politely", duration: "08:50" },
+          { title: "Storytelling & holding a conversation", duration: "11:40" },
+          { title: "Capstone: 10-minute spontaneous English talk", duration: "15:00" },
+        ],
+      },
+    ],
+    pdfs: [
+      {
+        title: "Daily Phrase Book",
+        desc: "100+ everyday phrases organized by situation — ready to use immediately.",
+        pages: 22,
+        size: "2.8 MB",
+      },
+      {
+        title: "Vocabulary Builder Workbook",
+        desc: "Practice exercises for the most useful words and expressions.",
+        pages: 30,
+        size: "3.5 MB",
+      },
+      {
+        title: "Interview Question Bank & Answer Templates",
+        desc: "Real interview questions with sample answers you can adapt.",
+        pages: 28,
+        size: "3.2 MB",
+      },
+    ],
+    certificate: {
+      title: "Completion Certificate",
+      desc: "Earn a verified FlyBridge certificate when you complete all 24 lessons and the final speaking challenge.",
+    },
+  },
 };

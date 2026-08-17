@@ -8,6 +8,7 @@ export type Program = {
   upcoming?: boolean;
   price?: string;
   image?: string;
+  hasDb?: boolean;
 };
 
 export const programs: Program[] = [
@@ -49,6 +50,16 @@ export const programs: Program[] = [
     badgeColor: "var(--peach-ink)",
     upcoming: true,
     image: "/programs/interview-blueprint.jpg",
+  },
+  {
+    slug: "easy-smart-spoken-english",
+    badge: "ENGLISH",
+    title: "Easy & Smart Spoken English",
+    desc: "A practical English course built around real conversations, daily phrases and confident speaking.",
+    bg: "var(--blue-bg)",
+    badgeColor: "var(--blue-ink)",
+    image: "/programs/easy-smart-spoken-english.jpg",
+    hasDb: true,
   },
 ];
 
