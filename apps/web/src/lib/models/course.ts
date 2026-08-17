@@ -40,6 +40,7 @@ const courseSchema = new Schema(
     image: { type: String, trim: true },
     published: { type: Boolean, default: false, index: true },
     featured: { type: Boolean, default: false },
+    upcoming: { type: Boolean, default: false },
     modules: { type: [moduleSchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

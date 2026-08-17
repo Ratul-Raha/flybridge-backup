@@ -20,6 +20,7 @@ function toDto(c: CourseDoc) {
     image: c.image ?? null,
     published: c.published ?? false,
     featured: c.featured ?? false,
+    upcoming: c.upcoming ?? false,
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
       image: typeof body.image === "string" ? body.image.trim() || undefined : undefined,
       published: body.published === true,
       featured: body.featured === true,
+      upcoming: body.upcoming === true,
       modules: normalizeModules(body.modules),
       createdBy: session!.userId,
     });

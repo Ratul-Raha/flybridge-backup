@@ -24,6 +24,7 @@ type Course = {
   image: string | null;
   published: boolean;
   featured: boolean;
+  upcoming: boolean;
   modules: Module[];
 };
 
@@ -41,6 +42,7 @@ type FormState = {
   image: string;
   published: boolean;
   featured: boolean;
+  upcoming: boolean;
   modules: Module[];
 };
 
@@ -61,6 +63,7 @@ const emptyForm: FormState = {
   image: "",
   published: false,
   featured: false,
+  upcoming: false,
   modules: [],
 };
 
@@ -126,6 +129,7 @@ export function CourseManage() {
       image: c.image ?? "",
       published: c.published ?? false,
       featured: c.featured ?? false,
+      upcoming: c.upcoming ?? false,
       modules: (c.modules ?? []).map((m) => ({
         title: m.title,
         lessons: m.lessons.map((l) => ({
@@ -422,6 +426,15 @@ export function CourseManage() {
               />
               Featured
             </label>
+            <label className="flex items-center gap-2.5 text-[13.5px] font-medium md:col-span-2 cursor-pointer" style={{ color: "var(--ink)" }}>
+              <input
+                type="checkbox"
+                checked={form.upcoming}
+                onChange={(e) => setForm({ ...form, upcoming: e.target.checked })}
+                className="w-4 h-4"
+              />
+              Coming soon (upcoming — not yet available for enrollment)
+            </label>
 
             <div className="md:col-span-2">
               <div className="flex items-center justify-between mb-3">
@@ -666,6 +679,14 @@ export function CourseManage() {
                         style={{ background: "#FDF1F0", color: "#C0392B" }}
                       >
                         Draft
+                      </span>
+                    )}
+                    {c.upcoming && (
+                      <span
+                        className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
+                        style={{ background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }}
+                      >
+                        Upcoming
                       </span>
                     )}
                   </div>

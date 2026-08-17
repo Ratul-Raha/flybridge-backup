@@ -12,6 +12,7 @@ export type DbCourse = {
   currency: string;
   image: string | null;
   level: string;
+  upcoming: boolean;
   modules: { title: string; lessons: { title: string }[] }[];
 };
 
@@ -27,6 +28,15 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
       {course.badge || "COURSE"}
     </span>
   );
+
+  const upcomingTag = course.upcoming ? (
+    <span
+      className="font-mono text-[10px] font-semibold tracking-[0.4px] px-[9px] py-[5px] rounded-full inline-block"
+      style={{ background: "var(--brand)", color: "#fff" }}
+    >
+      UPCOMING
+    </span>
+  ) : null;
 
   const media = (
     <div
@@ -56,7 +66,11 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
   if (course.level) meta.push(course.level);
   if (lessonCount > 0) meta.push(`${lessonCount} lessons`);
 
-  const footer = (
+  const footer = course.upcoming ? (
+    <span className="text-[12.5px] font-medium" style={{ color: "var(--brand)" }}>
+      Coming soon
+    </span>
+  ) : (
     <div className="flex items-end justify-between gap-3">
       <div>
         {isFree ? (
@@ -95,12 +109,8 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
     </div>
   );
 
-  return (
-    <Link
-      href={`/programs/${course.slug}`}
-      className="flex flex-col overflow-hidden rounded-[20px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
-      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
-    >
+  const body = (
+    <>
       {media}
       <div className="flex flex-col flex-1 gap-2.5 p-5">
         <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
@@ -126,6 +136,27 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
           {footer}
         </div>
       </div>
+    </>
+  );
+
+  if (course.upcoming) {
+    return (
+      <div
+        className="flex flex-col overflow-hidden rounded-[20px] border bg-white"
+        style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -12px rgba(18,32,67,0.12)" }}
+      >
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/programs/${course.slug}`}
+      className="flex flex-col overflow-hidden rounded-[20px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
+    >
+      {body}
     </Link>
   );
 }

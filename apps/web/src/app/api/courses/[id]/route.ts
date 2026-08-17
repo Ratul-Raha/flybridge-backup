@@ -48,6 +48,7 @@ export async function PATCH(
     if (typeof body.image === "string") course.image = body.image.trim() || undefined;
     if (typeof body.published === "boolean") course.published = body.published;
     if (typeof body.featured === "boolean") course.featured = body.featured;
+    if (typeof body.upcoming === "boolean") course.upcoming = body.upcoming;
     if (Array.isArray(body.modules)) {
       course.modules = body.modules as typeof course.modules;
     }

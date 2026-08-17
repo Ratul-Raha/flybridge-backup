@@ -34,7 +34,9 @@ const included = [
 
 async function getPublishedCourses(): Promise<DbCourse[]> {
   await connectDb();
-  const courses = await Course.find({ published: true }).sort({ createdAt: -1 });
+  const courses = await Course.find({
+    $or: [{ published: true }, { upcoming: true }],
+  }).sort({ createdAt: -1 });
   return courses.map((c) => ({
     id: c._id.toString(),
     slug: c.slug,
@@ -46,6 +48,7 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
     currency: c.currency ?? "BDT",
     image: c.image ?? null,
     level: c.level ?? "",
+    upcoming: c.upcoming ?? false,
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),

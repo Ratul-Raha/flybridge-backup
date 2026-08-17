@@ -12,10 +12,13 @@ import { readSession } from "@/lib/auth/session";
 import { CourseEnrollButton } from "@/components/programs/course-enroll-button";
 import {
   BadgeCheck,
+  BookOpen,
   Check,
   Clock,
+  FileText,
   Maximize2,
   Pause,
+  PlayCircle,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -23,6 +26,7 @@ import {
   Volume2,
   Zap,
 } from "lucide-react";
+import type { CourseDoc } from "@/lib/models/course";
 import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 
@@ -40,9 +44,14 @@ type CourseCta = {
 export function generateMetadata({ params }: Props): Metadata {
   const program = getProgram(params.slug);
   const details = courseDetails[params.slug];
+  if (program || details) {
+    return {
+      title: `${details?.title ?? program?.title ?? "Program"} | FlyBridge Education Group`,
+      description: details?.desc ?? program?.desc,
+    };
+  }
   return {
-    title: `${details?.title ?? program?.title ?? "Program"} | FlyBridge Education Group`,
-    description: details?.desc ?? program?.desc,
+    title: "Course | FlyBridge",
   };
 }
 
@@ -480,9 +489,258 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
+function DbCoursePage({ course }: { course: CourseDoc & { _id: import("mongoose").Types.ObjectId } }) {
+  const lessonCount = (course.modules ?? []).reduce((n, m) => n + (m.lessons?.length ?? 0), 0);
+  const moduleCount = (course.modules ?? []).length;
+  const isFree = (course.price ?? 0) <= 0;
+  const isUpcoming = course.upcoming === true;
+
+  return (
+    <div className="course-page">
+      <Nav />
+
+      {/* Hero */}
+      <section className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px]" style={{ background: "#fff" }}>
+        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-[50px] items-center">
+          <div>
+            <div className="flex items-center gap-2 text-[12.5px] font-medium mb-6">
+              <Link href="/" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Home</Link>
+              <span style={{ color: "var(--body)" }}>/</span>
+              <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Programs</Link>
+              <span style={{ color: "var(--body)" }}>/</span>
+              <span style={{ color: "var(--brand-2)" }}>{course.badge || "Course"}</span>
+            </div>
+
+            <p className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]" style={{ color: "var(--brand-2)" }}>
+              {(course.badge || "COURSE").toUpperCase()}
+            </p>
+
+            <h1 className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}>
+              {course.title}
+              {course.subtitle && <> {course.subtitle}</>}
+            </h1>
+
+            <div className="mt-[22px] pt-[20px] border-t border-line">
+              <div className="flex items-center gap-3 flex-wrap">
+                {isFree ? (
+                  <span className="text-[32px] font-bold leading-none" style={{ color: "var(--brand)" }}>Free</span>
+                ) : (
+                  <span className="text-[32px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                    {course.currency || "BDT"} {course.price.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {(course.level || course.language || course.pace) && (
+                <div className="mt-[10px] flex items-center gap-3 flex-wrap text-[13px] font-medium" style={{ color: "var(--brand-2)" }}>
+                  {course.level && <span>{course.level}</span>}
+                  {course.language && <>{course.level && <span>·</span>}<span>{course.language}</span></>}
+                  {course.pace && <>{(course.level || course.language) && <span>·</span>}<span>{course.pace}</span></>}
+                </div>
+              )}
+            </div>
+
+            <p className="mt-[18px] max-w-[460px] text-[15px] leading-[1.7]" style={{ color: "var(--body)" }}>
+              {course.description || course.subtitle || ""}
+            </p>
+
+            <div className="flex items-center gap-3 mt-6 flex-wrap">
+              {isUpcoming ? (
+                <span
+                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
+                  style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+                >
+                  Coming soon
+                </span>
+              ) : (
+                <CourseEnrollButton
+                  courseId={course._id.toString()}
+                  slug={course.slug}
+                  enrolled={false}
+                  paid={!isFree}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
+              {["Instant access", "Live support", "Verified certificate"].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Image / placeholder */}
+          <div className="relative flex justify-center items-center">
+            <div
+              className="w-full max-w-[430px] rounded-[24px] bg-[#101B31] overflow-hidden"
+              style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
+            >
+              {course.image ? (
+                <div className="relative h-[260px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={course.image} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="h-[260px] flex items-center justify-center" style={{ background: "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)" }}>
+                  <BookOpen className="w-16 h-16 text-white/20" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      {(moduleCount > 0 || lessonCount > 0) && (
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
+          <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+            {moduleCount > 0 && (
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>
+                  {moduleCount}
+                </span>
+                <span className="text-[13px]" style={{ color: "var(--body)" }}>modules</span>
+              </div>
+            )}
+            {lessonCount > 0 && (
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>
+                  {lessonCount}
+                </span>
+                <span className="text-[13px]" style={{ color: "var(--body)" }}>lessons</span>
+              </div>
+            )}
+            <div className="flex items-baseline gap-2.5">
+              <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>∞</span>
+              <span className="text-[13px]" style={{ color: "var(--body)" }}>lifetime access</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* What's included */}
+      <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
+        <SectionHeading
+          eyebrow="WHAT'S INCLUDED"
+          title="Everything in this program"
+          desc="From the first video to your certificate — every resource is part of the same package."
+        />
+        <div className="rounded-2xl border border-line bg-white overflow-hidden">
+          {[
+            { icon: PlayCircle, title: "Self-paced video lessons", desc: "Bite-sized, expert-led modules built around real applications." },
+            { icon: FileText, title: "Documents & templates", desc: "Actual forms, checklists and templates you'll need along the way." },
+            { icon: ShieldCheck, title: "Verified certificate", desc: "Proof of completion recognized by employers and institutions." },
+            { icon: Zap, title: "Instant access", desc: "Start learning the moment you enroll — no waiting." },
+          ].map(({ icon: Icon, title, desc }, i) => (
+            <div
+              key={title}
+              className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+            >
+              <span
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+              >
+                <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+              </span>
+              <div>
+                <h3 className="text-[14.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                  {title}
+                </h3>
+                <p className="text-[13px] mt-[5px] leading-[1.55]" style={{ color: "var(--body)" }}>
+                  {desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Other programs */}
+      <section className="px-[clamp(20px,4.5vw,56px)] pt-[20px] pb-[70px] max-w-[1320px] mx-auto">
+        <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
+          <div>
+            <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+              Other programs you may like
+            </h2>
+            <p className="text-[15px] mt-2" style={{ color: "var(--body)" }}>
+              More ways to build your international future.
+            </p>
+          </div>
+          <Link href="/programs" className="font-medium text-[14px] inline-flex items-center gap-[6px] group" style={{ color: "var(--brand-2)" }}>
+            View all programs
+            <svg className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {programs.map((p) => (
+            <ProgramCard key={p.slug} p={p} />
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-[clamp(20px,4.5vw,56px)] pb-[120px]">
+        <div className="max-w-[1320px] mx-auto">
+          <div className="rounded-[28px] px-[clamp(28px,6vw,72px)] py-[clamp(48px,7vw,80px)]" style={{ background: "var(--ink)" }}>
+            <div className="max-w-[600px]">
+              <div className="font-mono text-[11px] font-medium tracking-[0.2em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                Not sure where to start?
+              </div>
+              <h2 className="font-display text-[clamp(26px,3vw,36px)] font-semibold leading-[1.2] tracking-[-0.02em] text-white text-balance">
+                Talk to a counselor and get a personal roadmap
+              </h2>
+              <p className="text-[15.5px] leading-[1.65] mt-4 max-w-[440px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+                Tell us where you want to go — we&apos;ll point you to the right course and the next step to take.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 mt-10">
+                <a href="tel:+17786768459" className="inline-flex items-center gap-2.5 font-medium text-[14.5px] rounded-full px-[26px] py-[13px] transition-opacity hover:opacity-90" style={{ background: "var(--brand-2)", color: "#ffffff" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  Call us
+                </a>
+                <a href="/success-stories" className="inline-flex items-center gap-1.5 font-medium text-[14.5px] transition-opacity hover:opacity-70" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  See learner stories
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <style>{`
+        .course-page {
+          --body: #39445A;
+          --line: #DDE2EC;
+        }
+        @media (max-width: 560px) {
+          .course-page-hero { padding-top: 120px !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default async function ProgramPage({ params }: Props) {
   const program = getProgram(params.slug);
-  if (!program) notFound();
+
+  await connectDb();
+
+  if (!program) {
+    const course = await Course.findOne({
+      slug: params.slug,
+      $or: [{ published: true }, { upcoming: true }],
+    });
+    if (!course) notFound();
+    return <DbCoursePage course={course} />;
+  }
 
   const details = courseDetails[params.slug];
   const lessonCount = details
