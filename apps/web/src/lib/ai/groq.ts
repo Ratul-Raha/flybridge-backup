@@ -5,7 +5,7 @@ import { streamOpenAiCompatible } from "@/lib/ai/openai-compat";
 
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
-const DEFAULT_MODEL = "llama-3.1-8b-instant";
+const DEFAULT_MODEL = "openai/gpt-oss-20b";
 
 export const groqProvider: AiProvider = {
   id: "groq",

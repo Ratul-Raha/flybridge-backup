@@ -11,7 +11,9 @@ import {
   FileText,
   PlayCircle,
   CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
+import { LessonQuiz } from "./lesson-quiz";
 
 type Lesson = {
   title: string;
@@ -94,12 +96,27 @@ export function LessonPlayer({
   const [index, setIndex] = useState(initialIndex);
   const [watched, setWatched] = useState<Set<number>>(new Set());
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
+  const [tab, setTab] = useState<"video" | "quiz">("video");
 
   const current = lessons[index];
+
+  // Derive moduleIndex and lessonIndex from flat index
+  const { moduleIndex, lessonIndex } = useMemo(() => {
+    let remaining = index;
+    for (let mi = 0; mi < course.modules.length; mi++) {
+      const mod = course.modules[mi];
+      if (remaining < mod.lessons.length) {
+        return { moduleIndex: mi, lessonIndex: remaining };
+      }
+      remaining -= mod.lessons.length;
+    }
+    return { moduleIndex: 0, lessonIndex: 0 };
+  }, [index, course.modules]);
 
   const goTo = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
     setIndex(i);
+    setTab("video");
     router.replace(`/programs/${course.slug}/learn?lesson=${i}`);
   };
 
@@ -239,33 +256,75 @@ export function LessonPlayer({
                   {current.duration ? ` · ${current.duration}` : ""}
                 </p>
 
-                {current.videoUrl ? (
-                  <div className="mt-5 rounded-2xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.1)", background: "#000" }}>
-                    <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
-                  </div>
-                ) : (
-                  <div
-                    className="mt-5 rounded-2xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
-                    style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}
+                {/* Video / Quiz tabs */}
+                <div className="flex gap-1 mt-4 p-1 rounded-xl w-fit" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setTab("video")}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                    style={
+                      tab === "video"
+                        ? { background: "rgba(255,255,255,0.08)", color: "#E8ECF4" }
+                        : { color: "#5B6478" }
+                    }
                   >
-                    <PlayCircle size={34} style={{ color: "#5B6478" }} />
-                    <p className="text-[14px]" style={{ color: "#8B93A7" }}>
-                      This lesson has no video yet.
-                    </p>
-                  </div>
-                )}
+                    <PlayCircle size={14} />
+                    Video
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTab("quiz")}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                    style={
+                      tab === "quiz"
+                        ? { background: "rgba(107,76,224,0.15)", color: "#A78BFA" }
+                        : { color: "#5B6478" }
+                    }
+                  >
+                    <HelpCircle size={14} />
+                    Quiz
+                  </button>
+                </div>
 
-                {current.pdfUrl && (
-                  <a
-                    href={current.pdfUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 self-start inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13px] font-medium transition-colors hover:bg-white/5"
-                    style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
-                  >
-                    <FileText size={14} />
-                    Open lesson notes (PDF)
-                  </a>
+                {tab === "video" ? (
+                  <>
+                    {current.videoUrl ? (
+                      <div className="mt-5 rounded-2xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.1)", background: "#000" }}>
+                        <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
+                      </div>
+                    ) : (
+                      <div
+                        className="mt-5 rounded-2xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
+                        style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}
+                      >
+                        <PlayCircle size={34} style={{ color: "#5B6478" }} />
+                        <p className="text-[14px]" style={{ color: "#8B93A7" }}>
+                          This lesson has no video yet.
+                        </p>
+                      </div>
+                    )}
+
+                    {current.pdfUrl && (
+                      <a
+                        href={current.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 self-start inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13px] font-medium transition-colors hover:bg-white/5"
+                        style={{ color: "#E8ECF4", borderColor: "rgba(255,255,255,0.16)" }}
+                      >
+                        <FileText size={14} />
+                        Open lesson notes (PDF)
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <div className="mt-5">
+                    <LessonQuiz
+                      courseId={course.id}
+                      moduleIndex={moduleIndex}
+                      lessonIndex={lessonIndex}
+                    />
+                  </div>
                 )}
               </div>
 

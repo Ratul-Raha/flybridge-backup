@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server";
+import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
+import { Course } from "@/lib/models/course";
+import { CourseEnrollment } from "@/lib/models/enrollment";
+import { generateQuiz } from "@/lib/ai/quiz";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await readSession();
+  if (!session?.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { moduleIndex, lessonIndex } = body as {
+      moduleIndex: number;
+      lessonIndex: number;
+    };
+
+    if (typeof moduleIndex !== "number" || typeof lessonIndex !== "number") {
+      return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+    }
+
+    await connectDb();
+
+    const course = await Course.findOne({
+      _id: params.id,
+      $or: [{ published: true }, { upcoming: true }],
+    });
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const enrolled = await CourseEnrollment.exists({
+      user: session.userId,
+      course: course._id,
+      status: "active",
+    });
+    if (!enrolled) {
+      return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
+    }
+
+    const mod = course.modules?.[moduleIndex];
+    if (!mod) {
+      return NextResponse.json({ error: "Module not found" }, { status: 404 });
+    }
+
+    const lesson = mod.lessons?.[lessonIndex];
+    if (!lesson) {
+      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    }
+
+    const questions = await generateQuiz(
+      course.title,
+      mod.title,
+      lesson.title
+    );
+
+    return NextResponse.json({ questions });
+  } catch (error) {
+    console.error("quiz generate error", error);
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { error: "Failed to generate quiz", detail },
+      { status: 500 }
+    );
+  }
+}
