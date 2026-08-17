@@ -17,16 +17,24 @@ export async function GET() {
       paidOrders,
       pendingOrders,
       failedOrders,
+      cancelledOrders,
+      refundedOrders,
       freeOrders,
       revenueAgg,
       dailyAgg,
       topItems,
+      statusDist,
+      recentOrders,
+      thisMonthOrders,
+      lastMonthOrders,
     ] = await Promise.all([
       Order.countDocuments(),
       Order.countDocuments({ status: "paid" }),
       Order.countDocuments({ status: "pending" }),
-      Order.countDocuments({ status: { $in: ["failed", "cancelled"] } }),
-      Order.countDocuments({ total: 0 }),
+      Order.countDocuments({ status: "failed" }),
+      Order.countDocuments({ status: "cancelled" }),
+      Order.countDocuments({ status: "refunded" }),
+      Order.countDocuments({ total: 0, status: "paid" }),
       Order.aggregate([
         { $match: { status: "paid" } },
         { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
@@ -53,8 +61,28 @@ export async function GET() {
           },
         },
         { $sort: { orders: -1 } },
-        { $limit: 8 },
+        { $limit: 6 },
       ]),
+      Order.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      Order.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("user", "name email")
+        .lean(),
+      (async () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        return Order.countDocuments({ createdAt: { $gte: start } });
+      })(),
+      (async () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 1);
+        return Order.countDocuments({ createdAt: { $gte: start, $lt: end } });
+      })(),
     ]);
 
     const now = new Date();
@@ -77,21 +105,47 @@ export async function GET() {
       revenues.push(dailyMap.get(key)?.revenue ?? 0);
     }
 
+    const monthlyGrowth =
+      lastMonthOrders > 0
+        ? Math.round(((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100)
+        : thisMonthOrders > 0
+        ? 100
+        : 0;
+
     return NextResponse.json({
       totalOrders,
       paidOrders,
       pendingOrders,
       failedOrders,
+      cancelledOrders,
+      refundedOrders,
       freeOrders,
       completedOrders: paidOrders + freeOrders,
       totalRevenue: revenueAgg[0]?.total ?? 0,
       avgOrderValue: Math.round(revenueAgg[0]?.avg ?? 0),
+      thisMonthOrders,
+      lastMonthOrders,
+      monthlyGrowth,
       topItems: topItems.map((t) => ({
         title: t._id.title || "Untitled",
         itemType: t._id.itemType,
         orders: t.orders,
         revenue: t.revenue,
         avgPrice: Math.round(t.avgPrice),
+      })),
+      statusDistribution: statusDist.map((s) => ({
+        status: s._id,
+        count: s.count,
+      })),
+      recentOrders: recentOrders.map((o) => ({
+        id: o._id.toString(),
+        userName: (o as unknown as { user?: { name?: string } }).user?.name ?? "",
+        userEmail: (o as unknown as { user?: { email?: string } }).user?.email ?? o.email ?? "",
+        items: o.items.map((i) => ({ title: i.title, price: i.price, itemType: i.itemType })),
+        total: o.total,
+        currency: o.currency,
+        status: o.status,
+        createdAt: o.createdAt,
       })),
       chart: { labels, counts, revenues },
     });
