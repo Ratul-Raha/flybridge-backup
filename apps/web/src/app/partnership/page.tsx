@@ -174,7 +174,7 @@ export default function PartnershipPage() {
               <div className="absolute -inset-10 rounded-[48px]" style={{ background: "radial-gradient(460px 320px at 60% 30%, rgba(15,169,104,0.1), transparent 65%)" }} />
 
               <div
-                className="relative rounded-[28px] border border-line bg-white/90 backdrop-blur-[2px] p-7 md:p-8"
+                className="relative rounded-lg border border-line bg-white/90 backdrop-blur-[2px] p-7 md:p-8"
                 style={{ boxShadow: "0 40px 80px -40px rgba(18,32,67,0.25)" }}
               >
                 <div className="flex items-center justify-between gap-4 mb-7">
@@ -270,7 +270,7 @@ export default function PartnershipPage() {
 
         {/* ── STATS ───────────────────────────────────────────── */}
         <section className="px-[clamp(20px,4.5vw,56px)] pt-[70px] pb-[70px]">
-          <div className="max-w-[1320px] mx-auto rounded-[28px] border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-[36px]">
               {stats.map((stat) => (
                 <div key={stat.label} className="flex flex-col items-center text-center px-4">
@@ -311,7 +311,7 @@ export default function PartnershipPage() {
             </div>
 
             <div
-              className="rounded-[28px] border border-line bg-white overflow-hidden"
+              className="rounded-lg border border-line bg-white overflow-hidden"
               style={{ boxShadow: "0 24px 50px -34px rgba(18,32,67,0.22)" }}
             >
               {universities.map((u, i) => (
@@ -359,7 +359,7 @@ export default function PartnershipPage() {
 
         {/* ── STRATEGIC PARTNERS ──────────────────────────────── */}
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px]">
-          <div className="max-w-[1320px] mx-auto rounded-[32px] border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
             <div className="mb-10">
               <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
                 STRATEGIC PARTNERS
@@ -376,7 +376,7 @@ export default function PartnershipPage() {
               {strategicPartners.map((p) => (
                 <div
                   key={p.name}
-                  className="rounded-3xl border border-line bg-white p-7 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                  className="rounded-lg border border-line bg-white p-7 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
                   <div className="flex items-center gap-4 mb-5">
@@ -397,7 +397,7 @@ export default function PartnershipPage() {
 
             {/* Backer card */}
             <div
-              className="mt-6 rounded-3xl border border-line bg-white p-7 md:p-9 flex flex-col md:flex-row md:items-center gap-6 md:gap-9 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+              className="mt-6 rounded-lg border border-line bg-white p-7 md:p-9 flex flex-col md:flex-row md:items-center gap-6 md:gap-9 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
               style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
             >
               <div className="w-[60px] h-[60px] shrink-0 rounded-2xl flex items-center justify-center font-display font-semibold text-[16px] text-white" style={{ background: "linear-gradient(135deg, #0B5E46, #06382C)" }}>
@@ -440,7 +440,7 @@ export default function PartnershipPage() {
         <section id="become-partner" className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div
-              className="rounded-[32px] p-10 md:p-16 text-center relative overflow-hidden"
+              className="rounded-lg p-10 md:p-16 text-center relative overflow-hidden"
               style={{
                 background:
                   "linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",

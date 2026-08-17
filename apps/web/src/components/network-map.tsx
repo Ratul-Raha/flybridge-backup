@@ -112,7 +112,7 @@ export function NetworkMap() {
 
         <div className="grid lg:grid-cols-[1.55fr_1fr] gap-5 md:gap-6 items-stretch">
           <div
-            className="relative rounded-[28px] border border-line bg-white overflow-hidden"
+            className="relative rounded-lg border border-line bg-white overflow-hidden"
             style={{ boxShadow: "0 24px 50px -34px rgba(18,32,67,0.22)" }}
           >
             <div className="flex items-center justify-between gap-4 flex-wrap px-7 md:px-8 pt-7 pb-3">
@@ -246,7 +246,7 @@ export function NetworkMap() {
           </div>
 
           <div
-            className="rounded-[28px] border border-line bg-white p-7 md:p-8 flex flex-col"
+            className="rounded-lg border border-line bg-white p-7 md:p-8 flex flex-col"
             style={{ boxShadow: "0 24px 50px -34px rgba(18,32,67,0.22)" }}
           >
             <div className="font-mono text-[10px] font-medium tracking-[0.4em] uppercase mb-7" style={{ color: "var(--brand-2)" }}>

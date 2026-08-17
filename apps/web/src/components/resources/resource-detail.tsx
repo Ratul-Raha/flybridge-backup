@@ -36,8 +36,8 @@ export function ResourceDetail({
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
-  const paid = r.access === "paid";
-  const isFree = (r.price ?? 0) <= 0 && !paid;
+  const isFree = (r.price ?? 0) <= 0;
+  const paid = r.access === "paid" && !isFree;
   const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}?get=1`)}`;
 
   const triggerDownload = () => {
@@ -121,7 +121,7 @@ export function ResourceDetail({
         <ArrowLeft size={15} /> All resources
       </Link>
 
-      <div className="mt-6 overflow-hidden rounded-[24px] border bg-white" style={{ borderColor: "var(--line)" }}>
+      <div className="mt-6 overflow-hidden rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
         <div
           className="relative h-[220px] sm:h-[280px] flex items-center justify-center overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${meta.bg}, transparent 75%)` }}

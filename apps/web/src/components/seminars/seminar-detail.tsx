@@ -54,7 +54,7 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
       </Link>
 
       <div
-        className="mt-6 overflow-hidden rounded-[24px] border bg-white"
+        className="mt-6 overflow-hidden rounded-lg border bg-white"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="relative h-[220px] sm:h-[280px] overflow-hidden">
