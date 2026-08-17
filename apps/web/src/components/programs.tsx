@@ -53,9 +53,11 @@ export function Programs() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {programs.map((p) => (
-          <ProgramCard key={p.slug} p={p} />
-        ))}
+        {programs
+          .filter((p) => !p.hasDb)
+          .map((p) => (
+            <ProgramCard key={p.slug} p={p} />
+          ))}
       </div>
     </section>
   );
