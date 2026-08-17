@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, ExternalLink, Lock, Share2, Star } from "lucide-react";
+import { ArrowLeft, Check, Download, ExternalLink, Lock, Loader2, Share2, Star } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
   fileTypeMeta,
@@ -22,18 +22,23 @@ function downloadHref(r: ResourceCardData) {
 export function ResourceDetail({
   resource: r,
   wantsDownload = false,
+  wantsGet = false,
 }: {
   resource: ResourceCardData;
   wantsDownload?: boolean;
+  wantsGet?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { user, loading } = useAuth();
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
   const paid = r.access === "paid";
-  const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}?download=1`)}`;
+  const isFree = (r.price ?? 0) <= 0 && !paid;
+  const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}?get=1`)}`;
 
   const triggerDownload = () => {
     const href = downloadHref(r);
@@ -48,6 +53,39 @@ export function ResourceDetail({
       a.remove();
     }
   };
+
+  const handleGetForFree = async () => {
+    if (!user) {
+      router.push(loginNext);
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemType: "resource", itemId: r.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to get resource");
+      triggerDownload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to get resource");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!wantsGet || loading) return;
+    if (!user) {
+      router.replace(loginNext);
+      return;
+    }
+    handleGetForFree();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsGet, loading, user]);
 
   useEffect(() => {
     if (!wantsDownload || loading) return;
@@ -171,6 +209,23 @@ export function ResourceDetail({
                 {payNote && (
                   <span className="text-[12.5px] max-w-[280px]" style={{ color: "var(--body)" }}>
                     Payment for this resource is coming soon — you can download it for free once it launches.
+                  </span>
+                )}
+              </div>
+            ) : isFree ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleGetForFree}
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6B4CE0] px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#5A3CCB] hover:shadow-lg hover:shadow-[#6B4CE0]/25 active:scale-[0.98] disabled:opacity-60"
+                >
+                  {submitting && <Loader2 size={15} className="animate-spin" />}
+                  {submitting ? "Getting…" : "Get it for free"}
+                </button>
+                {error && (
+                  <span className="text-[12.5px] max-w-[280px]" style={{ color: "#C0392B" }}>
+                    {error}
                   </span>
                 )}
               </div>

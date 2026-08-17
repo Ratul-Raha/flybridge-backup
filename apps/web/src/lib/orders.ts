@@ -5,6 +5,7 @@ import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { Resource } from "@/lib/models/resource";
 import { emitEvent } from "@/lib/events/emit";
 import { resolveProduct } from "@/lib/products";
 import type { EventPayload } from "@/lib/events/types";
@@ -124,6 +125,11 @@ export async function fulfillOrder(
         price: course.price,
       },
     });
+  }
+
+  if (item.itemType === "resource") {
+    const resource = await Resource.findById(item.itemId);
+    if (!resource) throw new Error("Resource not found");
   }
 
   if (item.itemType === "seminar") {

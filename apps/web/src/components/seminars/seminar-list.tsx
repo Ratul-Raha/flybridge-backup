@@ -104,7 +104,7 @@ export function SeminarList() {
     <Link
       key={s.id}
       href={`/seminars/${s.id}`}
-      className="group flex flex-col overflow-hidden rounded-[24px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      className="group flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
     >
       {s.image ? (

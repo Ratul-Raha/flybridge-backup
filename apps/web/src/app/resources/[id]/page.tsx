@@ -5,7 +5,7 @@ import { Resource } from "@/lib/models/resource";
 import { Nav } from "@/components/nav";
 import { ResourceDetail } from "@/components/resources/resource-detail";
 
-type Params = { params: { id: string }; searchParams: { download?: string } };
+type Params = { params: { id: string }; searchParams: { download?: string; get?: string } };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   try {
@@ -34,6 +34,7 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
           <div className="w-full max-w-[980px] mx-auto">
             <ResourceDetail
               wantsDownload={searchParams.download === "1"}
+              wantsGet={searchParams.get === "1"}
               resource={{
                 id: resource._id.toString(),
                 title: resource.title,

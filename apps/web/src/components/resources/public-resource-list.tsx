@@ -157,7 +157,7 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
       href={`/resources/${r.id}`}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col overflow-hidden rounded-[20px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      className="group flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
     >
       {body}
@@ -277,14 +277,14 @@ export function PublicResourceList() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-[20px] border bg-white"
+              className="rounded-lg border bg-white"
               style={{ borderColor: "var(--line)", height: 320 }}
             />
           ))}
         </div>
       ) : error ? (
         <div
-          className="rounded-[20px] border bg-white px-6 py-16 text-center"
+          className="rounded-lg border bg-white px-6 py-16 text-center"
           style={{ borderColor: "var(--line)" }}
         >
           <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -296,7 +296,7 @@ export function PublicResourceList() {
         </div>
       ) : visible.length === 0 ? (
         <div
-          className="rounded-[20px] border bg-white px-6 py-16 text-center"
+          className="rounded-lg border bg-white px-6 py-16 text-center"
           style={{ borderColor: "var(--line)" }}
         >
           <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
