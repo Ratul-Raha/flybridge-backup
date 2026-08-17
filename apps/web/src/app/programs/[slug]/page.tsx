@@ -204,35 +204,32 @@ function CourseHero({
           </p>
 
           <div className="flex items-center gap-3 mt-6 flex-wrap">
-            {cta ? (
-              cta.hasDb ? (
-                <Link
-                  href={`/programs/${cta.slug}/checkout`}
-                  className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-                  style={{ background: "var(--brand)" }}
-                >
-                  Enroll now
-                  {arrow}
-                </Link>
-              ) : (
-                <span
-                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
-                  style={{ background: "var(--brand)", opacity: 0.5 }}
-                >
-                  Enroll now
-                  {arrow}
-                </span>
-              )
+            {cta?.enrolled ? (
+              <Link
+                href={`/programs/${cta.slug}/learn`}
+                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
+                style={{ background: "var(--brand)" }}
+              >
+                Open Player
+                {play}
+              </Link>
+            ) : cta?.hasDb ? (
+              <Link
+                href={`/programs/${cta.slug}/checkout`}
+                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
+                style={{ background: "var(--brand)" }}
+              >
+                Enroll now
+                {arrow}
+              </Link>
             ) : (
-              <>
-                <span
-                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
-                  style={{ background: "var(--brand)", opacity: 0.5 }}
-                >
-                  Enroll now
-                  {arrow}
-                </span>
-              </>
+              <span
+                className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
+                style={{ background: "var(--brand)", opacity: 0.5 }}
+              >
+                Enroll now
+                {arrow}
+              </span>
             )}
           </div>
 
@@ -384,7 +381,7 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-function DbCoursePage({ course }: { course: CourseDoc & { _id: import("mongoose").Types.ObjectId } }) {
+function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import("mongoose").Types.ObjectId }; enrolled: boolean }) {
   const lessonCount = (course.modules ?? []).reduce((n, m) => n + (m.lessons?.length ?? 0), 0);
   const moduleCount = (course.modules ?? []).length;
   const isFree = (course.price ?? 0) <= 0;
@@ -422,6 +419,39 @@ function DbCoursePage({ course }: { course: CourseDoc & { _id: import("mongoose"
 
       {/* Main checkout grid */}
       <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
+        {enrolled ? (
+          <div className="max-w-[560px] mx-auto">
+            <div
+              className="rounded-2xl border border-line bg-white p-8 sm:p-10 text-center"
+              style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.12)" }}
+            >
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                style={{ background: "rgba(15,169,104,0.1)" }}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0FA968" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </div>
+              <h2 className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+                You&apos;re enrolled in this course
+              </h2>
+              <p className="text-[14px] mt-2 mb-8" style={{ color: "var(--body)" }}>
+                {lessonCount} lessons across {moduleCount} modules ready for you.
+              </p>
+              <Link
+                href={`/programs/${checkoutCourse.slug}/learn`}
+                className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] hover:opacity-90 transition-opacity"
+                style={{ background: "var(--brand)" }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" />
+                </svg>
+                Open Player
+              </Link>
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
 
           {/* Left — product + form */}
@@ -596,6 +626,7 @@ function DbCoursePage({ course }: { course: CourseDoc & { _id: import("mongoose"
             </div>
           </aside>
         </div>
+        )}
       </section>
 
       <style>{`
@@ -619,7 +650,15 @@ export default async function ProgramPage({ params }: Props) {
       $or: [{ published: true }, { upcoming: true }],
     });
     if (!course) notFound();
-    return <DbCoursePage course={course} />;
+    const session = await readSession();
+    const enrolled =
+      session?.userId &&
+      (await CourseEnrollment.exists({
+        user: session.userId,
+        course: course._id,
+        status: "active",
+      }));
+    return <DbCoursePage course={course} enrolled={Boolean(enrolled)} />;
   }
 
   const details = courseDetails[params.slug];
