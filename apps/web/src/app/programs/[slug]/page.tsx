@@ -16,6 +16,7 @@ import {
   Check,
   Clock,
   FileText,
+  Lock,
   Maximize2,
   Pause,
   PlayCircle,
@@ -27,6 +28,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
+import { CheckoutForm } from "@/components/programs/checkout-form";
 import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 
@@ -493,235 +495,220 @@ function DbCoursePage({ course }: { course: CourseDoc & { _id: import("mongoose"
   const lessonCount = (course.modules ?? []).reduce((n, m) => n + (m.lessons?.length ?? 0), 0);
   const moduleCount = (course.modules ?? []).length;
   const isFree = (course.price ?? 0) <= 0;
-  const isUpcoming = course.upcoming === true;
+
+  const checkoutCourse = {
+    courseId: course._id.toString(),
+    slug: course.slug,
+    title: course.title,
+    subtitle: course.subtitle ?? "",
+    description: course.description ?? "",
+    image: course.image ?? null,
+    badge: course.badge ?? "COURSE",
+    price: course.price ?? 0,
+    currency: course.currency ?? "BDT",
+    level: course.level ?? "",
+    language: course.language ?? "",
+    pace: course.pace ?? "",
+    upcoming: course.upcoming === true,
+  };
 
   return (
-    <div className="course-page">
+    <div className="checkout-page">
       <Nav />
 
-      {/* Hero */}
-      <section className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px]" style={{ background: "#fff" }}>
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-[50px] items-center">
-          <div>
-            <div className="flex items-center gap-2 text-[12.5px] font-medium mb-6">
-              <Link href="/" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Home</Link>
-              <span style={{ color: "var(--body)" }}>/</span>
-              <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Programs</Link>
-              <span style={{ color: "var(--body)" }}>/</span>
-              <span style={{ color: "var(--brand-2)" }}>{course.badge || "Course"}</span>
+      {/* Breadcrumb */}
+      <div className="px-[clamp(20px,4.5vw,56px)] pt-[120px] pb-4 max-w-[1320px] mx-auto">
+        <div className="flex items-center gap-2 text-[12.5px] font-medium">
+          <Link href="/" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Home</Link>
+          <span style={{ color: "var(--body)" }}>/</span>
+          <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Programs</Link>
+          <span style={{ color: "var(--body)" }}>/</span>
+          <span style={{ color: "var(--brand-2)" }}>{checkoutCourse.badge}</span>
+        </div>
+      </div>
+
+      {/* Main checkout grid */}
+      <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
+
+          {/* Left — product + form */}
+          <div className="space-y-8">
+            {/* Product card */}
+            <div className="rounded-2xl border border-line bg-white overflow-hidden">
+              <div className="grid sm:grid-cols-[200px_1fr] gap-0">
+                <div
+                  className="relative h-[180px] sm:h-auto flex items-center justify-center overflow-hidden"
+                  style={{ background: "var(--brand-soft)" }}
+                >
+                  {checkoutCourse.image ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={checkoutCourse.image}
+                        alt={checkoutCourse.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(18,32,67,0.18), transparent 50%)" }} />
+                    </>
+                  ) : (
+                    <BookOpen size={36} className="text-white/40" />
+                  )}
+                </div>
+                <div className="p-5 sm:p-6 flex flex-col justify-center">
+                  <span
+                    className="font-mono text-[10px] font-semibold tracking-[0.3em] mb-2 inline-block w-fit"
+                    style={{ color: "var(--brand-2)" }}
+                  >
+                    {checkoutCourse.badge.toUpperCase()}
+                  </span>
+                  <h1 className="font-display text-[19px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                    {checkoutCourse.title}
+                    {checkoutCourse.subtitle && <> {checkoutCourse.subtitle}</>}
+                  </h1>
+                  {(checkoutCourse.level || checkoutCourse.language) && (
+                    <div className="mt-2 flex items-center gap-2 text-[12px] font-medium" style={{ color: "var(--body)" }}>
+                      {checkoutCourse.level && <span>{checkoutCourse.level}</span>}
+                      {checkoutCourse.language && <>{checkoutCourse.level && <span>·</span>}<span>{checkoutCourse.language}</span></>}
+                    </div>
+                  )}
+                  {checkoutCourse.description && (
+                    <p className="mt-2 text-[13px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
+                      {checkoutCourse.description}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <p className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]" style={{ color: "var(--brand-2)" }}>
-              {(course.badge || "COURSE").toUpperCase()}
-            </p>
+            {/* Checkout form */}
+            <div className="rounded-2xl border border-line bg-white p-6 sm:p-8">
+              <CheckoutForm course={checkoutCourse} />
+            </div>
+          </div>
 
-            <h1 className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}>
-              {course.title}
-              {course.subtitle && <> {course.subtitle}</>}
-            </h1>
+          {/* Right — order summary (sticky) */}
+          <aside className="lg:sticky lg:top-24">
+            <div
+              className="rounded-2xl border border-line bg-white overflow-hidden"
+              style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
+            >
+              <div className="p-6">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] mb-5" style={{ color: "var(--body)" }}>
+                  Order summary
+                </p>
 
-            <div className="mt-[22px] pt-[20px] border-t border-line">
-              <div className="flex items-center gap-3 flex-wrap">
-                {isFree ? (
-                  <span className="text-[32px] font-bold leading-none" style={{ color: "var(--brand)" }}>Free</span>
-                ) : (
-                  <span className="text-[32px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                    {course.currency || "BDT"} {course.price.toLocaleString()}
+                {/* Line item */}
+                <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
+                  <div
+                    className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                    style={{ background: "var(--brand-soft)" }}
+                  >
+                    {checkoutCourse.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={checkoutCourse.image} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <BookOpen size={20} className="text-white/50" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                      {checkoutCourse.title}
+                    </p>
+                    <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
+                      {checkoutCourse.badge}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Price breakdown */}
+                <div className="py-4 space-y-2.5 border-b" style={{ borderColor: "var(--line)" }}>
+                  <div className="flex items-center justify-between text-[13.5px]">
+                    <span style={{ color: "var(--body)" }}>Subtotal</span>
+                    <span className="font-medium" style={{ color: "var(--ink)" }}>
+                      {isFree ? "Free" : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[13.5px]">
+                    <span style={{ color: "var(--body)" }}>Tax</span>
+                    <span className="font-medium" style={{ color: "var(--ink)" }}>0.00</span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between pt-4">
+                  <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>Total</span>
+                  <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                    {isFree ? "Free" : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
                   </span>
+                </div>
+
+                {checkoutCourse.upcoming && (
+                  <div
+                    className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
+                    style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
+                  >
+                    This course is coming soon — join the waitlist to be notified.
+                  </div>
                 )}
               </div>
-              {(course.level || course.language || course.pace) && (
-                <div className="mt-[10px] flex items-center gap-3 flex-wrap text-[13px] font-medium" style={{ color: "var(--brand-2)" }}>
-                  {course.level && <span>{course.level}</span>}
-                  {course.language && <>{course.level && <span>·</span>}<span>{course.language}</span></>}
-                  {course.pace && <>{(course.level || course.language) && <span>·</span>}<span>{course.pace}</span></>}
-                </div>
-              )}
-            </div>
 
-            <p className="mt-[18px] max-w-[460px] text-[15px] leading-[1.7]" style={{ color: "var(--body)" }}>
-              {course.description || course.subtitle || ""}
-            </p>
-
-            <div className="flex items-center gap-3 mt-6 flex-wrap">
-              {isUpcoming ? (
-                <span
-                  className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
-                  style={{ background: "var(--bg-soft)", color: "var(--body)" }}
-                >
-                  Coming soon
-                </span>
-              ) : (
-                <CourseEnrollButton
-                  courseId={course._id.toString()}
-                  slug={course.slug}
-                  enrolled={false}
-                  paid={!isFree}
-                />
-              )}
-            </div>
-
-            <div className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
-              {["Instant access", "Live support", "Verified certificate"].map((t) => (
-                <span key={t} className="inline-flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Image / placeholder */}
-          <div className="relative flex justify-center items-center">
-            <div
-              className="w-full max-w-[430px] rounded-[24px] bg-[#101B31] overflow-hidden"
-              style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
-            >
-              {course.image ? (
-                <div className="relative h-[260px]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={course.image} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="h-[260px] flex items-center justify-center" style={{ background: "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)" }}>
-                  <BookOpen className="w-16 h-16 text-white/20" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      {(moduleCount > 0 || lessonCount > 0) && (
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
-          <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-            {moduleCount > 0 && (
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>
-                  {moduleCount}
-                </span>
-                <span className="text-[13px]" style={{ color: "var(--body)" }}>modules</span>
-              </div>
-            )}
-            {lessonCount > 0 && (
-              <div className="flex items-baseline gap-2.5">
-                <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>
-                  {lessonCount}
-                </span>
-                <span className="text-[13px]" style={{ color: "var(--body)" }}>lessons</span>
-              </div>
-            )}
-            <div className="flex items-baseline gap-2.5">
-              <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>∞</span>
-              <span className="text-[13px]" style={{ color: "var(--body)" }}>lifetime access</span>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* What's included */}
-      <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
-        <SectionHeading
-          eyebrow="WHAT'S INCLUDED"
-          title="Everything in this program"
-          desc="From the first video to your certificate — every resource is part of the same package."
-        />
-        <div className="rounded-2xl border border-line bg-white overflow-hidden">
-          {[
-            { icon: PlayCircle, title: "Self-paced video lessons", desc: "Bite-sized, expert-led modules built around real applications." },
-            { icon: FileText, title: "Documents & templates", desc: "Actual forms, checklists and templates you'll need along the way." },
-            { icon: ShieldCheck, title: "Verified certificate", desc: "Proof of completion recognized by employers and institutions." },
-            { icon: Zap, title: "Instant access", desc: "Start learning the moment you enroll — no waiting." },
-          ].map(({ icon: Icon, title, desc }, i) => (
-            <div
-              key={title}
-              className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-            >
-              <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-              >
-                <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-              </span>
-              <div>
-                <h3 className="text-[14.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                  {title}
-                </h3>
-                <p className="text-[13px] mt-[5px] leading-[1.55]" style={{ color: "var(--body)" }}>
-                  {desc}
+              {/* What's included */}
+              <div className="px-6 pb-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
+                <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3" style={{ color: "var(--body)" }}>
+                  What&apos;s included
                 </p>
+                <ul className="space-y-2.5">
+                  {[
+                    "Instant access after enrollment",
+                    `${moduleCount} modules · ${lessonCount} lessons`,
+                    "Lifetime access — learn at your own pace",
+                    "Certificate of completion",
+                    "Live support from instructors",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[13px]">
+                      <span
+                        className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
+                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                      >
+                        <Check className="w-[10px] h-[10px]" strokeWidth={3} />
+                      </span>
+                      <span style={{ color: "var(--ink)" }}>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Trust badges */}
+              <div className="px-6 pb-6">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { icon: Lock, label: "SSL Encrypted" },
+                    { icon: ShieldCheck, label: "30-day guarantee" },
+                    { icon: Zap, label: "Instant access" },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex flex-col items-center gap-1.5">
+                      <span
+                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </span>
+                      <span className="text-[10.5px] font-medium leading-tight" style={{ color: "var(--body)" }}>
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Other programs */}
-      <section className="px-[clamp(20px,4.5vw,56px)] pt-[20px] pb-[70px] max-w-[1320px] mx-auto">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
-          <div>
-            <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
-              Other programs you may like
-            </h2>
-            <p className="text-[15px] mt-2" style={{ color: "var(--body)" }}>
-              More ways to build your international future.
-            </p>
-          </div>
-          <Link href="/programs" className="font-medium text-[14px] inline-flex items-center gap-[6px] group" style={{ color: "var(--brand-2)" }}>
-            View all programs
-            <svg className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {programs.map((p) => (
-            <ProgramCard key={p.slug} p={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-[clamp(20px,4.5vw,56px)] pb-[120px]">
-        <div className="max-w-[1320px] mx-auto">
-          <div className="rounded-[28px] px-[clamp(28px,6vw,72px)] py-[clamp(48px,7vw,80px)]" style={{ background: "var(--ink)" }}>
-            <div className="max-w-[600px]">
-              <div className="font-mono text-[11px] font-medium tracking-[0.2em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Not sure where to start?
-              </div>
-              <h2 className="font-display text-[clamp(26px,3vw,36px)] font-semibold leading-[1.2] tracking-[-0.02em] text-white text-balance">
-                Talk to a counselor and get a personal roadmap
-              </h2>
-              <p className="text-[15.5px] leading-[1.65] mt-4 max-w-[440px]" style={{ color: "rgba(255,255,255,0.65)" }}>
-                Tell us where you want to go — we&apos;ll point you to the right course and the next step to take.
-              </p>
-              <div className="flex flex-wrap items-center gap-4 mt-10">
-                <a href="tel:+17786768459" className="inline-flex items-center gap-2.5 font-medium text-[14.5px] rounded-full px-[26px] py-[13px] transition-opacity hover:opacity-90" style={{ background: "var(--brand-2)", color: "#ffffff" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  Call us
-                </a>
-                <a href="/success-stories" className="inline-flex items-center gap-1.5 font-medium text-[14.5px] transition-opacity hover:opacity-70" style={{ color: "rgba(255,255,255,0.85)" }}>
-                  See learner stories
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
+          </aside>
         </div>
       </section>
 
       <style>{`
-        .course-page {
+        .checkout-page {
           --body: #39445A;
           --line: #DDE2EC;
-        }
-        @media (max-width: 560px) {
-          .course-page-hero { padding-top: 120px !important; }
         }
       `}</style>
     </div>

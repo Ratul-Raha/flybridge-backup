@@ -29,15 +29,6 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
     </span>
   );
 
-  const upcomingTag = course.upcoming ? (
-    <span
-      className="font-mono text-[10px] font-semibold tracking-[0.4px] px-[9px] py-[5px] rounded-full inline-block"
-      style={{ background: "var(--brand)", color: "#fff" }}
-    >
-      UPCOMING
-    </span>
-  ) : null;
-
   const media = (
     <div
       className="relative h-[178px] flex items-center justify-center overflow-hidden"
@@ -59,6 +50,14 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
         <BookOpen size={32} className="text-white/50" />
       )}
       <span className="absolute left-3.5 top-3.5">{badge}</span>
+      {course.upcoming && (
+        <span
+          className="absolute right-3.5 top-3.5 font-mono text-[10px] font-semibold tracking-[0.4px] px-[9px] py-[5px] rounded-full"
+          style={{ background: "var(--brand)", color: "#fff" }}
+        >
+          UPCOMING
+        </span>
+      )}
     </div>
   );
 
@@ -66,14 +65,17 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
   if (course.level) meta.push(course.level);
   if (lessonCount > 0) meta.push(`${lessonCount} lessons`);
 
-  const footer = course.upcoming ? (
-    <span className="text-[12.5px] font-medium" style={{ color: "var(--brand)" }}>
-      Coming soon
-    </span>
-  ) : (
+  const footer = (
     <div className="flex items-end justify-between gap-3">
       <div>
-        {isFree ? (
+        {course.upcoming ? (
+          <div
+            className="font-mono text-[10px] font-semibold tracking-[0.3px]"
+            style={{ color: "var(--brand)" }}
+          >
+            COMING SOON
+          </div>
+        ) : isFree ? (
           <div
             className="font-mono text-[10px] font-semibold tracking-[0.3px]"
             style={{ color: "var(--brand)" }}
@@ -101,7 +103,7 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
         className="inline-flex items-center gap-[5px] text-[12.5px] font-medium"
         style={{ color: "var(--brand)" }}
       >
-        Explore course
+        {course.upcoming ? "View details" : "Enroll now"}
         <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
           <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -109,8 +111,12 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
     </div>
   );
 
-  const body = (
-    <>
+  return (
+    <Link
+      href={`/programs/${course.slug}`}
+      className="flex flex-col overflow-hidden rounded-[20px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
+    >
       {media}
       <div className="flex flex-col flex-1 gap-2.5 p-5">
         <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
@@ -136,27 +142,6 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
           {footer}
         </div>
       </div>
-    </>
-  );
-
-  if (course.upcoming) {
-    return (
-      <div
-        className="flex flex-col overflow-hidden rounded-[20px] border bg-white"
-        style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -12px rgba(18,32,67,0.12)" }}
-      >
-        {body}
-      </div>
-    );
-  }
-
-  return (
-    <Link
-      href={`/programs/${course.slug}`}
-      className="flex flex-col overflow-hidden rounded-[20px] border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
-      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
-    >
-      {body}
     </Link>
   );
 }
