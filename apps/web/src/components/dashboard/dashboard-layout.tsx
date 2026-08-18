@@ -413,7 +413,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex" style={{ background: "var(--bg)" }}>
       <aside
-        className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-[264px] border-r bg-white z-30"
+        className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-[264px] border-r bg-white z-30 overflow-y-auto"
         style={{ borderColor: "var(--line)" }}
       >
         {sidebarContent}
@@ -426,13 +426,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 lg:hidden w-[280px] bg-white flex flex-col transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 lg:hidden w-[280px] bg-white flex flex-col overflow-y-auto transition-transform duration-300 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ boxShadow: "16px 0 40px -20px rgba(18,32,67,0.25)" }}
       >
         <button
-          className="absolute top-5 right-5 p-1.5 rounded-lg"
+          className="absolute top-5 right-5 p-1.5 rounded-lg z-10"
           style={{ color: "var(--body)" }}
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
