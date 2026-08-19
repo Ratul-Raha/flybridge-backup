@@ -103,15 +103,6 @@ export async function POST(
       }
     }
 
-    const existing = await SeminarRegistration.findOne({ seminar: seminar._id, email });
-    if (existing) {
-      return NextResponse.json({
-        ok: true,
-        alreadyRegistered: true,
-        registration: existing,
-      });
-    }
-
     if (userCreated) {
       try {
         await emitEvent("user.registered", {
@@ -129,7 +120,7 @@ export async function POST(
       }
     }
 
-    const { order } = await createOrder({
+    const { order, duplicate } = await createOrder({
       user: {
         id: user._id.toString(),
         name: name || user.name,
@@ -148,11 +139,12 @@ export async function POST(
     return NextResponse.json(
       {
         ok: true,
+        alreadyRegistered: duplicate,
         registration,
-        orderId: order._id.toString(),
-        requiresPayment: order.total > 0,
+        orderId: order?._id?.toString() ?? null,
+        requiresPayment: order ? order.total > 0 : false,
       },
-      { status: 201 }
+      { status: duplicate ? 200 : 201 }
     );
   } catch (error) {
     console.error("seminar register error", error);

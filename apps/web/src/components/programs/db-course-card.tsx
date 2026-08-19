@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -17,6 +18,7 @@ export type DbCourse = {
 };
 
 export function DbCourseCard({ course }: { course: DbCourse }) {
+  const [imgError, setImgError] = useState(false);
   const lessonCount = course.modules.reduce((n, m) => n + m.lessons.length, 0);
   const isFree = course.price <= 0;
 
@@ -34,12 +36,13 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
       className="relative h-[178px] flex items-center justify-center overflow-hidden"
       style={{ background: "var(--brand-soft)" }}
     >
-      {course.image ? (
+      {course.image && !imgError ? (
         <>
           <img
             src={course.image}
             alt={course.title}
             className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setImgError(true)}
           />
           <div
             className="absolute inset-0"

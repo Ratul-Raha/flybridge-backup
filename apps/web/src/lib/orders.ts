@@ -7,7 +7,7 @@ import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
 import { emitEvent } from "@/lib/events/emit";
-import { resolveProduct } from "@/lib/products";
+import { resolveProduct, type Product } from "@/lib/products";
 import type { EventPayload } from "@/lib/events/types";
 
 export type OrderUser = {
@@ -43,41 +43,137 @@ function serializeOrder(order: OrderDoc) {
   };
 }
 
+export async function isAlreadyFulfilled(
+  itemType: OrderItemType,
+  itemId: string,
+  user: OrderUser
+): Promise<boolean> {
+  await connectDb();
+
+  if (itemType === "course") {
+    const enrollment = await CourseEnrollment.findOne({
+      user: user.id,
+      course: itemId,
+    });
+    return !!enrollment;
+  }
+
+  if (itemType === "seminar") {
+    const registration = await SeminarRegistration.findOne({
+      seminar: itemId,
+      email: user.email,
+    });
+    return !!registration;
+  }
+
+  return false;
+}
+
+export async function fulfillFreeItem(
+  product: Product,
+  user: OrderUser
+): Promise<void> {
+  await connectDb();
+
+  if (product.itemType === "course") {
+    const course = await Course.findById(product.itemId);
+    if (!course) throw new Error("Course not found");
+
+    const enrollment = await CourseEnrollment.findOneAndUpdate(
+      { user: user.id, course: course._id },
+      {
+        $setOnInsert: {
+          user: user.id,
+          course: course._id,
+          status: "active",
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    await emitEvent("course.enrolled", {
+      enrollmentId: enrollment._id.toString(),
+      user: userPayload(user),
+      course: {
+        id: course._id.toString(),
+        slug: course.slug,
+        title: course.title,
+        price: course.price,
+      },
+    });
+  }
+
+  if (product.itemType === "seminar") {
+    const seminar = await Seminar.findById(product.itemId);
+    if (!seminar) throw new Error("Seminar not found");
+
+    const registration = await SeminarRegistration.findOneAndUpdate(
+      { seminar: seminar._id, email: user.email },
+      {
+        $setOnInsert: {
+          seminar: seminar._id,
+          user: user.id,
+          name: user.name,
+          phone: user.phone ?? "",
+          email: user.email,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    await emitEvent("seminar.registration_created", {
+      registrationId: registration._id.toString(),
+      user: {
+        id: user.id,
+        name: registration.name,
+        email: registration.email,
+        phone: registration.phone ?? null,
+      },
+      seminar: {
+        id: seminar._id.toString(),
+        title: seminar.title,
+        description: seminar.description,
+        dateTime: seminar.dateTime.toISOString(),
+        duration: seminar.duration,
+        type: seminar.type,
+        price: seminar.price,
+        url: seminar.url,
+        image: seminar.image,
+      },
+    });
+  }
+}
+
 export async function createOrder(input: {
   user: OrderUser;
   itemType: OrderItemType;
   itemId: string;
-}): Promise<{ order: OrderDoc; requiresPayment: boolean }> {
+}): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
   const product = await resolveProduct(input.itemType, input.itemId);
   if (!product) throw new Error("Product not found");
 
   if (product.price === 0) {
-    const order = await Order.create({
-      user: input.user.id,
-      email: input.user.email,
-      items: [
-        {
-          itemType: product.itemType,
-          itemId: product.itemId,
-          title: product.title,
-          price: 0,
-        },
-      ],
-      total: 0,
-      currency: product.currency,
-      status: "completed",
-    });
+    if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
+      return { order: null, requiresPayment: false, duplicate: true };
+    }
 
-    await emitEvent("order.created", {
-      order: serializeOrder(order),
-      user: userPayload(input.user),
-    });
+    await fulfillFreeItem(product, input.user);
+    return { order: null, requiresPayment: false, duplicate: false };
+  }
 
-    await fulfillOrder(order, input.user);
-
-    return { order, requiresPayment: false };
+  const existing = await Order.findOne({
+    user: input.user.id,
+    "items.itemId": product.itemId,
+    status: { $in: ["completed", "pending"] },
+  });
+  if (existing) {
+    return {
+      order: existing,
+      requiresPayment: existing.status === "pending",
+      duplicate: true,
+    };
   }
 
   const order = await Order.create({
@@ -101,7 +197,7 @@ export async function createOrder(input: {
     user: userPayload(input.user),
   });
 
-  return { order, requiresPayment: true };
+  return { order, requiresPayment: true, duplicate: false };
 }
 
 export async function fulfillOrder(

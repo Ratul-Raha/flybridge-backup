@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
     await user.save();
 
-    const { order, requiresPayment } = await createOrder({
+    const { order, requiresPayment, duplicate } = await createOrder({
       user: {
         id: user._id.toString(),
         name: user.name,
@@ -95,15 +95,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         ok: true,
-        order: {
-          id: order._id.toString(),
-          status: order.status,
-          total: order.total,
-          currency: order.currency,
-        },
+        order: order
+          ? {
+              id: order._id.toString(),
+              status: order.status,
+              total: order.total,
+              currency: order.currency,
+            }
+          : null,
         requiresPayment,
+        duplicate,
       },
-      { status: 201 }
+      { status: duplicate ? 200 : 201 }
     );
   } catch (error) {
     console.error("orders POST error", error);

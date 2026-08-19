@@ -34,6 +34,7 @@ type UserRow = {
   subscription: "free" | "paid";
   createdAt: string;
   seminars: number;
+  courses: number;
   downloads: number;
   readiness: number | null;
   readinessRuns: number;
@@ -47,6 +48,13 @@ type Stats = {
   moderators: number;
   newThisWeek: number;
   totalReadiness: number;
+};
+
+type DetailCourse = {
+  id: string;
+  course: { id: string; title: string; slug: string; image: string | null; badge: string; price: number; currency: string } | null;
+  status: string;
+  createdAt: string;
 };
 
 type DetailSeminar = {
@@ -73,7 +81,8 @@ type DetailReadiness = {
 
 type DetailData = {
   user: UserRow;
-  stats: { totalSeminars: number; totalDownloads: number; totalReadiness: number };
+  stats: { totalCourses: number; totalSeminars: number; totalDownloads: number; totalReadiness: number };
+  courses: DetailCourse[];
   seminars: DetailSeminar[];
   downloads: DetailDownload[];
   readiness: DetailReadiness[];
@@ -89,9 +98,9 @@ const scoreColor = (score: number): string => {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_62px_44px]";
+const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_62px_44px]";
 
-const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_62px_44px]";
+const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_62px_44px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -260,7 +269,7 @@ export function UserManage() {
   const deleteUser = useCallback(async () => {
     if (!detail || !isAdmin) return;
     const confirmed = window.confirm(
-      `Delete ${detail.user.name} (${detail.user.email})?\n\nThis permanently removes their account, seminar registrations, downloads, readiness assessments and notifications. This cannot be undone.`
+      `Delete ${detail.user.name} (${detail.user.email})?\n\nThis permanently removes their account, course enrollments, seminar registrations, downloads, readiness assessments and notifications. This cannot be undone.`
     );
     if (!confirmed) return;
     setDeleting(true);
@@ -448,7 +457,7 @@ export function UserManage() {
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
             >
-              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Files", "Readiness", "View"].map((c) => (
+              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Courses", "Files", "Readiness", "View"].map((c) => (
                 <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                   {c}
                 </span>
@@ -503,6 +512,9 @@ export function UserManage() {
                     </span>
                     <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
                       {u.seminars}
+                    </span>
+                    <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
+                      {u.courses}
                     </span>
                     <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
                       {u.downloads}
@@ -726,7 +738,7 @@ export function UserManage() {
                         Danger zone
                       </p>
                       <p className="text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
-                        Permanently remove this account and all of its activity (registrations, downloads,
+                        Permanently remove this account and all of its activity (enrollments, registrations, downloads,
                         assessments, notifications).
                       </p>
                       {me?.id === detail.user.id ? (
@@ -749,7 +761,18 @@ export function UserManage() {
                   )}
 
                   {/* Activity summary */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BookOpen size={14} style={{ color: "var(--brand)" }} />
+                        <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
+                          Courses
+                        </p>
+                      </div>
+                      <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+                        {detail.stats.totalCourses}
+                      </p>
+                    </div>
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen size={14} style={{ color: "var(--brand)" }} />
@@ -783,6 +806,41 @@ export function UserManage() {
                         {detail.stats.totalReadiness}
                       </p>
                     </div>
+                  </div>
+
+                  {/* Enrolled courses */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2" style={{ color: "var(--body)" }}>
+                      Enrolled courses
+                    </p>
+                    {detail.courses.length === 0 ? (
+                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                        No course enrollments yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                        {detail.courses.map((e) => (
+                          <div key={e.id} className="flex items-center gap-3 px-4 py-3">
+                            {e.course?.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={e.course.image} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
+                                <BookOpen size={16} style={{ color: "var(--brand)" }} />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                                {e.course?.title ?? "Deleted course"}
+                              </p>
+                              <p className="text-[12px] mt-0.5" style={{ color: "var(--body)" }}>
+                                {e.status} · {fmtDate(e.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Seminars */}

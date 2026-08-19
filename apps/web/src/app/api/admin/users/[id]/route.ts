@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
@@ -25,7 +26,12 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const [registrations, downloads, readiness] = await Promise.all([
+    const [enrollments, registrations, downloads, readiness] = await Promise.all([
+      CourseEnrollment.find({ user: user._id })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .populate("course", "title slug image badge price currency")
+        .lean(),
       SeminarRegistration.find({ user: user._id })
         .sort({ createdAt: -1 })
         .limit(100)
@@ -51,10 +57,27 @@ export async function GET(
         createdAt: user.createdAt,
       },
       stats: {
+        totalCourses: enrollments.length,
         totalSeminars: registrations.length,
         totalDownloads: downloads.length,
         totalReadiness: readiness.length,
       },
+      courses: enrollments.map((e) => ({
+        id: e._id.toString(),
+        course: e.course
+          ? {
+              id: (e.course as { _id: { toString(): string } })._id.toString(),
+              title: (e.course as { title?: string }).title,
+              slug: (e.course as { slug?: string }).slug,
+              image: (e.course as { image?: string }).image ?? null,
+              badge: (e.course as { badge?: string }).badge ?? "",
+              price: (e.course as { price?: number }).price ?? 0,
+              currency: (e.course as { currency?: string }).currency ?? "BDT",
+            }
+          : null,
+        status: e.status,
+        createdAt: e.createdAt,
+      })),
       seminars: registrations.map((r) => ({
         id: r._id.toString(),
         seminar: r.seminar
@@ -157,6 +180,7 @@ export async function DELETE(
 
     const userId = user._id;
     await Promise.all([
+      CourseEnrollment.deleteMany({ user: userId }),
       SeminarRegistration.deleteMany({ user: userId }),
       ResourceDownload.deleteMany({ user: userId }),
       ReadinessRun.deleteMany({ user: userId }),

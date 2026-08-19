@@ -9,6 +9,7 @@ import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 export function PromoPopup() {
   const [open, setOpen] = useState(false);
   useEffect(() => {
+    if (localStorage.getItem("promo-popup-seen")) return;
     const t = setTimeout(() => setOpen(true), 1500);
     return () => clearTimeout(t);
   }, []);
@@ -16,7 +17,10 @@ export function PromoPopup() {
     if (!open) return;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        localStorage.setItem("promo-popup-seen", "1");
+        setOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -34,7 +38,7 @@ export function PromoPopup() {
     >
       <div
         className="absolute inset-0 bg-[rgba(18,32,67,0.5)] backdrop-blur-[2px] fb-pop-fade"
-        onClick={() => setOpen(false)}
+          onClick={() => { localStorage.setItem("promo-popup-seen", "1"); setOpen(false); }}
       />
 
       <div
@@ -59,7 +63,7 @@ export function PromoPopup() {
         />
 
         <button
-          onClick={() => setOpen(false)}
+        onClick={() => { localStorage.setItem("promo-popup-seen", "1"); setOpen(false); }}
           aria-label="Close popup"
           className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-[#E7EBF0] transition-transform hover:scale-105"
           style={{ color: "var(--ink)" }}

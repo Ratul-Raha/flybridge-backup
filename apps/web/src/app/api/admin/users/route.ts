@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
@@ -52,7 +53,11 @@ export async function GET(request: NextRequest) {
       .lean();
 
     const userIds = users.map((u) => u._id);
-    const [regCounts, dlCounts, readinessAgg] = await Promise.all([
+    const [enrollCounts, regCounts, dlCounts, readinessAgg] = await Promise.all([
+      CourseEnrollment.aggregate([
+        { $match: { user: { $in: userIds } } },
+        { $group: { _id: "$user", count: { $sum: 1 } } },
+      ]),
       SeminarRegistration.aggregate([
         { $match: { user: { $in: userIds } } },
         { $group: { _id: "$user", count: { $sum: 1 } } },
@@ -73,6 +78,7 @@ export async function GET(request: NextRequest) {
         },
       ]),
     ]);
+    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
     const regMap = new Map(regCounts.map((r) => [r._id.toString(), r.count as number]));
     const dlMap = new Map(dlCounts.map((r) => [r._id.toString(), r.count as number]));
     const readinessMap = new Map(
@@ -112,6 +118,7 @@ export async function GET(request: NextRequest) {
           subscription: u.subscription,
           createdAt: u.createdAt,
           seminars: regMap.get(u._id.toString()) ?? 0,
+          courses: enrollMap.get(u._id.toString()) ?? 0,
           downloads: dlMap.get(u._id.toString()) ?? 0,
           readiness: readiness?.score ?? null,
           readinessRuns: readiness?.runs ?? 0,
