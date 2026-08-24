@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default async function CourseEnrollmentsPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
   const session = await readSession();
   if (!session) redirect("/login");
@@ -18,5 +18,5 @@ export default async function CourseEnrollmentsPage({
     redirect("/dashboard");
   }
 
-  return <CourseEnrollments courseId={params.id} />;
+  return <CourseEnrollments courseSlug={params.slug} />;
 }

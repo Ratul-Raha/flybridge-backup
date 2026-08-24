@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
@@ -25,7 +26,11 @@ export async function GET(
 
   try {
     await connectDb();
-    const course = await Course.findById(params.id);
+    const key = params.id;
+    const isObjectId = Types.ObjectId.isValid(key);
+    const course = await Course.findOne(
+      isObjectId ? { _id: key } : { slug: key.toLowerCase() }
+    );
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }

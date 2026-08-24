@@ -106,7 +106,7 @@ function StatCard({
   );
 }
 
-export function CourseEnrollments({ courseId }: { courseId: string }) {
+export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const [course, setCourse] = useState<CourseInfo | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -120,7 +120,7 @@ export function CourseEnrollments({ courseId }: { courseId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/courses/${courseId}/enrollments`, { cache: "no-store" });
+      const res = await fetch(`/api/courses/${encodeURIComponent(courseSlug)}/enrollments`, { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to load members");
       setCourse(data.course ?? null);
@@ -131,7 +131,7 @@ export function CourseEnrollments({ courseId }: { courseId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [courseId]);
+  }, [courseSlug]);
 
   useEffect(() => {
     load();
