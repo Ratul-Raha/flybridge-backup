@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course, type CourseDoc } from "@/lib/models/course";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 import { emitEvent } from "@/lib/events/emit";
 
-function toDto(c: CourseDoc) {
+function toDto(c: CourseDoc, enrollmentCount?: number) {
   return {
     id: c._id.toString(),
     slug: c.slug,
@@ -21,6 +22,7 @@ function toDto(c: CourseDoc) {
     published: c.published ?? false,
     featured: c.featured ?? false,
     upcoming: c.upcoming ?? false,
+    ...(enrollmentCount !== undefined ? { enrollmentCount } : {}),
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({
@@ -61,7 +63,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const courses = await Course.find().sort({ createdAt: -1 });
-      return NextResponse.json({ courses: courses.map(toDto) });
+      const enrollCounts = await CourseEnrollment.aggregate([
+        { $group: { _id: "$course", count: { $sum: 1 } } },
+      ]);
+      const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+      return NextResponse.json({
+        courses: courses.map((c) => toDto(c, enrollMap.get(c._id.toString()) ?? 0)),
+      });
     }
 
     if (slug) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { BookOpen, Loader2, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
 
@@ -25,6 +25,7 @@ type Course = {
   published: boolean;
   featured: boolean;
   upcoming: boolean;
+  enrollmentCount?: number;
   modules: Module[];
 };
 
@@ -673,6 +674,11 @@ export function CourseManage() {
                     <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                       {lessonCount} lessons
                     </span>
+                    {c.enrollmentCount !== undefined && (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                        {c.enrollmentCount} {c.enrollmentCount === 1 ? "member" : "members"}
+                      </span>
+                    )}
                     {!c.published && (
                       <span
                         className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
@@ -702,6 +708,14 @@ export function CourseManage() {
                     </p>
                   )}
                   <div className="flex flex-wrap items-center gap-3 mt-4">
+                    <Link
+                      href={`/dashboard/courses/${c.id}/enrollments`}
+                      className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                      style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                    >
+                      <Users size={13} />
+                      See registered members{c.enrollmentCount ? ` (${c.enrollmentCount})` : ""}
+                    </Link>
                     {c.published && (
                       <Link
                         href={`/dashboard/courses/${c.slug}/learn`}
