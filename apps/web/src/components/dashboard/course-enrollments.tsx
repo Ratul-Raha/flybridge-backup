@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
   Search,
   Users,
 } from "lucide-react";
@@ -24,7 +25,10 @@ type Member = {
   subscription: string;
   status: "active" | "expired" | string;
   enrolledAt: string;
-  progress: number;
+  lessonsCompleted: number;
+  totalLessons: number;
+  lessonProgress: number;
+  quizAvg: number;
   passed: boolean;
   certificateIssued: boolean;
   completed: boolean;
@@ -44,13 +48,14 @@ type Stats = {
   expired: number;
   completed: number;
   certificates: number;
-  avgProgress: number;
+  avgLessonProgress: number;
+  avgQuizScore: number;
 };
 
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_230px_130px_170px_110px]";
+const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_200px_115px_170px_95px_110px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -166,8 +171,11 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
       case "name-desc":
         arr.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case "progress":
-        arr.sort((a, b) => b.progress - a.progress);
+      case "lessons":
+        arr.sort((a, b) => b.lessonProgress - a.lessonProgress);
+        break;
+      case "quiz":
+        arr.sort((a, b) => b.quizAvg - a.quizAvg);
         break;
       default:
         arr.sort((a, b) => +new Date(b.enrolledAt) - +new Date(a.enrolledAt));
@@ -224,7 +232,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
           <StatCard
             label="Total members"
             value={stats.total}
@@ -240,10 +248,18 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
             caption={stats.total > 0 ? `${Math.round((stats.completed / stats.total) * 100)}% completion rate` : undefined}
           />
           <StatCard
-            label="Avg progress"
-            value={`${stats.avgProgress}%`}
+            label="Avg lessons completed"
+            value={`${stats.avgLessonProgress}%`}
             icon={BookOpen}
             gradient="linear-gradient(135deg,#0EA5E9,#38BDF8)"
+            caption="Course usage"
+          />
+          <StatCard
+            label="Avg quiz score"
+            value={`${stats.avgQuizScore}%`}
+            icon={GraduationCap}
+            gradient="linear-gradient(135deg,#6E4CFF,#8B5CF6)"
+            caption="Performance"
           />
           <StatCard
             label="Certificates issued"
@@ -297,7 +313,8 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
           <option value="oldest">Oldest first</option>
           <option value="name-asc">Name (A–Z)</option>
           <option value="name-desc">Name (Z–A)</option>
-          <option value="progress">Progress (high → low)</option>
+          <option value="lessons">Lessons completed (high → low)</option>
+          <option value="quiz">Quiz avg (high → low)</option>
         </select>
       </div>
 
@@ -310,7 +327,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
           className={`hidden md:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
           style={{ borderColor: "var(--line)" }}
         >
-          {["#", "Member", "Email", "Enrolled", "Progress", "Status"].map((c) => (
+          {["#", "Member", "Email", "Enrolled", "Course progress", "Quiz avg", "Status"].map((c) => (
             <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
               {c}
             </span>
@@ -382,23 +399,28 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                     })}
                   </span>
 
-                  {/* Progress */}
+                  {/* Course progress (lessons) */}
                   <div className="hidden md:flex items-center gap-2">
                     <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: "var(--line)" }}>
                       <div
                         className="h-full rounded-full transition-all duration-300"
                         style={{
-                          width: `${Math.min(100, Math.max(0, m.progress))}%`,
-                          background: m.completed
+                          width: `${Math.min(100, Math.max(0, m.lessonProgress))}%`,
+                          background: m.lessonProgress >= 100
                             ? "linear-gradient(90deg,#10B981,#34D399)"
                             : "linear-gradient(90deg,#6E4CFF,#8B5CF6)",
                         }}
                       />
                     </div>
                     <span className="font-mono text-[11.5px] tabular-nums shrink-0" style={{ color: "var(--body)" }}>
-                      {m.progress}%
+                      {m.lessonsCompleted}/{m.totalLessons}
                     </span>
                   </div>
+
+                  {/* Quiz avg */}
+                  <span className="hidden md:block font-mono text-[12px] tabular-nums" style={{ color: "var(--body)" }}>
+                    {m.quizAvg}%
+                  </span>
 
                   {/* Status */}
                   <div className="hidden md:flex items-center gap-1.5">
@@ -438,7 +460,10 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                       Enrolled {new Date(m.enrolledAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </span>
                     <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                      {m.progress}% complete
+                      {m.lessonsCompleted}/{m.totalLessons} lessons
+                    </span>
+                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                      Quiz avg {m.quizAvg}%
                     </span>
                     <span
                       className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[10px] font-semibold"

@@ -46,12 +46,23 @@ export async function GET(
       progressDocs.map((p) => [String(p.user), p])
     );
 
+    const allLessons = (course.modules ?? []).flatMap(
+      (m) => m.lessons ?? []
+    );
+    const totalLessons = allLessons.length;
+    const watchableLessons = allLessons.filter((l) => l.videoUrl).length;
+    const lessonDenominator = watchableLessons > 0 ? watchableLessons : totalLessons;
+
     const members = enrollments.map((e) => {
       const u = (e.user ?? null) as PopulatedUser | null;
       const userId = u?._id ? String(u._id) : "";
       const p = userId ? progressByUser.get(userId) : undefined;
-      const progress = p?.overallPercentage ?? 0;
-      const completed = Boolean(p && (p.passed || progress >= 100));
+      const quizAvg = p?.overallPercentage ?? 0;
+      const lessonsCompleted = Math.min(p?.watchedLessons?.length ?? 0, lessonDenominator);
+      const lessonProgress = lessonDenominator
+        ? Math.round((lessonsCompleted / lessonDenominator) * 100)
+        : 0;
+      const completed = Boolean(p && (p.passed || quizAvg >= 100));
       return {
         id: e._id.toString(),
         userId,
@@ -62,7 +73,10 @@ export async function GET(
         subscription: u?.subscription ?? "free",
         status: e.status ?? "active",
         enrolledAt: e.createdAt,
-        progress,
+        lessonsCompleted,
+        totalLessons,
+        lessonProgress,
+        quizAvg,
         passed: Boolean(p?.passed),
         certificateIssued: Boolean(p?.certificateIssued),
         completed,
@@ -73,8 +87,11 @@ export async function GET(
     const active = members.filter((m) => m.status === "active").length;
     const completedCount = members.filter((m) => m.completed).length;
     const certificates = members.filter((m) => m.certificateIssued).length;
-    const avgProgress = total
-      ? Math.round(members.reduce((sum, m) => sum + m.progress, 0) / total)
+    const avgLessonProgress = total
+      ? Math.round(members.reduce((sum, m) => sum + m.lessonProgress, 0) / total)
+      : 0;
+    const avgQuizScore = total
+      ? Math.round(members.reduce((sum, m) => sum + m.quizAvg, 0) / total)
       : 0;
 
     return NextResponse.json({
@@ -91,7 +108,8 @@ export async function GET(
         expired: total - active,
         completed: completedCount,
         certificates,
-        avgProgress,
+        avgLessonProgress,
+        avgQuizScore,
       },
       members,
     });
