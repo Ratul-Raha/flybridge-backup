@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -62,16 +62,30 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [signingOut, setSigningOut] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
     setSigningOut(true);
+    setAvatarMenuOpen(false);
     try {
       await signOut();
     } finally {
       setSigningOut(false);
     }
   };
+
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target as Node)) {
+        setAvatarMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [avatarMenuOpen]);
 
   const nav = useMemo<NavSegment[]>(() => {
     if (!user) return [];
@@ -397,16 +411,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         ))}
       </div>
 
-      <div className="mt-auto px-4 pb-6">
-        <button
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#FDF1F0] px-3.5 py-[11px] text-[13.5px] font-semibold text-[#C0392B] transition-all duration-200 hover:bg-[#C0392B] hover:text-white hover:shadow-lg hover:shadow-[#C0392B]/25 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
-        >
-          {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} strokeWidth={2.2} />}
-          {signingOut ? "Signing out…" : "Sign out"}
-        </button>
-      </div>
+      <div className="mt-auto" />
     </>
   );
 
@@ -474,17 +479,59 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               user && (
                 <div className="flex items-center gap-3">
                   {user && <NotificationBell />}
-                  <span
-                    className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[6px] hidden sm:block"
-                    style={{ background: roleStyle.bg, color: roleStyle.fg }}
-                  >
-                    {user.accountType}
-                  </span>
-                  <Link href="/dashboard/settings" aria-label="Settings">
-                    <span className="block rounded-full border-2" style={{ borderColor: "var(--line)" }}>
+                  <div className="relative" ref={avatarMenuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setAvatarMenuOpen((o) => !o)}
+                      className="block rounded-full border-2 transition-colors duration-200"
+                      style={{ borderColor: avatarMenuOpen ? "var(--brand)" : "var(--line)" }}
+                    >
                       <Avatar name={user.name} src={user.avatar} size={36} />
-                    </span>
-                  </Link>
+                    </button>
+
+                    {avatarMenuOpen && (
+                      <div
+                        className="absolute right-0 top-full mt-2 w-56 rounded-lg border bg-white py-1.5 z-50"
+                        style={{ borderColor: "var(--line)", boxShadow: "0 8px 24px -4px rgba(18,32,67,0.12)" }}
+                      >
+                        <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--line)" }}>
+                          <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                            {user.name}
+                          </p>
+                          <p className="text-[11.5px] truncate mt-0.5" style={{ color: "var(--body)" }}>
+                            {user.email}
+                          </p>
+                          <span
+                            className="inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-2.5 py-[3px] mt-2"
+                            style={{ background: roleStyle.bg, color: roleStyle.fg }}
+                          >
+                            {roleStyle.label}
+                          </span>
+                        </div>
+                        <div className="py-1">
+                          <Link
+                            href="/dashboard/settings"
+                            onClick={() => setAvatarMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors hover:bg-[var(--bg-soft)]"
+                            style={{ color: "var(--ink)" }}
+                          >
+                            <SettingsIcon size={15} style={{ color: "var(--body)" }} />
+                            Settings
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={handleSignOut}
+                            disabled={signingOut}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-50"
+                            style={{ color: "#C0392B" }}
+                          >
+                            {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                            {signingOut ? "Signing out…" : "Sign out"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             )}

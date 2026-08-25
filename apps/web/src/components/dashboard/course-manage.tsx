@@ -633,130 +633,203 @@ export function CourseManage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-5">
-        {courses.map((c) => {
-          const lessonCount = c.modules.reduce((n, m) => n + m.lessons.length, 0);
-          return (
-            <div key={c.id} className="rounded-[24px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-              <div className="flex flex-col sm:flex-row">
+      {/* ── Stat cards ── */}
+      {(() => {
+        const totalLessons = courses.reduce((n, c) => n + c.modules.reduce((m, mod) => m + mod.lessons.length, 0), 0);
+        const totalEnrollments = courses.reduce((n, c) => n + (c.enrollmentCount ?? 0), 0);
+        const publishedCount = courses.filter((c) => c.published).length;
+
+        const items = [
+          { label: "TOTAL COURSES", value: courses.length, icon: BookOpen, gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)", caption: `${publishedCount} published` },
+          { label: "ENROLLMENTS", value: totalEnrollments, icon: Users, gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)", caption: "Active enrollments" },
+          { label: "TOTAL LESSONS", value: totalLessons, icon: BookOpen, gradient: "linear-gradient(135deg,#10B981,#34D399)", caption: "Across all modules" },
+          { label: "DRAFTS", value: courses.length - publishedCount, icon: BookOpen, gradient: "linear-gradient(135deg,#F59E0B,#F97316)", caption: "Not yet published" },
+        ];
+
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {items.map((s) => (
+              <div
+                key={s.label}
+                className="relative rounded-lg border bg-white p-5 overflow-hidden transition-transform duration-250 hover:translate-y-[-2px]"
+                style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
+              >
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08]" style={{ background: s.gradient }} />
+                <div
+                  className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4"
+                  style={{ background: s.gradient, boxShadow: `0 8px 18px -6px ${s.gradient}66` }}
+                >
+                  <s.icon size={19} strokeWidth={2.2} />
+                </div>
+                <p className="font-display text-[26px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                  {s.value.toLocaleString()}
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
+                  {s.label}
+                </p>
+                <p className="text-[11.5px] mt-2.5 font-medium" style={{ color: "var(--body)" }}>
+                  {s.caption}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
+      {/* ── Course table ── */}
+      {courses.length === 0 && !formOpen ? (
+        <div className="rounded-lg border bg-white p-16 text-center" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+          <div className="w-14 h-14 rounded-lg mx-auto mb-5 flex items-center justify-center" style={{ background: "var(--bg-soft)" }}>
+            <BookOpen size={22} style={{ color: "var(--body)" }} />
+          </div>
+          <p className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>No courses yet</p>
+          <p className="text-[13px] mt-1.5 max-w-[260px] mx-auto" style={{ color: "var(--body)" }}>
+            Create your first course to start building your curriculum.
+          </p>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="mt-6 inline-flex items-center gap-2 rounded-full text-white text-[13px] font-medium px-5 py-[10px] transition-all hover:opacity-90"
+            style={{ background: "var(--brand)" }}
+          >
+            <Plus size={14} />
+            New course
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+          {/* Table header */}
+          <div
+            className="hidden md:grid items-center px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.08em]"
+            style={{
+              color: "var(--body)",
+              background: "var(--bg-soft)",
+              gridTemplateColumns: "44px 1fr 100px 90px 90px auto",
+              gap: "16px",
+            }}
+          >
+            <span />
+            <span>Course</span>
+            <span>Status</span>
+            <span className="text-right">Content</span>
+            <span className="text-right">Students</span>
+            <span className="text-right">Actions</span>
+          </div>
+
+          {/* Rows */}
+          {courses.map((c, idx) => {
+            const lessonCount = c.modules.reduce((n, m) => n + m.lessons.length, 0);
+            const isPaid = c.price > 0;
+            return (
+              <div
+                key={c.id}
+                className="grid items-center px-5 transition-colors hover:bg-[var(--bg-soft)]/60"
+                style={{
+                  gridTemplateColumns: "44px 1fr 100px 90px 90px auto",
+                  gap: "16px",
+                  borderBottom: idx < courses.length - 1 ? "1px solid var(--line)" : "none",
+                  minHeight: "56px",
+                }}
+              >
+                {/* Thumbnail */}
                 {c.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image} alt={c.title} className="w-full sm:w-[220px] sm:min-h-[140px] h-[150px] sm:h-auto object-cover" />
+                  <img src={c.image} alt="" className="w-[40px] h-[40px] rounded-lg object-cover" />
                 ) : (
                   <div
-                    className="w-full sm:w-[220px] h-[150px] sm:h-auto shrink-0 flex items-center justify-center"
+                    className="w-[40px] h-[40px] rounded-lg flex items-center justify-center"
                     style={{
-                      background:
-                        c.price > 0
-                          ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
-                          : "linear-gradient(135deg,#0FA968,#18A97A)",
+                      background: isPaid
+                        ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
+                        : "linear-gradient(135deg,#0FA968,#18A97A)",
                     }}
                   >
-                    <BookOpen className="w-8 h-8 text-white/80" />
+                    <BookOpen size={15} className="text-white/70" />
                   </div>
                 )}
 
-                <div className="flex-1 p-5">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span
-                      className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                      style={
-                        c.price > 0
-                          ? { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-                          : { background: "var(--brand-soft)", color: "var(--brand)" }
-                      }
-                    >
-                      {c.price > 0 ? `Paid · ${c.currency} ${c.price}` : "Free"}
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                      {c.modules.length} modules
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                      {lessonCount} lessons
-                    </span>
-                    {c.enrollmentCount !== undefined && (
-                      <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                        {c.enrollmentCount} {c.enrollmentCount === 1 ? "member" : "members"}
-                      </span>
-                    )}
-                    {!c.published && (
-                      <span
-                        className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                        style={{ background: "#FDF1F0", color: "#C0392B" }}
-                      >
-                        Draft
-                      </span>
-                    )}
-                    {c.upcoming && (
-                      <span
-                        className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                        style={{ background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }}
-                      >
-                        Upcoming
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+                {/* Title + slug */}
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-semibold truncate leading-tight" style={{ color: "var(--ink)" }}>
                     {c.title}
-                  </h3>
-                  <p className="text-[12.5px] font-mono mt-0.5" style={{ color: "var(--body)" }}>
+                  </p>
+                  <p className="text-[11px] font-mono truncate mt-0.5" style={{ color: "var(--body)" }}>
                     /{c.slug}
                   </p>
-                  {c.description && (
-                    <p className="text-[13px] mt-1 line-clamp-2" style={{ color: "var(--body)" }}>
-                      {c.description}
-                    </p>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-medium rounded-full px-2.5 py-[3px]"
+                    style={
+                      c.published
+                        ? { background: "var(--mint-bg)", color: "var(--mint-ink)" }
+                        : { background: "var(--bg-soft)", color: "var(--body)" }
+                    }
+                  >
+                    <span
+                      className="w-[6px] h-[6px] rounded-full"
+                      style={{ background: c.published ? "var(--mint-ink)" : "#B0B8C9" }}
+                    />
+                    {c.published ? "Active" : "Draft"}
+                  </span>
+                  {c.upcoming && (
+                    <span
+                      className="text-[10px] font-semibold rounded-full px-2 py-[2px]"
+                      style={{ background: "var(--lav-bg)", color: "var(--lav-ink)" }}
+                    >
+                      Soon
+                    </span>
                   )}
-                  <div className="flex flex-wrap items-center gap-3 mt-4">
-                    <Link
-                      href={`/dashboard/courses/${c.slug}/enrollments`}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                      style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                    >
-                      <Users size={13} />
-                      See registered members{c.enrollmentCount ? ` (${c.enrollmentCount})` : ""}
-                    </Link>
-                    {c.published && (
-                      <Link
-                        href={`/dashboard/courses/${c.slug}/learn`}
-                        className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                        style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                      >
-                        <BookOpen size={13} />
-                        Open player
-                      </Link>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => openEdit(c)}
-                      className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                      style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => remove(c)}
-                      disabled={deletingId === c.id}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] transition-all duration-200 disabled:opacity-50"
-                      style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.3)" }}
-                    >
-                      {deletingId === c.id ? <Loader2 size={13} className="animate-spin" /> : null}
-                      {deletingId === c.id ? "Deleting…" : "Delete"}
-                    </button>
-                  </div>
+                </div>
+
+                {/* Content */}
+                <p className="text-[12.5px] text-right tabular-nums" style={{ color: "var(--ink)" }}>
+                  {c.modules.length} <span style={{ color: "var(--body)" }}>mod</span>{" "}
+                  {lessonCount} <span style={{ color: "var(--body)" }}>les</span>
+                </p>
+
+                {/* Students */}
+                <p className="text-[12.5px] text-right tabular-nums" style={{ color: "var(--ink)" }}>
+                  {(c.enrollmentCount ?? 0).toLocaleString()}
+                </p>
+
+                {/* Actions — always visible */}
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(c)}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[5px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    Edit
+                  </button>
+                  <Link
+                    href={`/dashboard/courses/${c.slug}/enrollments`}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[5px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                  >
+                    <Users size={12} />
+                    {c.enrollmentCount ?? 0}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => remove(c)}
+                    disabled={deletingId === c.id}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[5px] transition-all duration-200 disabled:opacity-50"
+                    style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.25)" }}
+                  >
+                    {deletingId === c.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                    Delete
+                  </button>
                 </div>
               </div>
-            </div>
-          );
-        })}
-
-        {courses.length === 0 && !formOpen && (
-          <p className="text-[13.5px] text-center py-10" style={{ color: "var(--body)" }}>
-            No courses yet — click "New course" to create your first one.
-          </p>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
