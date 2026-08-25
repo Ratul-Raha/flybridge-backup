@@ -36,24 +36,35 @@ export async function createCheckoutSession(
   if (!order.items[0]) throw new Error("Order has no items");
 
   const item = order.items[0];
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    ...(opts.email ? { customer_email: opts.email } : {}),
-    client_reference_id: order._id.toString(),
-    metadata: { orderId: order._id.toString() },
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: (order.currency ?? "BDT").toLowerCase(),
-          unit_amount: Math.round((order.total ?? 0) * 100),
-          product_data: { name: item.title || "FlyBridge purchase" },
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      ...(opts.email ? { customer_email: opts.email } : {}),
+      client_reference_id: order._id.toString(),
+      metadata: { orderId: order._id.toString() },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: (order.currency ?? "BDT").toLowerCase(),
+            unit_amount: Math.round((order.total ?? 0) * 100),
+            product_data: { name: item.title || "FlyBridge purchase" },
+          },
         },
-      },
-    ],
-    success_url: `${opts.origin}/payment/success?order=${order._id.toString()}`,
-    cancel_url: `${opts.origin}${opts.cancelPath ?? cancelPathFor(item.itemType, item.itemId)}`,
-  });
+      ],
+      success_url: `${opts.origin}/payment/success?order=${order._id.toString()}`,
+      cancel_url: `${opts.origin}${opts.cancelPath ?? cancelPathFor(item.itemType, item.itemId)}`,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (/must convert to at least|below the minimum/i.test(message)) {
+      throw new Error(
+        "This amount is below the payment processor's minimum charge (around 60 BDT). Please use a higher amount."
+      );
+    }
+    throw error;
+  }
 
   if (!session.url) throw new Error("Stripe did not return a checkout URL");
   return { url: session.url, sessionId: session.id };
