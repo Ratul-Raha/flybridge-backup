@@ -100,7 +100,7 @@ export async function GET(
         title: course.title,
         slug: course.slug,
         price: course.price ?? 0,
-        currency: course.currency ?? "BDT",
+        currency: course.currency ?? "USD",
       },
       stats: {
         total,

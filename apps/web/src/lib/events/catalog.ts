@@ -101,7 +101,7 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
     description: "Fires when a course is announced (manual trigger from the admin console).",
     fields: ["course.slug", "course.title", "course.desc", "course.badge", "course.price", "course.image"],
     samplePayload: () => ({
-      course: { slug: "study-visa-prep-us", title: "Student Visa Blueprint™", desc: "Step-by-step study visa preparation.", badge: "STUDY ABROAD", price: "৳২,৯৯৯" },
+      course: { slug: "study-visa-prep-us", title: "Student Visa Blueprint™", desc: "Step-by-step study visa preparation.", badge: "STUDY ABROAD", price: "$29.99" },
     }),
   },
   "course.created": {
@@ -152,7 +152,7 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       order: {
         id: "665f1c2a9e3b1c0012ab34cd",
         total: 2999,
-        currency: "BDT",
+        currency: "USD",
         status: "pending",
         items: [{ itemType: "course", itemId: "665f1c2a9e3b1c0012ab34cd", title: "Student Visa Blueprint™", price: 2999 }],
       },
@@ -168,7 +168,7 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       order: {
         id: "665f1c2a9e3b1c0012ab34cd",
         total: 0,
-        currency: "BDT",
+        currency: "USD",
         status: "completed",
         items: [{ itemType: "seminar", itemId: "665f1c2a9e3b1c0012ab34cd", title: "Student Visa Blueprint — Live Q&A", price: 0 }],
       },

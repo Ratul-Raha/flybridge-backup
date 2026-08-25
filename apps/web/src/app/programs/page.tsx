@@ -45,7 +45,7 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
     subtitle: c.subtitle ?? "",
     description: c.description ?? "",
     price: c.price ?? 0,
-    currency: c.currency ?? "BDT",
+    currency: c.currency ?? "USD",
     image: c.image ?? null,
     level: c.level ?? "",
     upcoming: c.upcoming ?? false,

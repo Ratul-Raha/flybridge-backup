@@ -60,7 +60,7 @@ const emptyForm: FormState = {
   language: "",
   pace: "",
   price: "",
-  currency: "BDT",
+  currency: "USD",
   image: "",
   published: false,
   featured: false,
@@ -126,7 +126,7 @@ export function CourseManage() {
       language: c.language ?? "",
       pace: c.pace ?? "",
       price: c.price ? String(c.price) : "",
-      currency: c.currency ?? "BDT",
+      currency: c.currency ?? "USD",
       image: c.image ?? "",
       published: c.published ?? false,
       featured: c.featured ?? false,
@@ -368,7 +368,7 @@ export function CourseManage() {
                 type="text"
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                placeholder="BDT"
+                placeholder="USD"
                 className={inputClass}
                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
               />

@@ -159,7 +159,7 @@ function RevenueChart({ data }: { data: OrderStats["chart"] }) {
         axisPointer: { type: "shadow" },
         formatter: (params: unknown) => {
           const p = (params as { name: string; value: number }[])[0];
-          return `<b>${p.name}</b><br/>BDT ${p.value.toLocaleString()}`;
+          return `<b>${p.name}</b><br/>$${p.value.toLocaleString()}`;
         },
       },
       xAxis: {
@@ -404,7 +404,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                  {o.total === 0 ? "Free" : `${o.currency} ${o.total.toLocaleString()}`}
+                  {o.total === 0 ? "Free" : `$${o.total.toLocaleString()}`}
                 </p>
                 <p className="text-[10px]" style={{ color: "var(--body)" }}>{ago}</p>
               </div>
@@ -515,7 +515,7 @@ export function OrderManage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               label="Total revenue"
-              value={`${orders[0]?.currency ?? "BDT"} ${(stats?.totalRevenue ?? 0).toLocaleString()}`}
+              value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`}
               sub={`${stats?.completedOrders ?? 0} completed orders`}
               icon={DollarSign}
               iconBg="var(--mint-bg)"
@@ -530,7 +530,7 @@ export function OrderManage() {
             />
             <MetricCard
               label="Avg. order value"
-              value={`${orders[0]?.currency ?? "BDT"} ${(stats?.avgOrderValue ?? 0).toLocaleString()}`}
+              value={`$${(stats?.avgOrderValue ?? 0).toLocaleString()}`}
               sub="Across all paid orders"
               icon={TrendingUp}
               iconBg="var(--lav-bg)"

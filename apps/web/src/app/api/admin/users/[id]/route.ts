@@ -72,7 +72,7 @@ export async function GET(
               image: (e.course as { image?: string }).image ?? null,
               badge: (e.course as { badge?: string }).badge ?? "",
               price: (e.course as { price?: number }).price ?? 0,
-              currency: (e.course as { currency?: string }).currency ?? "BDT",
+              currency: (e.course as { currency?: string }).currency ?? "USD",
             }
           : null,
         status: e.status,

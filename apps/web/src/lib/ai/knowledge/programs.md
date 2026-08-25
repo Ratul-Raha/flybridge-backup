@@ -3,8 +3,8 @@
 ## Pricing and payments
 
 Program prices vary by course. Payment details and any intro offers are shown on
-each program card on the Programs page. If a price is shown in local currency
-(e.g. ৳), that is the intro offer price; the page is always the source of truth.
+each program card on the Programs page. If a price is shown (e.g. $29.99), that
+is the intro offer price; the page is always the source of truth.
 
 ## How to enrol
 

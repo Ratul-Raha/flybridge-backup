@@ -58,7 +58,7 @@ export default async function CheckoutPage({ params }: Props) {
     image: course.image ?? null,
     badge: details?.badge ?? course.badge ?? "COURSE",
     price: course.price ?? 0,
-    currency: course.currency ?? "BDT",
+    currency: course.currency ?? "USD",
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",

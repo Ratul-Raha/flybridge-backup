@@ -137,10 +137,10 @@ export function CoursePromo({ image = true }: { image?: boolean }) {
                       className="font-display font-bold leading-none mt-1.5 tracking-[-0.01em]"
                       style={{ fontSize: "26px", color: "var(--ink)" }}
                     >
-                      ৳২,৯৯৯
+                      $29.99
                     </div>
                     <div className="font-mono text-[8.5px] mt-1.5" style={{ color: "var(--brand-2)" }}>
-                      SAVE ৳২,০০১ · ৪০% ছাড়
+                      SAVE $20 · 40% OFF
                     </div>
                   </div>
                 </div>

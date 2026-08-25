@@ -22,7 +22,7 @@ const orderSchema = new Schema(
     email: { type: String, lowercase: true, trim: true, index: true },
     items: { type: [orderItemSchema], default: [] },
     total: { type: Number, min: 0, default: 0 },
-    currency: { type: String, default: "BDT", trim: true },
+    currency: { type: String, default: "USD", trim: true },
     status: {
       type: String,
       enum: ORDER_STATUSES,

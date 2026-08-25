@@ -39,7 +39,7 @@ export async function generateSeminarChunks(): Promise<KnowledgeChunk[]> {
 
   for (const seminar of seminars) {
     const date = formatDate(seminar.dateTime);
-    const price = seminar.type === "paid" && seminar.price ? `৳${seminar.price}` : null;
+    const price = seminar.type === "paid" && seminar.price ? `$${seminar.price}` : null;
 
     const lines = [
       `The ${seminar.type} seminar "${seminar.title}" takes place on ${date}.`,
@@ -116,7 +116,7 @@ export async function generateCourseChunks(): Promise<KnowledgeChunk[]> {
 
   for (const course of courses) {
     const price =
-      course.price && course.price > 0 ? `${course.currency ?? "BDT"} ${course.price}` : "Free";
+      course.price && course.price > 0 ? `${course.currency ?? "USD"} ${course.price}` : "Free";
     const status = course.published ? "Available now" : "Not published yet";
 
     const lines = [

@@ -19,7 +19,7 @@ export const programs: Program[] = [
     desc: "The complete step-by-step system to prepare your study visa application with confidence.",
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
-    price: "৳২,৯৯৯",
+    price: "$29.99",
     image: "/watermark.png",
   },
   {

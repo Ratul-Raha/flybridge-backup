@@ -36,7 +36,7 @@ const courseSchema = new Schema(
     language: { type: String, trim: true },
     pace: { type: String, trim: true },
     price: { type: Number, min: 0, default: 0 },
-    currency: { type: String, default: "BDT", trim: true },
+    currency: { type: String, default: "USD", trim: true },
     image: { type: String, trim: true },
     published: { type: Boolean, default: false, index: true },
     featured: { type: Boolean, default: false },

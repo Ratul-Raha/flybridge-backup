@@ -44,7 +44,7 @@ export async function resolveProduct(
       itemId: s._id.toString(),
       title: s.title,
       price: s.price,
-      currency: "BDT",
+      currency: "USD",
       image: s.image ?? null,
       url: s.url ?? null,
     };
@@ -58,7 +58,7 @@ export async function resolveProduct(
       itemId: r._id.toString(),
       title: r.title,
       price: r.price,
-      currency: "BDT",
+      currency: "USD",
       image: r.thumbnail ?? null,
       url: null,
     };

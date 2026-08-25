@@ -94,8 +94,8 @@ export const courseDetails: Record<string, CourseDetails> = {
     level: "Beginner friendly",
     language: "বাংলা + English",
     pace: "Self-paced · 3-month access",
-    price: "৳২,৯৯৯",
-    originalPrice: "৳৯,৯৯৯",
+    price: "$29.99",
+    originalPrice: "$99.99",
     savings: "70%",
     access: "৩ মাসের পূর্ণ এক্সেস",
     rating: {
@@ -258,7 +258,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     },
     cta: {
       title: "Ready to prepare your visa application with confidence?",
-      desc: "Get 3 months of full access — all video lessons, the AI SOP generator, document templates, live Q&A and support for ৳২,৯৯৯ only.",
+      desc: "Get 3 months of full access — all video lessons, the AI SOP generator, document templates, live Q&A and support for $29.99 only.",
     },
   },
   "obocheton-mone-ilish-level-01": {

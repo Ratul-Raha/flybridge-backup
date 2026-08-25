@@ -86,7 +86,7 @@ export function PromoPopup() {
                 মাত্র
               </div>
               <div className="mt-0.5 text-[27px] font-extrabold leading-none text-white">
-                ৳২,৯৯৯
+                $29.99
               </div>
               <div className="mt-1.5 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9.5px] font-bold text-[#5EEAA6]">
                 ৩ মাসের পূর্ণ এক্সেস
@@ -188,7 +188,7 @@ export function PromoPopup() {
                     মাত্র
                   </div>
                   <div className="mt-0.5 text-[22px] font-extrabold leading-none text-white">
-                    ৳২,৯৯৯
+                    $29.99
                   </div>
                   <div className="mt-1 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9px] font-bold text-[#5EEAA6]">
                     ৩ মাসের পূর্ণ এক্সেস

@@ -63,7 +63,7 @@ export function TopCourses() {
                       {item.orders}
                     </td>
                     <td className="py-3 text-right font-medium" style={{ color: "var(--ink)" }}>
-                      BDT {item.revenue.toLocaleString()}
+                      ${item.revenue.toLocaleString()}
                     </td>
                   </tr>
                 );

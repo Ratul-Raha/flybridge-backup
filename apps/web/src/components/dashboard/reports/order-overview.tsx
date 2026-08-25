@@ -123,7 +123,7 @@ export function OrderOverview() {
           <Metric
             icon={DollarSign}
             label="Revenue"
-            value={data ? `BDT ${data.totalRevenue.toLocaleString()}` : "\u2014"}
+            value={data ? `$${data.totalRevenue.toLocaleString()}` : "\u2014"}
             color="#10B981"
           />
           <Metric
@@ -148,7 +148,7 @@ export function OrderOverview() {
           <Metric
             icon={TrendingUp}
             label="Avg. order value"
-            value={data ? `BDT ${data.avgOrderValue.toLocaleString()}` : "\u2014"}
+            value={data ? `$${data.avgOrderValue.toLocaleString()}` : "\u2014"}
             color="#0EA5E9"
           />
           <Metric
@@ -214,7 +214,7 @@ export function OrderOverview() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[11.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                    {o.total === 0 ? "Free" : `${o.currency} ${o.total.toLocaleString()}`}
+                    {o.total === 0 ? "Free" : `$${o.total.toLocaleString()}`}
                   </p>
                   <p className="text-[9.5px]" style={{ color: "var(--body)" }}>{ago}</p>
                 </div>

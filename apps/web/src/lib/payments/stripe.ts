@@ -47,7 +47,7 @@ export async function createCheckoutSession(
         {
           quantity: 1,
           price_data: {
-            currency: (order.currency ?? "BDT").toLowerCase(),
+            currency: (order.currency ?? "USD").toLowerCase(),
             unit_amount: Math.round((order.total ?? 0) * 100),
             product_data: { name: item.title || "FlyBridge purchase" },
           },
@@ -60,7 +60,7 @@ export async function createCheckoutSession(
     const message = error instanceof Error ? error.message : "";
     if (/must convert to at least|below the minimum/i.test(message)) {
       throw new Error(
-        "This amount is below the payment processor's minimum charge (around 60 BDT). Please use a higher amount."
+        "This amount is below the payment processor's minimum charge (around US$0.50). Please use a higher amount."
       );
     }
     throw error;

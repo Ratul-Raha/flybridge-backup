@@ -20,7 +20,7 @@ function toDto(c: CourseDoc, progress?: {
     subtitle: c.subtitle ?? "",
     description: c.description ?? "",
     price: c.price ?? 0,
-    currency: c.currency ?? "BDT",
+    currency: c.currency ?? "USD",
     image: c.image ?? null,
     published: c.published ?? false,
     modules: (c.modules ?? []).map((m) => ({
