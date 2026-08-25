@@ -1,60 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { successStoryImages as stories } from "@/lib/stories";
 
 const stats = [
   { value: 10000, suffix: "+", label: "Learners guided" },
-  { value: 3200, suffix: "+", label: "Visa approvals" },
-  { value: 92, suffix: "%", label: "Course completion" },
+  { value: 300, suffix: "+", label: "Visa approvals" },
+  { value: 83, suffix: "%", label: "Course completion" },
 ];
 
-function CountUp({ start, target, suffix }: { start: boolean; target: number; suffix: string }) {
-  const [val, setVal] = useState(0);
-
-  useEffect(() => {
-    if (!start) return;
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min((now - t0) / 1500, 1);
-      setVal(Math.round((1 - Math.pow(1 - t, 3)) * target));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [start, target]);
-
-  return (
-    <>
-      {val.toLocaleString("en-US")}
-      <span style={{ color: "var(--brand)" }}>{suffix}</span>
-    </>
-  );
-}
-
 export function SuccessStories() {
-  const [shown, setShown] = useState(false);
   const [active, setActive] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ob = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setShown(true);
-          ob.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-    ob.observe(el);
-    return () => ob.disconnect();
-  }, []);
 
   useEffect(() => {
     if (active === null) return;
@@ -81,7 +39,7 @@ export function SuccessStories() {
 
   return (
     <section className="pt-[110px] pb-[100px] px-[clamp(20px,4.5vw,56px)] overflow-hidden" style={{ background: "var(--bg-soft)" }}>
-      <div ref={ref} className="max-w-[1320px] mx-auto">
+      <div className="max-w-[1320px] mx-auto">
         <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
           <div className="max-w-[560px]">
             <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
@@ -124,7 +82,8 @@ export function SuccessStories() {
               {i > 0 && <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "rgba(18,32,67,0.18)" }} />}
               <div>
                 <div className="font-display font-semibold leading-none tracking-[-0.02em]" style={{ color: "var(--ink)", fontSize: "clamp(26px,2.6vw,34px)" }}>
-                  <CountUp start={shown} target={s.value} suffix={s.suffix} />
+                  {s.value.toLocaleString("en-US")}
+                  <span style={{ color: "var(--brand)" }}>{s.suffix}</span>
                 </div>
                 <div className="font-mono text-[9.5px] tracking-[0.3px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
                   {s.label}
@@ -136,7 +95,7 @@ export function SuccessStories() {
             <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "rgba(18,32,67,0.18)" }} />
             <div>
               <div className="font-display font-semibold leading-none tracking-[-0.02em]" style={{ color: "var(--ink)", fontSize: "clamp(26px,2.6vw,34px)" }}>
-                4.9/
+                4.8/
                 <span style={{ color: "var(--brand)" }}>5</span>
               </div>
               <div className="font-mono text-[9.5px] tracking-[0.3px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>

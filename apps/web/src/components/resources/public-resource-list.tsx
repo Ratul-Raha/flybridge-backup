@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { Calendar, Check, Lock, Search, Share2, Star } from "lucide-react";
+import { Calendar, Check, Search, Share2, Star } from "lucide-react";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 import {
   fileTypeMeta,
@@ -11,11 +11,27 @@ import {
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "Study Visa": "#2F5FE0",
+  "Study Abroad": "#188A5D",
+  Scholarships: "#6B4CE0",
+  "Career & Jobs": "#DB8A2E",
+  Interviews: "#E05D44",
+  "English Skills": "#2563EB",
+  IELTS: "#0FA968",
+  "Documents & Templates": "#8B5CF6",
+  Other: "#64748B",
+};
+
+function getCategoryColor(category: string) {
+  return CATEGORY_COLORS[category] ?? "#64748B";
+}
+
 function ResourceCard({ r }: { r: ResourceCardData }) {
   const [copied, setCopied] = useState(false);
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
-  const membersOnly = r.access === "members";
+  const accent = getCategoryColor(r.category);
 
   const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -31,8 +47,8 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
 
   const media = (
     <div
-      className="relative h-[150px] flex items-center justify-center overflow-hidden"
-      style={{ background: `linear-gradient(135deg, ${meta.bg}, transparent 75%)` }}
+      className="relative h-[180px] flex items-center justify-center overflow-hidden"
+      style={{ background: `linear-gradient(160deg, ${accent}08, ${accent}15 50%, ${accent}05)` }}
     >
       {r.thumbnail ? (
         <>
@@ -44,110 +60,110 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
           />
           <div
             className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, rgba(18,32,67,0.28), rgba(18,32,67,0.04) 45%)" }}
+            style={{ background: "linear-gradient(to top, rgba(18,32,67,0.3), rgba(18,32,67,0.04) 50%)" }}
           />
         </>
       ) : (
         <span
-          className="flex h-[64px] w-[64px] items-center justify-center rounded-[20px]"
-          style={{ background: "rgba(255,255,255,0.85)", color: meta.color, boxShadow: "0 10px 30px -12px rgba(18,32,67,0.25)" }}
+          className="flex h-[68px] w-[68px] items-center justify-center rounded-2xl"
+          style={{
+            background: `${accent}12`,
+            color: accent,
+            boxShadow: `0 12px 32px -12px ${accent}25`,
+          }}
         >
-          <Icon size={30} strokeWidth={1.8} />
+          <Icon size={32} strokeWidth={1.6} />
         </span>
       )}
 
-      <span
-        className="absolute left-3.5 top-3.5 font-mono text-[10px] font-semibold tracking-[0.4px] px-[11px] py-[5px] rounded-full"
-        style={{ background: "rgba(255,255,255,0.92)", color: meta.color }}
-      >
-        {meta.label.toUpperCase()}
-      </span>
-
-      {membersOnly ? (
+      {/* Top badges */}
+      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-start justify-between">
         <span
-          className="absolute right-3.5 top-3.5 inline-flex items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.3px] px-[10px] py-[5px] rounded-full"
-          style={{ background: "#6B4CE0", color: "#fff" }}
+          className="font-mono text-[10px] font-semibold tracking-[0.4px] px-[11px] py-[5px] rounded-full"
+          style={{ background: "rgba(255,255,255,0.92)", color: accent }}
         >
-          <Lock size={9} /> MEMBERS
+          {meta.label.toUpperCase()}
         </span>
-      ) : r.featured ? (
-        <span
-          className="absolute right-3.5 top-3.5 inline-flex items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.3px] px-[10px] py-[5px] rounded-full"
-          style={{ background: "rgba(255,255,255,0.92)", color: "#E08A17" }}
-        >
-          <Star size={9} fill="#E08A17" /> FEATURED
-        </span>
-      ) : null}
+        {r.featured ? (
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold tracking-[0.3px] px-[10px] py-[5px] rounded-full"
+            style={{ background: "rgba(255,255,255,0.92)", color: "#E08A17" }}
+          >
+            <Star size={9} fill="#E08A17" /> FEATURED
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 
-  const footer = membersOnly ? (
-    <span
-      className="inline-flex items-center gap-2 text-[12.5px] font-medium"
-      style={{ color: "#6B4CE0" }}
-    >
-      <Lock size={12} />
-      Members only{r.price > 0 ? ` · $${r.price}` : ""}
-    </span>
-  ) : (
-    <span
-      className="inline-flex items-center gap-[5px] text-[12.5px] font-medium"
-      style={{ color: meta.color }}
-    >
-      {r.fileType === "link" ? "Open link" : "Download"}
-      <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
-        <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
+  const footer = (
+    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: "var(--line)" }}>
+      <span
+        className="inline-flex items-center gap-[5px] text-[12.5px] font-medium"
+        style={{ color: accent }}
+      >
+        {r.fileType === "link" ? "Open link" : "Download"}
+        <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <button
+        type="button"
+        title={copied ? "Copied!" : "Copy resource link"}
+        aria-label={copied ? "Copied!" : "Copy resource link"}
+        onClick={copyLink}
+        className="flex h-[28px] w-[28px] items-center justify-center rounded-lg transition-all duration-200 hover:scale-110"
+        style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
+      >
+        {copied ? (
+          <Check size={13} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+        ) : (
+          <Share2 size={13} style={{ color: "var(--body)" }} />
+        )}
+      </button>
+    </div>
   );
 
   const body = (
     <>
       {media}
-      <div className="flex flex-col flex-1 gap-2 p-5">
+      <div className="flex flex-col flex-1 gap-2.5 p-5">
         <div className="flex items-center gap-2">
           <span
+            className="w-[6px] h-[6px] rounded-full shrink-0"
+            style={{ background: accent }}
+          />
+          <span
             className="font-mono text-[10px] font-medium tracking-[0.3px] uppercase"
-            style={{ color: "var(--brand-2)" }}
+            style={{ color: accent }}
           >
             {r.category}
           </span>
         </div>
         <h3
-          className="font-display text-[16.5px] font-semibold leading-[1.3] line-clamp-2"
+          className="font-display text-[16px] font-semibold leading-[1.35] line-clamp-2"
           style={{ color: "var(--ink)" }}
         >
           {r.title}
         </h3>
         {r.description && (
-          <p className="text-[12.5px] leading-[1.55] line-clamp-2" style={{ color: "var(--body)" }}>
+          <p className="text-[13px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
             {r.description}
           </p>
         )}
-        <div className="flex items-center gap-2.5 text-[11.5px] mt-auto pt-4 border-t" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+        <div className="flex items-center gap-3 text-[11.5px] mt-auto pt-2" style={{ color: "var(--body)" }}>
           <span className="inline-flex items-center gap-1">
             <Calendar size={11} />
             {formatResourceDate(r.releaseDate)}
           </span>
-          {r.fileSize > 0 && <span>· {formatFileSize(r.fileSize)}</span>}
+          {r.fileSize > 0 && (
+            <>
+              <span className="w-[3px] h-[3px] rounded-full bg-current opacity-40" />
+              <span>{formatFileSize(r.fileSize)}</span>
+            </>
+          )}
         </div>
-        <div className="flex items-center justify-between gap-3 pt-3">
-          {footer}
-          <button
-            type="button"
-            title={copied ? "Copied!" : "Copy resource link"}
-            aria-label={copied ? "Copied!" : "Copy resource link"}
-            onClick={copyLink}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-            style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
-          >
-            {copied ? (
-              <Check size={14} style={{ color: "#0FA968" }} strokeWidth={2.5} />
-            ) : (
-              <Share2 size={14} style={{ color: "var(--body)" }} />
-            )}
-          </button>
-        </div>
+        {footer}
       </div>
     </>
   );
@@ -157,8 +173,11 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
       href={`/resources/${r.id}`}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
-      style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.12)" }}
+      className="group flex flex-col overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
+      style={{
+        borderColor: r.featured ? `${accent}30` : "var(--line)",
+        boxShadow: `0 6px 24px -14px rgba(18,32,67,0.12)`,
+      }}
     >
       {body}
     </Link>
@@ -264,7 +283,7 @@ export function PublicResourceList() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search resources…"
+            placeholder="Search resources..."
             className="w-full text-[13.5px] rounded-full border bg-white pl-10 pr-4 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
           />
@@ -277,14 +296,14 @@ export function PublicResourceList() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-lg border bg-white"
-              style={{ borderColor: "var(--line)", height: 320 }}
+              className="rounded-xl border bg-white animate-pulse"
+              style={{ borderColor: "var(--line)", height: 360 }}
             />
           ))}
         </div>
       ) : error ? (
         <div
-          className="rounded-lg border bg-white px-6 py-16 text-center"
+          className="rounded-xl border bg-white px-6 py-16 text-center"
           style={{ borderColor: "var(--line)" }}
         >
           <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -296,7 +315,7 @@ export function PublicResourceList() {
         </div>
       ) : visible.length === 0 ? (
         <div
-          className="rounded-lg border bg-white px-6 py-16 text-center"
+          className="rounded-xl border bg-white px-6 py-16 text-center"
           style={{ borderColor: "var(--line)" }}
         >
           <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>

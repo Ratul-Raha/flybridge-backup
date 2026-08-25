@@ -4,7 +4,7 @@ export function CTA() {
   return (
     <section className="py-18 md:py-26 lg:py-30">
       <Container narrow>
-        <div className="rounded-3xl border border-edge bg-gradient-to-br from-deep via-deep/80 to-deep/60 p-10 md:p-16 text-center relative overflow-hidden">
+        <div className="rounded-2xl border border-edge bg-gradient-to-br from-deep via-deep/80 to-deep/60 p-10 md:p-16 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gold/5 blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-[200px] h-[200px] rounded-full bg-signal/4 blur-[80px] translate-y-1/2 -translate-x-1/2" />
 

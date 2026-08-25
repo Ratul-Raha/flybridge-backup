@@ -149,7 +149,7 @@ export default async function ProgramsPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[120px]">
           <div className="max-w-[1320px] mx-auto">
             <div
-              className="rounded-[28px] px-[clamp(28px,6vw,72px)] py-[clamp(48px,7vw,80px)]"
+              className="rounded-2xl px-[clamp(28px,6vw,72px)] py-[clamp(48px,7vw,80px)]"
               style={{ background: "var(--ink)" }}
             >
               <div className="max-w-[600px]">

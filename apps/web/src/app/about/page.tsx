@@ -89,7 +89,7 @@ export default function AboutPage() {
         </section>
 
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px]">
-          <div className="max-w-[1320px] mx-auto rounded-[28px] border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-2xl border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-[36px]">
               {stats.map((stat) => (
                 <div key={stat.label} className="flex flex-col items-center text-center px-4">
@@ -133,12 +133,12 @@ export default function AboutPage() {
               {ecosystem.map((e) => (
                 <div
                   key={e.title}
-                  className="rounded-3xl border border-line bg-white p-7 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                  className="rounded-xl border border-line bg-white p-7 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
                   <div className="flex items-center gap-4 mb-5">
                     <div
-                      className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center font-display font-semibold text-[14px] text-white"
+                      className="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center font-display font-semibold text-[14px] text-white"
                       style={{ background: e.gradient }}
                     >
                       {e.initials}
@@ -158,7 +158,7 @@ export default function AboutPage() {
         </section>
 
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px]">
-          <div className="max-w-[1320px] mx-auto rounded-[32px] border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-2xl border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
             <div className="mb-10">
               <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
                 HOW WE SUPPORT STUDENTS
@@ -175,11 +175,11 @@ export default function AboutPage() {
               {steps.map((s, i) => (
                 <div
                   key={s.title}
-                  className="rounded-3xl border border-line bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                  className="rounded-xl border border-line bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
                   <div className="flex items-center justify-between mb-5">
-                    <span className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
+                    <span className="w-11 h-11 rounded-lg flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
                       <svg className="w-[19px] h-[19px]" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         {s.icon}
                       </svg>
@@ -199,7 +199,7 @@ export default function AboutPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div
-              className="rounded-[32px] p-10 md:p-16 text-center relative overflow-hidden"
+              className="rounded-2xl p-10 md:p-16 text-center relative overflow-hidden"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
