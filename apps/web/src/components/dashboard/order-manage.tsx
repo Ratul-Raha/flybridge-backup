@@ -24,7 +24,6 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
 import { BRAND, AMBER, SKY, EMERALD, ROSE, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "@/components/dashboard/reports/lib";
-import { ORDER_STATUSES } from "@/lib/models/order";
 
 type OrderItem = { itemType: string; itemId: string; title: string; price: number };
 
@@ -751,7 +750,7 @@ export function OrderManage() {
                                 className="text-[11px] font-medium rounded-lg px-2 py-1 border outline-none cursor-pointer disabled:opacity-50"
                                 style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
                               >
-                                {ORDER_STATUSES.map((s) => (
+                                {["pending", "completed", "failed", "cancelled", "refunded"].map((s) => (
                                   <option key={s} value={s}>{s}</option>
                                 ))}
                               </select>
