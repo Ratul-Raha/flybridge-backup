@@ -169,8 +169,19 @@ export async function createOrder(input: {
     status: { $in: ["completed", "pending"] },
   });
   if (existing) {
+    if (
+      existing.status === "pending" &&
+      existing.items[0] &&
+      (existing.total !== product.price || existing.items[0].price !== product.price)
+    ) {
+      const doc = existing as OrderDoc & { save(): Promise<unknown> };
+      doc.items[0].title = product.title;
+      doc.items[0].price = product.price;
+      doc.total = product.price;
+      await doc.save();
+    }
     return {
-      order: existing,
+      order: existing as OrderDoc & { save(): Promise<unknown> },
       requiresPayment: existing.status === "pending",
       duplicate: true,
     };
