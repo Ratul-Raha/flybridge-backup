@@ -61,6 +61,10 @@ export function AllCourses() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
       setEnrolled((prev) => new Set(prev).add(course.id));
       router.push(`/dashboard/courses/${course.slug}/learn`);
     } catch (e) {

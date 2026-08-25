@@ -4,6 +4,11 @@ import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { createOrder } from "@/lib/orders";
+import { Course } from "@/lib/models/course";
+import {
+  isStripeConfigured,
+  createCheckoutSession,
+} from "@/lib/payments/stripe";
 import { ORDER_ITEM_TYPES } from "@/lib/models/order";
 
 function isOrderItemType(value: unknown): value is OrderItemType {
@@ -92,6 +97,41 @@ export async function POST(request: NextRequest) {
       itemId: body.itemId,
     });
 
+    let paymentUrl: string | null = null;
+    if (requiresPayment && order) {
+      if (!isStripeConfigured()) {
+        return NextResponse.json(
+          { error: "Payments are not configured yet. Please try again later." },
+          { status: 503 }
+        );
+      }
+
+      let cancelPath = "/dashboard";
+      const item = order.items[0];
+      if (item?.itemType === "course") {
+        const c = await Course.findById(item.itemId)
+          .select("slug")
+          .lean<{ slug?: string } | null>();
+        if (c?.slug) cancelPath = `/programs/${c.slug}/checkout`;
+      } else if (item?.itemType === "seminar") {
+        cancelPath = `/seminars/${item.itemId}`;
+      } else if (item?.itemType === "resource") {
+        cancelPath = `/resources/${item.itemId}`;
+      }
+
+      const checkout = await createCheckoutSession(order as OrderDoc, {
+        origin: request.nextUrl.origin,
+        email: user.email,
+        cancelPath,
+      });
+
+      const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
+      orderDoc.gateway = "stripe";
+      orderDoc.gatewayRef = checkout.sessionId;
+      await orderDoc.save();
+      paymentUrl = checkout.url;
+    }
+
     return NextResponse.json(
       {
         ok: true,
@@ -105,6 +145,7 @@ export async function POST(request: NextRequest) {
           : null,
         requiresPayment,
         duplicate,
+        paymentUrl,
       },
       { status: duplicate ? 200 : 201 }
     );

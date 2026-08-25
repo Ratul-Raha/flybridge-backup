@@ -15,7 +15,8 @@ Current features and flows of the FlyBridge platform (web app in `apps/web`, Nex
 | Analytics | Google Analytics 4 (gtag via `@next/third-parties`) |
 
 **Roles:** `user` (default), `moderator`, `admin` (assigned via the admin dashboard or a promote script).
-**Subscriptions:** `free` (default), `paid` (role field only — no payment processor yet).
+**Subscriptions:** `free` (default), `paid` (role field only — no payment processor for subscriptions yet).
+**Payments:** paid courses/seminars/resources go through Stripe Checkout (hosted) — see §10.
 
 ---
 
@@ -166,6 +167,7 @@ Emitted by the app and logged to the event log:
 
 ## 10. Supporting systems
 
+- **Payments (Stripe):** paid items create a `pending` Order (`gateway: "stripe"`, `gatewayRef` = checkout session id) and redirect the buyer to Stripe-hosted Checkout (`POST /api/orders` → `paymentUrl`). Fulfilment happens on webhook `checkout.session.completed` (`/api/webhooks/stripe`) which calls `fulfillOrder()` (enrollment/registration + `order.fulfilled` event); `/payment/success?order=…` reconciles synchronously against Stripe as a fallback, so purchases complete even before webhooks are configured. Keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` (placeholders in `.env.example`). Currency follows the item (BDT).
 - **Uploads:** `/api/uploads` (Cloudinary) + `/api/uploads/delete` for images/files (avatars, seminar images, resource files).
 - **Google Analytics:** GA4 tag loaded site-wide via `NEXT_PUBLIC_GA_MEASUREMENT_ID`; automatic pageview tracking.
 - **Downloads tracking:** every resource file download by a signed-in user is recorded (visible in admin user detail).

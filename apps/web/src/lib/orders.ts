@@ -200,8 +200,10 @@ export async function createOrder(input: {
   return { order, requiresPayment: true, duplicate: false };
 }
 
+export type HydratedOrder = OrderDoc & { save(): Promise<unknown> };
+
 export async function fulfillOrder(
-  order: OrderDoc & { save(): Promise<unknown> },
+  order: HydratedOrder,
   user?: OrderUser
 ): Promise<void> {
   await connectDb();

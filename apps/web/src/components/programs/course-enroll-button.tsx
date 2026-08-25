@@ -48,11 +48,13 @@ export function CourseEnrollButton({
       <div className={`flex flex-col gap-2 ${block ? "" : "flex-1 sm:flex-none"}`}>
         <button
           type="button"
-          onClick={() => setNote("Payment for this course is coming soon — you can enroll for free once it launches.")}
+          onClick={enroll}
+          disabled={submitting}
           className={`${baseClass} cursor-pointer ${block ? blockClass : heroClass}`}
           style={{ background: "var(--brand)" }}
         >
-          Buy now
+          {submitting && <Loader2 size={16} className="animate-spin" />}
+          {submitting ? "Redirecting…" : "Buy now"}
         </button>
         {note && (
           <span className="text-[12.5px] text-center sm:text-left" style={{ color: "var(--body)" }}>
@@ -63,10 +65,10 @@ export function CourseEnrollButton({
     );
   }
 
-  const enroll = async () => {
+  async function enroll() {
     setNote(null);
     if (!user) {
-      router.push(`/login?next=${encodeURIComponent(learnHref)}`);
+      router.push(`/login?next=${encodeURIComponent(paid ? `/programs/${slug}` : learnHref)}`);
       return;
     }
     setSubmitting(true);
@@ -78,13 +80,17 @@ export function CourseEnrollButton({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
       router.push(learnHref);
     } catch (e) {
       setNote(e instanceof Error ? e.message : "Enrollment failed");
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
   return (
     <button

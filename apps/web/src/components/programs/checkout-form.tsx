@@ -30,10 +30,6 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
-  const [cardName, setCardName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,17 +40,6 @@ export function CheckoutForm({ course }: { course: Props }) {
       setPhone((prev) => prev || user.phone || "");
     }
   }, [user]);
-
-  const formatCard = (v: string) => {
-    const digits = v.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
-  };
-
-  const formatExpiry = (v: string) => {
-    const digits = v.replace(/\D/g, "").slice(0, 4);
-    if (digits.length >= 3) return digits.slice(0, 2) + " / " + digits.slice(2);
-    return digits;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +71,10 @@ export function CheckoutForm({ course }: { course: Props }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Enrollment failed");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
       router.push(`/dashboard/courses/${course.slug}/learn`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -146,72 +135,15 @@ export function CheckoutForm({ course }: { course: Props }) {
       {/* Payment */}
       {!isFree && !isUpcoming && (
         <div>
-          <p className={sectionTitle} style={{ color: "var(--body)" }}>Payment method</p>
-          <div className="rounded-xl border border-line p-4 space-y-3">
-            <div className="flex items-center gap-2 mb-1">
-              {["VISA", "MC", "AMEX"].map((b) => (
-                <span
-                  key={b}
-                  className="font-mono text-[9px] font-bold tracking-wider px-2 py-1 rounded border border-line bg-[var(--bg-soft)]"
-                  style={{ color: "var(--body)" }}
-                >
-                  {b}
-                </span>
-              ))}
-            </div>
-            <div>
-              <label className={labelClass} style={{ color: "var(--ink)" }}>Card number</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                required
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCard(e.target.value))}
-                placeholder="1234 5678 9012 3456"
-                className={inputClass}
-                style={{ color: "var(--ink)" }}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass} style={{ color: "var(--ink)" }}>Expiry</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  required
-                  value={expiry}
-                  onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                  placeholder="MM / YY"
-                  className={inputClass}
-                  style={{ color: "var(--ink)" }}
-                />
-              </div>
-              <div>
-                <label className={labelClass} style={{ color: "var(--ink)" }}>CVC</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  required
-                  value={cvc}
-                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="123"
-                  className={inputClass}
-                  style={{ color: "var(--ink)" }}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass} style={{ color: "var(--ink)" }}>Name on card</label>
-              <input
-                type="text"
-                required
-                value={cardName}
-                onChange={(e) => setCardName(e.target.value)}
-                placeholder="John Doe"
-                className={inputClass}
-                style={{ color: "var(--ink)" }}
-              />
-            </div>
+          <p className={sectionTitle} style={{ color: "var(--body)" }}>Payment</p>
+          <div
+            className="rounded-xl border p-4 flex items-center gap-3"
+            style={{ borderColor: "var(--line)" }}
+          >
+            <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: "var(--brand)" }} />
+            <p className="text-[13px] leading-relaxed" style={{ color: "var(--body)" }}>
+              You'll be redirected to a secure Stripe checkout to complete your payment. Cards, Apple&nbsp;Pay and Google&nbsp;Pay are accepted.
+            </p>
           </div>
         </div>
       )}

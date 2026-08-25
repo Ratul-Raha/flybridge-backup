@@ -72,6 +72,10 @@ export function ResourceDetail({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to get resource");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
       triggerDownload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to get resource");
