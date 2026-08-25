@@ -18,11 +18,13 @@ import {
   Users,
   BarChart3,
   Package,
+  Trash2,
   Eye,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
 import { BRAND, AMBER, SKY, EMERALD, ROSE, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "@/components/dashboard/reports/lib";
+import { ORDER_STATUSES } from "@/lib/models/order";
 
 type OrderItem = { itemType: string; itemId: string; title: string; price: number };
 
@@ -427,6 +429,8 @@ export function OrderManage() {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -450,6 +454,37 @@ export function OrderManage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const updateStatus = useCallback(async (orderId: string, status: string) => {
+    setUpdatingId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update status");
+    } finally {
+      setUpdatingId(null);
+    }
+  }, [load]);
+
+  const removeOrder = useCallback(async (order: Order) => {
+    if (!confirm(`Delete order #${order.id.slice(-8)}? This also removes associated enrollments and registrations.`)) return;
+    setDeletingId(order.id);
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  }, [load]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -595,7 +630,7 @@ export function OrderManage() {
               <table className="w-full text-left">
                 <thead>
                   <tr style={{ background: "var(--bg-soft)" }}>
-                    {(["date", "customer", "item", "total", "status", "id"] as const).map((col) => (
+                    {(["date", "customer", "item", "total", "status", "id", "actions"] as const).map((col) => (
                       <th key={col} className="px-5 py-2.5 first:pl-5">
                         {col === "date" || col === "total" || col === "status" ? (
                           <button
@@ -627,7 +662,7 @@ export function OrderManage() {
                 <tbody>
                   {paged.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-16 text-center">
+                      <td colSpan={7} className="px-5 py-16 text-center">
                         <Package size={32} className="mx-auto mb-3" style={{ color: "var(--line)" }} />
                         <p className="text-[13.5px] font-medium" style={{ color: "var(--body)" }}>
                           {search || statusFilter !== "all"
@@ -706,6 +741,37 @@ export function OrderManage() {
                             <span className="text-[10.5px] font-mono" style={{ color: "var(--body)" }}>
                               #{o.id.slice(-8)}
                             </span>
+                          </td>
+                          <td className="px-5 py-3.5 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={o.status}
+                                onChange={(e) => updateStatus(o.id, e.target.value)}
+                                disabled={updatingId === o.id}
+                                className="text-[11px] font-medium rounded-lg px-2 py-1 border outline-none cursor-pointer disabled:opacity-50"
+                                style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
+                              >
+                                {ORDER_STATUSES.map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                              {updatingId === o.id && (
+                                <Loader2 size={13} className="animate-spin" style={{ color: "var(--brand)" }} />
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeOrder(o)}
+                                disabled={deletingId === o.id}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors disabled:opacity-30 hover:bg-red-50"
+                                style={{ color: "var(--body)" }}
+                              >
+                                {deletingId === o.id ? (
+                                  <Loader2 size={13} className="animate-spin" style={{ color: "#EF4444" }} />
+                                ) : (
+                                  <Trash2 size={13} />
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
