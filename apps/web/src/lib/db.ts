@@ -27,22 +27,61 @@ const dbName = process.env.MONGODB_DB ?? "flybridge";
 
 declare global {
   // eslint-disable-next-line no-var
-  var _mongoose: { conn: mongoose.Connection | null; promise: Promise<mongoose.Connection> | null } | undefined;
+  var _mongoose: {
+    conn: mongoose.Connection | null;
+    promise: Promise<mongoose.Connection> | null;
+    listeners: boolean;
+  } | undefined;
 }
 
-const cached = globalThis._mongoose ?? { conn: null, promise: null };
+type Cache = NonNullable<typeof globalThis._mongoose>;
+
+const cached: Cache =
+  globalThis._mongoose ?? { conn: null, promise: null, listeners: false };
 globalThis._mongoose = cached;
 
+function attachConnectionListeners(conn: mongoose.Connection) {
+  if (cached.listeners) return;
+  cached.listeners = true;
+  const reset = () => {
+    cached.conn = null;
+    cached.promise = null;
+  };
+  conn.on("disconnected", reset);
+  conn.on("close", reset);
+}
+
 export async function connectDb(): Promise<mongoose.Connection> {
-  if (cached.conn) return cached.conn;
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(uri, { dbName }).then((m) => m.connection);
+  if (!uri) {
+    throw new Error("MONGODB_URI is not configured");
   }
+
+  if (cached.conn && cached.conn.readyState === 1) {
+    return cached.conn;
+  }
+
+  if (cached.conn) {
+    cached.conn = null;
+    cached.promise = null;
+  }
+
+  cached.promise ??= mongoose
+    .connect(uri, {
+      dbName,
+      maxIdleTimeMS: 60_000,
+      serverSelectionTimeoutMS: 10_000,
+      maxPoolSize: 10,
+      family: 4,
+    })
+    .then((m) => m.connection);
+
   try {
     cached.conn = await cached.promise;
   } catch (error) {
     cached.promise = null;
     throw error;
   }
+
+  attachConnectionListeners(cached.conn);
   return cached.conn;
 }

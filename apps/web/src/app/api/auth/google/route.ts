@@ -6,6 +6,67 @@ import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
 
+type Claims = Awaited<ReturnType<typeof verifyIdToken>>;
+
+const TRANSIENT_PATTERNS = [
+  "connection closed",
+  "connection to host closed",
+  "topology is closed",
+  "use a session that has ended",
+  "timed out",
+  "socket",
+  "network",
+  "econnreset",
+  "econnrefused",
+];
+
+function isTransientDbError(error: unknown): boolean {
+  const name =
+    typeof error === "object" && error !== null && "name" in error
+      ? String((error as { name?: unknown }).name)
+      : "";
+  if (name.startsWith("Mongo")) return true;
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  return TRANSIENT_PATTERNS.some((p) => message.includes(p));
+}
+
+async function loadOrCreateUser(email: string, claims: Claims) {
+  await connectDb();
+
+  let user = await User.findOne({ email });
+  if (!user) {
+    user = await User.create({
+      firebaseUid: claims.uid,
+      name: claims.name?.trim() || email.split("@")[0],
+      email,
+      avatar: claims.picture,
+      phone: claims.phone_number,
+      accountType: "user",
+      subscription: "free" as SubscriptionType,
+    });
+    try {
+      await emitEvent("user.registered", {
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          phone: user.phone ?? null,
+          accountType: user.accountType,
+          subscription: user.subscription,
+        },
+      });
+    } catch (emitError) {
+      console.error("user.registered emit error", emitError);
+    }
+  } else {
+    user.firebaseUid = user.firebaseUid || claims.uid;
+    if (!user.avatar && claims.picture) user.avatar = claims.picture;
+    if (!user.name && claims.name) user.name = claims.name;
+    await user.save();
+  }
+  return user;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -29,38 +90,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectDb();
-
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = await User.create({
-        firebaseUid: claims.uid,
-        name: claims.name?.trim() || email.split("@")[0],
-        email,
-        avatar: claims.picture,
-        phone: claims.phone_number,
-        accountType: "user",
-        subscription: "free" as SubscriptionType,
-      });
-      try {
-        await emitEvent("user.registered", {
-          user: {
-            id: user._id.toString(),
-            name: user.name,
-            email: user.email,
-            phone: user.phone ?? null,
-            accountType: user.accountType,
-            subscription: user.subscription,
-          },
-        });
-      } catch (emitError) {
-        console.error("user.registered emit error", emitError);
-      }
-    } else {
-      user.firebaseUid = user.firebaseUid || claims.uid;
-      if (!user.avatar && claims.picture) user.avatar = claims.picture;
-      if (!user.name && claims.name) user.name = claims.name;
-      await user.save();
+    let user;
+    try {
+      user = await loadOrCreateUser(email, claims);
+    } catch (dbError) {
+      if (!isTransientDbError(dbError)) throw dbError;
+      console.warn("auth/google transient db error, retrying", dbError);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      user = await loadOrCreateUser(email, claims);
     }
 
     const session = await createSession({
