@@ -8,6 +8,7 @@ const stats = [
   { value: 10000, suffix: "+", label: "Learners guided" },
   { value: 300, suffix: "+", label: "Visa approvals" },
   { value: 83, suffix: "%", label: "Course completion" },
+  { value: 4.8, suffix: "/5", label: "Learner rating" },
 ];
 
 export function SuccessStories() {
@@ -38,22 +39,26 @@ export function SuccessStories() {
   const doubled = [...stories, ...stories];
 
   return (
-    <section className="pt-[110px] pb-[100px] px-[clamp(20px,4.5vw,56px)] overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+    <section className="py-24 px-[clamp(20px,4.5vw,56px)] overflow-hidden" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1320px] mx-auto">
-        <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
-          <div className="max-w-[560px]">
-            <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
-              SUCCESS STORIES
+
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5" style={{ background: "var(--brand-soft)" }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+              <span className="font-mono text-[11px] font-medium tracking-[0.4px] uppercase" style={{ color: "var(--brand-2)" }}>
+                Success Stories
+              </span>
             </div>
             <h2
-              className="font-display font-semibold tracking-[-0.01em] text-balance"
-              style={{ fontSize: "clamp(28px,3.2vw,38px)", lineHeight: 1.2, color: "var(--ink)" }}
+              className="font-display font-semibold tracking-[-0.02em] text-balance leading-[1.12]"
+              style={{ fontSize: "clamp(30px,3.5vw,44px)", color: "var(--ink)" }}
             >
               Real results from{" "}
               <span className="relative inline-block" style={{ color: "var(--brand-2)" }}>
                 real learners.
                 <svg
-                  className="absolute -bottom-[5px] left-0 w-full h-[8px]"
+                  className="absolute -bottom-[6px] left-0 w-full h-[10px]"
                   viewBox="0 0 200 9"
                   preserveAspectRatio="none"
                   fill="none"
@@ -66,80 +71,63 @@ export function SuccessStories() {
           </div>
           <Link
             href="/success-stories"
-            className="inline-flex items-center gap-2 text-[14.5px] font-medium shrink-0"
-            style={{ color: "var(--brand-2)" }}
+            className="group inline-flex items-center gap-2 text-[14.5px] font-medium shrink-0 pb-1 border-b-2 transition-all duration-300"
+            style={{ color: "var(--brand-2)", borderColor: "var(--brand)" }}
           >
             View all stories
-            <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-[14px] h-[14px] transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12H19M19 12L13 6M19 12L13 18" />
             </svg>
           </Link>
         </div>
 
-        <div className="flex items-center gap-6 md:gap-10 flex-wrap">
-          {stats.map((s, i) => (
-            <div key={s.label} className="flex items-center gap-6 md:gap-10">
-              {i > 0 && <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "rgba(18,32,67,0.18)" }} />}
-              <div>
-                <div className="font-display font-semibold leading-none tracking-[-0.02em]" style={{ color: "var(--ink)", fontSize: "clamp(26px,2.6vw,34px)" }}>
-                  {s.value.toLocaleString("en-US")}
-                  <span style={{ color: "var(--brand)" }}>{s.suffix}</span>
-                </div>
-                <div className="font-mono text-[9.5px] tracking-[0.3px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
-                  {s.label}
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="rounded-2xl px-5 py-4 transition-all duration-300 hover:-translate-y-0.5"
+              style={{ background: "white", border: "1px solid var(--line)" }}
+            >
+              <div className="font-display font-bold leading-none tracking-[-0.03em]" style={{ color: "var(--ink)", fontSize: "clamp(24px,2.4vw,32px)" }}>
+                {typeof s.value === "number" && s.value >= 100 ? s.value.toLocaleString("en-US") : s.value}
+                <span className="font-semibold" style={{ color: "var(--brand)" }}>{s.suffix}</span>
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.3px] uppercase mt-2" style={{ color: "var(--body)" }}>
+                {s.label}
               </div>
             </div>
           ))}
-          <div className="flex items-center gap-6 md:gap-10">
-            <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "rgba(18,32,67,0.18)" }} />
-            <div>
-              <div className="font-display font-semibold leading-none tracking-[-0.02em]" style={{ color: "var(--ink)", fontSize: "clamp(26px,2.6vw,34px)" }}>
-                4.8/
-                <span style={{ color: "var(--brand)" }}>5</span>
-              </div>
-              <div className="font-mono text-[9.5px] tracking-[0.3px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
-                Learner rating
-              </div>
-            </div>
-          </div>
         </div>
 
         <div
-          className="fb-marquee relative mt-12 -mx-[clamp(20px,4.5vw,56px)]"
+          className="fb-marquee relative overflow-hidden rounded-2xl"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
+          style={{ maskImage: "linear-gradient(90deg, transparent, black 5%, black 95%, transparent)", WebkitMaskImage: "linear-gradient(90deg, transparent, black 5%, black 95%, transparent)" }}
         >
-          <div className="fb-marquee-track flex gap-5 md:gap-6 w-max px-[clamp(20px,4.5vw,56px)]">
+          <div className="fb-marquee-track flex gap-5 w-max py-1">
             {doubled.map((s, i) => (
               <button
                 key={`${s.src}-${i}`}
                 type="button"
                 onClick={() => setActive(i % stories.length)}
                 aria-label={`View ${s.alt}`}
-                className="group w-[260px] sm:w-[320px] shrink-0 rounded-2xl overflow-hidden border border-line bg-white p-[6px] text-left cursor-zoom-in transition-shadow duration-300 hover:shadow-[0_28px_45px_-30px_rgba(18,32,67,0.4)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60"
+                className="group w-[240px] sm:w-[300px] shrink-0 rounded-2xl overflow-hidden bg-white p-[5px] text-left cursor-zoom-in transition-all duration-300 hover:shadow-[0_24px_48px_-28px_rgba(18,32,67,0.35)]"
+                style={{ border: "1px solid var(--line)" }}
               >
-                <div className="aspect-[4/3] overflow-hidden rounded-xl">
+                <div className="aspect-[4/3] overflow-hidden rounded-[14px]">
                   <img
                     src={s.src}
                     alt={s.alt}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                   />
                 </div>
               </button>
             ))}
           </div>
-
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 w-[clamp(40px,6vw,90px)] z-10"
-            style={{ background: "linear-gradient(90deg, var(--bg-soft), transparent)" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 w-[clamp(40px,6vw,90px)] z-10"
-            style={{ background: "linear-gradient(270deg, var(--bg-soft), transparent)" }}
-          />
         </div>
+
       </div>
 
       {active !== null && (
