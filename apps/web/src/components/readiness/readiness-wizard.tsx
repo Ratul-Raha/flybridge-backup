@@ -70,7 +70,7 @@ const CHIPS = [
 
 type Phase = "intro" | "quiz" | "thinking" | "gate" | "result";
 
-export function ReadinessWizard({ compact }: { compact?: boolean } = {}) {
+export function ReadinessWizard() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<ReadinessAnswers>({});
@@ -308,61 +308,57 @@ export function ReadinessWizard({ compact }: { compact?: boolean } = {}) {
   };
 
   return (
-    <div className={`w-full ${compact ? "" : "max-w-[760px] mx-auto"}`} ref={cardRef}>
-      {!compact && (
-        <div className="text-center mb-10">
-          <span
-            className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] rounded-full px-4 py-[7px]"
-            style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-          >
-            <Sparkles size={12} /> Free AI assessment
-          </span>
-          <h1
-            className="font-display text-[clamp(28px,4.6vw,42px)] font-semibold tracking-[-0.03em] mt-4 leading-[1.08]"
-            style={{ color: "var(--ink)" }}
-          >
-            Study Abroad Readiness Score
-          </h1>
-          <p className="text-[14.5px] leading-[1.7] mt-3 max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
-            Answer a few simple questions and get your personalized readiness score —
-            plus a step-by-step action plan built by AI.
-          </p>
-        </div>
-      )}
+    <div className="w-full max-w-[760px] mx-auto" ref={cardRef}>
+      <div className="text-center mb-10">
+        <span
+          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] rounded-full px-4 py-[7px]"
+          style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+        >
+          <Sparkles size={12} /> Free AI assessment
+        </span>
+        <h1
+          className="font-display text-[clamp(28px,4.6vw,42px)] font-semibold tracking-[-0.03em] mt-4 leading-[1.08]"
+          style={{ color: "var(--ink)" }}
+        >
+          Study Abroad Readiness Score
+        </h1>
+        <p className="text-[14.5px] leading-[1.7] mt-3 max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
+          Answer a few simple questions and get your personalized readiness score —
+          plus a step-by-step action plan built by AI.
+        </p>
+      </div>
 
       <ReadinessCard>
           {phase === "intro" && (
             <div className="fb-step-in">
-              <div className={`flex justify-center ${compact ? "mb-5" : "mb-8"}`}>
+              <div className="flex justify-center mb-8">
                 <div className="relative">
                   <div
                     className="absolute inset-0 rounded-[28px] blur-2xl opacity-50"
                     style={{ background: "radial-gradient(circle, rgba(15,169,104,0.35), transparent 70%)" }}
                   />
                   <div
-                    className={`relative rounded-[28px] flex items-center justify-center ${compact ? "w-[64px] h-[64px]" : "w-[84px] h-[84px]"}`}
+                    className="relative w-[84px] h-[84px] rounded-[28px] flex items-center justify-center"
                     style={{
                       background: "linear-gradient(135deg, #0FA968, #14B57E)",
                       boxShadow: "0 18px 40px -12px rgba(15,169,104,0.5)",
                     }}
                   >
-                    <Compass size={compact ? 28 : 36} className="text-white fb-float" strokeWidth={1.8} />
+                    <Compass size={36} className="text-white fb-float" strokeWidth={1.8} />
                   </div>
                 </div>
               </div>
 
-              <h2 className={`text-center font-display font-semibold ${compact ? "text-[17px]" : "text-[20px]"}`} style={{ color: "var(--ink)" }}>
+              <h2 className="text-center font-display text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
                 How ready are you to study abroad?
               </h2>
-              {!compact && (
-                <p className="text-center text-[13.5px] leading-[1.7] mt-2 max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
-                  Answer 10 quick questions about your academics, English, funding and
-                  plans. We&apos;ll score your readiness and give you a tailored report
-                  with clear next steps.
-                </p>
-              )}
+              <p className="text-center text-[13.5px] leading-[1.7] mt-2 max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
+                Answer 10 quick questions about your academics, English, funding and
+                plans. We&apos;ll score your readiness and give you a tailored report
+                with clear next steps.
+              </p>
 
-              <div className="flex flex-wrap items-center justify-center gap-2.5 mt-5">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
                 {CHIPS.map((c) => (
                   <span
                     key={c.label}
@@ -375,7 +371,7 @@ export function ReadinessWizard({ compact }: { compact?: boolean } = {}) {
                 ))}
               </div>
 
-              <div className="flex justify-center mt-7">
+              <div className="flex justify-center mt-8">
                 <button
                   type="button"
                   onClick={start}
