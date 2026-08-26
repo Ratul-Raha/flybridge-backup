@@ -310,72 +310,70 @@ export function ReadinessWizard() {
   return (
     <div className="w-full max-w-[760px] mx-auto" ref={cardRef}>
       <div className="text-center mb-10">
-        <span
-          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] rounded-full px-4 py-[7px]"
-          style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-        >
-          <Sparkles size={12} /> Free AI assessment
-        </span>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5" style={{ background: "var(--brand-soft)" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+          <span className="font-mono text-[11px] font-medium tracking-[0.4px] uppercase" style={{ color: "var(--brand-2)" }}>
+            Readiness Assessment
+          </span>
+        </div>
         <h1
-          className="font-display text-[clamp(28px,4.6vw,42px)] font-semibold tracking-[-0.03em] mt-4 leading-[1.08]"
-          style={{ color: "var(--ink)" }}
+          className="font-display font-semibold tracking-[-0.02em] text-balance leading-[1.1]"
+          style={{ fontSize: "clamp(32px,4vw,48px)", color: "var(--ink)" }}
         >
-          Study Abroad Readiness Score
+          Study Abroad{" "}
+          <span style={{ color: "var(--brand-2)" }}>Readiness Score</span>
         </h1>
-        <p className="text-[14.5px] leading-[1.7] mt-3 max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
-          Answer a few simple questions and get your personalized readiness score —
-          plus a step-by-step action plan built by AI.
+        <p className="text-[15.5px] leading-[1.7] mt-4 max-w-[540px] mx-auto" style={{ color: "var(--body)" }}>
+          Evaluate your preparedness across academics, language proficiency, financial readiness, and visa requirements — then receive a tailored action plan.
         </p>
       </div>
 
       <ReadinessCard>
           {phase === "intro" && (
             <div className="fb-step-in">
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-6">
                 <div className="relative">
                   <div
-                    className="absolute inset-0 rounded-[28px] blur-2xl opacity-50"
+                    className="absolute inset-0 rounded-[24px] blur-2xl opacity-40"
                     style={{ background: "radial-gradient(circle, rgba(15,169,104,0.35), transparent 70%)" }}
                   />
                   <div
-                    className="relative w-[84px] h-[84px] rounded-[28px] flex items-center justify-center"
+                    className="relative w-[72px] h-[72px] rounded-[22px] flex items-center justify-center"
                     style={{
                       background: "linear-gradient(135deg, #0FA968, #14B57E)",
-                      boxShadow: "0 18px 40px -12px rgba(15,169,104,0.5)",
+                      boxShadow: "0 16px 36px -10px rgba(15,169,104,0.45)",
                     }}
                   >
-                    <Compass size={36} className="text-white fb-float" strokeWidth={1.8} />
+                    <Compass size={32} className="text-white" strokeWidth={1.8} />
                   </div>
                 </div>
               </div>
 
-              <h2 className="text-center font-display text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
-                How ready are you to study abroad?
+              <h2 className="text-center font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(18px,2.5vw,24px)", color: "var(--ink)" }}>
+                How prepared are you for studying abroad?
               </h2>
-              <p className="text-center text-[13.5px] leading-[1.7] mt-2 max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
-                Answer 10 quick questions about your academics, English, funding and
-                plans. We&apos;ll score your readiness and give you a tailored report
-                with clear next steps.
+              <p className="text-center text-[14px] leading-[1.7] mt-2.5 max-w-[440px] mx-auto" style={{ color: "var(--body)" }}>
+                10 focused questions covering your academics, English proficiency, financial standing, and timeline. Results are instant.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
                 {CHIPS.map((c) => (
                   <span
                     key={c.label}
-                    className="inline-flex items-center gap-1.5 text-[11.5px] font-medium rounded-full px-3.5 py-[7px]"
-                    style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-4 py-[8px]"
+                    style={{ background: "var(--bg-soft)", color: "var(--body)", border: "1px solid var(--line)" }}
                   >
-                    <c.icon size={12} style={{ color: "var(--brand)" }} />
+                    <c.icon size={13} style={{ color: "var(--brand)" }} />
                     {c.label}
                   </span>
                 ))}
               </div>
 
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-7">
                 <button
                   type="button"
                   onClick={start}
-                  className="inline-flex items-center gap-2 rounded-full text-white text-[14.5px] font-semibold px-8 py-[14px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 hover:shadow-lg"
+                  className="inline-flex items-center gap-2 rounded-full text-white text-[15px] font-semibold px-9 py-[15px] transition-all duration-250 hover:translate-y-[-1px] hover:shadow-lg"
                   style={{ background: "var(--brand)", boxShadow: "0 14px 30px -12px rgba(15,169,104,0.45)" }}
                 >
                   Start assessment
@@ -387,13 +385,13 @@ export function ReadinessWizard() {
 
           {phase === "quiz" && (
             <div>
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--body)" }}>
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
                   Question {step + 1} of {total}
                 </span>
                 <span
-                  className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.12em] rounded-full px-3.5 py-[6px]"
-                  style={{ background: "var(--bg-soft)", color: "var(--brand-2)" }}
+                  className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] rounded-full px-3.5 py-[6px]"
+                  style={{ background: "var(--bg-soft)", color: "var(--brand-2)", border: "1px solid var(--line)" }}
                 >
                   {CATEGORY_LABELS[question.category]}
                 </span>
@@ -437,9 +435,9 @@ export function ReadinessWizard() {
               </div>
 
               <div key={step} className="fb-step-in">
-                <div className="flex items-start gap-3.5 mb-7">
+                <div className="flex items-start gap-4 mb-7">
                   <span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
                     style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
                   >
                     {(() => {
@@ -448,10 +446,10 @@ export function ReadinessWizard() {
                     })()}
                   </span>
                   <div>
-                    <h2 className="font-display text-[19px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                    <h2 className="font-display text-[18px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
                       {question.title}
                     </h2>
-                    <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
+                    <p className="text-[13.5px] mt-1 leading-relaxed" style={{ color: "var(--body)" }}>
                       {question.subtitle}
                     </p>
                   </div>
@@ -468,7 +466,7 @@ export function ReadinessWizard() {
                         type="button"
                         onClick={() => pick(option.value)}
                         disabled={advancing}
-                        className="group flex items-center justify-between gap-4 rounded-2xl border bg-white px-5 py-[15px] text-left transition-all duration-200 hover:translate-y-[-1px] hover:shadow-[0_12px_28px_-14px_rgba(18,32,67,0.25)] disabled:opacity-80"
+                        className="group flex items-center justify-between gap-4 rounded-xl border bg-white px-5 py-[14px] text-left transition-all duration-200 hover:translate-y-[-1px] hover:shadow-[0_12px_28px_-14px_rgba(18,32,67,0.2)] disabled:opacity-80"
                         style={{
                           borderColor: active ? "var(--brand)" : "var(--line)",
                           background: active ? "var(--brand-soft)" : "var(--bg)",
@@ -480,14 +478,14 @@ export function ReadinessWizard() {
                             {option.label}
                           </span>
                           {option.hint && (
-                            <span className="text-[12px]" style={{ color: "var(--body)" }}>
+                            <span className="text-[12.5px]" style={{ color: "var(--body)" }}>
                               {option.hint}
                             </span>
                           )}
                         </span>
                         <span
                           className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center border transition-all duration-200 ${
-                            isMulti ? "rounded-[7px]" : "rounded-full"
+                            isMulti ? "rounded-[6px]" : "rounded-full"
                           }`}
                           style={{
                             borderColor: active ? "var(--brand)" : "var(--line)",
@@ -534,29 +532,29 @@ export function ReadinessWizard() {
 
           {phase === "thinking" && (
             <div className="py-10 flex flex-col items-center">
-              <div className="relative w-[120px] h-[120px] mb-8">
+              <div className="relative w-[110px] h-[110px] mb-7">
                 <div
                   className="absolute inset-0 rounded-full fb-spin-slow"
                   style={{
                     background:
                       "conic-gradient(from 0deg, transparent 0%, #0FA968 18%, #14B57E 32%, transparent 55%, #2F5FE0 78%, transparent 100%)",
-                    WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px))",
-                    mask: "radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px))",
+                    WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px))",
+                    mask: "radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px))",
                   }}
                 />
                 <div
-                  className="absolute inset-[14px] rounded-full flex items-center justify-center"
+                  className="absolute inset-[12px] rounded-full flex items-center justify-center"
                   style={{ background: "var(--brand-soft)" }}
                 >
-                  <Gauge size={34} style={{ color: "var(--brand)" }} className="fb-pulse" strokeWidth={1.8} />
+                  <Gauge size={30} style={{ color: "var(--brand)" }} className="fb-pulse" strokeWidth={1.8} />
                 </div>
               </div>
 
-              <h3 className="font-display text-[17px] font-semibold text-center" style={{ color: "var(--ink)" }}>
+              <h3 className="font-display text-[18px] font-semibold text-center" style={{ color: "var(--ink)" }}>
                 {THINKING_STEPS[thinkingIndex]}
               </h3>
-              <p className="text-[12.5px] mt-2 text-center" style={{ color: "var(--body)" }}>
-                Scoring your profile and writing your report — usually 15–20 seconds.
+              <p className="text-[13px] mt-2 text-center" style={{ color: "var(--body)" }}>
+                Analyzing your profile — this typically takes 15–20 seconds.
               </p>
 
               <div className="flex items-center gap-2 mt-6">
