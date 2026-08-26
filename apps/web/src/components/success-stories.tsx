@@ -74,20 +74,20 @@ export function SuccessStories() {
               </span>
             </div>
             <h2
-              className="font-display font-semibold tracking-[-0.02em] text-balance leading-[1.12]"
-              style={{ fontSize: "clamp(30px,3.5vw,44px)", color: "var(--ink)" }}
+              className="font-display font-semibold tracking-[-0.02em] text-balance leading-[1.1]"
+              style={{ fontSize: "clamp(32px,3.8vw,48px)", color: "var(--ink)" }}
             >
               Real results from{" "}
               <span className="relative inline-block" style={{ color: "var(--brand-2)" }}>
                 real learners.
                 <svg
-                  className="absolute -bottom-[6px] left-0 w-full h-[10px]"
-                  viewBox="0 0 200 9"
+                  className="absolute -bottom-[5px] left-0 w-full h-[12px]"
+                  viewBox="0 0 200 12"
                   preserveAspectRatio="none"
                   fill="none"
                   aria-hidden="true"
                 >
-                  <path d="M3 6.5C50 2.5 110 2.5 197 6" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+                  <path d="M1 8C35 3 75 2 110 7C145 12 175 4 199 6" stroke="var(--brand)" strokeWidth="4.5" strokeLinecap="round" opacity="0.4" />
                 </svg>
               </span>
             </h2>

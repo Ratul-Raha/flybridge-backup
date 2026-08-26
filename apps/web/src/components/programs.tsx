@@ -45,20 +45,20 @@ export async function Programs() {
             PROGRAMS & COURSES
           </div>
           <h2
-            className="font-display font-semibold tracking-[-0.01em] text-balance"
-            style={{ fontSize: "clamp(26px,3vw,36px)", lineHeight: 1.15, color: "var(--ink)" }}
+            className="font-display font-semibold tracking-[-0.02em] text-balance"
+            style={{ fontSize: "clamp(28px,3.2vw,40px)", lineHeight: 1.15, color: "var(--ink)" }}
           >
             Start with the{" "}
             <span className="relative inline-block" style={{ color: "var(--brand-2)" }}>
               right program.
               <svg
-                className="absolute -bottom-[5px] left-0 w-full h-[8px]"
-                viewBox="0 0 200 9"
+                className="absolute -bottom-[4px] left-0 w-full h-[11px]"
+                viewBox="0 0 200 12"
                 preserveAspectRatio="none"
                 fill="none"
                 aria-hidden="true"
               >
-                <path d="M3 6.5C50 2.5 110 2.5 197 6" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+                <path d="M2 9C40 4 80 2 120 6C160 10 185 3 198 5" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" opacity="0.45" />
               </svg>
             </span>
           </h2>
