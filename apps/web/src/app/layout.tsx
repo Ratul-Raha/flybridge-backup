@@ -5,6 +5,7 @@ import "@fontsource-variable/caveat";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { ReadinessFab } from "@/components/readiness/readiness-fab";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
@@ -28,6 +29,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <FooterWithRoutes />
+          <ReadinessFab />
           <ChatWidget />
         </AuthProvider>
       </body>
