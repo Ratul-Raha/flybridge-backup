@@ -44,22 +44,15 @@ export async function Programs() {
           <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
             PROGRAMS & COURSES
           </div>
-          <h2
-            className="font-display font-semibold tracking-[-0.02em] text-balance"
-            style={{ fontSize: "clamp(28px,3.2vw,40px)", lineHeight: 1.15, color: "var(--ink)" }}
-          >
-            Start with the{" "}
-            <span className="relative inline-block" style={{ color: "var(--brand-2)" }}>
+          <h2 className="text-balance">
+            <span className="block font-display font-medium tracking-[-0.01em] text-[clamp(18px,2vw,22px)] mb-2" style={{ color: "var(--body)" }}>
+              Start with the
+            </span>
+            <span
+              className="block font-display font-bold tracking-[-0.03em] leading-[1.08]"
+              style={{ fontSize: "clamp(32px,3.8vw,46px)", color: "var(--ink)" }}
+            >
               right program.
-              <svg
-                className="absolute -bottom-[4px] left-0 w-full h-[11px]"
-                viewBox="0 0 200 12"
-                preserveAspectRatio="none"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path d="M2 9C40 4 80 2 120 6C160 10 185 3 198 5" stroke="var(--brand)" strokeWidth="4" strokeLinecap="round" opacity="0.45" />
-              </svg>
             </span>
           </h2>
           <p className="text-[15.5px] mt-[10px]" style={{ color: "var(--body)" }}>
