@@ -5,11 +5,34 @@ import Link from "next/link";
 import { successStoryImages as stories } from "@/lib/stories";
 
 const stats = [
-  { value: 10000, suffix: "+", label: "Learners guided" },
-  { value: 300, suffix: "+", label: "Visa approvals" },
-  { value: 83, suffix: "%", label: "Course completion" },
-  { value: 4.8, suffix: "/5", label: "Learner rating" },
+  { value: 10000, suffix: "+", label: "Learners guided", icon: "users" as const },
+  { value: 300, suffix: "+", label: "Visa approvals", icon: "check" as const },
+  { value: 83, suffix: "%", label: "Course completion", icon: "chart" as const },
+  { value: 4.8, suffix: "/5", label: "Learner rating", icon: "star" as const },
 ];
+
+function StatIcon({ type }: { type: "users" | "check" | "chart" | "star" }) {
+  if (type === "users") return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+    </svg>
+  );
+  if (type === "check") return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+  if (type === "chart") return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  );
+  return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
 
 export function SuccessStories() {
   const [active, setActive] = useState<number | null>(null);
@@ -81,20 +104,27 @@ export function SuccessStories() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl px-5 py-4 transition-all duration-300 hover:-translate-y-0.5"
-              style={{ background: "white", border: "1px solid var(--line)" }}
-            >
-              <div className="font-display font-bold leading-none tracking-[-0.03em]" style={{ color: "var(--ink)", fontSize: "clamp(24px,2.4vw,32px)" }}>
-                {typeof s.value === "number" && s.value >= 100 ? s.value.toLocaleString("en-US") : s.value}
-                <span className="font-semibold" style={{ color: "var(--brand)" }}>{s.suffix}</span>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 mb-10">
+          {stats.map((s, i) => (
+            <div key={s.label} className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+              >
+                <StatIcon type={s.icon} />
               </div>
-              <div className="font-mono text-[10px] tracking-[0.3px] uppercase mt-2" style={{ color: "var(--body)" }}>
-                {s.label}
+              <div>
+                <div className="font-display font-bold leading-none tracking-[-0.02em]" style={{ color: "var(--ink)", fontSize: "clamp(20px,2vw,26px)" }}>
+                  {typeof s.value === "number" && s.value >= 100 ? s.value.toLocaleString("en-US") : s.value}
+                  <span className="font-semibold" style={{ color: "var(--brand)" }}>{s.suffix}</span>
+                </div>
+                <div className="font-mono text-[9.5px] tracking-[0.3px] uppercase mt-1" style={{ color: "var(--body)" }}>
+                  {s.label}
+                </div>
               </div>
+              {i < stats.length - 1 && (
+                <span className="hidden sm:block w-px h-8 mx-2" style={{ background: "var(--line)" }} />
+              )}
             </div>
           ))}
         </div>
