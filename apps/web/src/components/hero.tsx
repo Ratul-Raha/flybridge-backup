@@ -91,6 +91,7 @@ export function Hero() {
             <h1 className="font-display font-semibold leading-[1.16] tracking-[-0.02em] max-w-[620px]" style={{ color: "var(--ink)", fontSize: "clamp(34px,4.2vw,48px)" }}>
               Your Complete{" "}
               <span style={{ color: "var(--brand-2)" }}>Blueprint</span>
+              {" "}
               <br className="hidden md:block" />
               <span className="text-balance">to Studying and Working Abroad</span>
             </h1>

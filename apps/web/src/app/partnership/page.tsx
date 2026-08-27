@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { NetworkMap } from "@/components/network-map";
+import { UniversityNetwork } from "@/components/partnership/university-network";
 
 export const metadata: Metadata = {
   title: "Partnership | FlyBridge Education Group",
   description:
-    "FlyBridge partners with 50+ universities across the US and Canada, alongside IDP and the British Council, to deliver trusted pathways to global education.",
+    "FlyBridge partners with 50+ universities across the US, Canada and Europe, alongside IDP and the British Council, to deliver trusted pathways to global education.",
 };
 
 const marqueeNames = [
@@ -23,39 +24,21 @@ const marqueeNames = [
   "British Council",
 ];
 
-const universities = [
-  { name: "Arizona State University", country: "USA" },
-  { name: "Northeastern University", country: "USA" },
-  { name: "University of Massachusetts Boston", country: "USA" },
-  { name: "Illinois Institute of Technology", country: "USA" },
-  { name: "University at Buffalo", country: "USA" },
-  { name: "University of Toronto", country: "Canada" },
-  { name: "University of British Columbia", country: "Canada" },
-  { name: "York University", country: "Canada" },
-  { name: "Simon Fraser University", country: "Canada" },
-  { name: "Concordia University", country: "Canada" },
-];
-
 const strategicPartners = [
   {
     initials: "ID",
     name: "IDP Education",
     role: "Study Abroad Partner",
+    color: "#0E7A8A",
     desc: "A global leader in international education, IDP works alongside FlyBridge to guide students through university selection, applications and enrolment — with direct access to trusted institutions across the world.",
   },
   {
     initials: "BC",
     name: "British Council",
     role: "English Proficiency Partner",
+    color: "#C0392B",
     desc: "As our official English assessment partner, the British Council equips learners with IELTS preparation and recognized language credentials — the foundation every international journey is built on.",
   },
-];
-
-const stats = [
-  { value: "50+", label: "Partner universities" },
-  { value: "10,000+", label: "Learners guided" },
-  { value: "2", label: "Global strategic partners" },
-  { value: "12+", label: "Countries reached" },
 ];
 
 const workflowSteps = [
@@ -84,8 +67,6 @@ const workflowSteps = [
     icon: <path d="M23 6l-9.5 9.5-5-5L1 18M17 6h6v6" />,
   },
 ];
-
-const brandGradient = "linear-gradient(135deg, #14B57E, #0B5E46)";
 
 export default function PartnershipPage() {
   return (
@@ -120,9 +101,9 @@ export default function PartnershipPage() {
               </h1>
 
               <p className="mt-[22px] max-w-[540px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
-                FlyBridge connects ambitious students with 50+ universities across the United States and
-                Canada, alongside world-class expertise from IDP and the British Council — turning
-                international ambition into a clear, credible path forward.
+                FlyBridge connects ambitious students with 50+ universities across the United States,
+                Canada and Europe — alongside world-class expertise from IDP and the British Council —
+                turning international ambition into a clear, credible path forward.
               </p>
 
               <div className="flex items-center gap-5 mt-[34px] flex-wrap">
@@ -267,171 +248,107 @@ export default function PartnershipPage() {
           </div>
         </section>
 
-
-        {/* ── STATS ───────────────────────────────────────────── */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pt-[70px] pb-[70px]">
-          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-[36px]">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex flex-col items-center text-center px-4">
-                  <div className="flex items-baseline gap-[8px]">
-                    <span className="font-display font-semibold text-[clamp(32px,3.6vw,44px)] leading-none tracking-[-0.03em]" style={{ color: "var(--ink)" }}>
-                      {stat.value}
-                    </span>
-                    <span className="w-[7px] h-[7px] rounded-full self-center" style={{ background: "var(--brand)" }} />
-                  </div>
-                  <div className="font-mono text-[11px] font-medium tracking-[0.4px] uppercase mt-[12px]" style={{ color: "var(--body)" }}>
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── UNIVERSITY NETWORK ──────────────────────────────── */}
-        <section id="universities" className="px-[clamp(20px,4.5vw,56px)] pb-[70px]">
+        <UniversityNetwork />
+
+        {/* ── STRATEGIC PARTNERS ──────────────────────────────── */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px]">
           <div className="max-w-[1320px] mx-auto">
-            <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
+            <div className="flex items-end justify-between flex-wrap gap-6 mb-10">
               <div>
                 <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
-                  UNIVERSITY NETWORK
+                  STRATEGIC PARTNERS
                 </div>
                 <h2
                   className="font-display font-semibold tracking-[-0.01em] max-w-[560px]"
                   style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
                 >
-                  50+ universities across the US and Canada
+                  World-class expertise, built into every journey
                 </h2>
               </div>
-              <p className="text-[15px] max-w-[380px]" style={{ color: "var(--body)" }}>
-                From research powerhouses to career-focused institutions, our partner universities give
-                students real, credible pathways into North American higher education.
+              <p className="text-[15px] max-w-[360px]" style={{ color: "var(--body)" }}>
+                Two of the world&apos;s most trusted names in international education stand behind every
+                FlyBridge pathway.
               </p>
             </div>
 
-            <div
-              className="rounded-lg border border-line bg-white overflow-hidden"
-              style={{ boxShadow: "0 24px 50px -34px rgba(18,32,67,0.22)" }}
-            >
-              {universities.map((u, i) => (
+            <div className="grid md:grid-cols-2 gap-6">
+              {strategicPartners.map((p) => (
                 <div
-                  key={u.name}
-                  className={`group flex items-center gap-4 sm:gap-6 px-6 sm:px-8 py-[17px] transition-colors duration-250 ${i > 0 ? "border-t border-line" : ""} hover:bg-brand-soft/50`}
+                  key={p.name}
+                  className="group relative overflow-hidden rounded-lg border border-line bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_-28px_rgba(18,32,67,0.28)]"
+                  style={{ boxShadow: "0 8px 26px -18px rgba(18,32,67,0.14)" }}
                 >
-                  <span className="font-mono text-[11px] w-[26px] shrink-0" style={{ color: "var(--body)", opacity: 0.6 }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[15px] font-medium truncate" style={{ color: "var(--ink)" }}>
-                      {u.name}
+                  <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: `linear-gradient(90deg, ${p.color}, ${p.color}33)` }} />
+                  <div className="flex items-center gap-4">
+                    <span
+                      className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl font-display text-[15px] font-bold text-white"
+                      style={{ background: `linear-gradient(140deg, ${p.color}, ${p.color}BB)`, boxShadow: `0 12px 24px -12px ${p.color}88` }}
+                    >
+                      {p.initials}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: p.color }}>
+                        {p.role}
+                      </div>
+                      <div className="font-display font-semibold text-[20px] mt-[6px]" style={{ color: "var(--ink)" }}>
+                        {p.name}
+                      </div>
                     </div>
                   </div>
-                  <span
-                    className="font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-3 py-[6px] rounded-full border shrink-0"
-                    style={{ color: "var(--body)", borderColor: "var(--line)" }}
-                  >
-                    {u.country}
-                  </span>
-                  <svg
-                    className="w-[15px] h-[15px] shrink-0 opacity-0 -translate-x-[6px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-250"
-                    viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  >
-                    <path d="M5 12H19M19 12L13 6M19 12L13 18" />
-                  </svg>
+                  <p className="mt-6 text-[14.5px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                    {p.desc}
+                  </p>
                 </div>
               ))}
+            </div>
 
-              <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-[18px] border-t border-dashed" style={{ borderColor: "var(--line)" }}>
-                <span className="text-[13.5px]" style={{ color: "var(--body)" }}>
-                  …and 40+ more institutions across the United States &amp; Canada
+            {/* Backer band */}
+            <div
+              className="relative mt-6 overflow-hidden rounded-lg"
+              style={{
+                background:
+                  "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
+                backgroundSize: "36px 36px, 36px 36px, auto",
+              }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-10 px-8 md:px-12 py-9 md:py-10 relative">
+                <span
+                  className="w-[64px] h-[64px] shrink-0 rounded-xl flex items-center justify-center font-display font-bold text-[17px] text-white"
+                  style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(2px)" }}
+                >
+                  NV
                 </span>
-                <a href="#become-partner" className="inline-flex items-center gap-2 font-medium text-[14px] shrink-0" style={{ color: "var(--brand-2)" }}>
-                  Join the network
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.3em] px-3 py-[6px] rounded-full" style={{ background: "rgba(255,255,255,0.16)", color: "#ffffff" }}>
+                      Group backer
+                    </span>
+                    <div className="font-display font-semibold text-[18px]" style={{ color: "#ffffff" }}>
+                      Backed by{" "}
+                      <a
+                        href="https://newvisaexpress.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-white/40 underline-offset-4 hover:decoration-white transition-all"
+                      >
+                        New Visa Express
+                      </a>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[14.5px] leading-[1.7] max-w-[680px]" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    Every FlyBridge program sits on the foundation of New Visa Express — a visa and study
+                    abroad group whose expertise strengthens our application, documentation and post-arrival
+                    support across every market we serve.
+                  </p>
+                </div>
+                <a href="https://newvisaexpress.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-medium text-[14.5px] rounded-full px-6 py-3 shrink-0 self-start md:self-auto transition-transform duration-200 hover:-translate-y-[1px]" style={{ background: "#ffffff", color: "#0B5E46", boxShadow: "0 14px 26px -14px rgba(0,0,0,0.45)" }}>
+                  Visit newvisaexpress.com
                   <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12H19M19 12L13 6M19 12L13 18" />
                   </svg>
                 </a>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── STRATEGIC PARTNERS ──────────────────────────────── */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px]">
-          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
-            <div className="mb-10">
-              <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
-                STRATEGIC PARTNERS
-              </div>
-              <h2
-                className="font-display font-semibold tracking-[-0.01em] max-w-[560px]"
-                style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
-              >
-                World-class expertise, built into every journey
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
-              {strategicPartners.map((p) => (
-                <div
-                  key={p.name}
-                  className="rounded-lg border border-line bg-white p-7 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
-                  style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
-                >
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center font-display font-semibold text-[14px] text-white" style={{ background: brandGradient }}>
-                      {p.initials}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-display font-semibold text-[17px]" style={{ color: "var(--ink)" }}>{p.name}</div>
-                      <div className="font-mono text-[10px] font-medium tracking-[0.3px] uppercase mt-[3px]" style={{ color: "var(--brand-2)" }}>
-                        {p.role}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[14.5px] leading-[1.7]" style={{ color: "var(--body)" }}>{p.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Backer card */}
-            <div
-              className="mt-6 rounded-lg border border-line bg-white p-7 md:p-9 flex flex-col md:flex-row md:items-center gap-6 md:gap-9 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
-              style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
-            >
-              <div className="w-[60px] h-[60px] shrink-0 rounded-lg flex items-center justify-center font-display font-semibold text-[16px] text-white" style={{ background: "linear-gradient(135deg, #0B5E46, #06382C)" }}>
-                NV
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="font-display font-semibold text-[17px]" style={{ color: "var(--ink)" }}>
-                    Backed by{" "}
-                    <a
-                      href="https://newvisaexpress.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "var(--brand-2)" }}
-                    >
-                      New Visa Express
-                    </a>
-                  </div>
-                  <span className="font-mono text-[9.5px] font-medium tracking-[0.4px] px-3 py-[6px] rounded-full uppercase" style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}>
-                    Group backer
-                  </span>
-                </div>
-                <p className="text-[14.5px] leading-[1.7] mt-2 max-w-[640px]" style={{ color: "var(--body)" }}>
-                  Every FlyBridge program sits on the foundation of New Visa Express — a visa and study
-                  abroad group whose expertise strengthens our application, documentation and post-arrival
-                  support across every market we serve.
-                </p>
-              </div>
-              <a href="https://newvisaexpress.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-medium text-[14.5px] shrink-0 self-start md:self-auto" style={{ color: "var(--brand-2)" }}>
-                Visit newvisaexpress.com
-                <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12H19M19 12L13 6M19 12L13 18" />
-                </svg>
-              </a>
             </div>
           </div>
         </section>

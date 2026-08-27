@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, ExternalLink, Lock, Loader2, Share2, Star, Users } from "lucide-react";
+import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
   fileTypeMeta,
@@ -11,6 +11,7 @@ import {
   formatResourceDate,
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
+import { getCategoryColor } from "@/lib/resource-colors";
 
 function downloadHref(r: ResourceCardData) {
   if (r.fileType === "link" || r.fileType === "image" || r.fileType === "video") {
@@ -23,10 +24,12 @@ export function ResourceDetail({
   resource: r,
   wantsDownload = false,
   wantsGet = false,
+  mostDownloaded = false,
 }: {
   resource: ResourceCardData;
   wantsDownload?: boolean;
   wantsGet?: boolean;
+  mostDownloaded?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
@@ -36,16 +39,18 @@ export function ResourceDetail({
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
+  const accent = getCategoryColor(r.category);
   const isFree = (r.price ?? 0) <= 0;
   const isMembersOnly = r.access === "members";
   const needsLogin = isMembersOnly && isFree && !user;
   const needsPayment = isMembersOnly && !isFree;
   const isPublic = r.access === "public";
+  const isLink = r.fileType === "link";
   const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}`)}`;
 
   const triggerDownload = () => {
     const href = downloadHref(r);
-    if (r.fileType === "link") {
+    if (isLink) {
       window.open(href, "_blank", "noopener");
     } else {
       const a = document.createElement("a");
@@ -118,159 +123,202 @@ export function ResourceDetail({
     }
   };
 
+  const primaryLabel = needsPayment
+    ? `Buy now${r.price > 0 ? ` · $${r.price}` : ""}`
+    : needsLogin
+      ? "Sign in to download"
+      : isFree
+        ? submitting
+          ? "Processing…"
+          : isPublic
+            ? isLink
+              ? "Open link"
+              : "Download"
+            : "Get it for free"
+        : isLink
+          ? "Open link"
+          : "Download";
+
+  const primaryAction = needsPayment
+    ? () => setPayNote((v) => !v)
+    : needsLogin
+      ? () => router.push(loginNext)
+      : isFree
+        ? () => (isPublic ? triggerDownload() : handleGetForFree())
+        : triggerDownload;
+
+  const reassurance = needsPayment
+    ? `One-time purchase · ${r.fileName ?? r.fileType} file`
+    : needsLogin
+      ? "Free for FlyBridge members — sign in to download it."
+      : isPublic
+        ? "Free download · sign up required"
+        : "Members-only · yours to keep once you\u2019re in";
+
+  const detailRows: { label: string; value: string }[] = [
+    { label: "Category", value: r.category },
+    { label: "File type", value: meta.label },
+    ...(r.fileName ? [{ label: "File", value: r.fileName }] : []),
+    ...(r.fileSize > 0 ? [{ label: "Size", value: formatFileSize(r.fileSize) }] : []),
+    { label: "Published", value: formatResourceDate(r.releaseDate) },
+    { label: "Access", value: isPublic ? "Public" : "Members only" },
+  ];
+
   return (
     <div>
-      <Link
-        href="/resources"
-        className="inline-flex items-center gap-2 text-[13px] font-medium transition-colors duration-200 hover:opacity-70"
-        style={{ color: "var(--brand)" }}
-      >
-        <ArrowLeft size={15} /> All resources
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-[13px] font-medium">
+        <Link href="/resources" className="inline-flex items-center gap-2 transition-opacity duration-200 hover:opacity-70" style={{ color: "var(--brand)" }}>
+          <ArrowLeft size={15} /> All resources
+        </Link>
+        <span style={{ color: "var(--line)" }}>/</span>
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: accent }}>
+          {r.category}
+        </span>
+      </nav>
 
-      <div className="mt-6 overflow-hidden rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
-        <div
-          className="relative h-[220px] sm:h-[280px] flex items-center justify-center overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${meta.bg}, transparent 75%)` }}
-        >
-          {r.thumbnail ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={r.thumbnail} alt={r.title} className="absolute inset-0 w-full h-full object-cover" />
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, rgba(18,32,67,0.30), rgba(18,32,67,0.05) 45%)" }}
-              />
-            </>
-          ) : (
-            <span
-              className="flex h-[84px] w-[84px] items-center justify-center rounded-[24px]"
-              style={{ background: "rgba(255,255,255,0.9)", color: meta.color, boxShadow: "0 10px 30px -12px rgba(18,32,67,0.25)" }}
-            >
-              <Icon size={38} strokeWidth={1.8} />
-            </span>
-          )}
-
-          <span
-            className="absolute left-5 top-5 font-mono text-[10.5px] font-semibold tracking-[0.4px] px-[12px] py-[6px] rounded-full"
-            style={{ background: "rgba(255,255,255,0.92)", color: meta.color }}
+      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_320px]">
+        {/* ===== Main document sheet ===== */}
+        <div className="overflow-hidden rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
+          {/* Accent header */}
+          <div
+            className="relative border-b px-6 pb-10 pt-5 sm:px-10"
+            style={{ borderColor: "var(--line)", background: `linear-gradient(165deg, ${accent}14, ${accent}03 72%)` }}
           >
-            {meta.label.toUpperCase()}
-          </span>
-          {isMembersOnly ? (
-            <span
-              className="absolute right-5 top-5 inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-[0.3px] px-[12px] py-[6px] rounded-full"
-              style={{ background: "#6B4CE0", color: "#fff" }}
-            >
-              <Users size={10} /> MEMBERS
-            </span>
-          ) : r.featured ? (
-            <span
-              className="absolute right-5 top-5 inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold tracking-[0.3px] px-[12px] py-[6px] rounded-full"
-              style={{ background: "rgba(255,255,255,0.92)", color: "#E08A17" }}
-            >
-              <Star size={10} fill="#E08A17" /> FEATURED
-            </span>
-          ) : null}
-        </div>
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className="rounded-md border bg-white/80 px-2.5 py-[4px] font-mono text-[10px] font-bold uppercase tracking-[0.12em]"
+                style={{ borderColor: "var(--line)", color: meta.color }}
+              >
+                {meta.label}
+              </span>
+              {isMembersOnly ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2.5 py-[4px] font-mono text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: "#6B4CE0" }}>
+                  <Users size={10} /> Members
+                </span>
+              ) : mostDownloaded ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2.5 py-[4px] font-mono text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: "#E08A17" }}>
+                  <TrendingUp size={10} /> Most downloaded
+                </span>
+              ) : null}
+            </div>
 
-        <div className="p-6 sm:p-9">
-          <div className="flex flex-wrap items-center gap-2.5 text-[12.5px]" style={{ color: "var(--body)" }}>
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.3px]" style={{ color: "var(--brand-2)" }}>
-              {r.category}
-            </span>
-            <span>·</span>
-            <span>{formatResourceDate(r.releaseDate)}</span>
-            {r.fileSize > 0 && (
-              <>
-                <span>·</span>
-                <span>{formatFileSize(r.fileSize)}</span>
-              </>
-            )}
+            <div className="mt-6 flex justify-center">
+              <span
+                className="flex h-[84px] w-[84px] items-center justify-center rounded-xl border"
+                style={{ background: "rgba(255,255,255,0.92)", borderColor: "var(--line)", color: accent, boxShadow: "0 18px 40px -20px rgba(18,32,67,0.3)" }}
+              >
+                <Icon size={38} strokeWidth={1.7} />
+              </span>
+            </div>
           </div>
 
-          <h1
-            className="font-display text-[clamp(26px,4vw,38px)] font-semibold tracking-[-0.02em] leading-[1.12] mt-3"
-            style={{ color: "var(--ink)" }}
-          >
-            {r.title}
-          </h1>
+          {/* Body */}
+          <div className="px-6 py-8 sm:px-10">
+            <div className="flex flex-wrap items-center gap-2 text-[12.5px]" style={{ color: "var(--body)" }}>
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: accent }}>
+                {r.category}
+              </span>
+              <span>·</span>
+              <span>{formatResourceDate(r.releaseDate)}</span>
+              {r.fileSize > 0 && (
+                <>
+                  <span>·</span>
+                  <span>{formatFileSize(r.fileSize)}</span>
+                </>
+              )}
+            </div>
 
-          {r.description && (
-            <p className="text-[15px] leading-[1.75] mt-4 max-w-[680px]" style={{ color: "var(--body)" }}>
-              {r.description}
-            </p>
-          )}
+            <h1
+              className="mt-3 font-display text-[clamp(26px,4vw,38px)] font-semibold leading-[1.12] tracking-[-0.02em]"
+              style={{ color: "var(--ink)" }}
+            >
+              {r.title}
+            </h1>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
-            {needsPayment ? (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPayNote((v) => !v)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                  style={{ background: "var(--brand)" }}
-                >
-                  <Lock size={15} />
-                  Buy now{r.price > 0 ? ` · $${r.price}` : ""}
-                </button>
-                {payNote && (
-                  <span className="text-[12.5px] max-w-[280px]" style={{ color: "var(--body)" }}>
-                    Payment for this resource is coming soon — you can download it for free once it launches.
-                  </span>
-                )}
-              </div>
-            ) : needsLogin ? (
-              <button
-                type="button"
-                onClick={() => router.push(loginNext)}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                style={{ background: "var(--brand)" }}
-              >
-                <Lock size={15} />
-                Sign in to download
-              </button>
-            ) : isFree ? (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={isPublic ? triggerDownload : handleGetForFree}
-                  disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                  style={{ background: "var(--brand)" }}
-                >
-                  {submitting && <Loader2 size={15} className="animate-spin" />}
-                  {submitting ? "Processing…" : isPublic ? "Download" : "Get it for free"}
-                </button>
-                {error && (
-                  <span className="text-[12.5px] max-w-[280px]" style={{ color: "#C0392B" }}>
-                    {error}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={triggerDownload}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                style={{ background: "var(--brand)" }}
-              >
-                {r.fileType === "link" ? <ExternalLink size={15} /> : <Download size={15} />}
-                {r.fileType === "link" ? "Open link" : "Download"}
-              </button>
+            {r.description && (
+              <p className="mt-5 whitespace-pre-line text-[15.5px] leading-[1.8]" style={{ color: "var(--body)" }}>
+                {r.description}
+              </p>
             )}
+          </div>
+        </div>
+
+        {/* ===== Sidebar ===== */}
+        <aside className="flex flex-col gap-5 lg:sticky lg:top-28">
+          {/* Actions */}
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg" style={{ background: `${accent}12`, color: accent }}>
+                <Icon size={20} strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <div className="truncate text-[13.5px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
+                  {r.title}
+                </div>
+                <div className="mt-[2px] text-[11px]" style={{ color: "var(--body)" }}>
+                  {meta.label} · {r.category}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={primaryAction}
+              disabled={submitting}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+              style={{ background: "var(--brand)" }}
+            >
+              {submitting && <Loader2 size={15} className="animate-spin" />}
+              {needsPayment ? <Lock size={15} /> : isLink ? <ExternalLink size={15} /> : <Download size={15} />}
+              {primaryLabel}
+            </button>
 
             <button
               type="button"
               onClick={copyLink}
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-white px-7 py-3.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
+              className="mt-2.5 inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-white px-6 py-3 text-[13.5px] font-semibold transition-colors duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
               style={{ borderColor: "var(--line)", color: copied ? "#0FA968" : "var(--ink)" }}
             >
               {copied ? <Check size={15} /> : <Share2 size={15} />}
-              {copied ? "Link copied!" : "Share"}
+              {copied ? "Link copied!" : "Copy link"}
             </button>
+
+            <p className="mt-3.5 text-center text-[11.5px]" style={{ color: "var(--body)" }}>
+              {reassurance}
+            </p>
+
+            {error && (
+              <p className="mt-2 text-center text-[12px]" style={{ color: "#C0392B" }}>
+                {error}
+              </p>
+            )}
+            {payNote && (
+              <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
+                Payment for this resource is coming soon — you can download it for free once it launches.
+              </p>
+            )}
           </div>
-        </div>
+
+          {/* Details */}
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+            <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
+              File details
+            </h2>
+            <dl className="mt-3 divide-y" style={{ borderColor: "var(--line)" }}>
+              {detailRows.map((row) => (
+                <div key={row.label} className="flex items-center justify-between gap-4 py-2.5">
+                  <dt className="text-[12px]" style={{ color: "var(--body)" }}>
+                    {row.label}
+                  </dt>
+                  <dd className="truncate text-right text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </aside>
       </div>
     </div>
   );

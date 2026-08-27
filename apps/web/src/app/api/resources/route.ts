@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
+import { ResourceDownload } from "@/lib/models/resource-download";
 import { isResourceCategory } from "@/lib/resource-categories";
 import { emitEvent } from "@/lib/events/emit";
 
@@ -19,6 +20,7 @@ type ResourceDto = {
   access: "public" | "members";
   price: number;
   featured: boolean;
+  downloadCount: number;
 };
 
 function toDto(r: ResourceDoc): ResourceDto {
@@ -36,7 +38,16 @@ function toDto(r: ResourceDoc): ResourceDto {
     access: r.access,
     price: r.price ?? 0,
     featured: r.featured ?? false,
+    downloadCount: 0,
   };
+}
+
+async function withDownloadCounts(resources: ResourceDoc[]): Promise<ResourceDto[]> {
+  const rows = await ResourceDownload.aggregate<{ _id: string; count: number }>([
+    { $group: { _id: "$resource", count: { $sum: 1 } } },
+  ]);
+  const counts = new Map(rows.map((r) => [r._id.toString(), r.count]));
+  return resources.map((r) => ({ ...toDto(r), downloadCount: counts.get(r._id.toString()) ?? 0 }));
 }
 
 function isManager(session: { role: string } | null) {
@@ -57,7 +68,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const resources = await Resource.find().sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: resources.map(toDto) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources) });
     }
 
     if (mine) {
@@ -65,11 +76,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: resources.map(toDto) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources) });
     }
 
     const resources = await Resource.find().sort({ releaseDate: -1 });
-    return NextResponse.json({ resources: resources.map(toDto) });
+    return NextResponse.json({ resources: await withDownloadCounts(resources) });
   } catch (error) {
     console.error("resources GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

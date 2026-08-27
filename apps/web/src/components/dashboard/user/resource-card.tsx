@@ -25,6 +25,7 @@ export type ResourceCardData = {
   access: "public" | "members";
   price: number;
   featured: boolean;
+  downloadCount?: number;
 };
 
 const FILE_TYPE_META: Record<string, { icon: LucideIcon; label: string; color: string; bg: string }> = {
