@@ -209,7 +209,7 @@ export default function PrivacyPage() {
               <div className="absolute -inset-8 rounded-[48px]" style={{ background: "radial-gradient(420px 320px at 60% 30%, rgba(15,169,104,0.08), transparent 65%)" }} />
 
               <div
-                className="relative rounded-[28px] border border-line bg-white/90 backdrop-blur-[2px] overflow-hidden"
+                className="relative rounded-lg border border-line bg-white/90 backdrop-blur-[2px] overflow-hidden"
                 style={{ boxShadow: "0 40px 80px -40px rgba(18,32,67,0.25)" }}
               >
                 <div className="flex items-center justify-between px-7 py-5 border-b border-line">
@@ -277,7 +277,7 @@ export default function PrivacyPage() {
               </div>
 
               <div
-                className="absolute -bottom-6 -left-6 flex items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3"
+                className="absolute -bottom-6 -left-6 flex items-center gap-3 rounded-lg border border-line bg-white px-4 py-3"
                 style={{ boxShadow: "0 24px 44px -24px rgba(18,32,67,0.3)" }}
               >
                 <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
@@ -297,7 +297,7 @@ export default function PrivacyPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto grid lg:grid-cols-[280px_1fr] gap-10 lg:gap-14">
             <aside className="lg:sticky lg:top-[110px] lg:self-start hidden lg:block">
-              <div className="rounded-3xl border border-line bg-white p-6" style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}>
+              <div className="rounded-lg border border-line bg-white p-6" style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}>
                 <div className="font-mono text-[10px] font-medium tracking-[0.4em] uppercase mb-5" style={{ color: "var(--body)" }}>
                   On this page
                 </div>
@@ -388,7 +388,7 @@ export default function PrivacyPage() {
                         {s.items.map((item) => (
                           <div
                             key={item.title}
-                            className="rounded-2xl border border-line bg-white p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                            className="rounded-lg border border-line bg-white p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                             style={{ boxShadow: "0 4px 16px -10px rgba(18,32,67,0.08)" }}
                           >
                             <span className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "var(--brand-soft)" }}>
@@ -407,7 +407,7 @@ export default function PrivacyPage() {
 
                 <section id="contact" className="scroll-mt-[110px]">
                   <div
-                    className="rounded-[32px] p-10 md:p-14 relative overflow-hidden"
+                    className="rounded-lg p-10 md:p-14 relative overflow-hidden"
                     style={{
                       backgroundImage:
                         "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
@@ -448,12 +448,12 @@ export default function PrivacyPage() {
                               href={c.href}
                               target={c.href.startsWith("http") ? "_blank" : undefined}
                               rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                              className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
+                              className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
                             >
                               {inner}
                             </a>
                           ) : (
-                            <div key={c.label} className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-[2px]">
+                            <div key={c.label} className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px]">
                               {inner}
                             </div>
                           );

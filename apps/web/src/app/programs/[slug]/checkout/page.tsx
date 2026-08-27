@@ -106,7 +106,7 @@ export default async function CheckoutPage({ params }: Props) {
           {/* Left — product + form */}
           <div className="space-y-8">
             {/* Product card */}
-            <div className="rounded-2xl border border-line bg-white overflow-hidden">
+            <div className="rounded-lg border border-line bg-white overflow-hidden">
               <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                 <div
                   className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
@@ -173,7 +173,7 @@ export default async function CheckoutPage({ params }: Props) {
             </div>
 
             {/* Checkout form */}
-            <div className="rounded-2xl border border-line bg-white p-6 sm:p-8">
+            <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
               <CheckoutForm course={checkoutCourse} />
             </div>
           </div>
@@ -181,7 +181,7 @@ export default async function CheckoutPage({ params }: Props) {
           {/* Right — order summary (sticky) */}
           <aside className="lg:sticky lg:top-24">
             <div
-              className="rounded-2xl border border-line bg-white overflow-hidden"
+              className="rounded-lg border border-line bg-white overflow-hidden"
               style={{
                 boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)",
               }}

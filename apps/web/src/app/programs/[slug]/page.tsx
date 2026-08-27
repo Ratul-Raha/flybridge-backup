@@ -245,7 +245,7 @@ function CourseHero({
 
         <div className="relative flex justify-center items-center">
           <div
-            className="w-full max-w-[430px] rounded-[24px] bg-[#101B31] overflow-hidden"
+            className="w-full max-w-[430px] rounded-lg bg-[#101B31] overflow-hidden"
             style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
           >
             {/* Player screen */}
@@ -422,7 +422,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
         {enrolled ? (
           <div className="max-w-[560px] mx-auto">
             <div
-              className="rounded-2xl border border-line bg-white p-8 sm:p-10 text-center"
+              className="rounded-lg border border-line bg-white p-8 sm:p-10 text-center"
               style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.12)" }}
             >
               <div
@@ -457,7 +457,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
           {/* Left — product + form */}
           <div className="space-y-8">
             {/* Product card */}
-            <div className="rounded-2xl border border-line bg-white overflow-hidden">
+            <div className="rounded-lg border border-line bg-white overflow-hidden">
               <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                 <div
                   className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
@@ -504,7 +504,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
             </div>
 
             {/* Checkout form */}
-            <div className="rounded-2xl border border-line bg-white p-6 sm:p-8">
+            <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
               <CheckoutForm course={checkoutCourse} />
             </div>
           </div>
@@ -512,7 +512,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
           {/* Right — order summary (sticky) */}
           <aside className="lg:sticky lg:top-24">
             <div
-              className="rounded-2xl border border-line bg-white overflow-hidden"
+              className="rounded-lg border border-line bg-white overflow-hidden"
               style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
             >
               <div className="p-6">
@@ -795,7 +795,7 @@ export default async function ProgramPage({ params }: Props) {
                       "From the first video to your approval — every resource is part of the same package."
                     }
                   />
-                  <div className="rounded-2xl border border-line bg-white overflow-hidden">
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
                     {(details.features ?? BLUEPRINT_FEATURES).map(({ icon: Icon, title, desc }, i) => (
                       <div
                         key={title}
@@ -828,13 +828,13 @@ export default async function ProgramPage({ params }: Props) {
                       title="The book is included in this program"
                       desc={details.book.desc}
                     />
-                    <div className="rounded-2xl border border-line bg-white overflow-hidden">
+                    <div className="rounded-lg border border-line bg-white overflow-hidden">
                       <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={details.book.image}
                           alt={details.book.title}
-                          className="w-full max-w-[220px] mx-auto rounded-xl aspect-[3/4] object-cover"
+                          className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
                           style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
                         />
                         <div className="flex flex-col gap-3">
@@ -863,7 +863,7 @@ export default async function ProgramPage({ params }: Props) {
                     title="Course outcomes"
                     desc="By the end of this course you will be able to:"
                   />
-                  <div className="rounded-2xl border border-line bg-white overflow-hidden">
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
                     {details.outcomes.map((o, i) => (
                       <div
                         key={o.title}
@@ -900,7 +900,7 @@ export default async function ProgramPage({ params }: Props) {
                       "Everything you need to prepare with confidence, in one place."
                     }
                   />
-                  <div className="rounded-2xl border border-line bg-white overflow-hidden">
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
                     {(details.highlights ?? [
                       {
                         title: "10 Videos",
@@ -948,7 +948,7 @@ export default async function ProgramPage({ params }: Props) {
                 title="What students say"
                 desc="Real experiences from enrollees who prepared their study visa application with the Blueprint."
               />
-              <div className="rounded-2xl border border-line bg-white overflow-hidden">
+              <div className="rounded-lg border border-line bg-white overflow-hidden">
                 {details.reviews.map((review, i) => (
                   <div key={review.name} className={i > 0 ? "border-t border-line" : ""}>
                     <ReviewCard review={review} />

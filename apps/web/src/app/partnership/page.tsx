@@ -270,7 +270,7 @@ export default function PartnershipPage() {
 
         {/* ── STATS ───────────────────────────────────────────── */}
         <section className="px-[clamp(20px,4.5vw,56px)] pt-[70px] pb-[70px]">
-          <div className="max-w-[1320px] mx-auto rounded-2xl border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[24px] py-[38px]" style={{ background: "var(--bg-soft)" }}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-[36px]">
               {stats.map((stat) => (
                 <div key={stat.label} className="flex flex-col items-center text-center px-4">
@@ -359,7 +359,7 @@ export default function PartnershipPage() {
 
         {/* ── STRATEGIC PARTNERS ──────────────────────────────── */}
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px]">
-          <div className="max-w-[1320px] mx-auto rounded-2xl border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
+          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
             <div className="mb-10">
               <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
                 STRATEGIC PARTNERS
@@ -440,7 +440,7 @@ export default function PartnershipPage() {
         <section id="become-partner" className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div
-              className="rounded-2xl p-10 md:p-16 text-center relative overflow-hidden"
+              className="rounded-lg p-10 md:p-16 text-center relative overflow-hidden"
               style={{
                 background:
                   "linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",

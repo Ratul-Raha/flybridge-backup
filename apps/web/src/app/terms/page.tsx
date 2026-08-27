@@ -160,7 +160,7 @@ export default function TermsPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[110px]">
           <div className="max-w-[820px] mx-auto space-y-8">
             {sections.map((s) => (
-              <div key={s.number} className="rounded-3xl border bg-white p-7 md:p-9" style={{ borderColor: "var(--line)" }}>
+              <div key={s.number} className="rounded-lg border bg-white p-7 md:p-9" style={{ borderColor: "var(--line)" }}>
                 <div className="flex items-center gap-4 mb-4">
                   <span className="font-mono text-[12px] font-semibold" style={{ color: "var(--brand-2)" }}>
                     {s.number}
@@ -180,7 +180,7 @@ export default function TermsPage() {
             ))}
 
             <div
-              className="rounded-[28px] p-8 md:p-10 relative overflow-hidden"
+              className="rounded-lg p-8 md:p-10 relative overflow-hidden"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
@@ -208,7 +208,7 @@ export default function TermsPage() {
                       href={c.href}
                       target={c.external ? "_blank" : undefined}
                       rel={c.external ? "noopener noreferrer" : undefined}
-                      className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
+                      className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
                     >
                       <div className="font-mono text-[9.5px] font-medium tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>
                         {c.label}

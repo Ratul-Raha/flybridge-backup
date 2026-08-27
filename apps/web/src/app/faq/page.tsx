@@ -136,7 +136,7 @@ export default function FaqPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto grid lg:grid-cols-[280px_1fr] gap-10 lg:gap-14">
             <aside className="lg:sticky lg:top-[110px] lg:self-start hidden lg:block">
-              <div className="rounded-3xl border border-line bg-white p-6" style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}>
+              <div className="rounded-lg border border-line bg-white p-6" style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}>
                 <div className="font-mono text-[10px] font-medium tracking-[0.4em] uppercase mb-5" style={{ color: "var(--body)" }}>
                   On this page
                 </div>
@@ -206,7 +206,7 @@ export default function FaqPage() {
                         return (
                           <div
                             key={id}
-                            className="rounded-2xl border bg-white transition-all duration-300"
+                            className="rounded-lg border bg-white transition-all duration-300"
                             style={{
                               borderColor: expanded ? "var(--brand-2)" : "var(--line)",
                               boxShadow: expanded ? "0 12px 28px -18px rgba(18,32,67,0.25)" : "0 4px 16px -12px rgba(18,32,67,0.08)",
@@ -248,7 +248,7 @@ export default function FaqPage() {
 
                 <section className="relative">
                   <div
-                    className="rounded-[32px] p-10 md:p-14 relative overflow-hidden"
+                    className="rounded-lg p-10 md:p-14 relative overflow-hidden"
                     style={{
                       backgroundImage:
                         "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
@@ -275,7 +275,7 @@ export default function FaqPage() {
                             href={c.href}
                             target={c.href.startsWith("http") ? "_blank" : undefined}
                             rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                            className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
+                            className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
                           >
                             <div className="font-mono text-[9.5px] font-medium tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>
                               {c.label}

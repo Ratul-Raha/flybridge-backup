@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-video";
-import { successStories as stories } from "@/lib/stories";
 
 export const metadata: Metadata = {
   title: "Success Stories | FlyBridge",
@@ -10,10 +9,77 @@ export const metadata: Metadata = {
     "Real stories from real learners — students who studied, worked and built lives abroad with FlyBridge courses and guidance.",
 };
 
+type Learner = {
+  src: string;
+  name: string;
+  program: string;
+  country: string;
+  flag: string;
+  quote: string;
+  badge: string;
+};
+
+const learners: Learner[] = [
+  {
+    src: "/stories/success1.png",
+    name: "Mijanur Rahman",
+    program: "University for the Creative Arts",
+    country: "UK",
+    flag: "🇬🇧",
+    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
+    badge: "Visa Approved",
+  },
+  {
+    src: "/stories/success2.png",
+    name: "Faiyaz",
+    program: "Wichita State University",
+    country: "USA",
+    flag: "🇺🇸",
+    quote: "FlyBridge made my dream of studying in the USA a reality. The guidance was exceptional!",
+    badge: "Visa Approved",
+  },
+  {
+    src: "/stories/success3.png",
+    name: "Pabel",
+    program: "Neapolis University Pafos",
+    country: "Cyprus",
+    flag: "🇨🇾",
+    quote: "From university selection to visa approval, FlyBridge was with me every step of the way.",
+    badge: "Visa Approved",
+  },
+  {
+    src: "/stories/success4.png",
+    name: "Mahfuz Ahmed",
+    program: "Work Permit",
+    country: "Portugal",
+    flag: "🇵🇹",
+    quote: "The team's support and clear process helped me achieve my goal stress-free.",
+    badge: "Visa Approved",
+  },
+  {
+    src: "/stories/success5.png",
+    name: "Real Khan Mamun",
+    program: "",
+    country: "UK",
+    flag: "🇬🇧",
+    quote: "I went from confused about where to apply to holding multiple offer letters with FlyBridge's guidance.",
+    badge: "Visa Approved",
+  },
+  {
+    src: "/stories/success6.png",
+    name: "Ahmed Taj",
+    program: "University of Chester",
+    country: "UK",
+    flag: "🇬🇧",
+    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
+    badge: "Visa Approved",
+  },
+];
+
 const featuredVideo: StoryVideo = {
-  title: "From Dhaka to London — a work permit journey",
+  title: "From Sylhet to UK — a study abroad journey",
   duration: "2:34",
-  tag: "Work Abroad",
+  tag: "Study Abroad",
   initials: "IH",
   gradient: "linear-gradient(135deg,#2FBF8F,#188A5D 60%,#0B5E46)",
   src: "/videos/review_video.mp4",
@@ -54,7 +120,7 @@ const videos: StoryVideo[] = [
 const outcomes = [
   {
     title: "Accepted into university",
-    desc: "Students in our Study Abroad track gain admission to partner universities across the US and Canada.",
+    desc: "Students in our Study Abroad track gain admission to partner universities across the US, Canada and Europe.",
     icon: <path d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />,
   },
   {
@@ -74,6 +140,7 @@ export default function SuccessStoriesPage() {
     <>
       <Nav />
       <main>
+        {/* ── Hero ── */}
         <section
           className="pt-[150px] pb-[80px] px-[clamp(20px,4.5vw,56px)] relative overflow-hidden"
           style={{
@@ -125,32 +192,24 @@ export default function SuccessStoriesPage() {
               </div>
 
               <div className="flex items-center gap-6 mt-[38px]">
-                <div>
-                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-                    10,000+
+                {[
+                  { value: "10,000+", label: "Learners guided" },
+                  { value: "50+", label: "University partners" },
+                  { value: "83%", label: "Success rate" },
+                  { value: "4.8/5", label: "Average rating" },
+                ].map((s, i, arr) => (
+                  <div key={s.label} className="flex items-center gap-6">
+                    <div>
+                      <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
+                        {s.value}
+                      </div>
+                      <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
+                        {s.label}
+                      </div>
+                    </div>
+                    {i < arr.length - 1 && <span className="w-[1px] h-[38px]" style={{ background: "var(--line)" }} />}
                   </div>
-                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
-                    Learners guided
-                  </div>
-                </div>
-                <span className="w-[1px] h-[38px]" style={{ background: "var(--line)" }} />
-                <div>
-                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-                    300+
-                  </div>
-                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
-                    Visa approvals
-                  </div>
-                </div>
-                <span className="w-[1px] h-[38px]" style={{ background: "var(--line)" }} />
-                <div>
-                  <div className="font-display font-semibold text-[26px] leading-none tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-                    4.8
-                  </div>
-                  <div className="font-mono text-[10.5px] font-medium tracking-[0.4px] uppercase mt-[6px]" style={{ color: "var(--body)" }}>
-                    Average rating
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -160,72 +219,75 @@ export default function SuccessStoriesPage() {
           </div>
         </section>
 
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px]">
+        {/* ── Learner journeys ── */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
-            <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
+            <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
               <div>
-                <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                <div className="flex items-center gap-2 font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
                   LEARNER JOURNEYS
                 </div>
-                <h2 className="font-display font-semibold tracking-[-0.01em] max-w-[560px]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(28px,3.4vw,38px)", color: "var(--ink)" }}>
                   From one course to a life abroad
                 </h2>
               </div>
-              <p className="text-[15px] max-w-[380px]" style={{ color: "var(--body)" }}>
+              <p className="text-[15px] max-w-[360px] leading-relaxed" style={{ color: "var(--body)" }}>
                 Every story below started with a single decision — and a single course.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {stories.map((s) => (
-                <figure
-                  key={s.initials}
-                  className="rounded-xl border border-line bg-white overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {learners.map((l) => (
+                <div
+                  key={l.name}
+                  className="rounded-lg border border-line bg-white overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden" style={{ background: s.gradient }}>
-                    {s.src ? (
-                      <img
-                        src={s.src}
-                        alt={s.alt}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <>
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
-                            backgroundSize: "18px 18px",
-                          }}
-                        />
-                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
-                          <path d="M30 255 C 140 205, 225 125, 370 55" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeDasharray="5 6" strokeLinecap="round" />
-                          <circle cx="30" cy="255" r="4" fill="#fff" opacity="0.95" />
-                          <circle cx="370" cy="55" r="4" fill="#fff" opacity="0.95" />
-                          <path d="M370 55 l-15 -5 7 9 -7 9 15 -5z" fill="#fff" opacity="0.95" />
-                        </svg>
-                      </>
-                    )}
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={l.src} alt={l.name} loading="lazy" className="w-full h-full object-cover" />
+                    <div
+                      className="absolute top-3 left-3 font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-3 py-1.5 rounded-full text-white"
+                      style={{ background: "rgba(18,32,67,0.55)", backdropFilter: "blur(4px)" }}
+                    >
+                      {l.badge}
+                    </div>
                   </div>
-                </figure>
+                  <div className="p-5 flex flex-col">
+                    <div className="font-display font-semibold text-[17px] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
+                      {l.name}
+                    </div>
+                    {l.program && (
+                      <div className="text-[12.5px] mt-0.5" style={{ color: "var(--body)" }}>{l.program}</div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--brand-2)" }}>
+                      <span>{l.flag}</span>
+                      <span>{l.country}</span>
+                    </div>
+                    <p className="text-[13.5px] leading-relaxed mt-3 line-clamp-3" style={{ color: "var(--ink)" }}>
+                      &ldquo;{l.quote}&rdquo;
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px]">
+        {/* ── Video stories ── */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
-            <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
+            <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
               <div>
-                <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                <div className="flex items-center gap-2 font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
                   VIDEO STORIES
                 </div>
-                <h2 className="font-display font-semibold tracking-[-0.01em] max-w-[560px]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(28px,3.4vw,38px)", color: "var(--ink)" }}>
                   More stories on video
                 </h2>
               </div>
-              <p className="text-[15px] max-w-[380px]" style={{ color: "var(--body)" }}>
+              <p className="text-[15px] max-w-[360px] leading-relaxed" style={{ color: "var(--body)" }}>
                 Learners tell their own stories — how they prepared, what they learned and where they are now.
               </p>
             </div>
@@ -234,15 +296,17 @@ export default function SuccessStoriesPage() {
           </div>
         </section>
 
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px]">
-          <div className="max-w-[1320px] mx-auto rounded-2xl border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
+        {/* ── Outcomes ── */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
+          <div className="max-w-[1320px] mx-auto rounded-lg border border-line px-[clamp(20px,4.5vw,56px)] py-[70px]" style={{ background: "var(--bg-soft)" }}>
             <div className="mb-10">
-              <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+              <div className="flex items-center gap-2 font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
                 WHAT LEARNERS ACHIEVE
               </div>
               <h2
                 className="font-display font-semibold tracking-[-0.01em] max-w-[560px]"
-                style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
+                style={{ fontSize: "clamp(28px,3.4vw,38px)", color: "var(--ink)" }}
               >
                 Outcomes that keep compounding
               </h2>
@@ -252,7 +316,7 @@ export default function SuccessStoriesPage() {
               {outcomes.map((o) => (
                 <div
                   key={o.title}
-                  className="rounded-xl border border-line bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
+                  className="rounded-lg border border-line bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
                   style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
                 >
                   <span className="w-11 h-11 rounded-lg flex items-center justify-center mb-5" style={{ background: "var(--brand-soft)" }}>
@@ -268,10 +332,11 @@ export default function SuccessStoriesPage() {
           </div>
         </section>
 
+        {/* ── CTA ── */}
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div
-              className="rounded-2xl p-10 md:p-16 text-center relative overflow-hidden"
+              className="rounded-lg p-10 md:p-16 text-center relative overflow-hidden"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",

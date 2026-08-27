@@ -78,7 +78,7 @@ export function HeroVideo({ video }: { video: StoryVideo }) {
   return (
     <div className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60">
       <div
-        className="relative aspect-video overflow-hidden rounded-[26px] border border-line"
+        className="relative aspect-video overflow-hidden rounded-lg border border-line"
         style={{ background: video.gradient, boxShadow: "0 30px 60px -25px rgba(18,32,67,0.4)" }}
       >
         {playing && hasVideo ? (
@@ -172,7 +172,7 @@ export function VideoGallery({ videos }: { videos: StoryVideo[] }) {
           <button
             key={v.title}
             onClick={() => setActive(v)}
-            className="group text-left rounded-3xl border border-line bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60"
+            className="group text-left rounded-lg border border-line bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-2/60"
             style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
           >
             <div className="relative aspect-video overflow-hidden" style={{ background: v.gradient }}>

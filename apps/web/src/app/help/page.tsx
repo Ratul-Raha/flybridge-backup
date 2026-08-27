@@ -313,7 +313,7 @@ export default function HelpPage() {
                     key={c.key}
                     type="button"
                     onClick={() => pickCategory(c.key)}
-                    className="group text-left rounded-[22px] border bg-white p-6 transition-all duration-300 hover:-translate-y-1"
+                    className="group text-left rounded-lg border bg-white p-6 transition-all duration-300 hover:-translate-y-1"
                     style={{
                       borderColor: active ? c.accent : "var(--line)",
                       boxShadow: active
@@ -369,7 +369,7 @@ export default function HelpPage() {
 
             {results.length === 0 ? (
               <div
-                className="rounded-[22px] border bg-white text-center py-16 px-6"
+                className="rounded-lg border bg-white text-center py-16 px-6"
                 style={{ borderColor: "var(--line)" }}
               >
                 <span
@@ -393,7 +393,7 @@ export default function HelpPage() {
                   return (
                     <div
                       key={a.id}
-                      className="rounded-[18px] border bg-white transition-all duration-300"
+                      className="rounded-lg border bg-white transition-all duration-300"
                       style={{
                         borderColor: open ? cat.accent : "var(--line)",
                         boxShadow: open ? `0 14px 34px -22px ${cat.accent}` : "0 4px 16px -14px rgba(18,32,67,0.12)",
@@ -449,7 +449,7 @@ export default function HelpPage() {
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[110px]">
           <div className="max-w-[980px] mx-auto">
             <div
-              className="rounded-[32px] p-10 md:p-14 relative overflow-hidden"
+              className="rounded-lg p-10 md:p-14 relative overflow-hidden"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
@@ -485,7 +485,7 @@ export default function HelpPage() {
                       href={c.href}
                       target={c.external ? "_blank" : undefined}
                       rel={c.external ? "noopener noreferrer" : undefined}
-                      className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] text-left transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
+                      className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] text-left transition-all duration-300 hover:bg-white/15 hover:-translate-y-1"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(255,255,255,0.12)", color: "#fff" }}>
                         {c.icon}

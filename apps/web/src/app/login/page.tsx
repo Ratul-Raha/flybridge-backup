@@ -34,7 +34,7 @@ export default async function LoginPage({
         </div>
 
         <div
-          className="rounded-[28px] border bg-white p-[clamp(24px,5vw,40px)]"
+          className="rounded-lg border bg-white p-[clamp(24px,5vw,40px)]"
           style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -32px rgba(18,32,67,0.18)" }}
         >
           <AuthForm initialMode={mode === "register" ? "register" : "login"} next={safeNext} />
