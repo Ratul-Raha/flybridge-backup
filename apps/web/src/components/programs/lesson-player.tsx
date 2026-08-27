@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -113,14 +113,31 @@ export function LessonPlayer({
 }) {
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
-  const [watched, setWatched] = useState<Set<number>>(new Set());
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
-  const [tab, setTab] = useState<"video" | "quiz">("video");
+  const [tab, setTab] = useState<"lesson" | "quiz">("lesson");
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const current = lessons[index];
+
+  const completedLessons = useMemo(() => {
+    const completed = new Set<number>();
+    let offset = 0;
+    for (let mi = 0; mi < course.modules.length; mi++) {
+      const mod = course.modules[mi];
+      for (let li = 0; li < mod.lessons.length; li++) {
+        const entry = quizScores.find(
+          (s) => s.moduleIndex === mi && s.lessonIndex === li
+        );
+        if (entry && entry.score >= 60) {
+          completed.add(offset + li);
+        }
+      }
+      offset += mod.lessons.length;
+    }
+    return completed;
+  }, [quizScores, course.modules]);
 
   const { moduleIndex, lessonIndex } = useMemo(() => {
     let remaining = index;
@@ -139,7 +156,6 @@ export function LessonPlayer({
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
-          setWatched(new Set<number>(data.watchedLessons ?? []));
           setGrade(data.grade ?? null);
           setQuizScores(data.quizScores ?? []);
         }
@@ -150,7 +166,7 @@ export function LessonPlayer({
   const goTo = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
     setIndex(i);
-    setTab("video");
+    setTab("lesson");
     router.replace(`/dashboard/courses/${course.slug}/learn?lesson=${i}`);
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setSidebarOpen(false);
@@ -158,28 +174,12 @@ export function LessonPlayer({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const markWatched = useCallback((i: number) => {
-    if (lessons[i]?.videoUrl) {
-      setWatched((prev) => {
-        if (prev.has(i)) return prev;
-        const next = new Set(prev);
-        next.add(i);
-        fetch(`/api/courses/${course.id}/progress`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ watchedLesson: i }),
-        }).catch(() => {});
-        return next;
-      });
-    }
-  }, [lessons, course.id]);
-
   const toggleModule = (title: string) =>
     setOpenModules((prev) => ({ ...prev, [title]: !(prev[title] ?? true) }));
 
   const totalLessons = lessons.length;
-  const watchedCount = watched.size;
-  const progressPct = totalLessons > 0 ? Math.round((watchedCount / totalLessons) * 100) : 0;
+  const completedCount = completedLessons.size;
+  const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
@@ -271,7 +271,7 @@ export function LessonPlayer({
               />
             </div>
             <p className="text-[11px] mt-1.5" style={{ color: "var(--body)" }}>
-              {watchedCount}/{totalLessons} lessons watched
+              {completedCount}/{totalLessons} lessons completed
               {grade && grade.completedQuizzes > 0 && (
                 <> · Avg: {grade.percentage}%</>
               )}
@@ -305,7 +305,7 @@ export function LessonPlayer({
                           .slice(0, mi)
                           .reduce((n, x) => n + x.lessons.length, 0) + li;
                         const isCurrent = globalIndex === index;
-                        const isWatched = watched.has(globalIndex);
+                        const isCompleted = completedLessons.has(globalIndex);
                         const quizScore = quizScores.find(
                           (s) => s.moduleIndex === mi && s.lessonIndex === li
                         );
@@ -321,7 +321,7 @@ export function LessonPlayer({
                                 : { background: "transparent" }
                             }
                           >
-                            {isWatched ? (
+                            {isCompleted ? (
                               <CheckCircle2 size={15} style={{ color: "#16a34a" }} />
                             ) : (
                               <PlayCircle
@@ -380,19 +380,47 @@ export function LessonPlayer({
           {current ? (
             <div className="px-4 sm:px-8 py-6 flex flex-col">
               {/* Video player at top */}
-              {tab === "video" && current.videoUrl && (
+              {tab === "lesson" && current.videoUrl && (
                 <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--line)", background: "#000" }}>
-                  <VideoPlayer url={current.videoUrl} onEnded={() => markWatched(index)} />
+                  <VideoPlayer url={current.videoUrl} />
                 </div>
               )}
-              {tab === "video" && !current.videoUrl && (
+              {tab === "lesson" && !current.videoUrl && current.pdfUrl && (
+                <a
+                  href={current.pdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border flex items-center gap-4 px-6 py-5 transition-colors hover:bg-black/[0.02]"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))" }}
+                  >
+                    <FileText size={22} style={{ color: "var(--brand)" }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                      Lesson Material
+                    </p>
+                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--body)" }}>
+                      Open the PDF lesson notes in a new tab
+                    </p>
+                  </div>
+                  <svg className="ml-auto shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--body)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 17L17 7" />
+                    <path d="M7 7h10v10" />
+                  </svg>
+                </a>
+              )}
+              {tab === "lesson" && !current.videoUrl && !current.pdfUrl && (
                 <div
                   className="rounded-xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
                   style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
                 >
                   <PlayCircle size={34} style={{ color: "var(--body)" }} />
                   <p className="text-[14px]" style={{ color: "var(--body)" }}>
-                    This lesson has no video yet.
+                    No content uploaded for this lesson yet.
                   </p>
                 </div>
               )}
@@ -401,16 +429,16 @@ export function LessonPlayer({
               <div className="flex gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: "var(--bg-soft, rgba(0,0,0,0.03))" }}>
                 <button
                   type="button"
-                  onClick={() => setTab("video")}
+                  onClick={() => setTab("lesson")}
                   className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
                   style={
-                    tab === "video"
+                    tab === "lesson"
                       ? { background: "white", color: "var(--ink)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
                       : { color: "var(--body)" }
                   }
                 >
                   <PlayCircle size={14} />
-                  Video
+                  Lesson
                 </button>
                 <button
                   type="button"
@@ -439,9 +467,9 @@ export function LessonPlayer({
               </div>
 
               {/* Content area */}
-              {tab === "video" ? (
+              {tab === "lesson" ? (
                 <>
-                  {current.pdfUrl && (
+                  {current.pdfUrl && current.videoUrl && (
                     <a
                       href={current.pdfUrl}
                       target="_blank"

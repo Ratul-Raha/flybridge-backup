@@ -18,7 +18,7 @@ const sections = [
       },
       {
         title: "Learning Data",
-        desc: "Your course progress, quiz results, video lessons watched, and certificates earned.",
+        desc: "Your course progress, quiz results, lesson completion status, and certificates earned.",
         icon: <path d="M6 4L20 12L6 20V4Z" />,
       },
       {

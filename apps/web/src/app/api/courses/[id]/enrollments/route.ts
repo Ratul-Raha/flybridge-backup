@@ -50,18 +50,23 @@ export async function GET(
       (m) => m.lessons ?? []
     );
     const totalLessons = allLessons.length;
-    const watchableLessons = allLessons.filter((l) => l.videoUrl).length;
-    const lessonDenominator = watchableLessons > 0 ? watchableLessons : totalLessons;
+    const lessonDenominator = totalLessons > 0 ? totalLessons : 1;
 
     const members = enrollments.map((e) => {
       const u = (e.user ?? null) as PopulatedUser | null;
       const userId = u?._id ? String(u._id) : "";
       const p = userId ? progressByUser.get(userId) : undefined;
       const quizAvg = p?.overallPercentage ?? 0;
-      const lessonsCompleted = Math.min(p?.watchedLessons?.length ?? 0, lessonDenominator);
-      const lessonProgress = lessonDenominator
-        ? Math.round((lessonsCompleted / lessonDenominator) * 100)
-        : 0;
+      const scores = (p?.quizScores ?? []) as {
+        moduleIndex: number;
+        lessonIndex: number;
+        score: number;
+      }[];
+      const lessonsCompleted = scores.filter((s) => s.score >= 60).length;
+      const lessonProgress = Math.min(
+        Math.round((lessonsCompleted / lessonDenominator) * 100),
+        100
+      );
       const completed = Boolean(p && (p.passed || quizAvg >= 100));
       return {
         id: e._id.toString(),

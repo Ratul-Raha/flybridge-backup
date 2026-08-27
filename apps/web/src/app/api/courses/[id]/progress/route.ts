@@ -50,7 +50,6 @@ export async function GET(
         user: session.userId,
         course: course._id,
         courseSlug: course.slug,
-        watchedLessons: [],
         quizScores: [],
         overallPercentage: 0,
         totalQuizzes: totalLessons,
@@ -65,7 +64,6 @@ export async function GET(
     );
 
     return NextResponse.json({
-      watchedLessons: progress.watchedLessons,
       quizScores: progress.quizScores,
       grade,
       certificateIssued: progress.certificateIssued,
@@ -89,8 +87,7 @@ export async function PUT(
   }
 
   try {
-    const body = await request.json();
-    const { watchedLesson } = body as { watchedLesson?: number };
+    await request.json().catch(() => ({}));
 
     await connectDb();
 
@@ -116,12 +113,6 @@ export async function PUT(
       0
     );
 
-    const update: Record<string, unknown> = {};
-
-    if (typeof watchedLesson === "number") {
-      update.$addToSet = { watchedLessons: watchedLesson };
-    }
-
     const progress = await CourseProgress.findOneAndUpdate(
       { user: session.userId, course: course._id },
       {
@@ -131,7 +122,6 @@ export async function PUT(
           courseSlug: course.slug,
           totalQuizzes: totalLessons,
         },
-        ...update,
       },
       { upsert: true, new: true }
     );
@@ -142,7 +132,6 @@ export async function PUT(
     );
 
     return NextResponse.json({
-      watchedLessons: progress.watchedLessons,
       quizScores: progress.quizScores,
       grade,
       certificateIssued: progress.certificateIssued,
