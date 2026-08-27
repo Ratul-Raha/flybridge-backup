@@ -167,17 +167,17 @@ export function ResourceDetail({
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-[13px] font-medium">
-        <Link href="/resources" className="inline-flex items-center gap-2 transition-opacity duration-200 hover:opacity-70" style={{ color: "var(--brand)" }}>
+      <nav className="flex min-w-0 flex-wrap items-center gap-2 text-[13px] font-medium">
+        <Link href="/resources" className="inline-flex shrink-0 items-center gap-2 transition-opacity duration-200 hover:opacity-70" style={{ color: "var(--brand)" }}>
           <ArrowLeft size={15} /> All resources
         </Link>
-        <span style={{ color: "var(--line)" }}>/</span>
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: accent }}>
+        <span className="shrink-0" style={{ color: "var(--line)" }}>/</span>
+        <span className="min-w-0 truncate font-mono text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: accent }}>
           {r.category}
         </span>
       </nav>
 
-      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* ===== Main document sheet ===== */}
         <div className="overflow-hidden rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
           {/* Accent header */}
@@ -185,7 +185,7 @@ export function ResourceDetail({
             className="relative border-b px-6 pb-10 pt-5 sm:px-10"
             style={{ borderColor: "var(--line)", background: `linear-gradient(165deg, ${accent}14, ${accent}03 72%)` }}
           >
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span
                 className="rounded-md border bg-white/80 px-2.5 py-[4px] font-mono text-[10px] font-bold uppercase tracking-[0.12em]"
                 style={{ borderColor: "var(--line)", color: meta.color }}
@@ -230,14 +230,14 @@ export function ResourceDetail({
             </div>
 
             <h1
-              className="mt-3 font-display text-[clamp(26px,4vw,38px)] font-semibold leading-[1.12] tracking-[-0.02em]"
+              className="mt-3 font-display text-[clamp(26px,4vw,38px)] font-semibold leading-[1.12] tracking-[-0.02em] [overflow-wrap:anywhere]"
               style={{ color: "var(--ink)" }}
             >
               {r.title}
             </h1>
 
             {r.description && (
-              <p className="mt-5 whitespace-pre-line text-[15.5px] leading-[1.8]" style={{ color: "var(--body)" }}>
+              <p className="mt-5 break-words whitespace-pre-line text-[15.5px] leading-[1.8]" style={{ color: "var(--body)" }}>
                 {r.description}
               </p>
             )}
@@ -245,7 +245,7 @@ export function ResourceDetail({
         </div>
 
         {/* ===== Sidebar ===== */}
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-28">
+        <aside className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-28">
           {/* Actions */}
           <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-3">
