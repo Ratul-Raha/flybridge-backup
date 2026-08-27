@@ -40,23 +40,17 @@ export async function Programs() {
   return (
     <section id="programs" className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
-        <div className="max-w-[560px]">
-          <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
-            PROGRAMS & COURSES
-          </div>
+        <div className="max-w-[640px]">
           <h2 className="text-balance">
-            <span className="block font-display font-medium tracking-[-0.01em] text-[clamp(18px,2vw,22px)] mb-2" style={{ color: "var(--body)" }}>
-              Start with the
-            </span>
             <span
-              className="block font-display font-bold tracking-[-0.03em] leading-[1.08]"
-              style={{ fontSize: "clamp(32px,3.8vw,46px)", color: "var(--ink)" }}
+              className="block font-display font-medium tracking-[-0.02em] leading-[1.1]"
+              style={{ fontSize: "clamp(26px,3vw,38px)", color: "var(--ink)" }}
             >
-              right program.
+              Find your <span style={{ color: "var(--brand-2)" }}>program &amp; course</span>
             </span>
           </h2>
-          <p className="text-[15.5px] mt-[10px]" style={{ color: "var(--body)" }}>
-            Pick a path based on where you&apos;re headed next — each one comes with everything you need to get there.
+          <p className="text-[14.5px] mt-[10px] max-w-[520px]" style={{ color: "var(--body)" }}>
+            Everything you need for study abroad and work abroad — all in one place.
           </p>
         </div>
         <Link

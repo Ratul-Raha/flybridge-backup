@@ -134,13 +134,19 @@ export function SuccessStories() {
 
         {/* Header */}
         <div className="mb-12">
-          {/* Eyebrow + view all */}
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full" style={{ background: "var(--brand-soft)" }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: "var(--brand)" }} />
-              <span className="font-mono text-[11px] font-semibold tracking-[0.4px] uppercase" style={{ color: "var(--brand-2)" }}>
-                Success Stories
-              </span>
+          <div className="flex items-end justify-between flex-wrap gap-4">
+            <div className="max-w-[640px]">
+              <h2 className="text-balance">
+                <span
+                  className="block font-display font-medium tracking-[-0.02em] leading-[1.1]"
+                  style={{ fontSize: "clamp(26px,3vw,38px)", color: "var(--ink)" }}
+                >
+                  Real results, <span style={{ color: "var(--brand-2)" }}>real learners</span>
+                </span>
+              </h2>
+              <p className="text-[14.5px] mt-[10px] max-w-[520px]" style={{ color: "var(--body)" }}>
+                Discover how FlyBridge learners achieved their study abroad dreams and built brighter futures.
+              </p>
             </div>
             <Link
               href="/success-stories"
@@ -152,54 +158,38 @@ export function SuccessStories() {
             </Link>
           </div>
 
-          {/* Title */}
-          <h2 className="max-w-[820px] text-balance">
-            <span className="block font-display font-medium tracking-[-0.01em] text-[clamp(18px,2.2vw,24px)] mb-3" style={{ color: "var(--body)" }}>
-              Real results from
-            </span>
-            <span className="block font-display font-bold tracking-[-0.035em] leading-[1.03]" style={{ fontSize: "clamp(40px,5.2vw,62px)", color: "var(--ink)" }}>
-              real learners<span style={{ color: "var(--brand)" }}>.</span>
-            </span>
-          </h2>
-
-          {/* Intro + trust cluster */}
-          <div className="mt-9 flex flex-col lg:flex-row lg:items-center justify-between gap-7 lg:gap-10">
-            <p className="text-[15.5px] leading-relaxed max-w-[560px]" style={{ color: "var(--body)" }}>
-              Discover how FlyBridge learners achieved their study abroad dreams and built brighter futures with the right guidance.
-            </p>
-
-            <div className="flex items-center gap-5 shrink-0">
-              <div className="flex -space-x-3">
-                {avatarPreview.map((s) => (
-                  <img
-                    key={s.src}
-                    src={s.src}
-                    alt=""
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white"
-                    style={{ boxShadow: "0 2px 6px -2px rgba(18,32,67,0.3)" }}
-                  />
+          {/* Trust cluster */}
+          <div className="mt-8 flex items-center gap-5">
+            <div className="flex -space-x-3">
+              {avatarPreview.map((s) => (
+                <img
+                  key={s.src}
+                  src={s.src}
+                  alt=""
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                  style={{ boxShadow: "0 2px 6px -2px rgba(18,32,67,0.3)" }}
+                />
+              ))}
+              <div
+                className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center font-mono text-[10px] font-semibold"
+                style={{ background: "var(--brand)", color: "#fff" }}
+              >
+                10k+
+              </div>
+            </div>
+            <span className="w-px h-9 shrink-0" style={{ background: "var(--line)" }} />
+            <div>
+              <div className="flex items-center gap-[3px]">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <svg key={i} className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#F59E0B" }}>
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
                 ))}
-                <div
-                  className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center font-mono text-[10px] font-semibold"
-                  style={{ background: "var(--brand)", color: "#fff" }}
-                >
-                  10k+
-                </div>
+                <span className="text-[13px] font-bold ml-1.5" style={{ color: "var(--ink)" }}>4.8/5</span>
               </div>
-              <span className="w-px h-9 shrink-0" style={{ background: "var(--line)" }} />
-              <div>
-                <div className="flex items-center gap-[3px]">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <svg key={i} className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#F59E0B" }}>
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  ))}
-                  <span className="text-[13px] font-bold ml-1.5" style={{ color: "var(--ink)" }}>4.8/5</span>
-                </div>
-                <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
-                  Trusted by <span className="font-semibold" style={{ color: "var(--ink)" }}>10,000+</span> learners worldwide
-                </p>
-              </div>
+              <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
+                Trusted by <span className="font-semibold" style={{ color: "var(--ink)" }}>10,000+</span> learners worldwide
+              </p>
             </div>
           </div>
         </div>
