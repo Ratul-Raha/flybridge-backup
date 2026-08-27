@@ -79,16 +79,13 @@ export function MobileUserApp() {
         <div className="flex items-center justify-between h-14 px-5">
           <Link href="/dashboard" className="brand flex flex-col items-start leading-none">
             <Image
-              src="/logo-light.png"
+              src="/transparent-logo-dark.png"
               alt="FlyBridge Education Group"
               width={113}
               height={38}
               className="w-auto h-[30px] shrink-0 object-contain"
               priority
             />
-            <span className="font-mono text-[7.5px] tracking-[1.6px] mt-[2px]" style={{ color: "var(--body)" }}>
-              EDUCATION GROUP
-            </span>
           </Link>
           <Link href="/dashboard/settings" aria-label="Settings">
             <Avatar name={user.name} src={user.avatar} size={32} />

@@ -65,7 +65,7 @@ function shell(inner: string): string {
   <tr>
     <td style="background:#122043;padding:22px 28px;">
       <a href="${SITE_URL}" style="text-decoration:none;">
-        <img src="${SITE_URL}/logo-light.png" alt="FlyBridge Education Group" width="150" style="width:150px;height:auto;display:block;"/>
+        <img src="${SITE_URL}/transparent-logo-light.png" alt="FlyBridge Education Group" width="150" style="width:150px;height:auto;display:block;"/>
       </a>
     </td>
   </tr>
@@ -140,19 +140,6 @@ function seminarChips(s: SeminarPayload): Chip[] {
 function firstName(name?: string | null): string {
   const first = (name ?? "").trim().split(/\s+/)[0];
   return first || "there";
-}
-
-function welcomeCard(emoji: string, title: string, desc: string, href: string): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center" style="border:1px solid #E5EAF3;border-radius:16px;padding:22px 12px 18px;background:#FFFFFF;">
-        <span style="display:inline-block;width:44px;height:44px;line-height:46px;border-radius:14px;background:#EEF4FE;font-size:21px;">${emoji}</span>
-        <p style="margin:12px 0 5px;color:#102A43;font-size:14px;font-weight:800;">${esc(title)}</p>
-        <p style="margin:0;color:#5B6B8C;font-size:12px;line-height:1.6;">${esc(desc)}</p>
-        <p style="margin:10px 0 0;"><a href="${href}" style="color:#2563EB;font-size:12px;font-weight:700;text-decoration:none;">Learn more →</a></p>
-      </td>
-    </tr>
-  </table>`;
 }
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -432,43 +419,40 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
       const u = (payload.user ?? {}) as UserPayload;
       const who = firstName(u.name);
       return shell(
-        `<tr><td style="height:6px;background:#10B981;padding:0;"></td></tr>` +
-          `<tr><td align="center" style="padding:44px 40px 0;">
-            <p style="margin:0 0 12px;color:#10B981;font-size:11px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;">Welcome to FlyBridge</p>
-            <h1 style="margin:0;color:#102A43;font-size:27px;font-weight:800;line-height:1.3;letter-spacing:-0.01em;">Welcome aboard, ${esc(who)}! 👋</h1>
-          </td></tr>` +
-          `<tr><td align="center" style="padding:16px 46px 0;">
-            <p style="margin:0;color:#4A5570;font-size:15px;line-height:1.8;">
+        `<tr><td style="padding:36px 40px 8px;" align="center">
+            <span style="display:inline-block;background:#E2F6EE;color:#0FA968;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-radius:999px;">Welcome to FlyBridge</span>
+            <h1 style="margin:18px 0 0;color:#122043;font-size:28px;font-weight:800;line-height:1.25;letter-spacing:-0.02em;">Welcome aboard, ${esc(who)} 🎉</h1>
+            <p style="margin:14px 0 0;color:#5B6478;font-size:15px;line-height:1.75;">
               You're now part of a global community of ambitious students. FlyBridge helps you build an
-              international future through practical, step-by-step education — learn at your own pace,
-              wherever you are.
+              international future through practical, step-by-step education — at your own pace, anywhere in the world.
             </p>
           </td></tr>` +
-          `<tr><td style="padding:32px 26px 0;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td width="32%" style="vertical-align:top;padding:0;">
-                  ${welcomeCard("🎓", "Programs", "Structured courses to prepare for studying and working abroad.", `${SITE_URL}/programs`)}
-                </td>
-                <td width="2%"></td>
-                <td width="32%" style="vertical-align:top;padding:0;">
-                  ${welcomeCard("🎥", "Live seminars", "Free expert sessions — join live or catch the replay.", `${SITE_URL}/seminars`)}
-                </td>
-                <td width="2%"></td>
-                <td width="32%" style="vertical-align:top;padding:0;">
-                  ${welcomeCard("📚", "Resources", "Guides, checklists and tools — free for members.", `${SITE_URL}/resources`)}
-                </td>
-              </tr>
+          `<tr><td style="padding:30px 40px 0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:16px;border:1px solid #E5EAF3;">
+              <tr><td style="padding:24px 24px 20px;background:#F7FAFC;border-radius:16px;">
+                <p style="margin:0 0 14px;color:#122043;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;">Your first steps</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="padding:0 0 14px;"><p style="margin:0;color:#4A5570;font-size:14px;line-height:1.6;"><span style="color:#0FA968;font-weight:800;">✓</span>&nbsp; Explore <a href="${SITE_URL}/programs" style="color:#122043;font-weight:700;text-decoration:underline;">programs</a> that match your goals</p></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 14px;"><p style="margin:0;color:#4A5570;font-size:14px;line-height:1.6;"><span style="color:#0FA968;font-weight:800;">✓</span>&nbsp; Join a <a href="${SITE_URL}/seminars" style="color:#122043;font-weight:700;text-decoration:underline;">live seminar</a> — free, expert-led</p></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0;"><p style="margin:0;color:#4A5570;font-size:14px;line-height:1.6;"><span style="color:#0FA968;font-weight:800;">✓</span>&nbsp; Grab free <a href="${SITE_URL}/resources" style="color:#122043;font-weight:700;text-decoration:underline;">resources</a> &amp; checklists</p></td>
+                  </tr>
+                </table>
+              </td></tr>
             </table>
           </td></tr>` +
-          `<tr><td align="center" style="padding:36px 40px 0;">
-            <a href="${SITE_URL}/programs" style="display:inline-block;background:#10B981;color:#ffffff;text-decoration:none;font-weight:800;font-size:15px;padding:15px 34px;border-radius:12px;box-shadow:0 6px 16px -6px rgba(16,185,129,0.5);">Start exploring programs</a>
+          `<tr><td align="center" style="padding:28px 40px 0;">
+            <a href="${SITE_URL}/programs" style="display:inline-block;background:#0FA968;color:#ffffff;text-decoration:none;font-weight:800;font-size:15px;padding:15px 36px;border-radius:12px;box-shadow:0 8px 20px -8px rgba(15,169,104,0.55);">Start exploring</a>
           </td></tr>` +
-          `<tr><td align="center" style="padding:14px 40px 0;">
-            <p style="margin:0;color:#5B6B8C;font-size:13px;">Prefer to meet us live? <a href="${SITE_URL}/seminars" style="color:#2563EB;font-weight:700;text-decoration:none;">Browse upcoming seminars →</a></p>
+          `<tr><td align="center" style="padding:18px 40px 0;">
+            <p style="margin:0;color:#8B93A7;font-size:13px;">Prefer to meet us live? <a href="${SITE_URL}/seminars" style="color:#0FA968;font-weight:700;text-decoration:none;">Browse upcoming seminars →</a></p>
           </td></tr>` +
-          `<tr><td align="center" style="padding:22px 40px 0;">
-            <p style="margin:0;color:#8B93A7;font-size:12px;line-height:1.6;">Questions? Just reply to this email — our team is happy to help you get started.</p>
+          `<tr><td align="center" style="padding:24px 40px 0;">
+            <p style="margin:0;color:#8B93A7;font-size:12px;line-height:1.7;">Questions? Just reply to this email — our team is happy to help you get started.</p>
           </td></tr>` +
           `<tr><td style="height:44px;"></td></tr>`
       );

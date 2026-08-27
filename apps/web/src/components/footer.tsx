@@ -42,7 +42,7 @@ export function Footer() {
             <div className="col-span-2 md:col-span-2">
               <a href="/" className="brand flex flex-col items-start leading-none mb-4">
                 <Image
-                  src="/logo-light.png"
+                  src="/transparent-logo-dark.png"
                   alt="FlyBridge Education Group"
                   width={113}
                   height={38}

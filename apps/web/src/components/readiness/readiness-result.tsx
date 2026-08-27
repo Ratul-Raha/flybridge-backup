@@ -284,7 +284,7 @@ export function ReadinessResultView({
       <div className="flex items-center justify-between gap-4 mb-8 pb-6 border-b" style={{ borderColor: "var(--line)" }}>
         <div className="flex items-center gap-3">
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
-            <Image src="/logo-light.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
+            <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
           </div>
           <div>
             <p className="font-display text-[14px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
@@ -469,7 +469,7 @@ export function ReadinessResultView({
 
       <div className="mt-6 rounded-[20px] border p-5 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
         <div className="flex items-center gap-3">
-          <Image src="/logo-light.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
+          <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
           <div>
             <p className="font-display text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
               FlyBridge Education Group

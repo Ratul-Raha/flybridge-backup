@@ -69,7 +69,7 @@ export function Hero() {
   return (
     <>
       <section
-        className="pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
+        className="hero-section pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
             "linear-gradient(rgba(18,32,67,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.045) 1px, transparent 1px), radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
@@ -268,7 +268,7 @@ export function Hero() {
           .float-card { display: none; }
         }
         @media (max-width: 560px) {
-          section { padding-top: 120px !important; }
+          .hero-section { padding-top: 120px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           .animate-scroll-reel { animation: none !important; }
