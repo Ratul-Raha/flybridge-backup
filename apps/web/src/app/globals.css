@@ -67,8 +67,10 @@
   animation: fb-marquee 32s linear infinite;
 }
 
-.fb-marquee:hover .fb-marquee-track {
-  animation-play-state: paused;
+@media (hover: hover) {
+  .fb-marquee:hover .fb-marquee-track {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes fb-bounce {
@@ -81,7 +83,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fb-marquee-track { animation: none; }
   .fb-bounce { animation: none; }
 }
 

@@ -213,7 +213,7 @@ export function SuccessStories() {
           <div className="overflow-x-auto lg:overflow-hidden -mx-1 px-1 no-scrollbar">
             <div
               ref={trackRef}
-              className="flex gap-5 lg:transition-transform lg:duration-500 lg:ease-out"
+              className="flex gap-5 transition-transform duration-500 ease-out"
               style={{ transform: `translateX(calc(-${start} * (100% / ${VISIBLE} + 20px / ${VISIBLE})))` }}
             >
               {stories.map((s) => (
@@ -295,23 +295,23 @@ export function SuccessStories() {
         >
           <div className="absolute top-0 right-0 w-[260px] h-[260px] rounded-full blur-[90px] -translate-y-1/2 translate-x-1/2" style={{ background: "rgba(255,255,255,0.12)" }} />
 
-          <div className="relative flex items-center gap-4 lg:flex-1">
+          <div className="relative flex items-center gap-4 lg:flex-1 min-w-0">
             <div
-              className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 text-white"
+              className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 text-white self-center"
               style={{ background: "rgba(255,255,255,0.14)" }}
             >
               <ShieldIcon />
             </div>
-            <h3 className="font-display font-bold text-[22px] leading-tight text-white">
+            <h3 className="font-display font-bold text-[22px] leading-snug text-white text-left text-balance min-w-0">
               Your success is our mission.
             </h3>
           </div>
 
-          <p className="relative text-[13.5px] leading-relaxed max-w-[320px] text-white/80 hidden lg:block">
+          <p className="relative self-center text-[13.5px] leading-relaxed max-w-[320px] text-white/80 hidden lg:block">
             We&apos;re more than consultants — we&apos;re your partners in building a global future.
           </p>
 
-          <div className="relative hidden lg:block w-px self-stretch" style={{ background: "rgba(255,255,255,0.2)" }} />
+          <div className="relative hidden lg:block w-px self-center" style={{ background: "rgba(255,255,255,0.2)" }} />
 
           <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-3 shrink-0">
             {[
