@@ -83,7 +83,7 @@ export function SuccessStoriesGrid() {
   }
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
       {stories.map((s) => (
         <div
           key={s.src}
