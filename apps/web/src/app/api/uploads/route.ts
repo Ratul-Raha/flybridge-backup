@@ -49,9 +49,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const scope = request.nextUrl.searchParams.get("scope") === "courses" ? "courses" : "resources";
+    const scopeParam = request.nextUrl.searchParams.get("scope");
+    const scope: "courses" | "resources" | "stories" =
+      scopeParam === "courses" ? "courses" : scopeParam === "stories" ? "stories" : "resources";
     const base =
-      scope === "courses" ? "flybridge/courses" : "flybridge/resources";
+      scope === "courses"
+        ? "flybridge/courses"
+        : scope === "stories"
+        ? "flybridge/stories"
+        : "flybridge/resources";
 
     const folder =
       kind === "image"

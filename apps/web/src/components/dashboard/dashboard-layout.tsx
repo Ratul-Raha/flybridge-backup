@@ -209,6 +209,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             icon: FolderOpen,
             active: pathname.startsWith("/dashboard/resources"),
           },
+          {
+            kind: "link",
+            label: "Success Stories",
+            href: "/dashboard/success-stories",
+            icon: FolderOpen,
+            active: pathname.startsWith("/dashboard/success-stories"),
+          },
         ],
       });
     }
