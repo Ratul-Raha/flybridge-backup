@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Loader2, PlayCircle, Award } from "lucide-react";
 import { EmptyState } from "./ui";
+import { BengaliText } from "@/components/bengali-text";
 
 type Course = {
   id: string;
@@ -126,7 +127,7 @@ export function MyCourses() {
             {/* Body */}
             <div className="flex flex-col flex-1 gap-2.5 p-5">
               <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                {c.title}
+                <BengaliText>{c.title}</BengaliText>
               </h3>
               <p className="text-[12.5px] leading-[1.55]" style={{ color: "var(--body)" }}>
                 {c.subtitle || c.description}

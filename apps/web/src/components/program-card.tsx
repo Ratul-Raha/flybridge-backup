@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Program } from "@/lib/programs";
+import { BengaliText } from "./bengali-text";
 
 const decos: Record<string, ReactNode> = {
   "study-visa-prep-us": (
@@ -125,7 +126,7 @@ export function ProgramCard({ p }: { p: Program }) {
       {media}
       <div className="flex flex-col flex-1 gap-2.5 p-5">
         <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-          {p.title}
+          <BengaliText>{p.title}</BengaliText>
         </h3>
         <p className="text-[12.5px] leading-[1.55]" style={{ color: "var(--body)" }}>
           {p.desc}

@@ -20,6 +20,7 @@ import {
   Stamp,
   Target,
   Wallet,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -54,18 +55,18 @@ const QUESTION_ICONS: Record<ReadinessQuestionId, LucideIcon> = {
 };
 
 const THINKING_STEPS = [
-  "Reading your answers…",
-  "Reviewing your academic profile…",
-  "Checking language readiness…",
-  "Evaluating funding readiness…",
-  "Assessing your timeline & goals…",
-  "Preparing your personalized report…",
+  "Reading your answers\u2026",
+  "Reviewing your academic profile\u2026",
+  "Checking language readiness\u2026",
+  "Evaluating funding readiness\u2026",
+  "Assessing your timeline & goals\u2026",
+  "Preparing your personalized report\u2026",
 ];
 
-const CHIPS = [
-  { label: "10 questions", icon: FileText },
-  { label: "~3 minutes", icon: Compass },
-  { label: "AI-powered report", icon: Sparkles },
+const FEATURES = [
+  { icon: FileText, label: "10 questions", desc: "Academics, finances, visa & more" },
+  { icon: Compass, label: "~3 minutes", desc: "Quick, focused & mobile-friendly" },
+  { icon: Zap, label: "AI action plan", desc: "Personalized & ready instantly" },
 ];
 
 type Phase = "intro" | "quiz" | "thinking" | "gate" | "result";
@@ -308,106 +309,175 @@ export function ReadinessWizard() {
   };
 
   return (
-    <div className="w-full max-w-[760px] mx-auto" ref={cardRef}>
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5" style={{ background: "var(--brand-soft)" }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
-          <span className="font-mono text-[11px] font-medium tracking-[0.4px] uppercase" style={{ color: "var(--brand-2)" }}>
+    <div className="w-full max-w-[860px] mx-auto px-4 sm:px-0" ref={cardRef}>
+      {/* ── Page Header (mobile-optimized) ── */}
+      <div className="text-center mb-8 sm:mb-12">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 sm:mb-6" style={{ background: "var(--brand-soft)", border: "1px solid rgba(15,169,104,0.18)", boxShadow: "0 4px 12px -4px rgba(15,169,104,0.25)" }}>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ background: "var(--brand)" }} />
+            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />
+          </span>
+          <span className="font-mono text-[10.5px] sm:text-[11px] font-semibold tracking-[0.45px] uppercase" style={{ color: "var(--brand-2)" }}>
             Readiness Assessment
           </span>
         </div>
+
         <h1
-          className="font-display font-semibold tracking-[-0.02em] text-balance leading-[1.1]"
-          style={{ fontSize: "clamp(32px,4vw,48px)", color: "var(--ink)" }}
+          className="font-display font-bold tracking-[-0.03em] text-balance leading-[1.06]"
+          style={{ fontSize: "clamp(30px,7vw,52px)", color: "var(--ink)" }}
         >
           Study Abroad{" "}
-          <span style={{ color: "var(--brand-2)" }}>Readiness Score</span>
+          <span
+            className="relative inline-block"
+            style={{
+              background: "linear-gradient(135deg, var(--brand), var(--brand-2))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Readiness Score
+          </span>
         </h1>
-        <p className="text-[15.5px] leading-[1.7] mt-4 max-w-[540px] mx-auto" style={{ color: "var(--body)" }}>
-          Evaluate your preparedness across academics, language proficiency, financial readiness, and visa requirements — then receive a tailored action plan.
+
+        <p className="text-[15px] sm:text-[16px] leading-[1.7] mt-4 sm:mt-5 max-w-[560px] mx-auto" style={{ color: "var(--body)" }}>
+          Evaluate your preparedness across academics, language, finances and visa — then get a tailored action plan.
         </p>
       </div>
 
       <ReadinessCard>
+          {/* ─── INTRO ─── */}
           {phase === "intro" && (
             <div className="fb-step-in">
-              <div className="flex justify-center mb-6">
+              {/* Compass hero */}
+              <div className="flex justify-center mb-8">
                 <div className="relative">
                   <div
-                    className="absolute inset-0 rounded-[24px] blur-2xl opacity-40"
-                    style={{ background: "radial-gradient(circle, rgba(15,169,104,0.35), transparent 70%)" }}
+                    className="absolute inset-0 rounded-[28px] blur-3xl opacity-50"
+                    style={{ background: "radial-gradient(circle, rgba(15,169,104,0.5), transparent 70%)" }}
                   />
+                  <span
+                    className="absolute -top-1 -right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full text-white"
+                    style={{ background: "linear-gradient(135deg, #2F5FE0, #4A74E8)", boxShadow: "0 6px 14px -4px rgba(47,95,224,0.5)" }}
+                  >
+                    <Sparkles size={13} strokeWidth={2.2} />
+                  </span>
                   <div
-                    className="relative w-[72px] h-[72px] rounded-[22px] flex items-center justify-center"
+                    className="relative w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] rounded-[26px] flex items-center justify-center"
                     style={{
                       background: "linear-gradient(135deg, #0FA968, #14B57E)",
-                      boxShadow: "0 16px 36px -10px rgba(15,169,104,0.45)",
+                      boxShadow: "0 20px 44px -10px rgba(15,169,104,0.55), inset 0 1px 0 rgba(255,255,255,0.2)",
                     }}
                   >
-                    <Compass size={32} className="text-white" strokeWidth={1.8} />
+                    <Compass size={32} className="text-white sm:hidden" strokeWidth={1.8} />
+                    <Compass size={36} className="text-white hidden sm:block" strokeWidth={1.8} />
                   </div>
                 </div>
               </div>
 
-              <h2 className="text-center font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(18px,2.5vw,24px)", color: "var(--ink)" }}>
-                How prepared are you for studying abroad?
-              </h2>
-              <p className="text-center text-[14px] leading-[1.7] mt-2.5 max-w-[440px] mx-auto" style={{ color: "var(--body)" }}>
-                10 focused questions covering your academics, English proficiency, financial standing, and timeline. Results are instant.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
-                {CHIPS.map((c) => (
+              {/* Heading */}
+              <div className="text-center max-w-[560px] mx-auto">
+                <h2 className="font-display font-bold tracking-[-0.01em] text-[21px] sm:text-[24px] leading-snug" style={{ color: "var(--ink)" }}>
+                  How prepared are you for{" "}
                   <span
-                    key={c.label}
-                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-4 py-[8px]"
-                    style={{ background: "var(--bg-soft)", color: "var(--body)", border: "1px solid var(--line)" }}
+                    style={{
+                      background: "linear-gradient(135deg, var(--brand), var(--brand-2))",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
                   >
-                    <c.icon size={13} style={{ color: "var(--brand)" }} />
-                    {c.label}
+                    studying abroad?
                   </span>
+                </h2>
+                <p className="text-center text-[14px] sm:text-[14.5px] leading-[1.7] mt-3" style={{ color: "var(--body)" }}>
+                  Answer a few focused questions and get a personalized readiness score with an
+                  instant action plan — built for students in minutes, on any device.
+                </p>
+              </div>
+
+              {/* What we assess — feature grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-7">
+                {FEATURES.map((f, i) => (
+                  <div
+                    key={f.label}
+                    className="relative flex flex-col items-center text-center gap-2 rounded-2xl px-3 py-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-12px_rgba(18,32,67,0.2)]"
+                    style={{ background: "var(--bg-soft)", border: "1px solid var(--line)" }}
+                  >
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-xl"
+                      style={{
+                        background: "linear-gradient(135deg, var(--brand-soft), rgba(20,181,126,0.08))",
+                        border: "1px solid rgba(15,169,104,0.1)",
+                      }}
+                    >
+                      <f.icon size={16} style={{ color: "var(--brand)" }} strokeWidth={2} />
+                    </span>
+                    <span className="text-[13px] font-bold leading-snug" style={{ color: "var(--ink)" }}>
+                      {f.label}
+                    </span>
+                    <span className="text-[11.5px] leading-snug text-center" style={{ color: "var(--body)" }}>
+                      {f.desc}
+                    </span>
+                    {i < FEATURES.length - 1 && (
+                      <span
+                        className="hidden sm:block absolute top-1/2 -right-[14px] -translate-y-1/2 h-6 w-px"
+                        style={{ background: "radial-gradient(circle, var(--line), transparent 70%)" }}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
 
-              <div className="flex justify-center mt-7">
+              {/* CTA */}
+              <div className="flex flex-col items-center gap-3 mt-8">
                 <button
                   type="button"
                   onClick={start}
-                  className="inline-flex items-center gap-2 rounded-full text-white text-[15px] font-semibold px-9 py-[15px] transition-all duration-250 hover:translate-y-[-1px] hover:shadow-lg"
-                  style={{ background: "var(--brand)", boxShadow: "0 14px 30px -12px rgba(15,169,104,0.45)" }}
+                  className="group inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-full text-white text-[15px] font-bold px-10 py-[16px] transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl active:scale-[0.98]"
+                  style={{
+                    background: "linear-gradient(135deg, #0FA968, #14B57E)",
+                    boxShadow: "0 16px 36px -10px rgba(15,169,104,0.55), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  }}
                 >
                   Start assessment
-                  <ArrowRight size={16} />
+                  <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
+                <span className="text-[12px] font-medium" style={{ color: "#8B93A7" }}>
+                  Free \u2022 No account required to begin
+                </span>
               </div>
             </div>
           )}
 
+          {/* ─── QUIZ ─── */}
           {phase === "quiz" && (
             <div>
-              <div className="flex items-center justify-between gap-4 mb-5">
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
-                  Question {step + 1} of {total}
+              {/* Top bar */}
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
+                  Step {step + 1} / {total}
                 </span>
                 <span
-                  className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] rounded-full px-3.5 py-[6px]"
-                  style={{ background: "var(--bg-soft)", color: "var(--brand-2)", border: "1px solid var(--line)" }}
+                  className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] rounded-full px-3.5 py-[6px] truncate max-w-[150px]"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)", border: "1px solid rgba(15,169,104,0.12)" }}
                 >
                   {CATEGORY_LABELS[question.category]}
                 </span>
               </div>
 
-              <div className="h-[6px] rounded-full mb-4 overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+              {/* Progress bar */}
+              <div className="h-[5px] rounded-full mb-3 overflow-hidden" style={{ background: "var(--bg-soft)" }}>
                 <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  className="h-full rounded-full transition-all duration-600 ease-out"
                   style={{
                     width: `${((step + 1) / total) * 100}%`,
                     background: "linear-gradient(90deg, var(--brand), var(--brand-2))",
+                    boxShadow: "0 0 12px rgba(15,169,104,0.35)",
                   }}
                 />
               </div>
 
-              <div className="flex items-center justify-center gap-[7px] mb-8">
+              {/* Dot indicators */}
+              <div className="flex items-center justify-center gap-[6px] mb-7">
                 {READINESS_QUESTIONS.map((q, i) => {
                   const answered = answers[q.id] !== undefined;
                   const current = i === step;
@@ -418,9 +488,9 @@ export function ReadinessWizard() {
                       type="button"
                       onClick={() => reachable && setStep(i)}
                       aria-label={`Question ${i + 1}`}
-                      className="h-[7px] rounded-full transition-all duration-300"
+                      className="h-[6px] rounded-full transition-all duration-300"
                       style={{
-                        width: current ? 26 : 7,
+                        width: current ? 28 : 6,
                         background: current
                           ? "var(--brand)"
                           : answered
@@ -434,28 +504,33 @@ export function ReadinessWizard() {
                 })}
               </div>
 
+              {/* Question */}
               <div key={step} className="fb-step-in">
-                <div className="flex items-start gap-4 mb-7">
+                <div className="flex items-start gap-3.5 sm:gap-4 mb-6 sm:mb-8">
                   <span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                    className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl"
+                    style={{
+                      background: "linear-gradient(135deg, var(--brand-soft), rgba(20,181,126,0.08))",
+                      border: "1px solid rgba(15,169,104,0.12)",
+                    }}
                   >
                     {(() => {
                       const Icon = QUESTION_ICONS[question.id];
-                      return <Icon size={20} strokeWidth={1.9} />;
+                      return <Icon size={20} style={{ color: "var(--brand)" }} strokeWidth={1.9} />;
                     })()}
                   </span>
                   <div>
-                    <h2 className="font-display text-[18px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                    <h2 className="font-display text-[17px] sm:text-[19px] font-bold leading-snug" style={{ color: "var(--ink)" }}>
                       {question.title}
                     </h2>
-                    <p className="text-[13.5px] mt-1 leading-relaxed" style={{ color: "var(--body)" }}>
+                    <p className="text-[13px] sm:text-[13.5px] mt-1.5 leading-relaxed" style={{ color: "var(--body)" }}>
                       {question.subtitle}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                {/* Options — bigger tap targets on mobile */}
+                <div className="flex flex-col gap-2.5">
                   {question.options.map((option) => {
                     const active = isMulti
                       ? multiSelected().includes(option.value)
@@ -466,33 +541,33 @@ export function ReadinessWizard() {
                         type="button"
                         onClick={() => pick(option.value)}
                         disabled={advancing}
-                        className="group flex items-center justify-between gap-4 rounded-xl border bg-white px-5 py-[14px] text-left transition-all duration-200 hover:translate-y-[-1px] hover:shadow-[0_12px_28px_-14px_rgba(18,32,67,0.2)] disabled:opacity-80"
+                        className="group flex items-center justify-between gap-3.5 sm:gap-4 rounded-2xl border bg-white px-4 py-[15px] sm:px-5 sm:py-4 text-left transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[0_14px_32px_-16px_rgba(18,32,67,0.18)] active:scale-[0.99] disabled:opacity-80"
                         style={{
                           borderColor: active ? "var(--brand)" : "var(--line)",
                           background: active ? "var(--brand-soft)" : "var(--bg)",
-                          boxShadow: active ? "0 0 0 1px var(--brand)" : "none",
+                          boxShadow: active ? "0 0 0 1.5px var(--brand), 0 8px 24px -12px rgba(15,169,104,0.2)" : "none",
                         }}
                       >
                         <span className="flex flex-col gap-0.5">
-                          <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+                          <span className="text-[14px] sm:text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
                             {option.label}
                           </span>
                           {option.hint && (
-                            <span className="text-[12.5px]" style={{ color: "var(--body)" }}>
+                            <span className="text-[12px] sm:text-[12.5px]" style={{ color: "var(--body)" }}>
                               {option.hint}
                             </span>
                           )}
                         </span>
                         <span
-                          className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center border transition-all duration-200 ${
-                            isMulti ? "rounded-[6px]" : "rounded-full"
+                          className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center border-2 transition-all duration-200 ${
+                            isMulti ? "rounded-lg" : "rounded-full"
                           }`}
                           style={{
                             borderColor: active ? "var(--brand)" : "var(--line)",
                             background: active ? "var(--brand)" : "transparent",
                           }}
                         >
-                          {active && <Check size={13} className="text-white" strokeWidth={3} />}
+                          {active && <Check size={12} className="text-white" strokeWidth={3} />}
                         </span>
                       </button>
                     );
@@ -500,11 +575,12 @@ export function ReadinessWizard() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-8">
+              {/* Navigation — full-width button on mobile */}
+              <div className="flex items-center justify-between gap-3 mt-7 pt-5" style={{ borderTop: "1px solid var(--line)" }}>
                 <button
                   type="button"
                   onClick={back}
-                  className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full px-4 py-[9px] transition-colors duration-200 hover:opacity-75"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-3.5 py-[10px] transition-all duration-200 hover:bg-[var(--bg-soft)]"
                   style={{ color: "var(--body)" }}
                 >
                   <ChevronLeft size={15} />
@@ -515,75 +591,79 @@ export function ReadinessWizard() {
                     type="button"
                     onClick={continueNext}
                     disabled={advancing || multiSelected().length === 0}
-                    className="inline-flex items-center gap-2 rounded-full text-white text-[13.5px] font-semibold px-6 py-[11px] transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{ background: "var(--brand)" }}
+                    className="inline-flex items-center gap-2 rounded-full text-white text-[13.5px] font-bold px-6 py-[12px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                    style={{
+                      background: "linear-gradient(135deg, #0FA968, #14B57E)",
+                      boxShadow: "0 8px 20px -8px rgba(15,169,104,0.45)",
+                    }}
                   >
                     Continue
-                    <ArrowRight size={15} />
+                    <ArrowRight size={14} />
                   </button>
-                ) : step < total - 1 ? (
-                  <span className="text-[11.5px]" style={{ color: "#A6ADC0" }}>
-                    Pick an answer to continue
-                  </span>
                 ) : null}
               </div>
             </div>
           )}
 
+          {/* ─── THINKING ─── */}
           {phase === "thinking" && (
-            <div className="py-10 flex flex-col items-center">
-              <div className="relative w-[110px] h-[110px] mb-7">
+            <div className="py-12 flex flex-col items-center px-2">
+              <div className="relative w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] mb-8">
                 <div
                   className="absolute inset-0 rounded-full fb-spin-slow"
                   style={{
                     background:
                       "conic-gradient(from 0deg, transparent 0%, #0FA968 18%, #14B57E 32%, transparent 55%, #2F5FE0 78%, transparent 100%)",
-                    WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px))",
-                    mask: "radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px))",
+                    WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px))",
+                    mask: "radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px))",
                   }}
                 />
                 <div
-                  className="absolute inset-[12px] rounded-full flex items-center justify-center"
-                  style={{ background: "var(--brand-soft)" }}
+                  className="absolute inset-[14px] rounded-full flex items-center justify-center"
+                  style={{ background: "var(--brand-soft)", border: "1px solid rgba(15,169,104,0.12)" }}
                 >
-                  <Gauge size={30} style={{ color: "var(--brand)" }} className="fb-pulse" strokeWidth={1.8} />
+                  <Gauge size={30} style={{ color: "var(--brand)" }} className="fb-pulse" strokeWidth={1.7} />
                 </div>
               </div>
 
-              <h3 className="font-display text-[18px] font-semibold text-center" style={{ color: "var(--ink)" }}>
+              <h3 className="font-display text-[18px] sm:text-[20px] font-bold text-center" style={{ color: "var(--ink)" }}>
                 {THINKING_STEPS[thinkingIndex]}
               </h3>
-              <p className="text-[13px] mt-2 text-center" style={{ color: "var(--body)" }}>
-                Analyzing your profile — this typically takes 15–20 seconds.
+              <p className="text-[13px] sm:text-[13.5px] mt-2.5 text-center" style={{ color: "var(--body)" }}>
+                Analyzing your profile — this typically takes 15\u201320 seconds.
               </p>
 
-              <div className="flex items-center gap-2 mt-6">
+              <div className="flex items-center gap-2 mt-7">
                 {THINKING_STEPS.map((_, i) => (
                   <span
                     key={i}
                     className="h-[5px] rounded-full transition-all duration-500"
                     style={{
-                      width: i === thinkingIndex ? 22 : 5,
+                      width: i === thinkingIndex ? 24 : 5,
                       background: i <= thinkingIndex ? "var(--brand)" : "var(--line)",
+                      boxShadow: i === thinkingIndex ? "0 0 8px rgba(15,169,104,0.3)" : "none",
                     }}
                   />
                 ))}
               </div>
 
               {error && (
-                <div className="mt-8 w-full max-w-[400px]">
+                <div className="mt-10 w-full max-w-[420px]">
                   <div
-                    className="text-[13px] rounded-xl border px-4 py-3 text-center"
-                    style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.25)", background: "rgba(192,57,43,0.06)" }}
+                    className="text-[13px] rounded-2xl border px-5 py-4 text-center"
+                    style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.2)", background: "rgba(192,57,43,0.04)" }}
                   >
                     {error}
                   </div>
-                  <div className="flex justify-center mt-4">
+                  <div className="flex justify-center mt-5">
                     <button
                       type="button"
                       onClick={retry}
-                      className="inline-flex items-center gap-2 rounded-full text-white text-[13.5px] font-semibold px-6 py-[11px] transition-all duration-200 hover:opacity-90"
-                      style={{ background: "var(--brand)" }}
+                      className="inline-flex items-center gap-2 rounded-full text-white text-[13.5px] font-bold px-7 py-[12px] transition-all duration-250 hover:opacity-90"
+                      style={{
+                        background: "linear-gradient(135deg, #0FA968, #14B57E)",
+                        boxShadow: "0 8px 20px -8px rgba(15,169,104,0.45)",
+                      }}
                     >
                       <RotateCcw size={14} />
                       Try again
@@ -594,10 +674,12 @@ export function ReadinessWizard() {
             </div>
           )}
 
+          {/* ─── GATE ─── */}
           {phase === "gate" && (
             <SignInGate onSignedIn={() => router.push("/readiness/result")} />
           )}
 
+          {/* ─── RESULT ─── */}
           {phase === "result" && result && (
             <ReadinessResultView
               result={result}

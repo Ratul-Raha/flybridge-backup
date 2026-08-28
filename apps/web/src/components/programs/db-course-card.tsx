@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { BengaliText } from "../bengali-text";
 
 export type DbCourse = {
   id: string;
@@ -125,7 +126,7 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
       {media}
       <div className="flex flex-col flex-1 gap-2.5 p-5">
         <h3 className="font-display text-[16.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-          {course.title}
+          <BengaliText>{course.title}</BengaliText>
         </h3>
         <p className="text-[12.5px] leading-[1.55]" style={{ color: "var(--body)" }}>
           {course.subtitle || course.description}

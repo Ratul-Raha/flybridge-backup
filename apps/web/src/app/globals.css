@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Bornomala';
+  src: url('/fonts/Bornomala-Regular.ttf') format('truetype');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bornomala';
+  src: url('/fonts/Bornomala-Bold.ttf') format('truetype');
+  font-weight: 600 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --ink: #122043;

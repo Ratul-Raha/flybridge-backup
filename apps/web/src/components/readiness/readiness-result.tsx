@@ -72,6 +72,13 @@ function scoreColor(score: number): string {
   return "#C0392B";
 }
 
+function scoreGlow(score: number): string {
+  if (score >= 80) return "rgba(15,169,104,0.15)";
+  if (score >= 60) return "rgba(47,95,224,0.15)";
+  if (score >= 40) return "rgba(219,138,46,0.15)";
+  return "rgba(192,57,43,0.15)";
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -84,10 +91,10 @@ function renderRich(text: string): string {
   return escaped
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline font-medium" style="color:var(--brand-2)">$1</a>')
     .replace(/`([^`]+)`/g, '<code class="px-[5px] py-[1px] rounded-[6px] font-mono text-[12px]" style="background:var(--bg-soft);color:var(--ink)">$1</code>')
-    .replace(/^#{1,4}\s+(.+)$/gm, '<h3 class="font-display font-semibold text-[15.5px] mt-6 mb-2 first:mt-0" style="color:var(--ink)">$1</h3>')
-    .replace(/^- \[ \]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] border shrink-0" style="border-color:var(--brand-2)"></span><span>$1</span></div>')
-    .replace(/^- \[x\]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[13px] h-[13px] rounded-[4px] shrink-0 flex items-center justify-center text-white" style="background:var(--brand)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 13L10 18L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>$1</span></div>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 flex gap-2"><span style="color:var(--brand)">•</span><span>$1</span></div>')
+    .replace(/^#{1,4}\s+(.+)$/gm, '<h3 class="font-display font-bold text-[15.5px] mt-7 mb-2.5 first:mt-0" style="color:var(--ink)">$1</h3>')
+    .replace(/^- \[ \]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[14px] h-[14px] rounded-[5px] border-[1.5px] shrink-0" style="border-color:var(--brand-2)"></span><span>$1</span></div>')
+    .replace(/^- \[x\]\s+(.+)$/gm, '<div class="pl-2 flex gap-2.5 items-start"><span class="mt-[3px] w-[14px] h-[14px] rounded-[5px] shrink-0 flex items-center justify-center text-white" style="background:var(--brand)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M5 13L10 18L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>$1</span></div>')
+    .replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 flex gap-2"><span style="color:var(--brand)">\u2022</span><span>$1</span></div>')
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
     .replace(/\n/g, "<br/>");
@@ -124,10 +131,10 @@ function ScoreRing({
   const C = 2 * Math.PI * R;
 
   return (
-    <div className="relative w-[220px] h-[220px] mx-auto">
+    <div className="relative w-[230px] h-[230px] mx-auto">
       <div
-        className="absolute inset-[-18px] rounded-full opacity-60 blur-2xl"
-        style={{ background: `radial-gradient(circle, ${color}33, transparent 70%)` }}
+        className="absolute inset-[-22px] rounded-full opacity-70 blur-3xl"
+        style={{ background: `radial-gradient(circle, ${onDark ? "rgba(255,255,255,0.12)" : scoreGlow(score)}, transparent 70%)` }}
       />
       <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
         <circle
@@ -135,35 +142,35 @@ function ScoreRing({
           cy="100"
           r={R}
           fill="none"
-          strokeWidth="12"
-          style={{ stroke: onDark ? "rgba(255,255,255,0.18)" : "var(--bg-soft)" }}
+          strokeWidth="11"
+          style={{ stroke: onDark ? "rgba(255,255,255,0.15)" : "var(--bg-soft)" }}
         />
         <circle
           cx="100"
           cy="100"
           r={R}
           fill="none"
-          strokeWidth="12"
+          strokeWidth="11"
           strokeLinecap="round"
           stroke={color}
           strokeDasharray={C}
           strokeDashoffset={C * (1 - score / 100)}
           style={{
-            transition: "stroke-dashoffset 1.5s cubic-bezier(0.22, 1, 0.36, 1)",
-            filter: `drop-shadow(0 0 14px ${color}66)`,
+            transition: "stroke-dashoffset 1.6s cubic-bezier(0.22, 1, 0.36, 1)",
+            filter: `drop-shadow(0 0 16px ${onDark ? "rgba(255,255,255,0.3)" : color + "55"})`,
           }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
-          className="font-display text-[52px] font-bold leading-none tracking-[-0.04em]"
+          className="font-display text-[56px] font-bold leading-none tracking-[-0.04em]"
           style={{ color: onDark ? "#FFFFFF" : "var(--ink)" }}
         >
           {display}
         </span>
         <span
-          className="font-mono text-[10px] uppercase tracking-[0.2em] mt-1"
-          style={{ color: onDark ? "rgba(255,255,255,0.65)" : "var(--body)" }}
+          className="font-mono text-[10px] uppercase tracking-[0.22em] mt-1.5"
+          style={{ color: onDark ? "rgba(255,255,255,0.55)" : "var(--body)" }}
         >
           / 100
         </span>
@@ -174,31 +181,37 @@ function ScoreRing({
 
 function CategoryBars({ categories }: { categories: CategoryScore[] }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {categories.map((c) => {
         const Icon = CATEGORY_ICONS[c.id] ?? Gauge;
         const color = scoreColor(c.pct);
         return (
           <div key={c.id}>
-            <div className="flex items-center justify-between gap-3 mb-1.5">
-              <span className="flex items-center gap-2 text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                <Icon size={13} style={{ color }} />
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <span className="flex items-center gap-2.5 text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-lg"
+                  style={{ background: `${color}12` }}
+                >
+                  <Icon size={14} style={{ color }} strokeWidth={2} />
+                </span>
                 {c.label}
               </span>
-              <span className="font-mono text-[11.5px] font-semibold" style={{ color }}>
+              <span className="font-mono text-[12px] font-bold" style={{ color }}>
                 {c.pct}%
               </span>
             </div>
             <div
-              className="h-[7px] rounded-full overflow-hidden"
+              className="h-[8px] rounded-full overflow-hidden"
               style={{ background: "var(--bg-soft)" }}
             >
               <div
                 className="h-full rounded-full"
                 style={{
                   width: `${c.pct}%`,
-                  background: `linear-gradient(90deg, ${color}88, ${color})`,
-                  transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                  background: `linear-gradient(90deg, ${color}cc, ${color})`,
+                  transition: "width 1.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                  boxShadow: `0 2px 8px ${color}33`,
                 }}
               />
             </div>
@@ -220,8 +233,11 @@ export function ReadinessCard({ children }: { children: React.ReactNode }) {
         }}
       />
       <div
-        className="relative rounded-[28px] border bg-white p-[clamp(22px,4vw,40px)]"
-        style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -24px rgba(18,32,67,0.18)" }}
+        className="relative rounded-[28px] border bg-white p-[clamp(18px,4vw,44px)]"
+        style={{
+          borderColor: "var(--line)",
+          boxShadow: "0 32px 68px -28px rgba(18,32,67,0.16), 0 1px 3px rgba(18,32,67,0.04)",
+        }}
       >
         {children}
       </div>
@@ -266,7 +282,7 @@ export function ReadinessResultView({
     } catch (e) {
       console.error("readiness pdf download failed", e);
       setDownloadError(
-        e instanceof Error ? e.message : "Couldn't generate the PDF. Try again."
+        e instanceof Error ? e.message : "Couldn\u2019t generate the PDF. Try again."
       );
     } finally {
       setDownloading(false);
@@ -281,91 +297,106 @@ export function ReadinessResultView({
 
   return (
     <div className="fb-step-in">
-      <div className="flex items-center justify-between gap-4 mb-8 pb-6 border-b" style={{ borderColor: "var(--line)" }}>
+      {/* Report Header */}
+      <div className="flex items-center justify-between gap-4 mb-7 pb-5" style={{ borderBottom: "2px solid var(--line)" }}>
         <div className="flex items-center gap-3">
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
-            <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={28} height={28} className="object-contain" />
+          <div className="relative flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl border bg-white" style={{ borderColor: "var(--line)", boxShadow: "0 2px 8px rgba(18,32,67,0.06)" }}>
+            <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={26} height={26} className="object-contain" />
           </div>
           <div>
-            <p className="font-display text-[14px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
+            <p className="font-display text-[14px] sm:text-[15px] font-bold leading-tight" style={{ color: "var(--ink)" }}>
               FlyBridge Education Group
             </p>
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.16em]" style={{ color: "var(--brand)" }}>
+            <p className="font-mono text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.18em] mt-0.5" style={{ color: "var(--brand)" }}>
               Study Abroad Readiness
             </p>
           </div>
         </div>
-        <span className="hidden sm:block font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
+        <span className="hidden md:block font-mono text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
           {today}
         </span>
       </div>
 
+      {/* Score Banner */}
       <div
-        className="relative overflow-hidden rounded-[26px] px-[clamp(20px,4vw,36px)] pt-[clamp(28px,4vw,40px)] pb-[clamp(24px,4vw,36px)] text-center"
+        className="relative overflow-hidden rounded-[28px] px-[clamp(24px,4vw,40px)] pt-[clamp(32px,4vw,44px)] pb-[clamp(28px,4vw,40px)] text-center"
         style={{
-          background: "linear-gradient(135deg, #0A3D2C 0%, #0FA968 52%, #2F5FE0 130%)",
-          boxShadow: "0 24px 50px -20px rgba(15,169,104,0.45)",
+          background: "linear-gradient(135deg, #071D14 0%, #0A3D2C 25%, #0FA968 55%, #2F5FE0 130%)",
+          boxShadow: "0 28px 56px -20px rgba(15,169,104,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
         }}
       >
-        <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }} />
-        <div className="pointer-events-none absolute -bottom-16 -left-10 h-56 w-56 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+        {/* Decorative elements */}
+        <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }} />
+        <div className="pointer-events-none absolute -bottom-20 -left-12 h-64 w-64 rounded-full" style={{ background: "rgba(255,255,255,0.04)" }} />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.03), transparent 60%)" }} />
 
         <span
-          className="relative inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] rounded-full px-4 py-[7px]"
-          style={{ background: "rgba(255,255,255,0.16)", color: "#FFFFFF" }}
+          className="relative inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] rounded-full px-5 py-[8px]"
+          style={{ background: "rgba(255,255,255,0.14)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.12)" }}
         >
-          <BadgeCheck size={13} />
+          <BadgeCheck size={14} />
           {result.label}
         </span>
 
-        <div className="relative mt-5">
+        <div className="relative mt-6">
           <ScoreRing result={result} onDark />
         </div>
 
-        <p className="relative text-[13.5px] leading-[1.7] mt-5 max-w-[440px] mx-auto" style={{ color: "rgba(255,255,255,0.85)" }}>
+        <p className="relative text-[14px] leading-[1.7] mt-6 max-w-[440px] mx-auto" style={{ color: "rgba(255,255,255,0.82)" }}>
           {result.tagline}
         </p>
       </div>
 
-      <div className="mt-6 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
-        <div className="flex items-center justify-between mb-5">
-          <h4 className="font-display text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-            How you scored by area
+      {/* Category Breakdown */}
+      <div className="mt-6 rounded-[20px] sm:rounded-[22px] border p-5 sm:p-7" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <h4 className="font-display text-[14px] sm:text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+            Performance Breakdown
           </h4>
-          <span className="font-mono text-[9.5px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
             {result.score}/100 overall
           </span>
         </div>
         <CategoryBars categories={result.categories} />
       </div>
 
+      {/* Priority Focus Areas */}
       {result.priorityAreas.length > 0 && (
-        <div className="mt-6 rounded-[20px] border p-6" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
-          <h4 className="font-display text-[14px] font-semibold mb-1" style={{ color: "var(--ink)" }}>
-            Priority focus areas
-          </h4>
-          <p className="text-[12.5px] mb-4" style={{ color: "var(--body)" }}>
-            These are the dimensions holding your score back the most — start here.
+        <div className="mt-6 rounded-[20px] sm:rounded-[22px] border p-5 sm:p-7" style={{ borderColor: "var(--line)", background: "var(--bg)" }}>
+          <div className="flex items-center gap-2.5 mb-1">
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-lg shrink-0"
+              style={{ background: "rgba(219,138,46,0.1)" }}
+            >
+              <Gauge size={14} style={{ color: "#DB8A2E" }} strokeWidth={2} />
+            </span>
+            <h4 className="font-display text-[14px] sm:text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+              Priority Focus Areas
+            </h4>
+          </div>
+          <p className="text-[12.5px] sm:text-[13px] mb-5 ml-[36px]" style={{ color: "var(--body)" }}>
+            These dimensions are holding your score back the most — start here.
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {result.priorityAreas.map((p) => {
               const color = scoreColor(p.pct);
               return (
                 <div key={p.questionId}>
-                  <div className="flex items-center justify-between gap-3 mb-1.5">
-                    <span className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <span className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                       {p.label}
                     </span>
-                    <span className="font-mono text-[11.5px] font-semibold" style={{ color }}>
+                    <span className="font-mono text-[12px] font-bold" style={{ color }}>
                       {p.pct}%
                     </span>
                   </div>
-                  <div className="h-[7px] rounded-full overflow-hidden" style={{ background: "var(--bg-soft)" }}>
+                  <div className="h-[8px] rounded-full overflow-hidden" style={{ background: "var(--bg-soft)" }}>
                     <div
                       className="h-full rounded-full"
                       style={{
                         width: `${p.pct}%`,
-                        background: `linear-gradient(90deg, ${color}88, ${color})`,
+                        background: `linear-gradient(90deg, ${color}cc, ${color})`,
+                        boxShadow: `0 2px 8px ${color}33`,
                       }}
                     />
                   </div>
@@ -376,16 +407,22 @@ export function ReadinessResultView({
         </div>
       )}
 
-      <div className="mt-6 rounded-[20px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "var(--line)" }}>
-          <div className="flex items-center gap-2">
+      {/* AI Report */}
+      <div className="mt-6 rounded-[20px] sm:rounded-[22px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)", boxShadow: "0 4px 16px -6px rgba(18,32,67,0.08)" }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4" style={{ borderBottom: "2px solid var(--line)" }}>
+          <div className="flex items-center gap-2.5">
             {generating ? (
-              <LoaderCircle size={14} className="animate-spin" style={{ color: "var(--brand)" }} />
+              <LoaderCircle size={16} className="animate-spin" style={{ color: "var(--brand)" }} />
             ) : (
-              <Sparkles size={14} style={{ color: "var(--brand)" }} />
+              <span
+                className="flex h-7 w-7 items-center justify-center rounded-lg shrink-0"
+                style={{ background: "var(--brand-soft)" }}
+              >
+                <Sparkles size={14} style={{ color: "var(--brand)" }} strokeWidth={2} />
+              </span>
             )}
-            <h4 className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
-              Your readiness report
+            <h4 className="text-[14px] sm:text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+              Your Readiness Report
             </h4>
           </div>
           <div className="flex items-center gap-2">
@@ -393,8 +430,8 @@ export function ReadinessResultView({
               type="button"
               onClick={copy}
               disabled={!report}
-              className="flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3.5 py-[7px] transition-colors duration-200 disabled:opacity-40"
-              style={{ background: "var(--bg-soft)", color: "var(--ink)" }}
+              className="flex items-center gap-1.5 text-[12px] font-semibold rounded-full px-3.5 py-[8px] transition-all duration-200 disabled:opacity-40 hover:bg-[var(--bg-soft)]"
+              style={{ background: "var(--bg-soft)", color: "var(--ink)", border: "1px solid var(--line)" }}
             >
               <Copy size={13} /> {copied ? "Copied" : "Copy"}
             </button>
@@ -402,91 +439,103 @@ export function ReadinessResultView({
               type="button"
               onClick={download}
               disabled={!report || downloading}
-              className="flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3.5 py-[7px] text-white transition-colors duration-200 disabled:opacity-40"
-              style={{ background: "var(--brand)" }}
+              className="flex items-center gap-1.5 text-[12px] font-semibold rounded-full px-3.5 py-[8px] text-white transition-all duration-250 disabled:opacity-40 hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #0FA968, #14B57E)",
+                boxShadow: "0 4px 12px -4px rgba(15,169,104,0.4)",
+              }}
             >
               {downloading ? (
                 <LoaderCircle size={13} className="animate-spin" />
               ) : (
                 <Download size={13} />
               )}
-              {downloading ? "Preparing…" : "Download PDF"}
+              {downloading ? "Preparing\u2026" : "Download PDF"}
             </button>
           </div>
         </div>
 
-        <div className="px-5 py-4 min-h-[160px]">
+        <div className="px-4 sm:px-6 py-5 min-h-[180px]">
           {!report && generating && (
-            <div className="flex flex-col gap-2.5 py-6">
+            <div className="flex flex-col gap-3 py-8">
               {[92, 100, 84, 96, 64].map((w, i) => (
-                <div key={i} className="h-[12px] rounded-md fb-shimmer" style={{ width: `${w}%` }} />
+                <div key={i} className="h-[13px] rounded-lg fb-shimmer" style={{ width: `${w}%` }} />
               ))}
-              <p className="text-[12px] flex items-center gap-2 mt-2" style={{ color: "var(--body)" }}>
-                <LoaderCircle size={13} className="animate-spin" style={{ color: "var(--brand)" }} />
-                Writing your personalized report…
+              <p className="text-[12.5px] flex items-center gap-2.5 mt-3" style={{ color: "var(--body)" }}>
+                <LoaderCircle size={14} className="animate-spin" style={{ color: "var(--brand)" }} />
+                Writing your personalized report\u2026
               </p>
             </div>
           )}
           {report && (
             <div
-              className="text-[13.5px] leading-[1.75] break-words whitespace-pre-wrap"
+              className="text-[14px] leading-[1.8] break-words whitespace-pre-wrap"
               style={{ color: "var(--ink)" }}
               dangerouslySetInnerHTML={{ __html: renderRich(report) }}
             />
           )}
           {!report && !generating && error && (
-            <p className="text-[12.5px]" style={{ color: "#C0392B" }}>
+            <p className="text-[13px]" style={{ color: "#C0392B" }}>
               {error}
             </p>
           )}
         </div>
         {downloadError && (
-          <p className="px-5 pb-4 text-[12px]" style={{ color: "#C0392B" }}>
+          <p className="px-4 sm:px-6 pb-4 text-[12.5px]" style={{ color: "#C0392B" }}>
             {downloadError}
           </p>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 mt-8 sm:mt-9">
         <button
           type="button"
           onClick={onRetake}
-          className="inline-flex items-center gap-2 rounded-full text-[13.5px] font-semibold px-6 py-[12px] transition-all duration-200 hover:opacity-85"
-          style={{ background: "var(--brand)", color: "#fff", boxShadow: "0 10px 24px -12px rgba(15,169,104,0.5)" }}
+          className="inline-flex items-center justify-center gap-2 rounded-full text-[14px] font-bold px-7 py-[14px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 active:scale-[0.98]"
+          style={{
+            background: "linear-gradient(135deg, #0FA968, #14B57E)",
+            color: "#fff",
+            boxShadow: "0 12px 28px -10px rgba(15,169,104,0.5)",
+          }}
         >
-          <RotateCcw size={14} />
+          <RotateCcw size={15} />
           Retake assessment
         </button>
         <a
           href="/programs"
-          className="inline-flex items-center gap-2 rounded-full text-[13.5px] font-semibold px-6 py-[12px] border transition-all duration-200 hover:bg-[var(--bg-soft)]"
+          className="inline-flex items-center justify-center gap-2 rounded-full text-[14px] font-bold px-7 py-[14px] border-2 transition-all duration-250 hover:bg-[var(--bg-soft)]"
           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
         >
           Explore programs
-          <ArrowRight size={14} />
+          <ArrowRight size={15} />
         </a>
       </div>
 
-      <div className="mt-6 rounded-[20px] border p-5 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
-        <div className="flex items-center gap-3">
-          <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={34} height={34} className="object-contain" />
+      {/* Footer */}
+      <div
+        className="mt-6 sm:mt-7 rounded-[20px] sm:rounded-[22px] border p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+        style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}
+      >
+        <div className="flex items-center gap-3.5">
+          <Image src="/transparent-logo-dark.png" alt="FlyBridge" width={36} height={36} className="object-contain shrink-0" />
           <div>
-            <p className="font-display text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+            <p className="font-display text-[14px] font-bold" style={{ color: "var(--ink)" }}>
               FlyBridge Education Group
             </p>
-            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--body)" }}>
               Study, work and build a career abroad — one confident step at a time.
             </p>
           </div>
         </div>
-        <div className="text-[11px] text-center sm:text-right leading-relaxed" style={{ color: "var(--body)" }}>
+        <div className="text-[11.5px] text-center sm:text-right leading-relaxed font-medium" style={{ color: "var(--body)" }}>
           +1 778 676 8459
           <br />
           <span style={{ color: "var(--brand)" }}>flybridgeedu.com</span>
         </div>
       </div>
 
-      <p className="text-center text-[11px] mt-5" style={{ color: "#A6ADC0" }}>
+      <p className="text-center text-[11px] mt-6 font-medium" style={{ color: "#A6ADC0" }}>
         This score is an advisory estimate — official eligibility depends on each
         university and visa office.
       </p>
@@ -511,75 +560,75 @@ export function SignInGate({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <div className="fb-step-in text-center">
-      <div className="flex justify-center mb-7">
+      <div className="flex justify-center mb-8">
         <div className="relative">
           <div
-            className="absolute inset-0 rounded-[28px] blur-2xl opacity-50"
-            style={{ background: "radial-gradient(circle, rgba(47,95,224,0.35), transparent 70%)" }}
+            className="absolute inset-0 rounded-[32px] blur-3xl opacity-50"
+            style={{ background: "radial-gradient(circle, rgba(47,95,224,0.4), transparent 70%)" }}
           />
           <div
-            className="relative w-[76px] h-[76px] rounded-[28px] flex items-center justify-center"
+            className="relative w-[84px] h-[84px] rounded-[30px] flex items-center justify-center"
             style={{
               background: "linear-gradient(135deg, #2F5FE0, #4A74E8)",
-              boxShadow: "0 18px 40px -12px rgba(47,95,224,0.5)",
+              boxShadow: "0 22px 48px -12px rgba(47,95,224,0.55), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
-            <Lock size={30} className="text-white fb-float" strokeWidth={1.8} />
+            <Lock size={34} className="text-white fb-float" strokeWidth={1.7} />
           </div>
         </div>
       </div>
 
       <span
-        className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] rounded-full px-4 py-[7px]"
-        style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+        className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] rounded-full px-5 py-[8px]"
+        style={{ background: "var(--brand-soft)", color: "var(--brand)", border: "1px solid rgba(15,169,104,0.12)" }}
       >
-        <BadgeCheck size={13} /> Your score is ready
+        <BadgeCheck size={14} /> Your score is ready
       </span>
 
-      <h2 className="text-center font-display text-[20px] font-semibold mt-4" style={{ color: "var(--ink)" }}>
+      <h2 className="text-center font-display text-[22px] font-bold mt-5" style={{ color: "var(--ink)" }}>
         Sign in to see your result
       </h2>
-      <p className="text-center text-[13.5px] leading-[1.7] mt-2 max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
+      <p className="text-center text-[14px] leading-[1.7] mt-3 max-w-[440px] mx-auto" style={{ color: "var(--body)" }}>
         Your readiness score and personalized AI report are ready. Sign in with
         Google to view and download them.
       </p>
 
-      <div className="flex flex-col items-center mt-7">
+      <div className="flex flex-col items-center mt-8">
         <button
           type="button"
           onClick={handleGoogle}
           disabled={busy || loading}
-          className="flex items-center justify-center gap-2.5 rounded-xl border px-6 py-[12px] text-[13.5px] font-semibold transition-all duration-200 hover:border-brand-2/60 hover:bg-brand-soft/50 disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{ color: "var(--ink)", borderColor: "var(--line)", minWidth: 230 }}
+          className="flex items-center justify-center gap-2.5 rounded-2xl border-2 px-7 py-[13px] text-[14px] font-bold transition-all duration-250 hover:border-brand-2/60 hover:bg-brand-soft/50 hover:translate-y-[-1px] disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ color: "var(--ink)", borderColor: "var(--line)", minWidth: 240 }}
         >
           {busy ? (
-            <LoaderCircle size={16} className="animate-spin" />
+            <LoaderCircle size={17} className="animate-spin" />
           ) : (
-            <svg className="w-[16px] h-[16px]" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-[17px] h-[17px]" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
               <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
           )}
-          {busy ? "Signing in…" : "Continue with Google"}
+          {busy ? "Signing in\u2026" : "Continue with Google"}
         </button>
       </div>
 
       {error && (
-        <p className="text-[12px] mt-3" style={{ color: "#C0392B" }}>
+        <p className="text-[12.5px] mt-3" style={{ color: "#C0392B" }}>
           {error}
         </p>
       )}
 
-      <p className="text-center text-[12.5px] mt-5" style={{ color: "var(--body)" }}>
+      <p className="text-center text-[13px] mt-6" style={{ color: "var(--body)" }}>
         Already have an account?{" "}
-        <Link href="/login" className="font-medium hover:text-brand-2 transition-colors" style={{ color: "var(--brand)" }}>
+        <Link href="/login" className="font-semibold hover:text-brand-2 transition-colors" style={{ color: "var(--brand)" }}>
           Log in
         </Link>
       </p>
 
-      <p className="text-center text-[11px] mt-6" style={{ color: "#A6ADC0" }}>
+      <p className="text-center text-[11px] mt-6 font-medium" style={{ color: "#A6ADC0" }}>
         Your answers and report stay private — nothing is posted publicly.
       </p>
     </div>
@@ -616,21 +665,21 @@ export function ReadinessResultClient() {
   };
 
   return (
-    <div className="w-full max-w-[760px] mx-auto">
-      <div className="text-center mb-10">
+    <div className="w-full max-w-[860px] mx-auto px-4 sm:px-0">
+      <div className="text-center mb-8 sm:mb-12">
         <span
-          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] rounded-full px-4 py-[7px]"
-          style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.18em] rounded-full px-4 py-2"
+          style={{ background: "var(--brand-soft)", color: "var(--brand)", border: "1px solid rgba(15,169,104,0.12)" }}
         >
-          <Sparkles size={12} /> Your result
+          <Sparkles size={13} /> Your result
         </span>
         <h1
-          className="font-display text-[clamp(28px,4.6vw,42px)] font-semibold tracking-[-0.03em] mt-4 leading-[1.08]"
+          className="font-display text-[clamp(30px,7vw,44px)] font-bold tracking-[-0.03em] mt-5 leading-[1.06]"
           style={{ color: "var(--ink)" }}
         >
           Your Readiness Report
         </h1>
-        <p className="text-[14.5px] leading-[1.7] mt-3 max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
+        <p className="text-[14.5px] sm:text-[15px] leading-[1.7] mt-4 max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
           Your personalized score, category breakdown and AI action plan — all in
           one place.
         </p>
@@ -638,28 +687,36 @@ export function ReadinessResultClient() {
 
       {loading ? (
         <ReadinessCard>
-          <div className="py-14 flex flex-col items-center gap-4">
-            <LoaderCircle size={28} className="animate-spin" style={{ color: "var(--brand)" }} />
-            <p className="text-[13px]" style={{ color: "var(--body)" }}>
-              Loading your result…
+          <div className="py-16 flex flex-col items-center gap-5">
+            <LoaderCircle size={32} className="animate-spin" style={{ color: "var(--brand)" }} />
+            <p className="text-[14px] font-medium" style={{ color: "var(--body)" }}>
+              Loading your result\u2026
             </p>
           </div>
         </ReadinessCard>
       ) : !data ? (
         <ReadinessCard>
-          <div className="text-center py-8">
-            <Gauge size={40} style={{ color: "#A6ADC0" }} strokeWidth={1.5} />
-            <h2 className="font-display text-[18px] font-semibold mt-5" style={{ color: "var(--ink)" }}>
+          <div className="text-center py-10">
+            <div
+              className="inline-flex h-16 w-16 items-center justify-center rounded-2xl mb-5"
+              style={{ background: "var(--bg-soft)", border: "1px solid var(--line)" }}
+            >
+              <Gauge size={30} style={{ color: "#A6ADC0" }} strokeWidth={1.5} />
+            </div>
+            <h2 className="font-display text-[20px] font-bold mt-2" style={{ color: "var(--ink)" }}>
               No result found
             </h2>
-            <p className="text-[13.5px] mt-2 max-w-[380px] mx-auto leading-[1.7]" style={{ color: "var(--body)" }}>
+            <p className="text-[14px] mt-2.5 max-w-[400px] mx-auto leading-[1.7]" style={{ color: "var(--body)" }}>
               Complete the readiness assessment first to unlock your personalized
               score and AI report.
             </p>
             <Link
               href="/readiness"
-              className="inline-flex items-center gap-2 rounded-full text-white text-[14px] font-semibold px-7 py-[12px] mt-6 transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
-              style={{ background: "var(--brand)" }}
+              className="inline-flex items-center gap-2 rounded-full text-white text-[14px] font-bold px-8 py-[13px] mt-7 transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #0FA968, #14B57E)",
+                boxShadow: "0 12px 28px -10px rgba(15,169,104,0.5)",
+              }}
             >
               Take the assessment
               <ArrowRight size={15} />

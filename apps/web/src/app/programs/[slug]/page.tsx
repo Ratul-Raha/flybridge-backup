@@ -28,6 +28,7 @@ import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
 import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
+import { BengaliText } from "@/components/bengali-text";
 
 type Props = { params: { slug: string } };
 
@@ -154,8 +155,8 @@ function CourseHero({
           </p>
 
           <h1 className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}>
-            {title}
-            {subtitle && <> {subtitle}</>}
+            <BengaliText>{title}</BengaliText>
+            {subtitle && <> <BengaliText>{subtitle}</BengaliText></>}
           </h1>
 
           {rating && (
@@ -485,8 +486,8 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
                     {checkoutCourse.badge.toUpperCase()}
                   </span>
                   <h1 className="font-display text-[19px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                    {checkoutCourse.title}
-                    {checkoutCourse.subtitle && <> {checkoutCourse.subtitle}</>}
+                    <BengaliText>{checkoutCourse.title}</BengaliText>
+                    {checkoutCourse.subtitle && <> <BengaliText>{checkoutCourse.subtitle}</BengaliText></>}
                   </h1>
                   {(checkoutCourse.level || checkoutCourse.language) && (
                     <div className="mt-2 flex items-center gap-2 text-[12px] font-medium" style={{ color: "var(--body)" }}>
@@ -535,7 +536,7 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                      {checkoutCourse.title}
+                      <BengaliText>{checkoutCourse.title}</BengaliText>
                     </p>
                     <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
                       {checkoutCourse.badge}

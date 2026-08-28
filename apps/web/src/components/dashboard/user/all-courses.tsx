@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight, Loader2 } from "lucide-react";
 import { programs } from "@/lib/programs";
 import { useAuth } from "@/lib/auth/auth-context";
+import { BengaliText } from "@/components/bengali-text";
 
 type Course = {
   id: string;
@@ -100,7 +101,7 @@ export function AllCourses() {
 
             <div className="flex flex-col gap-1.5 flex-1">
               <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                {p.title}
+                <BengaliText>{p.title}</BengaliText>
               </h3>
               <p className="text-[13.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
                 {p.desc}
@@ -161,7 +162,7 @@ export function AllCourses() {
 
             <div className="flex flex-col gap-1.5 flex-1">
               <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                {c.title}
+                <BengaliText>{c.title}</BengaliText>
               </h3>
               <p className="text-[13.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
                 {c.subtitle || c.description}

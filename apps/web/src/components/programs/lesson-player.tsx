@@ -15,6 +15,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { LessonQuiz } from "./lesson-quiz";
+import { BengaliText } from "../bengali-text";
 
 type Lesson = {
   title: string;
@@ -205,7 +206,7 @@ export function LessonPlayer({
               </Link>
               <ChevronRight size={12} style={{ color: "var(--body)" }} />
               <span className="font-semibold truncate" style={{ color: "var(--ink)" }}>
-                {course.title}
+                <BengaliText>{course.title}</BengaliText>
               </span>
             </div>
           </div>
@@ -296,7 +297,7 @@ export function LessonPlayer({
                     <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
                       Module {mi + 1}
                     </span>
-                    <span className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>{m.title}</span>
+                    <span className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}><BengaliText>{m.title}</BengaliText></span>
                   </button>
                   {open && (
                     <div className="flex flex-col gap-0.5 ml-[22px]">
@@ -336,7 +337,7 @@ export function LessonPlayer({
                                 fontWeight: isCurrent ? 600 : 400,
                               }}
                             >
-                              {l.title}
+                              <BengaliText>{l.title}</BengaliText>
                             </span>
                             {quizScore && (
                               <span
@@ -458,7 +459,7 @@ export function LessonPlayer({
               {/* Lesson title & meta */}
               <div className="mt-5">
                 <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                  {current.title}
+                  <BengaliText>{current.title}</BengaliText>
                 </h1>
                 <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
                   {current.moduleTitle}

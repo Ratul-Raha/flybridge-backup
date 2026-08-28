@@ -22,6 +22,7 @@ const config: Config = {
         display: ["var(--font-display)", "sans-serif"],
         sans: ["var(--font-body)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+        bengali: ["'Bornomala'", "'Inter Variable'", "sans-serif"],
       },
       fontSize: {
         "display-lg": ["clamp(38px,5vw,60px)", { lineHeight: "1.08", letterSpacing: "-0.02em" }],
