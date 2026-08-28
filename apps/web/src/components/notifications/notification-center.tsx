@@ -59,6 +59,8 @@ export function NotificationCenter() {
         window.location.assign(n.courseSlug ? `/programs/${n.courseSlug}` : "/programs");
       } else if (n.type === "resource_created") {
         window.location.assign("/resources");
+      } else if (n.type === "scholarship_created") {
+        window.location.assign("/dashboard/scholarships");
       }
     },
     [markRead]

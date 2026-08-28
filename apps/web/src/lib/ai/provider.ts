@@ -22,6 +22,7 @@ export type AiProvider = {
     system: string;
     messages: AiMessage[];
     signal?: AbortSignal;
+    jsonMode?: boolean;
   }): Promise<ReadableStream<AiStreamChunk>>;
 };
 

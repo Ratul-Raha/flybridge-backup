@@ -9,6 +9,8 @@ type StreamOptions = {
   system: string;
   messages: AiMessage[];
   signal?: AbortSignal;
+  /** Ask the provider for a strict JSON object response. */
+  jsonMode?: boolean;
 };
 
 /** Parse an SSE "data: ..." line and return its JSON payload (null for [DONE]). */
@@ -36,6 +38,7 @@ export async function streamOpenAiCompatible({
   system,
   messages,
   signal,
+  jsonMode,
 }: StreamOptions): Promise<ReadableStream<AiStreamChunk>> {
   const res = await fetch(url, {
     method: "POST",
@@ -50,6 +53,7 @@ export async function streamOpenAiCompatible({
       temperature: 0.3,
       max_tokens: 1024,
       messages: [{ role: "system", content: system }, ...messages],
+      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),
   });
 

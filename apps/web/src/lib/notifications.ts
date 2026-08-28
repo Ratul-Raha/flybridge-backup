@@ -4,6 +4,7 @@ export type AppNotificationType =
   | "seminar_created"
   | "course_launched"
   | "resource_created"
+  | "scholarship_created"
   | "automation";
 
 export type AppNotification = {

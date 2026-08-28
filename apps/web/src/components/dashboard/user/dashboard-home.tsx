@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, BookOpen, FolderOpen, ArrowUpRight, Gauge } from "lucide-react";
+import { CalendarDays, BookOpen, FolderOpen, ArrowUpRight, Gauge, Award } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { programs } from "@/lib/programs";
+import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 
 type Stat = {
   label: string;
@@ -102,6 +103,12 @@ export function DashboardHome() {
       icon: FolderOpen,
     },
     {
+      label: "Scholarships",
+      desc: "Fund your studies abroad",
+      href: "/dashboard/scholarships",
+      icon: Award,
+    },
+    {
       label: "Readiness score",
       desc: "Eligibility score & AI report",
       href: "/dashboard/readiness",
@@ -111,6 +118,8 @@ export function DashboardHome() {
 
   return (
     <div className="flex flex-col gap-8">
+      <ScholarshipTicker />
+
       <div>
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--brand)" }}>
           {today}

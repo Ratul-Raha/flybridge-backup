@@ -20,11 +20,12 @@ import { MySeminars } from "./my-seminars";
 import { AllCourses } from "./all-courses";
 import { MyCourses } from "./my-courses";
 import { ResourceBrowser } from "./resource-browser";
+import { ScholarshipBrowser } from "./scholarship-browser";
 import { SopGenerator } from "./sop-generator";
 import { MobileSettings } from "./mobile-settings";
 import { SectionTabs, type SectionParent } from "./section-tabs";
 
-type TabId = "dashboard" | "seminars" | "courses" | "resources" | "sop" | "settings";
+type TabId = "dashboard" | "seminars" | "courses" | "resources" | "scholarships" | "sop" | "settings";
 
 const TABS: { id: TabId; label: string; icon: LucideIcon; href: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -39,6 +40,7 @@ function tabFromPath(pathname: string): TabId {
   if (pathname.startsWith("/dashboard/seminars")) return "seminars";
   if (pathname.startsWith("/dashboard/courses")) return "courses";
   if (pathname.startsWith("/dashboard/resources")) return "resources";
+  if (pathname.startsWith("/dashboard/scholarships")) return "scholarships";
   if (pathname.startsWith("/dashboard/sop-generator")) return "sop";
   if (pathname.startsWith("/dashboard/settings")) return "settings";
   return "dashboard";
@@ -111,6 +113,7 @@ export function MobileUserApp() {
           ) : (
             <ResourceBrowser mobile />
           ))}
+        {tab === "scholarships" && <ScholarshipBrowser />}
         {tab === "sop" && <SopGenerator mobile />}
         {tab === "settings" && <MobileSettings />}
       </main>

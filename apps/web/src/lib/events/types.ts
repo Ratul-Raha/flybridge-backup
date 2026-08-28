@@ -12,6 +12,7 @@ export const EVENT_NAMES = [
   "order.created",
   "order.fulfilled",
   "resource.created",
+  "scholarship.created",
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];
@@ -77,6 +78,18 @@ export type EventPayloadMap = {
       thumbnail?: string | null;
       access?: "public" | "members";
       price?: number;
+    };
+  };
+  "scholarship.created": {
+    scholarship: {
+      id: string;
+      institution: string;
+      title: string;
+      country?: string | null;
+      countryCode?: string | null;
+      level?: string;
+      amount?: string | null;
+      deadline?: string | null;
     };
   };
 };

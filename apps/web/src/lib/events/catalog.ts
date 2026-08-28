@@ -200,6 +200,33 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       },
     }),
   },
+  "scholarship.created": {
+    name: "scholarship.created",
+    label: "Scholarship published",
+    description: "Fires when a new scholarship is published.",
+    fields: [
+      "scholarship.id",
+      "scholarship.institution",
+      "scholarship.title",
+      "scholarship.country",
+      "scholarship.countryCode",
+      "scholarship.level",
+      "scholarship.amount",
+      "scholarship.deadline",
+    ],
+    samplePayload: () => ({
+      scholarship: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        institution: "University of Toronto",
+        title: "International Merit Scholarship",
+        country: "Canada",
+        countryCode: "CA",
+        level: "undergraduate",
+        amount: "$10,000",
+        deadline: "15 December 2026",
+      },
+    }),
+  },
 };
 
 export const EVENT_LIST: EventCatalogEntry[] = EVENT_NAMES.map((name) => EVENT_CATALOG[name]);

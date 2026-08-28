@@ -9,6 +9,7 @@ const footerLinks = [
     links: [
       { label: "Programs", href: "/programs" },
       { label: "Check Eligibility", href: "/readiness" },
+      { label: "Scholarships", href: "/scholarships" },
       { label: "Resources", href: "/resources" },
       { label: "English", href: "#" },
       { label: "FAQ", href: "/faq" },

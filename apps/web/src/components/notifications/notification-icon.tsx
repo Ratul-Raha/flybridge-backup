@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { BookOpen, FolderOpen, Megaphone, UserPlus, Zap } from "lucide-react";
+import { Award, BookOpen, FolderOpen, Megaphone, UserPlus, Zap } from "lucide-react";
 import type { AppNotificationType } from "@/lib/notifications";
 
 const ICONS: Record<AppNotificationType, typeof Megaphone> = {
@@ -8,6 +8,7 @@ const ICONS: Record<AppNotificationType, typeof Megaphone> = {
   seminar_created: Megaphone,
   course_launched: BookOpen,
   resource_created: FolderOpen,
+  scholarship_created: Award,
   automation: Zap,
 };
 

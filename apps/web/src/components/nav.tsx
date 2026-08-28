@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 const links = [
   { label: "Programs", href: "/programs" },
   { label: "Seminars", href: "/seminars" },
+  { label: "Scholarships", href: "/scholarships" },
   { label: "Partnership", href: "/partnership" },
   { label: "Resources", href: "/resources" },
 ];

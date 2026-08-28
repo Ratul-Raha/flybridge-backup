@@ -5,6 +5,7 @@ import {
   notifyAllOnSeminarCreated,
   notifyAllOnCourseLaunched,
   notifyAllOnResourceCreated,
+  notifyAllOnScholarshipCreated,
   refreshKnowledgeBase,
 } from "./handlers";
 
@@ -20,6 +21,7 @@ export function registerDefaultHandlers(): void {
   on("course.updated", refreshKnowledgeBase);
   on("course.deleted", refreshKnowledgeBase);
   on("resource.created", notifyAllOnResourceCreated);
+  on("scholarship.created", notifyAllOnScholarshipCreated);
 }
 
 registerDefaultHandlers();

@@ -23,6 +23,7 @@ import {
   Gauge,
   ShoppingCart,
   Loader2,
+  Award,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -133,6 +134,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 { label: "My resources", href: "/dashboard/resources/mine", active: pathname === "/dashboard/resources/mine" },
               ],
             },
+            {
+              kind: "group",
+              label: "Scholarships",
+              icon: Award,
+              children: [
+                { label: "All scholarships", href: "/dashboard/scholarships", active: pathname === "/dashboard/scholarships" },
+              ],
+            },
           ],
         },
         {
@@ -215,6 +224,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/success-stories",
             icon: FolderOpen,
             active: pathname.startsWith("/dashboard/success-stories"),
+          },
+          {
+            kind: "link",
+            label: "Scholarships",
+            href: "/dashboard/scholarships",
+            icon: Award,
+            active: pathname.startsWith("/dashboard/scholarships"),
           },
         ],
       });

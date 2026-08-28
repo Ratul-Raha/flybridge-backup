@@ -146,4 +146,22 @@ export const notifyAllOnResourceCreated: EventHandler = {
   },
 };
 
+export const notifyAllOnScholarshipCreated: EventHandler = {
+  name: "notifyAllOnScholarshipCreated",
+  run: async (payload) => {
+    const scholarship = (payload.scholarship ?? {}) as Record<string, unknown>;
+    const title = String(scholarship.title ?? "");
+    const institution = String(scholarship.institution ?? "");
+
+    const recipients = await User.find().select("_id").lean();
+    if (recipients.length === 0) return;
+
+    await insertNotifications(recipients, {
+      type: "scholarship_created",
+      title: "New scholarship available",
+      message: `${title}${institution ? ` at ${institution}` : ""} has just been published — apply before the deadline.`,
+    });
+  },
+};
+
 
