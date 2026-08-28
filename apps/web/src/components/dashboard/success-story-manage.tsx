@@ -110,15 +110,6 @@ function formatDate(iso: string) {
   });
 }
 
-function FlagCircle({ code }: { code: string }) {
-  const flag = countryByCode(code)?.flag;
-  return (
-    <span className="text-[14px] leading-none" title={code}>
-      {flag ?? "🌐"}
-    </span>
-  );
-}
-
 export function SuccessStoryManage() {
   const { user } = useAuth();
   const [stories, setStories] = useState<StoryItem[]>([]);
@@ -589,103 +580,64 @@ export function SuccessStoryManage() {
           </select>
         </div>
 
-        {/* List */}
-        <div className="rounded-[14px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-          <div className="hidden md:grid grid-cols-[minmax(0,1fr)_140px_180px_80px_auto] gap-3 px-4 py-2.5 border-b bg-[var(--bg-soft)]" style={{ borderColor: "var(--line)" }}>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-              Name
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-              Destination
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-              Type
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-              Status
-            </span>
-            <span />
+        {/* Card grid */}
+        {filtered.length === 0 ? (
+          <div className="rounded-[14px] border bg-white px-4 py-12 text-center text-[13.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+            No stories match your search or filters.
           </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {filtered.map((s) => {
+              const isStudent = s.visaType === "student";
+              const flag = countryByCode(s.destinationCode)?.flag ?? "";
+              const program = isStudent ? s.universityName : s.cityName;
+              return (
+                <div
+                  key={s.id}
+                  className="group flex flex-col overflow-hidden rounded-lg border bg-white"
+                  style={{ borderColor: "var(--line)", boxShadow: "0 4px 20px -12px rgba(18,32,67,0.12)" }}
+                >
+                  <div className="relative aspect-[16/11]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={s.imageUrl} alt={s.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-0 h-20 w-24 rounded-tr-2xl select-none pointer-events-none"
+                      style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0) 70%)" }}
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/stamp.png" alt="" aria-hidden="true" className="absolute left-2.5 top-2 w-[16%] -rotate-12 select-none pointer-events-none" />
+                    <span
+                      className="absolute top-2.5 right-2.5 text-[10px] font-semibold rounded-full px-2.5 py-1"
+                      style={
+                        s.active
+                          ? { background: "rgba(15,169,104,0.92)", color: "#fff" }
+                          : { background: "rgba(18,32,67,0.6)", color: "#fff" }
+                      }
+                    >
+                      {s.active ? "Live" : "Hidden"}
+                    </span>
+                  </div>
 
-          {filtered.length === 0 ? (
-            <div className="px-4 py-12 text-center text-[13.5px]" style={{ color: "var(--body)" }}>
-              No stories match your search or filters.
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {filtered.map((s, idx) => {
-                const isStudent = s.visaType === "student";
-                return (
-                  <div
-                    key={s.id}
-                    className={`group md:grid items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${idx > 0 ? "border-t" : ""} grid-cols-[minmax(0,1fr)_140px_180px_80px_auto]`}
-                    style={{ borderColor: "var(--line)" }}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        {isStudent ? <GraduationCap size={18} /> : <Briefcase size={18} />}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
-                          {s.name}
-                        </span>
-                        <span className="text-[11.5px] truncate" style={{ color: "var(--body)" }}>
-                          {s.origin || "—"}
-                          {s.universityName && <> · {s.universityName}</>}
-                          {s.cityName && <> · {s.cityName}</>}
-                        </span>
-                        <span className="md:hidden block mt-1 text-[11.5px] flex items-center gap-1" style={{ color: "var(--body)" }}>
-                          {s.destinationCode && <FlagCircle code={s.destinationCode} />}
-                          <span>{s.destination || "—"}</span>
-                          {s.destinationCode && <span>({s.destinationCode})</span>}
-                          <span>· {formatDate(s.createdAt)}</span>
-                        </span>
-                      </span>
+                  <div className="relative flex-1 flex flex-col px-3.5 pb-3.5 pt-2.5" style={{ borderTop: "1px solid var(--line)" }}>
+                    <div className="font-display font-semibold text-[14px] leading-tight tracking-[-0.01em] truncate" style={{ color: "var(--ink)" }}>
+                      {s.name}
+                    </div>
+                    {program && (
+                      <div className="text-[11.5px] mt-0.5 truncate" style={{ color: "var(--body)" }}>{program}</div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-[12px] font-medium mt-1.5" style={{ color: "var(--brand-2)" }}>
+                      {s.destinationCode && <span className={`fi fi-${s.destinationCode.toLowerCase()}`} />}
+                      <span className="truncate">{s.destination || "—"}</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-[11px]" style={{ color: "var(--body)" }}>
+                      {isStudent ? <GraduationCap size={11} /> : <Briefcase size={11} />}
+                      <span>{isStudent ? "Student visa" : "Work permit"}</span>
+                      <span className="opacity-50">·</span>
+                      <span className="opacity-50">{formatDate(s.createdAt)}</span>
                     </div>
 
-                    <span className="hidden md:block text-[12.5px] flex items-center gap-1.5" style={{ color: "var(--body)" }}>
-                      {s.destinationCode ? (
-                        <>
-                          <FlagCircle code={s.destinationCode} />
-                          <span>
-                            {s.destination} ({s.destinationCode})
-                          </span>
-                        </>
-                      ) : (
-                        s.destination || "—"
-                      )}
-                    </span>
-
-                    <span className="hidden md:block">
-                      <span
-                        className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
-                        style={
-                          isStudent
-                            ? { background: "var(--brand-soft)", color: "var(--brand-2)" }
-                            : { background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }
-                        }
-                      >
-                        {isStudent ? "Student" : "Work permit"}
-                      </span>
-                    </span>
-
-                    <span className="hidden md:block">
-                      <span
-                        className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
-                        style={
-                          s.active
-                            ? { background: "var(--brand-soft)", color: "var(--brand)" }
-                            : { background: "var(--bg-soft)", color: "var(--body)" }
-                        }
-                      >
-                        {s.active ? "Live" : "Hidden"}
-                      </span>
-                    </span>
-
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="mt-auto pt-3 flex items-center justify-end gap-1" style={{ borderTop: "1px solid var(--line)" }}>
                       <button
                         type="button"
                         title={s.active ? "Hide" : "Show"}
@@ -723,11 +675,11 @@ export function SuccessStoryManage() {
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {stories.length === 0 && (
           <p className="text-[13.5px] text-center py-6" style={{ color: "var(--body)" }}>

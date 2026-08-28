@@ -2,79 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-video";
+import { SuccessStoriesGrid } from "@/components/success-stories-grid";
 
 export const metadata: Metadata = {
   title: "Success Stories | FlyBridge",
   description:
     "Real stories from real learners — students who studied, worked and built lives abroad with FlyBridge courses and guidance.",
 };
-
-type Learner = {
-  src: string;
-  name: string;
-  program: string;
-  country: string;
-  flag: string;
-  quote: string;
-  badge: string;
-};
-
-const learners: Learner[] = [
-  {
-    src: "/stories/success1.png",
-    name: "Mijanur Rahman",
-    program: "University for the Creative Arts",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success2.png",
-    name: "Faiyaz",
-    program: "Wichita State University",
-    country: "USA",
-    flag: "🇺🇸",
-    quote: "FlyBridge made my dream of studying in the USA a reality. The guidance was exceptional!",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success3.png",
-    name: "Pabel",
-    program: "Neapolis University Pafos",
-    country: "Cyprus",
-    flag: "🇨🇾",
-    quote: "From university selection to visa approval, FlyBridge was with me every step of the way.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success4.png",
-    name: "Mahfuz Ahmed",
-    program: "Work Permit",
-    country: "Portugal",
-    flag: "🇵🇹",
-    quote: "The team's support and clear process helped me achieve my goal stress-free.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success5.png",
-    name: "Real Khan Mamun",
-    program: "",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "I went from confused about where to apply to holding multiple offer letters with FlyBridge's guidance.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success6.png",
-    name: "Ahmed Taj",
-    program: "University of Chester",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
-    badge: "Visa Approved",
-  },
-];
 
 const featuredVideo: StoryVideo = {
   title: "From Sylhet to UK — a study abroad journey",
@@ -237,40 +171,7 @@ export default function SuccessStoriesPage() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {learners.map((l) => (
-                <div
-                  key={l.name}
-                  className="rounded-lg border border-line bg-white overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-brand-2/40"
-                  style={{ boxShadow: "0 4px 20px -10px rgba(18,32,67,0.08)" }}
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <img src={l.src} alt={l.name} loading="lazy" className="w-full h-full object-cover" />
-                    <div
-                      className="absolute top-3 left-3 font-mono text-[10px] font-medium tracking-[0.4px] uppercase px-3 py-1.5 rounded-full text-white"
-                      style={{ background: "rgba(18,32,67,0.55)", backdropFilter: "blur(4px)" }}
-                    >
-                      {l.badge}
-                    </div>
-                  </div>
-                  <div className="p-5 flex flex-col">
-                    <div className="font-display font-semibold text-[17px] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
-                      {l.name}
-                    </div>
-                    {l.program && (
-                      <div className="text-[12.5px] mt-0.5" style={{ color: "var(--body)" }}>{l.program}</div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-[12.5px] font-medium mt-2" style={{ color: "var(--brand-2)" }}>
-                      <span>{l.flag}</span>
-                      <span>{l.country}</span>
-                    </div>
-                    <p className="text-[13.5px] leading-relaxed mt-3 line-clamp-3" style={{ color: "var(--ink)" }}>
-                      &ldquo;{l.quote}&rdquo;
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SuccessStoriesGrid />
           </div>
         </section>
 

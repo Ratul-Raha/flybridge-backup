@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { countryByCode } from "@/lib/countries";
 
-/**
- * NOTE ON DATA
- * Your old file pulled `successStoryImages` (just { src, alt }) from
- * "@/lib/stories". The new design needs a bit more per story — name,
- * program, country, a short quote, and a status badge — so this file
- * defines that richer shape locally as `stories`.
- *
- * Easiest path: move this `Story` type + the `stories` array into
- * "@/lib/stories.ts" (replacing the old `successStoryImages` export),
- * point `src` at your real photos, and swap in your real learners.
- * Everything below already reads from `stories`, so nothing else changes.
- */
+type StoryDto = {
+  id: string;
+  name: string;
+  origin: string;
+  originCode: string;
+  destination: string;
+  destinationCode: string;
+  visaType: "student" | "work";
+  universityName: string;
+  cityName: string;
+  story: string;
+  imageUrl: string;
+  active: boolean;
+  createdAt: string;
+};
 
 type Story = {
   src: string;
@@ -22,73 +26,25 @@ type Story = {
   name: string;
   program: string;
   country: string;
-  flag: string;
+  flagCode: string;
   quote: string;
   badge: string;
 };
 
-const stories: Story[] = [
-  {
-    src: "/stories/success1.png",
-    alt: "Mijanur Rahman in the UK",
-    name: "Mijanur Rahman",
-    program: "University for the Creative Arts",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success2.png",
-    alt: "Faiyaz in the USA",
-    name: "Faiyaz",
-    program: "Wichita State University",
-    country: "USA",
-    flag: "🇺🇸",
-    quote: "FlyBridge made my dream of studying in the USA a reality. The guidance was exceptional!",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success3.png",
-    alt: "Pabel in Cyprus",
-    name: "Pabel",
-    program: "Neapolis University Pafos",
-    country: "Cyprus",
-    flag: "🇨🇾",
-    quote: "From university selection to visa approval, FlyBridge was with me every step of the way.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success4.png",
-    alt: "Mahfuz Ahmed in Portugal",
-    name: "Mahfuz Ahmed",
-    program: "Work Permit",
-    country: "Portugal",
-    flag: "🇵🇹",
-    quote: "The team's support and clear process helped me achieve my goal stress-free.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success5.png",
-    alt: "Real Khan Mamun in the UK",
-    name: "Real Khan Mamun",
-    program: "",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "I went from confused about where to apply to holding multiple offer letters with FlyBridge's guidance.",
-    badge: "Visa Approved",
-  },
-  {
-    src: "/stories/success6.png",
-    alt: "Ahmed Taj in the UK",
-    name: "Ahmed Taj",
-    program: "University of Chester",
-    country: "UK",
-    flag: "🇬🇧",
-    quote: "Thanks to FlyBridge, I'm now studying at my dream university in the UK.",
-    badge: "Visa Approved",
-  },
-];
+function mapStory(s: StoryDto): Story {
+  const country = countryByCode(s.destinationCode);
+  const program = s.visaType === "student" ? s.universityName : s.cityName;
+  return {
+    src: s.imageUrl,
+    alt: `${s.name} in ${s.destination || "their destination"}`,
+    name: s.name,
+    program,
+    country: s.destination,
+    flagCode: country?.code ?? "",
+    quote: s.story,
+    badge: s.visaType === "student" ? "Visa Approved" : "Work Permit Approved",
+  };
+}
 
 function ChevronIcon({ dir }: { dir: "left" | "right" }) {
   return (
@@ -109,10 +65,33 @@ function ShieldIcon() {
 
 export function SuccessStories() {
   const VISIBLE = 4; // cards visible per "page" on large screens
-  const maxStart = Math.max(0, stories.length - VISIBLE);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
   const [start, setStart] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
 
+  const loadStories = useCallback(async () => {
+    try {
+      const res = await fetch("/api/success-stories", { cache: "no-store" });
+      const data = await res.json();
+      const list: StoryDto[] = Array.isArray(data.stories) ? data.stories : [];
+      setStories(list.map(mapStory));
+    } catch {
+      setStories([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStories();
+  }, [loadStories]);
+
+  useEffect(() => {
+    setStart(0);
+  }, [stories.length]);
+
+  const maxStart = Math.max(0, stories.length - VISIBLE);
   const goTo = (i: number) => setStart(Math.min(Math.max(i, 0), maxStart));
   const next = () => goTo(start + 1 > maxStart ? 0 : start + 1);
   const prev = () => goTo(start === 0 ? maxStart : start - 1);
@@ -120,13 +99,33 @@ export function SuccessStories() {
   // Auto-advance, pausing on hover
   const [paused, setPaused] = useState(false);
   useEffect(() => {
-    if (paused) return;
+    if (paused || stories.length <= VISIBLE) return;
     const t = setInterval(() => setStart((s) => (s + 1 > maxStart ? 0 : s + 1)), 4500);
     return () => clearInterval(t);
-  }, [paused, maxStart]);
+  }, [paused, maxStart, stories.length, VISIBLE]);
 
   const dots = useMemo(() => Array.from({ length: maxStart + 1 }, (_, i) => i), [maxStart]);
   const avatarPreview = stories.slice(0, 5);
+
+  if (loading) {
+    return (
+      <section className="py-24 px-[clamp(20px,4.5vw,56px)]" style={{ background: "var(--bg-soft)" }}>
+        <div className="max-w-[1320px] mx-auto text-[13.5px]" style={{ color: "var(--body)" }}>
+          Loading stories…
+        </div>
+      </section>
+    );
+  }
+
+  if (stories.length === 0) {
+    return (
+      <section className="py-24 px-[clamp(20px,4.5vw,56px)]" style={{ background: "var(--bg-soft)" }}>
+        <div className="max-w-[1320px] mx-auto text-[13.5px]" style={{ color: "var(--body)" }}>
+          No success stories yet.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 px-[clamp(20px,4.5vw,56px)] overflow-hidden" style={{ background: "var(--bg-soft)" }}>
@@ -219,28 +218,44 @@ export function SuccessStories() {
               {stories.map((s) => (
                 <div
                   key={s.src}
-                  className="w-[240px] sm:w-[260px] lg:w-[calc((100%-60px)/4)] shrink-0 rounded-2xl overflow-hidden bg-white flex flex-col"
+                  className="w-[240px] sm:w-[260px] lg:w-[calc((100%-60px)/4)] shrink-0 aspect-[4/5] rounded-lg overflow-hidden bg-white flex flex-col"
                   style={{ border: "1px solid var(--line)" }}
                 >
-                  <div className="aspect-[4/5] overflow-hidden">
-                    <img src={s.src} alt={s.alt} loading="lazy" className="w-full h-full object-cover" />
+                  <div className="relative flex-1 overflow-hidden">
+                    <img src={s.src} alt={s.alt} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-0 h-24 w-28 rounded-tr-3xl select-none pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0) 70%)",
+                      }}
+                    />
+                    <img
+                      src="/stamp.png"
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute left-3 top-2.5 w-[15%] -rotate-12 select-none pointer-events-none"
+                    />
                   </div>
-                  <div className="p-4 flex flex-col h-[230px]">
-                    <div className="font-display font-semibold text-[16px] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
+                  <div className="px-4 pb-4 pt-3 flex flex-col" style={{ borderTop: "1px solid var(--line)" }}>
+                    <div className="font-display font-semibold text-[15px] leading-tight tracking-[-0.01em] truncate" style={{ color: "var(--ink)" }}>
                       {s.name}
                     </div>
                     {s.program && (
-                      <div className="text-[12.5px] mt-0.5" style={{ color: "var(--body)" }}>{s.program}</div>
+                      <div className="text-[12px] mt-0.5 truncate" style={{ color: "var(--body)" }}>{s.program}</div>
                     )}
                     <div className="flex items-center gap-1.5 text-[12.5px] font-medium mt-1.5" style={{ color: "var(--brand-2)" }}>
-                      <span>{s.flag}</span>
+                      <span className={`fi fi-${s.flagCode.toLowerCase()}`} />
                       <span>{s.country}</span>
                     </div>
-                    <p className="text-[13px] leading-relaxed mt-3 line-clamp-3" style={{ color: "var(--ink)" }}>
-                      &ldquo;{s.quote}&rdquo;
-                    </p>
+                    {s.quote && (
+                      <p className="text-[12.5px] leading-relaxed mt-2 line-clamp-2" style={{ color: "var(--ink)" }}>
+                        &ldquo;{s.quote}&rdquo;
+                      </p>
+                    )}
                     <div
-                      className="inline-flex items-center gap-1.5 mt-auto pt-3 px-2.5 py-1 rounded-full font-mono text-[9.5px] font-medium tracking-[0.3px] uppercase"
+                      className="inline-flex items-center gap-1.5 mt-auto pt-3 px-2.5 py-1 rounded-full font-mono text-[9px] font-medium tracking-[0.3px] uppercase"
                       style={{ background: "var(--brand-soft)", color: "var(--brand-2)", alignSelf: "flex-start" }}
                     >
                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
