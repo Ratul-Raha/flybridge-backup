@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, GraduationCap, Lock, School } from "lucide-react";
+import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
 
@@ -11,12 +12,17 @@ function levelIcon(level: string) {
 }
 
 function ScholarshipCard({ s }: { s: PublicScholarship }) {
+  const { user, loading } = useAuth();
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = levelIcon(s.level);
 
+  const detailHref = user
+    ? `/dashboard/scholarships/${s.id}`
+    : `/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`;
+
   return (
     <Link
-      href={`/scholarships/${s.id}`}
+      href={loading ? `/scholarships/${s.id}` : detailHref}
       className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
     >
@@ -63,13 +69,23 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
         className="mt-auto flex items-center justify-between gap-3 border-t pt-4"
         style={{ borderColor: "var(--line)" }}
       >
-        <span
-          className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-          style={{ color: "var(--body)" }}
-        >
-          <Lock size={11} style={{ color: "var(--brand-2)" }} />
-          Members only
-        </span>
+        {user ? (
+          <span
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+            style={{ color: "#0FA968" }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#0FA968" }} />
+            Full details
+          </span>
+        ) : (
+          <span
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+            style={{ color: "var(--body)" }}
+          >
+            <Lock size={11} style={{ color: "var(--brand-2)" }} />
+            Members only
+          </span>
+        )}
         <span
           className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
           style={{ color: "var(--brand)" }}

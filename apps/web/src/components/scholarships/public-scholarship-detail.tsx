@@ -146,14 +146,14 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/login?mode=register&next=/dashboard/scholarships"
+              href={`/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
               className="rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
               style={{ background: "var(--brand)" }}
             >
               Create free account
             </Link>
             <Link
-              href="/login?next=/dashboard/scholarships"
+              href={`/login?next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
               className="rounded-full border px-6 py-3 text-[13.5px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)]"
               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             >

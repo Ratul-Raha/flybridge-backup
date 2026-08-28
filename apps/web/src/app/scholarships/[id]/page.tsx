@@ -36,7 +36,7 @@ export default async function ScholarshipDetailPage({ params }: Params) {
     if (!scholarship) notFound();
 
     const session = await readSession();
-    if (session?.userId) redirect("/dashboard/scholarships");
+    if (session?.userId) redirect(`/dashboard/scholarships/${params.id}`);
 
     return (
       <main>
