@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
+import { successStoryImages } from "@/lib/stories";
 import { Nav } from "@/components/nav";
 import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
@@ -59,34 +60,92 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
 export default async function ProgramsPage() {
   const dbCourses = await getPublishedCourses();
   const hasDbCourses = dbCourses.length > 0;
+  const visiblePrograms = programs.filter((p) => !(p.hasDb && hasDbCourses));
+  const programCount = visiblePrograms.length + dbCourses.length;
 
   return (
     <>
       <Nav />
       <main>
         {/* Hero */}
-        <section className="pt-[168px] pb-[96px] px-[clamp(20px,4.5vw,56px)]">
-          <div className="max-w-[1320px] mx-auto">
-            <div className="grid lg:grid-cols-[1fr_auto] gap-16 items-end">
-              <div className="max-w-[640px]">
+        <section
+          className="relative pt-[160px] pb-[80px] px-[clamp(20px,4.5vw,56px)] overflow-hidden"
+          style={{
+            background:
+              "radial-gradient(860px 540px at 85% 2%, rgba(15,169,104,0.16), transparent 62%), radial-gradient(720px 480px at 4% 96%, rgba(47,95,224,0.13), transparent 60%), radial-gradient(680px 460px at 98% 90%, rgba(107,76,224,0.12), transparent 62%), radial-gradient(520px 380px at 2% 4%, rgba(219,138,46,0.12), transparent 60%), linear-gradient(180deg, #F2F7EE -6%, #FFFFFF 48%)",
+          }}
+        >
+          <div className="programs-hero-grid" aria-hidden="true" />
+          <div className="programs-hero-blob programs-blob-a" aria-hidden="true" />
+          <div className="programs-hero-blob programs-blob-b" aria-hidden="true" />
+
+          <div className="max-w-[1320px] mx-auto relative z-[1]">
+            <div className="grid lg:grid-cols-[1fr_auto] lg:items-center gap-12 lg:gap-20">
+              <div className="max-w-[660px]">
                 <div
-                  className="font-mono text-[11.5px] font-medium tracking-[0.4px] uppercase mb-6 pb-2 border-b w-fit"
-                  style={{ color: "var(--brand-2)", borderColor: "var(--line)" }}
+                  className="inline-flex items-center gap-2.5 rounded-full border px-4 py-[9px] mb-8"
+                  style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.8)" }}
                 >
-                  Programs
+                  <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+                  <span
+                    className="font-mono text-[10.5px] font-semibold tracking-[0.28em] uppercase"
+                    style={{ color: "var(--brand-2)" }}
+                  >
+                    Learning tracks
+                  </span>
+                  <span
+                    className="font-mono text-[10px] font-semibold tracking-[0.18em] uppercase px-2 py-[3px] rounded-full"
+                    style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                  >
+                    4 pathways
+                  </span>
                 </div>
 
                 <h1
-                  className="font-display text-display-lg font-semibold leading-[1.1] tracking-[-0.02em] text-balance"
-                  style={{ color: "var(--ink)" }}
+                  className="font-display font-semibold leading-[1.1] tracking-[-0.02em] text-balance"
+                  style={{ fontSize: "clamp(36px,4.4vw,52px)", color: "var(--ink)" }}
                 >
-                  Every step of the journey, covered in one place.
+                  Every step of the journey,{" "}
+                  <span
+                    style={{
+                      background:
+                        "linear-gradient(92deg, var(--brand) 8%, var(--brand-2) 60%, rgba(47,95,224,0.95) 112%)",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      color: "transparent",
+                    }}
+                  >
+                    covered in one place.
+                  </span>
                 </h1>
 
-                <p className="mt-6 max-w-[480px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
+                <p className="mt-6 max-w-[480px] text-[16.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
                   Self-paced, practical courses that take you from where you are now to
                   studying, working and building a life abroad.
                 </p>
+
+                <div className="flex items-center gap-[18px] mt-9">
+                  <div className="flex -space-x-3">
+                    {successStoryImages.map((s) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={s.src}
+                        src={s.src}
+                        alt=""
+                        className="w-11 h-11 rounded-full object-cover border-2 border-white"
+                        style={{ boxShadow: "0 4px 10px -4px rgba(18,32,67,0.3)" }}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-[15px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                      10,000+ learners
+                    </div>
+                    <div className="text-[12px] mt-[5px]" style={{ color: "var(--body)" }}>
+                      already building their journey abroad
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <TrackAccordion />
@@ -94,15 +153,86 @@ export default async function ProgramsPage() {
           </div>
         </section>
 
+        <style>{`
+          .programs-hero-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+              linear-gradient(rgba(18,32,67,0.055) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(18,32,67,0.055) 1px, transparent 1px);
+            background-size: 44px 44px;
+            -webkit-mask-image: radial-gradient(130% 100% at 50% 20%, rgba(0,0,0,0.9), transparent 74%);
+            mask-image: radial-gradient(130% 100% at 50% 20%, rgba(0,0,0,0.9), transparent 74%);
+          }
+          .programs-hero-blob {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(72px);
+            opacity: 0.5;
+            pointer-events: none;
+            animation: programs-hero-drift 14s ease-in-out infinite alternate;
+          }
+          .programs-blob-a { width: 420px; height: 420px; top: -8%; right: 10%; background: rgba(15,169,104,0.28); }
+          .programs-blob-b { width: 460px; height: 460px; bottom: -10%; left: -6%; background: rgba(47,95,224,0.20); opacity: 0.4; animation-delay: -6s; }
+          @keyframes programs-hero-drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(24px, -18px) scale(1.07); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .programs-hero-blob { animation: none; }
+          }
+        `}</style>
+
         {/* Program grid */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
+        <section id="programs" className="px-[clamp(20px,4.5vw,56px)] pb-[100px] pt-[36px] scroll-mt-8">
           <div className="max-w-[1320px] mx-auto">
+            <div className="flex items-end justify-between flex-wrap gap-4 mb-11">
+              <div className="max-w-[640px]">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+                  <span
+                    className="font-mono text-[10.5px] font-semibold tracking-[0.3em] uppercase"
+                    style={{ color: "var(--brand-2)" }}
+                  >
+                    Programs &amp; courses
+                  </span>
+                </div>
+                <h2
+                  className="font-display font-semibold tracking-[-0.02em] leading-[1.1] text-balance"
+                  style={{ fontSize: "clamp(26px,3vw,38px)", color: "var(--ink)" }}
+                >
+                  Find your{" "}
+                  <span
+                    style={{
+                      background:
+                        "linear-gradient(92deg, var(--brand) 8%, var(--brand-2) 60%, rgba(47,95,224,0.95) 112%)",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      color: "transparent",
+                    }}
+                  >
+                    program &amp; course
+                  </span>
+                </h2>
+                <p className="text-[14.5px] mt-[10px] max-w-[520px]" style={{ color: "var(--body)" }}>
+                  Everything you need for study abroad and work abroad — all in one place.
+                </p>
+              </div>
+
+              <div
+                className="inline-flex items-center gap-2 font-mono text-[11px] font-semibold tracking-[0.14em] uppercase rounded-full border px-4 py-[9px] shrink-0"
+                style={{ borderColor: "var(--line)", background: "#fff", color: "var(--brand-2)" }}
+              >
+                <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+                {programCount} programs
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {programs
-                .filter((p) => !(p.hasDb && hasDbCourses))
-                .map((p) => (
-                  <ProgramCard key={p.slug} p={p} />
-                ))}
+              {visiblePrograms.map((p) => (
+                <ProgramCard key={p.slug} p={p} />
+              ))}
               {dbCourses.map((c) => (
                 <DbCourseCard key={c.id} course={c} />
               ))}

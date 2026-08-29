@@ -72,11 +72,15 @@ export function Hero() {
         className="hero-section pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
-            "linear-gradient(rgba(18,32,67,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.045) 1px, transparent 1px), radial-gradient(700px 420px at 88% 8%, rgba(15,169,104,0.08), transparent 60%), radial-gradient(600px 360px at 8% 90%, rgba(24,138,93,0.06), transparent 60%)",
-          backgroundSize: "40px 40px, 40px 40px, auto, auto",
+            "radial-gradient(860px 540px at 82% 2%, rgba(15,169,104,0.16), transparent 62%), radial-gradient(720px 480px at 6% 92%, rgba(47,95,224,0.13), transparent 60%), radial-gradient(680px 460px at 96% 88%, rgba(107,76,224,0.12), transparent 62%), radial-gradient(520px 380px at 0% 6%, rgba(219,138,46,0.13), transparent 60%), linear-gradient(180deg, #F2F7EE -6%, #FFFFFF 46%)",
         }}
       >
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center">
+        <div className="hero-grid-bg" aria-hidden="true" />
+        <div className="hero-blob hero-blob-a" aria-hidden="true" />
+        <div className="hero-blob hero-blob-b" aria-hidden="true" />
+        <div className="hero-blob hero-blob-c" aria-hidden="true" />
+
+        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.92fr] gap-[50px] items-center relative z-[1]">
           <div>
             <p className="relative inline-block mb-[28px]" style={{ color: "var(--brand-2)" }}>
               <span className="tag-text font-mono font-medium tracking-[0.12em] uppercase text-[12.5px]" style={{ color: "var(--brand-2)" }}>
@@ -90,7 +94,16 @@ export function Hero() {
 
             <h1 className="font-display font-semibold leading-[1.16] tracking-[-0.02em] max-w-[620px]" style={{ color: "var(--ink)", fontSize: "clamp(34px,4.2vw,48px)" }}>
               Your Complete{" "}
-              <span style={{ color: "var(--brand-2)" }}>Blueprint</span>
+              <span
+                style={{
+                  background: "linear-gradient(92deg, var(--brand) 8%, var(--brand-2) 60%, rgba(47,95,224,0.95) 112%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                Blueprint
+              </span>
               {" "}
               <br className="hidden md:block" />
               <span className="text-balance">to Studying and Working Abroad</span>
@@ -103,14 +116,14 @@ export function Hero() {
             </p>
 
             <div className="mt-[32px] flex flex-col gap-6">
-              <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-[10px] sm:gap-4 flex-wrap sm:flex-nowrap">
                 <a
                   href="/programs"
-                  className="browse-btn inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[14px]"
+                  className="browse-btn inline-flex items-center gap-[7px] sm:gap-[9px] font-medium text-[12.5px] sm:text-[15px] text-white rounded-full px-[15px] sm:px-[26px] py-[10px] sm:py-[14px] whitespace-nowrap"
                   style={{ background: "var(--brand)" }}
                 >
                   Browse programs
-                  <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
+                  <svg className="w-[12px] h-[12px] sm:w-[15px] sm:h-[15px]" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </a>
@@ -118,14 +131,14 @@ export function Hero() {
                 <button
                   type="button"
                   onClick={() => setVideoOpen(true)}
-                  className="inline-flex items-center gap-[9px] font-medium text-[15px] rounded-full pl-[6px] pr-[24px] py-[10px] border border-line bg-white transition-all duration-250 hover:border-brand-2/50 hover:shadow-md"
+                  className="inline-flex items-center gap-[7px] sm:gap-[9px] font-medium text-[12.5px] sm:text-[15px] rounded-full pl-[5px] sm:pl-[6px] pr-[14px] sm:pr-[24px] py-[8.5px] sm:py-[10px] border border-line bg-white whitespace-nowrap transition-all duration-250 hover:border-brand-2/50 hover:shadow-md"
                   style={{ color: "var(--ink)" }}
                 >
                   <span
-                    className="w-[34px] h-[34px] rounded-full flex items-center justify-center shrink-0"
+                    className="w-[24px] h-[24px] sm:w-[34px] sm:h-[34px] rounded-full flex items-center justify-center shrink-0"
                     style={{ background: "var(--brand-soft)" }}
                   >
-                    <svg className="w-[13px] h-[13px] ml-[1px]" viewBox="0 0 24 24" fill="none">
+                    <svg className="w-[9px] h-[9px] sm:w-[13px] sm:h-[13px] ml-[1px]" viewBox="0 0 24 24" fill="none">
                       <path d="M6 4L20 12L6 20V4Z" fill="var(--brand)" />
                     </svg>
                   </span>
@@ -238,6 +251,32 @@ export function Hero() {
       </section>
 
       <style>{`
+        .hero-grid-bg {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image:
+            linear-gradient(rgba(18,32,67,0.055) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(18,32,67,0.055) 1px, transparent 1px);
+          background-size: 44px 44px;
+          -webkit-mask-image: radial-gradient(130% 100% at 50% 18%, rgba(0,0,0,0.9), transparent 74%);
+          mask-image: radial-gradient(130% 100% at 50% 18%, rgba(0,0,0,0.9), transparent 74%);
+        }
+        .hero-blob {
+          position: absolute;
+          border-radius: 9999px;
+          filter: blur(72px);
+          opacity: 0.55;
+          pointer-events: none;
+          animation: hero-blob-drift 14s ease-in-out infinite alternate;
+        }
+        .hero-blob-a { width: 380px; height: 380px; top: -6%; right: 6%; background: rgba(15,169,104,0.30); }
+        .hero-blob-b { width: 480px; height: 480px; bottom: -14%; left: -8%; background: rgba(47,95,224,0.22); animation-delay: -5s; }
+        .hero-blob-c { width: 360px; height: 360px; bottom: 2%; right: -6%; background: rgba(107,76,224,0.20); animation-delay: -9s; }
+        @keyframes hero-blob-drift {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(26px, -18px) scale(1.07); }
+        }
         @keyframes bob {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
@@ -274,6 +313,7 @@ export function Hero() {
         @media (prefers-reduced-motion: reduce) {
           .animate-scroll-reel { animation: none !important; }
           .float-card { animation: none !important; }
+          .hero-blob { animation: none !important; }
         }
         .tag-plane {
           position: absolute;

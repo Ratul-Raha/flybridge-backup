@@ -420,18 +420,18 @@ export function ScholarshipManage() {
             </div>
 
             <div className="flex flex-col gap-2 md:col-span-2">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   disabled={parsing}
                   onClick={parseWithAI}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-[10px] text-[13.5px] font-medium text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
+                  className="inline-flex items-center gap-2 rounded-full px-5 py-[10px] text-[13.5px] font-medium text-white whitespace-nowrap transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
                   style={{ background: "linear-gradient(135deg,#6B4CE0,#8A6BF2)" }}
                 >
                   {parsing ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
                   {parsing ? "Designing…" : "Parse with AI"}
                 </button>
-                <span className="text-[12px]" style={{ color: "var(--body)" }}>
+                <span className="min-w-[240px] flex-1 text-[12px]" style={{ color: "var(--body)" }}>
                   Auto-extracts title, country, level, amount, deadline & eligibility from the text.
                 </span>
               </div>

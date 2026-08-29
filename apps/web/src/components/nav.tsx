@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ProgramsMegaMenu } from "@/components/programs/programs-mega-menu";
 
 const links = [
   { label: "Programs", href: "/programs" },
@@ -16,13 +18,28 @@ const links = [
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [programsOpen, setProgramsOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
   const { user, loading } = useAuth();
+
+  const closePrograms = useCallback(() => setProgramsOpen(false), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!programsOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setProgramsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [programsOpen]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -32,12 +49,14 @@ export function Nav() {
   return (
     <>
       <nav
+        ref={navRef}
         className={`navbar fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-shadow duration-300 px-[clamp(20px,4.5vw,56px)] py-[18px] ${
           scrolled
             ? "shadow-[0_6px_24px_-12px_rgba(18,32,67,0.12)] border-b border-line"
             : "shadow-none border-b border-transparent"
         }`}
         style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)" }}
+        onMouseLeave={closePrograms}
       >
         <div className="flex w-full max-w-[1320px] mx-auto items-center justify-between">
         <a href="/" className="brand flex flex-col items-start leading-none">
@@ -52,19 +71,46 @@ export function Nav() {
         </a>
 
         <ul className="hidden lg:flex items-center gap-[30px]">
-          {links.map((link) => (
-            <li key={link.label}>
-              <a
-                href={link.href}
-                className="flex items-center gap-[4px] text-[14px] font-medium py-[6px] px-[2px] relative
-                  after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[2px] after:bg-brand-2 after:rounded-[2px] after:transition-all after:duration-250
-                  hover:after:w-full"
-                style={{ color: "var(--ink)" }}
+          {links.map((link) =>
+            link.label === "Programs" ? (
+              <li
+                key={link.label}
+                className="relative"
+                onMouseEnter={() => setProgramsOpen(true)}
               >
-                {link.label}
-              </a>
-            </li>
-          ))}
+                <a
+                  href={link.href}
+                  aria-haspopup="true"
+                  aria-expanded={programsOpen}
+                  className="flex items-center gap-[6px] text-[14px] font-medium py-[6px] px-[2px] relative
+                    after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[2px] after:bg-brand-2 after:rounded-[2px] after:transition-all after:duration-250
+                    hover:after:w-full"
+                  style={{ color: "var(--ink)" }}
+                >
+                  {link.label}
+                  <ChevronDown
+                    size={13}
+                    className={`transition-transform duration-250 ${programsOpen ? "rotate-180" : ""}`}
+                    style={{ color: "var(--body)" }}
+                  />
+                </a>
+
+                {programsOpen && <ProgramsMegaMenu onClose={closePrograms} />}
+              </li>
+            ) : (
+              <li key={link.label}>
+                <a
+                  href={link.href}
+                  className="flex items-center gap-[4px] text-[14px] font-medium py-[6px] px-[2px] relative
+                    after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-[2px] after:bg-brand-2 after:rounded-[2px] after:transition-all after:duration-250
+                    hover:after:w-full"
+                  style={{ color: "var(--ink)" }}
+                >
+                  {link.label}
+                </a>
+              </li>
+            )
+          )}
         </ul>
 
         <div className="flex items-center gap-[14px]">
@@ -128,7 +174,10 @@ export function Nav() {
 
           <button
             className="lg:hidden w-[22px] h-[16px] relative bg-none border-none"
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => {
+              setProgramsOpen(false);
+              setMobileOpen(!mobileOpen);
+            }}
             aria-label="Toggle menu"
           >
             <span className={`absolute left-0 w-full h-[2px] rounded-[2px] transition-all duration-300 ${mobileOpen ? 'top-[7px] rotate-45' : 'top-0'}`} style={{ background: "var(--ink)" }} />

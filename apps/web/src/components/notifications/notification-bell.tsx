@@ -131,14 +131,15 @@ export function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 mt-[10px] w-[min(92vw,360px)] rounded-2xl border bg-white overflow-hidden"
+          className="absolute right-0 mt-[10px] w-[min(calc(100vw-24px),360px)] rounded-2xl border bg-white overflow-hidden flex flex-col"
           style={{
             borderColor: "var(--line)",
             boxShadow: "0 30px 60px -25px rgba(18,32,67,0.32)",
+            maxHeight: "min(540px, calc(100dvh - 120px))",
           }}
         >
           <div
-            className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b"
+            className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b shrink-0"
             style={{ borderColor: "var(--line)" }}
           >
             <div>
@@ -162,7 +163,7 @@ export function NotificationBell() {
             )}
           </div>
 
-          <div className="max-h-[380px] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {loading ? (
               <div className="px-5 py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>
                 Loading&hellip;
@@ -248,7 +249,7 @@ export function NotificationBell() {
           </div>
 
           <div
-            className="border-t px-5 py-3"
+            className="border-t px-5 py-3 shrink-0"
             style={{ borderColor: "var(--line)" }}
           >
             <a

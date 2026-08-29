@@ -78,7 +78,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ course: toDto(course) });
     }
 
-    const courses = await Course.find({ published: true }).sort({ createdAt: -1 });
+    const courses = await Course.find({
+      $or: [{ published: true }, { upcoming: true }],
+    }).sort({ createdAt: -1 });
     return NextResponse.json({ courses: courses.map(toDto) });
   } catch (error) {
     console.error("courses GET error", error);
