@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 import { BengaliText } from "@/components/bengali-text";
+import { DashboardMyRank } from "@/components/dashboard/user/dashboard-my-rank";
 
 type MiniCourse = {
   id: string;
@@ -227,6 +228,8 @@ export function MobileDashboardHome() {
           </span>
         </div>
       </Link>
+
+      <DashboardMyRank />
 
       {/* Continue learning */}
       <section>

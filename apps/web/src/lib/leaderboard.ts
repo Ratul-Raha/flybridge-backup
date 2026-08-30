@@ -21,10 +21,15 @@ export type LeaderboardOptions = {
   periodDays?: number;
 };
 
-export async function computeLeaderboard(
-  options: LeaderboardOptions = {}
-): Promise<LeaderboardResult> {
-  const { limit = 5, periodDays = 7 } = options;
+export type RankedUser = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  composite: number;
+  weeklyActivity: number;
+};
+
+async function computeRankedUsers(periodDays: number): Promise<RankedUser[]> {
   await connectDb();
 
   const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
@@ -65,6 +70,7 @@ export async function computeLeaderboard(
     progressAgg.map((p) => [
       p._id.toString(),
       {
+        userId: p._id.toString(),
         name: p.name,
         avatar: p.avatar ?? null,
         avgProgress: Math.round((p.avgProgress ?? 0) * 10) / 10,
@@ -88,6 +94,7 @@ export async function computeLeaderboard(
   );
 
   const rows: Array<{
+    userId: string;
     name: string;
     avatar: string | null;
     composite: number;
@@ -97,6 +104,7 @@ export async function computeLeaderboard(
   for (const [userId, p] of progressById) {
     const weekly = weeklyById.get(userId) ?? 0;
     rows.push({
+      userId,
       name: p.name,
       avatar: p.avatar,
       composite: Math.round((p.avgProgress + p.quizPoints) * 100) / 100,
@@ -106,10 +114,63 @@ export async function computeLeaderboard(
 
   rows.sort((a, b) => b.composite - a.composite || b.weeklyActivity - a.weeklyActivity);
 
+  return rows;
+}
+
+export async function computeLeaderboard(
+  options: LeaderboardOptions = {}
+): Promise<LeaderboardResult> {
+  const { limit = 5, periodDays = 7 } = options;
+
+  const rows = await computeRankedUsers(periodDays);
+
   const entries: LeaderboardEntry[] = rows.slice(0, limit).map((r, i) => ({
     rank: i + 1,
     user: { name: r.name, avatar: r.avatar },
   }));
 
   return { entries, periodDays };
+}
+
+export type MyRankResult = {
+  rank: number | null;
+  total: number;
+  my: {
+    name: string;
+    avatar: string | null;
+    composite: number;
+    weeklyActivity: number;
+  } | null;
+  top: LeaderboardEntry[];
+};
+
+export async function computeMyRank(
+  userId: string,
+  options: Pick<LeaderboardOptions, "periodDays"> = {}
+): Promise<MyRankResult> {
+  const { periodDays = 7 } = options;
+
+  const rows = await computeRankedUsers(periodDays);
+
+  const rankIndex = rows.findIndex((r) => r.userId === userId);
+  const top = rows.slice(0, 5).map((r, i) => ({
+    rank: i + 1,
+    user: { name: r.name, avatar: r.avatar },
+  }));
+
+  const myRow = rankIndex >= 0 ? rows[rankIndex] : null;
+
+  return {
+    rank: rankIndex >= 0 ? rankIndex + 1 : null,
+    total: rows.length,
+    my: myRow
+      ? {
+          name: myRow.name,
+          avatar: myRow.avatar,
+          composite: myRow.composite,
+          weeklyActivity: myRow.weeklyActivity,
+        }
+      : null,
+    top,
+  };
 }

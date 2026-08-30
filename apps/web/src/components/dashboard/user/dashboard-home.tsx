@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 import { BengaliText } from "@/components/bengali-text";
+import { DashboardMyRank } from "@/components/dashboard/user/dashboard-my-rank";
 
 type Stat = {
   label: string;
@@ -352,6 +353,21 @@ export function DashboardHome() {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* My rank */}
+      <section>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
+          <DashboardMyRank />
+          <div className="hidden lg:col-span-2 lg:flex flex-col justify-center rounded-lg border border-dashed px-5 py-5" style={{ borderColor: "var(--line)" }}>
+            <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+              Climb the weekly board
+            </p>
+            <p className="text-[12.5px] mt-1 leading-[1.6]" style={{ color: "var(--body)" }}>
+              Your rank is weighted by lessons finished, quiz accuracy and recent momentum, reshuffled every Monday. Keep learning to rise.
+            </p>
+          </div>
         </div>
       </section>
 
