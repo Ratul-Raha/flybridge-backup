@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Avatar } from "@/components/dashboard/avatar";
-import { DashboardHome } from "./dashboard-home";
+import { MobileDashboardHome } from "./mobile-dashboard-home";
 import { AllSeminars } from "./all-seminars";
 import { MySeminars } from "./my-seminars";
 import { AllCourses } from "./all-courses";
@@ -97,7 +97,7 @@ export function MobileUserApp() {
 
       {/* Screen content */}
       <main className="flex-1 px-5 pt-5 pb-28">
-        {tab === "dashboard" && <DashboardHome />}
+        {tab === "dashboard" && <MobileDashboardHome />}
 
         {subParent && tab !== "resources" && (
           <div className="mb-6">
