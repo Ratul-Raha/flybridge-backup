@@ -13,9 +13,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     await connectDb();
     const resource = await Resource.findById(params.id);
     if (!resource) return {};
+    const title = `${resource.title} | FlyBridge Education Group`;
+    const description = resource.description ?? undefined;
     return {
-      title: `${resource.title} | FlyBridge Education Group`,
-      description: resource.description ?? undefined,
+      title,
+      description,
+      openGraph: {
+        type: "article",
+        title,
+        description,
+        url: `/resources/${resource._id.toString()}`,
+        images: resource.thumbnail ? [{ url: resource.thumbnail }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: resource.thumbnail ? [resource.thumbnail] : undefined,
+      },
     };
   } catch {
     return {};

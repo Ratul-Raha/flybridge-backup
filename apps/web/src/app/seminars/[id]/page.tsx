@@ -12,9 +12,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     await connectDb();
     const seminar = await Seminar.findById(params.id);
     if (!seminar) return {};
+    const title = `${seminar.title} | FlyBridge Education Group`;
+    const description = seminar.description ?? undefined;
     return {
-      title: `${seminar.title} | FlyBridge Education Group`,
-      description: seminar.description ?? undefined,
+      title,
+      description,
+      openGraph: {
+        type: "article",
+        title,
+        description,
+        url: `/seminars/${seminar._id.toString()}`,
+        images: seminar.image ? [{ url: seminar.image }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: seminar.image ? [seminar.image] : undefined,
+      },
     };
   } catch {
     return {};

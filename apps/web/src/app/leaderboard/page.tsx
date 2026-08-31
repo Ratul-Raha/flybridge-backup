@@ -9,6 +9,19 @@ export const metadata: Metadata = {
   title: "Leaderboard | FlyBridge",
   description:
     "The weekly FlyBridge scoreboard — the top 10 learners, ranked by course progress and quiz activity, reshuffled every Monday.",
+  openGraph: {
+    type: "website",
+    title: "Leaderboard | FlyBridge",
+    description:
+      "The weekly FlyBridge scoreboard — the top 10 learners, ranked by course progress and quiz activity, reshuffled every Monday.",
+    url: "/leaderboard",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Leaderboard | FlyBridge",
+    description:
+      "The weekly FlyBridge scoreboard — the top 10 learners, ranked by course progress and quiz activity, reshuffled every Monday.",
+  },
 };
 
 const METAL: Record<number, { bar: string; ring: string; num: string; name: string }> = {

@@ -42,13 +42,43 @@ type CourseCta = {
   hasDb?: boolean;
 };
 
-export function generateMetadata({ params }: Props): Metadata {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const program = getProgram(params.slug);
   const details = courseDetails[params.slug];
+  const title = `${details?.title ?? program?.title ?? "Program"} | FlyBridge Education Group`;
+  const description = details?.desc ?? program?.desc;
+
+  let image = program?.image;
+  if (!image && program?.hasDb) {
+    try {
+      await connectDb();
+      const course = await Course.findOne({
+        slug: params.slug,
+        $or: [{ published: true }, { upcoming: true }],
+      }).select("image");
+      image = (course?.image as string | undefined) ?? undefined;
+    } catch {
+      /* fall back to default og image */
+    }
+  }
+
   if (program || details) {
     return {
-      title: `${details?.title ?? program?.title ?? "Program"} | FlyBridge Education Group`,
-      description: details?.desc ?? program?.desc,
+      title,
+      description,
+      openGraph: {
+        type: "article",
+        title,
+        description,
+        url: `/programs/${params.slug}`,
+        images: image ? [{ url: image }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: image ? [image] : undefined,
+      },
     };
   }
   return {

@@ -23,6 +23,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return {
       title: `${scholarship.title || scholarship.institution} | FlyBridge Education Group`,
       description: teaser || undefined,
+      openGraph: {
+        type: "article",
+        title: `${scholarship.title || scholarship.institution} | FlyBridge Education Group`,
+        description: teaser || undefined,
+        url: `/scholarships/${params.id}`,
+        images: scholarship.imageUrl
+          ? [{ url: scholarship.imageUrl }]
+          : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${scholarship.title || scholarship.institution} | FlyBridge Education Group`,
+        description: teaser || undefined,
+        images: scholarship.imageUrl ? [scholarship.imageUrl] : undefined,
+      },
     };
   } catch {
     return {};
