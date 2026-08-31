@@ -1,18 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Award,
   CalendarClock,
+  Check,
   GraduationCap,
   Lock,
   School,
+  Share2,
 } from "lucide-react";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
 
 export function PublicScholarshipDetail({ scholarship: s }: { scholarship: PublicScholarship }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/scholarships/${s.id}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = s.level === "school" ? School : GraduationCap;
 
@@ -56,13 +73,27 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
 
   return (
     <div>
-      <Link
-        href="/scholarships"
-        className="inline-flex items-center gap-2 text-[13px] font-medium transition-colors duration-200 hover:opacity-70"
-        style={{ color: "var(--brand)" }}
-      >
-        <ArrowLeft size={15} /> All scholarships
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/scholarships"
+          className="inline-flex items-center gap-2 text-[13px] font-medium transition-colors duration-200 hover:opacity-70"
+          style={{ color: "var(--brand)" }}
+        >
+          <ArrowLeft size={15} /> All scholarships
+        </Link>
+        <button
+          type="button"
+          onClick={copyLink}
+          className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-[8px] text-[13px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
+          style={{
+            borderColor: "var(--line)",
+            color: copied ? "#0FA968" : "var(--ink)",
+          }}
+        >
+          {copied ? <Check size={14} /> : <Share2 size={14} />}
+          {copied ? "Link copied!" : "Share"}
+        </button>
+      </div>
 
       <div
         className="mt-6 overflow-hidden rounded-lg border bg-white"

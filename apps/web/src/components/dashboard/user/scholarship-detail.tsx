@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Award,
   CalendarClock,
+  Check,
   ExternalLink,
   GraduationCap,
   School,
   Settings2,
+  Share2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
@@ -41,6 +44,19 @@ export function ScholarshipDetailView({ scholarship: s }: { scholarship: Scholar
   const isStaff = user && (user.accountType === "admin" || user.accountType === "moderator");
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = s.level === "school" ? School : GraduationCap;
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/scholarships/${s.id}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
     <div className="mx-auto flex max-w-[860px] flex-col gap-6">
@@ -52,15 +68,30 @@ export function ScholarshipDetailView({ scholarship: s }: { scholarship: Scholar
         >
           <ArrowLeft size={14} /> All scholarships
         </Link>
-        {isStaff && (
-          <Link
-            href="/dashboard/scholarships/manage"
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={copyLink}
             className="inline-flex items-center gap-2 rounded-full border px-4 py-[8px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] transition-all duration-200 hover:translate-y-[-1px]"
-            style={{ borderColor: "var(--line)", background: "#fff", color: "var(--brand-2)" }}
+            style={{
+              borderColor: "var(--line)",
+              background: "#fff",
+              color: copied ? "#0FA968" : "var(--brand-2)",
+            }}
           >
-            <Settings2 size={13} /> Manage
-          </Link>
-        )}
+            {copied ? <Check size={13} /> : <Share2 size={13} />}
+            {copied ? "Copied!" : "Share"}
+          </button>
+          {isStaff && (
+            <Link
+              href="/dashboard/scholarships/manage"
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-[8px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] transition-all duration-200 hover:translate-y-[-1px]"
+              style={{ borderColor: "var(--line)", background: "#fff", color: "var(--brand-2)" }}
+            >
+              <Settings2 size={13} /> Manage
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-[24px] border bg-white" style={{ borderColor: "var(--line)", boxShadow: "0 20px 50px -32px rgba(18,32,67,0.25)" }}>

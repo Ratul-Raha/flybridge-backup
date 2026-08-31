@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import {
   Award,
@@ -10,6 +10,8 @@ import {
   School,
   CalendarClock,
   Settings2,
+  Check,
+  Share2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
@@ -43,6 +45,43 @@ const LEVEL_LABELS: Record<string, string> = {
 
 function levelIcon(level: string) {
   return level === "school" ? School : GraduationCap;
+}
+
+function ShareButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/scholarships/${id}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      title={copied ? "Copied!" : "Copy public link"}
+      aria-label={copied ? "Copied!" : "Copy public link"}
+      onClick={copyLink}
+      className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+      style={{
+        background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)",
+      }}
+    >
+      {copied ? (
+        <Check size={14} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+      ) : (
+        <Share2 size={14} style={{ color: "var(--body)" }} />
+      )}
+    </button>
+  );
 }
 
 export function ScholarshipBrowser() {
@@ -273,12 +312,15 @@ export function ScholarshipBrowser() {
                         <ExternalLink size={13} />
                       </a>
                     )}
-                    {(s.description || s.eligibility) && (
-                      <span className="inline-flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--body)" }}>
-                        <Icon size={12} />
-                        Details
-                      </span>
-                    )}
+                    <div className="ml-auto flex items-center gap-2">
+                      {(s.description || s.eligibility) && (
+                        <span className="inline-flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--body)" }}>
+                          <Icon size={12} />
+                          Details
+                        </span>
+                      )}
+                      <ShareButton id={s.id} />
+                    </div>
                   </div>
                 </div>
               </div>

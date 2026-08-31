@@ -1,14 +1,51 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, GraduationCap, Lock, School } from "lucide-react";
+import { ArrowRight, Check, GraduationCap, Lock, School, Share2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
 
 function levelIcon(level: string) {
   return level === "school" ? School : GraduationCap;
+}
+
+function ShareButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/scholarships/${id}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      title={copied ? "Copied!" : "Copy scholarship link"}
+      aria-label={copied ? "Copied!" : "Copy scholarship link"}
+      onClick={copyLink}
+      className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+      style={{
+        background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)",
+      }}
+    >
+      {copied ? (
+        <Check size={14} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+      ) : (
+        <Share2 size={14} style={{ color: "var(--body)" }} />
+      )}
+    </button>
+  );
 }
 
 function ScholarshipCard({ s }: { s: PublicScholarship }) {
@@ -86,13 +123,16 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
             Members only
           </span>
         )}
-        <span
-          className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
-          style={{ color: "var(--brand)" }}
-        >
-          See details
-          <ArrowRight size={13} />
-        </span>
+        <div className="flex items-center gap-3">
+          <ShareButton id={s.id} />
+          <span
+            className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
+            style={{ color: "var(--brand)" }}
+          >
+            See details
+            <ArrowRight size={13} />
+          </span>
+        </div>
       </div>
     </Link>
   );
