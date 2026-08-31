@@ -264,7 +264,7 @@ export default function CertificatePage({
             ))}
 
             {/* Header: logo + cert id */}
-            <div className="relative flex items-start justify-between px-[6%] pt-[4.5%]">
+            <div className="relative flex items-start justify-between px-[6%] pt-[6%]">
               <div className="flex flex-col items-start">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -272,12 +272,6 @@ export default function CertificatePage({
                   alt="FlyBridge Education Group"
                   className="h-[clamp(18px,2.6vw,28px)] w-auto object-contain"
                 />
-                <p
-                  className="mt-1.5 text-[7px] sm:text-[8px] font-semibold uppercase tracking-[0.35em]"
-                  style={{ color: "var(--brand-2)" }}
-                >
-                  Education Group
-                </p>
               </div>
 
               <div className="text-right">
