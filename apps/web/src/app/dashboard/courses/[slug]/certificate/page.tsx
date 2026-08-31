@@ -2,15 +2,26 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { Playfair_Display, Dancing_Script } from "next/font/google";
 import {
   ArrowLeft,
   Download,
   Loader2,
   ShieldCheck,
   Lock,
-  MessageCircle,
   Award,
 } from "lucide-react";
+
+const displayFont = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
+});
+
+const scriptFont = Dancing_Script({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
 
 type GradeData = {
   percentage: number;
@@ -162,6 +173,8 @@ export default function CertificatePage({
     day: "numeric",
   });
 
+  const displayCourseTitle = courseTitle || params.slug.replace(/-/g, " ");
+
   const verifyUrl = origin ? `${origin}/verify/${issuedCertId}` : issuedCertId;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(
     verifyUrl
@@ -182,279 +195,301 @@ export default function CertificatePage({
         {/* ============ Certificate Preview ============ */}
         <div className="w-full" style={{ aspectRatio: "1.55 / 1" }}>
           <div
-            className="relative w-full h-full rounded-[20px] overflow-hidden shadow-[0_40px_80px_-40px_rgba(10,18,40,0.85)]"
+            className="relative w-full h-full rounded-[6px] overflow-hidden shadow-[0_40px_80px_-40px_rgba(18,32,67,0.35)]"
             style={{
               background:
-                "radial-gradient(120% 90% at 85% -10%, rgba(15,169,104,0.28) 0%, rgba(15,169,104,0) 55%), linear-gradient(150deg, #0D1B33 0%, #132243 55%, #0B1528 100%)",
+                "linear-gradient(165deg,#ffffff 0%,#F4FAF7 45%,#EAF7F1 100%)",
             }}
           >
-            {/* Thin brand-green inner frame */}
+            {/* Micro-dot grid, top-left */}
             <div
-              className="absolute inset-[1.5%] rounded-[14px] pointer-events-none"
-              style={{ border: "1px solid rgba(52,211,153,0.35)" }}
-            />
-            {/* Corner accents */}
-            <div className="absolute top-[1.5%] left-[1.5%] w-8 h-8 rounded-tl-[14px] border-t-2 border-l-2" style={{ borderColor: "rgba(52,211,153,0.7)" }} />
-            <div className="absolute top-[1.5%] right-[1.5%] w-8 h-8 rounded-tr-[14px] border-t-2 border-r-2" style={{ borderColor: "rgba(52,211,153,0.7)" }} />
-            <div className="absolute bottom-[1.5%] left-[1.5%] w-8 h-8 rounded-bl-[14px] border-b-2 border-l-2" style={{ borderColor: "rgba(52,211,153,0.7)" }} />
-            <div className="absolute bottom-[1.5%] right-[1.5%] w-8 h-8 rounded-br-[14px] border-b-2 border-r-2" style={{ borderColor: "rgba(52,211,153,0.7)" }} />
-
-            {/* Decorative dot grid, top-left */}
-            <div
-              className="absolute top-[10%] left-[3.5%] w-24 h-16 pointer-events-none"
+              className="absolute top-[6%] left-[3%] w-40 h-28 pointer-events-none"
               style={{
                 backgroundImage:
-                  "radial-gradient(rgba(52,211,153,0.5) 1px, transparent 1.5px)",
-                backgroundSize: "10px 10px",
-                opacity: 0.25,
+                  "radial-gradient(var(--brand-2) 1px, transparent 1.5px)",
+                backgroundSize: "12px 12px",
+                opacity: 0.14,
+              }}
+            />
+            {/* Micro-dot grid, bottom-right */}
+            <div
+              className="absolute bottom-[8%] right-[3%] w-44 h-32 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(var(--brand) 1px, transparent 1.5px)",
+                backgroundSize: "14px 14px",
+                opacity: 0.12,
+              }}
+            />
+            {/* Soft gradient blobs */}
+            <div
+              className="absolute -top-14 -right-12 w-72 h-72 rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(15,169,104,0.12), transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute -bottom-16 -left-12 w-64 h-64 rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(20,181,126,0.10), transparent 70%)",
               }}
             />
 
-            {/* Decorative wave, bottom-left */}
-            <svg
-              className="absolute bottom-0 left-0 w-[45%] h-[55%] pointer-events-none"
-              viewBox="0 0 400 300"
-              fill="none"
-              style={{ opacity: 0.5 }}
-            >
-              <path
-                d="M0 220 C 80 180, 140 260, 220 210 S 360 150, 400 190 V300 H0 Z"
-                fill="rgba(52,211,153,0.06)"
-              />
-              <path
-                d="M0 250 C 90 210, 150 280, 240 240 S 370 190, 400 220 V300 H0 Z"
-                fill="rgba(52,211,153,0.10)"
-              />
-            </svg>
+            {/* Outer brand rule */}
+            <div
+              className="absolute inset-[2.2%] pointer-events-none"
+              style={{ border: "2px solid var(--brand-2)" }}
+            />
+            {/* Inner hairline rule */}
+            <div
+              className="absolute inset-[3%] pointer-events-none"
+              style={{ border: "1px solid var(--brand)" }}
+            />
 
-            {/* Header row: logo + id */}
-            <div className="relative flex items-start justify-between px-[4%] pt-[4%]">
+            {/* Corner flourishes */}
+            {[
+              { top: "2.2%", left: "2.2%", rotate: "0deg" },
+              { top: "2.2%", right: "2.2%", rotate: "90deg" },
+              { bottom: "2.2%", right: "2.2%", rotate: "180deg" },
+              { bottom: "2.2%", left: "2.2%", rotate: "270deg" },
+            ].map((pos, i) => (
+              <svg
+                key={i}
+                width="34"
+                height="34"
+                viewBox="0 0 34 34"
+                className="absolute pointer-events-none"
+                style={{ ...pos, transform: `rotate(${pos.rotate})` }}
+              >
+                <path
+                  d="M2 2 H16 M2 2 V16"
+                  stroke="var(--brand-2)"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <circle cx="2" cy="2" r="3" fill="var(--brand-2)" />
+              </svg>
+            ))}
+
+            {/* Header: logo + cert id */}
+            <div className="relative flex items-start justify-between px-[6%] pt-[4.5%]">
               <div className="flex flex-col items-start">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/transparent-logo-light.png"
+                  src="/transparent-logo-dark.png"
                   alt="FlyBridge Education Group"
-                  className="h-[clamp(20px,3vw,34px)] w-auto object-contain"
+                  className="h-[clamp(18px,2.6vw,28px)] w-auto object-contain"
                 />
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="h-[5px] w-[5px] rounded-full" style={{ background: "#34D399" }} />
-                  <p
-                    className="text-[7.5px] sm:text-[8.5px] font-semibold uppercase tracking-[0.3em]"
-                    style={{ color: "#9FB0CC" }}
-                  >
-                    Education Group · Certificate
-                  </p>
-                </div>
+                <p
+                  className="mt-1.5 text-[7px] sm:text-[8px] font-semibold uppercase tracking-[0.35em]"
+                  style={{ color: "var(--brand-2)" }}
+                >
+                  Education Group
+                </p>
               </div>
 
               <div className="text-right">
                 <p
-                  className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.18em]"
-                  style={{ color: "#9FB0CC" }}
+                  className="text-[7px] sm:text-[8px] font-semibold uppercase tracking-[0.2em]"
+                  style={{ color: "var(--brand-2)" }}
                 >
-                  Certificate ID
+                  Certificate No.
                 </p>
                 <p
-                  className="mt-0.5 text-[11px] sm:text-[13px] font-bold font-mono tracking-wider"
-                  style={{ color: unlocked ? "#34D399" : "#6B7A99" }}
+                  className="mt-0.5 text-[10px] sm:text-[12px] font-bold font-mono tracking-wider"
+                  style={{ color: unlocked ? "var(--brand)" : "#B5C1D4" }}
                 >
                   {unlocked ? issuedCertId : "FB-••••-••••"}
                 </p>
               </div>
             </div>
 
-            {/* Main content row: photo + text */}
-            <div className="relative flex items-start gap-4 sm:gap-6 px-[4%] mt-[3%]">
-              {/* Avatar with brand ring */}
+            {/* Seal */}
+            <div className="relative flex justify-center mt-[1%]">
               <div
-                className="shrink-0 rounded-full overflow-hidden flex items-center justify-center"
+                className="flex items-center justify-center rounded-full"
                 style={{
-                  width: "clamp(56px, 9vw, 100px)",
-                  height: "clamp(56px, 9vw, 100px)",
-                  background: "#14253F",
-                  boxShadow: "0 0 0 2px #11203A, 0 0 0 3.5px rgba(52,211,153,0.55)",
+                  width: "clamp(34px, 4.2vw, 48px)",
+                  height: "clamp(34px, 4.2vw, 48px)",
+                  background: "linear-gradient(155deg,#14B57E,#0FA968)",
+                  boxShadow: "0 2px 6px rgba(15,169,104,0.35)",
                 }}
               >
-                {userAvatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={userAvatar}
-                    alt={userName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span
-                    className="text-2xl font-bold"
-                    style={{ color: "#34D399" }}
-                  >
-                    {(userName || "S").trim().charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-
-              {/* Text column */}
-              <div className="flex-1 text-left">
-                <p
-                  className="font-mono text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.35em]"
-                  style={{ color: "#34D399" }}
-                >
-                  Certificate of
-                </p>
-                <h1
-                  className="font-extrabold uppercase leading-[0.95] tracking-tight"
-                  style={{ fontSize: "clamp(24px, 4.2vw, 44px)", color: "#F4F7FF" }}
-                >
-                  Completion
-                </h1>
-                <div
-                  className="mt-1.5 h-[3px] w-16 sm:w-20 rounded-full"
-                  style={{ background: "linear-gradient(90deg,#34D399,#0FA968)" }}
-                />
-
-                <p
-                  className="mt-3 sm:mt-4 text-[11px] sm:text-[13px]"
-                  style={{ color: "#9FB0CC" }}
-                >
-                  This is proudly presented to
-                </p>
-                <p
-                  className="mt-0.5 font-bold leading-tight"
-                  style={{ fontSize: "clamp(20px, 3.4vw, 36px)", color: "#F4F7FF" }}
-                >
-                  {userName || "Student Name"}
-                </p>
-
-                <p
-                  className="mt-2.5 text-[11px] sm:text-[13px]"
-                  style={{ color: "#9FB0CC" }}
-                >
-                  for successfully completing the course
-                </p>
-                <div className="mt-1.5 inline-flex items-center gap-2">
-                  <div
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(52,211,153,0.14)" }}
-                  >
-                    <MessageCircle size={14} style={{ color: "#34D399" }} />
-                  </div>
-                  <p
-                    className="font-bold text-[13px] sm:text-[16px]"
-                    style={{ color: "#34D399" }}
-                  >
-                    {courseTitle || params.slug.replace(/-/g, " ")}
-                  </p>
-                </div>
-
-                <p
-                  className="mt-2.5 max-w-[520px] text-[9.5px] sm:text-[11px] leading-relaxed"
-                  style={{ color: "#A8B6CF" }}
-                >
-                  The recipient has fulfilled all course requirements and demonstrated
-                  commitment to developing knowledge and skills in the field.
-                </p>
+                <Award size={20} style={{ color: "#fff" }} />
               </div>
             </div>
 
-            {/* Divider */}
-            <div
-              className="relative mx-[4%] mt-[3%] h-px"
-              style={{ background: "linear-gradient(90deg,transparent,rgba(52,211,153,0.35),transparent)" }}
-            />
+            {/* Main content, centered */}
+            <div className="relative flex flex-col items-center text-center px-[8%] mt-[1.5%]">
+              <p
+                className="text-[8px] sm:text-[9.5px] font-semibold uppercase tracking-[0.4em]"
+                style={{ color: "var(--brand-2)" }}
+              >
+                Certificate of Completion
+              </p>
+
+              <h1
+                className={`${displayFont.className} mt-1.5 italic font-bold`}
+                style={{
+                  fontSize: "clamp(15px, 2vw, 20px)",
+                  color: "var(--ink)",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                This is to certify that
+              </h1>
+
+              <p
+                className={`${scriptFont.className} leading-none`}
+                style={{
+                  fontSize: "clamp(30px, 5.4vw, 54px)",
+                  color: "var(--ink)",
+                  marginTop: "clamp(4px, 1vw, 10px)",
+                }}
+              >
+                {userName || "Student Name"}
+              </p>
+
+              <p
+                className={`${scriptFont.className}`}
+                style={{
+                  fontSize: "clamp(13px, 1.9vw, 19px)",
+                  color: "var(--body)",
+                  maxWidth: "560px",
+                  marginTop: "clamp(4px, 1vw, 8px)",
+                  lineHeight: 1.35,
+                }}
+              >
+                has successfully completed{" "}
+                <span style={{ color: "var(--brand)", fontWeight: 700 }}>
+                  {displayCourseTitle}
+                </span>
+                , demonstrating dedication and commitment throughout the
+                program. We proudly recognize this achievement and wish
+                continued success ahead.
+              </p>
+            </div>
 
             {/* Stats row */}
             {grade && (
-              <div className="relative grid grid-cols-4 gap-2 sm:gap-4 mx-[4%] mt-[2.5%]">
+              <div className="relative flex justify-center gap-[6%] sm:gap-[8%] mt-[2.2%] px-[8%]">
                 {[
-                  { label: "Overall Score", value: `${grade.percentage}%`, accent: grade.passed },
-                  { label: "Grade", value: grade.grade, accent: true },
-                  { label: "English Level", value: grade.englishLevel.split(" ")[0], accent: false },
-                  { label: "Quizzes Done", value: `${grade.completedQuizzes}/${grade.totalQuizzes}`, accent: true },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="relative rounded-xl px-2 py-2.5 text-center overflow-hidden"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-                  >
-                    <span
-                      className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-b-full"
-                      style={{ background: s.accent ? "#34D399" : "rgba(52,211,153,0.35)" }}
-                    />
-                    <p className="font-mono text-[7px] sm:text-[9px] uppercase tracking-wider truncate" style={{ color: "#8A98B8" }}>
-                      {s.label}
-                    </p>
-                    <p
-                      className="mt-1 text-[13px] sm:text-[20px] font-bold tabular-nums"
-                      style={{ color: s.accent ? "#4BE0A8" : "#F4F7FF" }}
-                    >
-                      {s.value}
-                    </p>
+                  { label: "Score", value: `${grade.percentage}%` },
+                  { label: "Grade", value: grade.grade },
+                  { label: "Level", value: grade.englishLevel.split(" ")[0] },
+                  {
+                    label: "Quizzes",
+                    value: `${grade.completedQuizzes}/${grade.totalQuizzes}`,
+                  },
+                ].map((s, i) => (
+                  <div key={s.label} className="flex items-center gap-[6%] sm:gap-[8%]">
+                    {i !== 0 && (
+                      <span
+                        className="hidden sm:block h-6 w-px -ml-[3%] sm:-ml-[4%]"
+                        style={{ background: "var(--brand)", opacity: 0.35 }}
+                      />
+                    )}
+                    <div className="text-center">
+                      <p
+                        className="font-mono text-[6.5px] sm:text-[8px] uppercase tracking-wider"
+                        style={{ color: "var(--body)" }}
+                      >
+                        {s.label}
+                      </p>
+                      <p
+                        className={`${displayFont.className} mt-0.5 font-bold tabular-nums`}
+                        style={{
+                          fontSize: "clamp(11px, 1.6vw, 16px)",
+                          color: "var(--ink)",
+                        }}
+                      >
+                        {s.value}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Bottom row: verified note + QR + date */}
-            <div className="relative flex items-center justify-between mx-[4%] mt-[3%] pb-[3%]">
+            {/* Signature + verification row */}
+            <div className="relative flex items-end justify-between mx-[6%] mt-[2.8%] pb-[3.5%]">
               <div className="text-left">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "rgba(52,211,153,0.16)" }}>
-                    <ShieldCheck size={11} style={{ color: "#34D399" }} />
-                  </span>
-                  <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#34D399" }}>
-                    {unlocked ? "Verified" : "Locked"}
-                  </p>
-                </div>
-                <p className="mt-1 text-[8px] sm:text-[10px] max-w-[240px] leading-snug" style={{ color: "#8A98B8" }}>
-                  {unlocked
-                    ? "Digitally issued & verified by FlyBridge Education Group. Scan to confirm authenticity."
-                    : "Complete all quizzes with 60% or higher to reveal the completion details."}
+                <p
+                  className={`${scriptFont.className} font-bold`}
+                  style={{ fontSize: "clamp(16px, 2.4vw, 24px)", color: "var(--brand)" }}
+                >
+                  FlyBridge
+                </p>
+                <div
+                  className="mt-1 h-px w-24 sm:w-32"
+                  style={{ background: "var(--brand-2)" }}
+                />
+                <p
+                  className="mt-1 text-[7px] sm:text-[8.5px] uppercase tracking-[0.14em] flex items-center gap-1"
+                  style={{ color: "var(--body)" }}
+                >
+                  <ShieldCheck size={10} />
+                  {unlocked ? "Authorized signature" : "Locked"}
                 </p>
               </div>
 
-              {unlocked && (
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-md border p-1 overflow-hidden"
-                    style={{ borderColor: "rgba(255,255,255,0.12)", background: "#fff" }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={qrSrc}
-                      alt="Verify certificate"
-                      className="w-full h-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-[7px] sm:text-[8px] uppercase tracking-wider" style={{ color: "#8A98B8" }}>
-                      Completion Date
-                    </p>
-                    <p className="mt-0.5 text-[10px] sm:text-[12px] font-semibold" style={{ color: "#F4F7FF" }}>
-                      {displayDate}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="text-right flex items-center gap-2 sm:gap-3">
+                {unlocked && (
+                  <>
+                    <div className="text-right">
+                      <p
+                        className="font-mono text-[6.5px] sm:text-[7.5px] uppercase tracking-wider"
+                        style={{ color: "var(--body)" }}
+                      >
+                        Issued
+                      </p>
+                      <p
+                        className="mt-0.5 text-[9px] sm:text-[11px] font-semibold"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {displayDate}
+                      </p>
+                    </div>
+                    <div
+                      className="w-10 h-10 sm:w-14 sm:h-14 rounded-sm border p-1 overflow-hidden"
+                      style={{ borderColor: "var(--brand)", background: "#fff" }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrSrc}
+                        alt="Verify certificate"
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Locked fade overlay: lower half fades to invisible */}
+            {/* Locked fade overlay */}
             {!unlocked && (
-              <div className="absolute inset-x-0 bottom-0 h-[58%] pointer-events-none">
+              <div className="absolute inset-x-0 bottom-0 h-[50%] pointer-events-none">
                 <div
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(180deg, rgba(13,27,51,0.05) 0%, rgba(13,27,51,0.55) 45%, #0B1528 92%)",
+                      "linear-gradient(180deg, rgba(234,247,241,0) 0%, rgba(234,247,241,0.85) 55%, #EAF7F1 92%)",
                   }}
                 />
-                <div className="absolute left-1/2 bottom-[20%] -translate-x-1/2 flex flex-col items-center gap-1.5 text-center">
+                <div className="absolute left-1/2 bottom-[18%] -translate-x-1/2 flex flex-col items-center gap-1.5 text-center">
                   <div
                     className="flex h-9 w-9 items-center justify-center rounded-full border"
-                    style={{ borderColor: "rgba(52,211,153,0.5)", background: "rgba(13,27,51,0.85)" }}
+                    style={{ borderColor: "var(--brand)", background: "#F4FAF7" }}
                   >
-                    <Lock size={16} style={{ color: "#34D399" }} />
+                    <Lock size={16} style={{ color: "var(--brand)" }} />
                   </div>
-                  <p className="text-[9px] sm:text-[10px] font-semibold" style={{ color: "#D6E0F2" }}>
+                  <p
+                    className={`${displayFont.className} italic text-[10px] sm:text-[12px] font-bold`}
+                    style={{ color: "var(--ink)" }}
+                  >
                     Unlock the full certificate
                   </p>
                 </div>
@@ -510,10 +545,10 @@ export default function CertificatePage({
               <div className="text-center">
                 <div
                   className="rounded-xl p-4 mb-4 flex items-start gap-3 text-left"
-                  style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}
+                  style={{ background: "var(--brand-soft)", border: "1px solid rgba(15,169,104,0.25)" }}
                 >
-                  <Lock size={18} style={{ color: "#B45309", marginTop: 1 }} />
-                  <p className="text-[13px] font-medium" style={{ color: "#B45309" }}>
+                  <Lock size={18} style={{ color: "var(--brand)", marginTop: 1 }} />
+                  <p className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
                     {grade && grade.completedQuizzes < grade.totalQuizzes
                       ? `Complete all quizzes to unlock your certificate (${grade.completedQuizzes}/${grade.totalQuizzes} done).`
                       : grade && grade.percentage < 60
