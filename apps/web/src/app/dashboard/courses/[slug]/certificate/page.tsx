@@ -104,42 +104,8 @@ export default function CertificatePage({
     if (typeof window !== "undefined") setOrigin(window.location.origin);
   }, [issuedCertId, certId]);
 
-  const generateCertificate = async () => {
-    if (!courseId) return;
-    setGenerating(true);
-    try {
-      const gateRes = await fetch(`/api/courses/${courseId}/certificate`);
-      if (!gateRes.ok) {
-        setGenerating(false);
-        return;
-      }
-      const gateData = await gateRes.json();
-      setServerEligible(Boolean(gateData.certificateIssued));
-
-      const { generateCertificatePdf } = await import(
-        "@/lib/certificate/pdf"
-      );
-      await generateCertificatePdf({
-        userName,
-        userEmail,
-        userAvatar,
-        courseTitle: courseTitle || params.slug.replace(/-/g, " "),
-        courseSlug: params.slug,
-        grade: progress?.grade ?? {
-          percentage: 100,
-          grade: "A",
-          englishLevel: "Advanced (C2)",
-        },
-        certId: issuedCertId,
-        issuedAt: new Date(),
-        unlocked,
-        verifyUrl: origin ? `${origin}/verify/${issuedCertId}` : "",
-      });
-    } catch (err) {
-      console.error("Certificate generation failed", err);
-    } finally {
-      setGenerating(false);
-    }
+  const handlePrint = () => {
+    window.print();
   };
 
   if (loading) {
@@ -182,10 +148,36 @@ export default function CertificatePage({
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <style>{`
+        @media print {
+          @page { size: 297mm 210mm; margin: 0; }
+          body { background: #fff !important; }
+          .no-print, aside, nav,
+          div.sticky, header { display: none !important; }
+          .print-shell, .cert-print {
+            position: absolute !important;
+            inset: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .cert-print { width: 100% !important; height: 100% !important; }
+          .cert-face {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1.55 / 1 !important;
+            max-height: 100% !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-10">
         <Link
           href={`/dashboard/courses/${params.slug}/learn`}
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-black/5 mb-8"
+          className="no-print inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-black/5 mb-8"
           style={{ color: "var(--ink)", borderColor: "var(--line)" }}
         >
           <ArrowLeft size={14} />
@@ -193,14 +185,12 @@ export default function CertificatePage({
         </Link>
 
         {/* ============ Certificate Preview ============ */}
-        <div className="w-full" style={{ aspectRatio: "1.55 / 1" }}>
+        <div id="certificate-print" className="cert-print w-full" style={{ aspectRatio: "1.55 / 1" }}>
           <div
-            className="relative w-full h-full rounded-[6px] overflow-hidden shadow-[0_40px_80px_-40px_rgba(18,32,67,0.35)]"
-            style={{
-              background:
-                "linear-gradient(165deg,#ffffff 0%,#F4FAF7 45%,#EAF7F1 100%)",
-            }}
+            className="cert-face relative w-full h-full rounded-[6px] overflow-hidden"
+            style={{ boxShadow: "0 40px 80px -40px rgba(18,32,67,0.35)" }}
           >
+            <div className="print-cert-frame" style={{ position: "absolute", inset: 0, background: "linear-gradient(165deg,#ffffff 0%,#F4FAF7 45%,#EAF7F1 100%)" }} />
             {/* Micro-dot grid, top-left */}
             <div
               className="absolute top-[6%] left-[3%] w-40 h-28 pointer-events-none"
@@ -499,48 +489,25 @@ export default function CertificatePage({
         </div>
 
         {/* ============ Download / status section ============ */}
-        <div className="mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
+        <div className="no-print mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
             {clientEligible && (serverEligible || isStaff) ? (
-              <button
-                type="button"
-                onClick={generateCertificate}
-                disabled={generating}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ background: "var(--brand)", color: "#fff" }}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Generating certificate…
-                  </>
-                ) : (
-                  <>
-                    <Download size={16} />
-                    Download Certificate (PDF)
-                  </>
-                )}
-              </button>
-            ) : clientEligible ? (
-              <button
-                type="button"
-                onClick={generateCertificate}
-                disabled={generating}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ background: "var(--brand)", color: "#fff" }}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Verifying &amp; generating…
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={16} />
-                    Verify &amp; Download Certificate (PDF)
-                  </>
-                )}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: "var(--brand)" }}
+                >
+                  <Download size={16} />
+                  Print / Save as PDF
+                </button>
+                <p className="mt-3 text-center text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
+                  Your certificate is ready. Choose <strong>Print / Save as PDF</strong> in the
+                  print dialog and select <strong>Save as PDF</strong> to download a copy with your
+                  full official details.
+                </p>
+              </>
             ) : (
               <div className="text-center">
                 <div
