@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { Order } from "@/lib/models/order";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -48,7 +49,25 @@ export async function GET(
     }
 
     const session = await readSession();
-    if (session) {
+
+    if (resource.access !== "public") {
+      if (!session?.userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if ((resource.price ?? 0) > 0) {
+        const owned = await Order.exists({
+          user: session.userId,
+          "items.itemId": resource._id.toString(),
+          "items.itemType": "resource",
+          status: "completed",
+        });
+        if (!owned) {
+          return NextResponse.json({ error: "Purchase required" }, { status: 403 });
+        }
+      }
+    }
+
+    if (session?.userId) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
         console.error("resource download tracking error", e)
       );

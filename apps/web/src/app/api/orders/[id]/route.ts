@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Order, ORDER_STATUSES, type OrderStatus } from "@/lib/models/order";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
+import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
 
 function isOrderStatus(value: unknown): value is OrderStatus {
   return typeof value === "string" && (ORDER_STATUSES as readonly string[]).includes(value);
@@ -26,14 +27,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      params.id,
-      { status: body.status },
-      { new: true }
-    );
+    const order = await Order.findById(params.id);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (body.status === "completed" && order.status !== "completed") {
+      await fulfillOrder(order as HydratedOrder);
+    } else {
+      order.status = body.status;
+      await order.save();
     }
 
     return NextResponse.json({ ok: true, status: order.status });
