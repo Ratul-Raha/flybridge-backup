@@ -5,7 +5,6 @@ export type CertificateData = {
   userEmail: string;
   courseTitle: string;
   courseSlug: string;
-  instructorName: string;
   grade: {
     percentage: number;
     grade: string;
@@ -303,33 +302,11 @@ export async function generateCertificatePdf(data: CertificateData): Promise<voi
   pdf.setLineWidth(0.8);
   pdf.line(cx, detailY - 6, cx, detailY + 22);
 
-  /* ---- Footer: instructor signature (left) + digital seal (right) ---- */
+  /* ---- Footer: digital seal (centered) ---- */
   const footY = H - innerInset - 34;
 
-  // Instructor signature (left-anchored)
-  const sigX = innerInset + 38;
-  if (hasCaveat) {
-    pdf.setFont("Caveat", "normal");
-    pdf.setFontSize(26);
-  } else {
-    serif(pdf, "italic", 13);
-  }
-  toHexText(pdf, INK);
-  pdf.text(data.instructorName || "Course Instructor", sigX, footY, {
-    align: "left",
-  });
-
-  toHexDraw(pdf, FAINT);
-  pdf.setLineWidth(0.8);
-  pdf.line(sigX, footY + 6, sigX + 150, footY + 6);
-  serif(pdf, "normal", 8);
-  toHexText(pdf, FAINT);
-  pdf.text("COURSE INSTRUCTOR", sigX, footY + 18, { align: "left" });
-
-  // Digital seal (right): gold circle w/ check + caption below
-  const sealmargin = innerInset + 38;
   const sealR = 26;
-  const sealcx = W - sealmargin - sealR;
+  const sealcx = cx;
   const sealcy = footY - 6;
 
   toHexFill(pdf, "#FBF6E8");
@@ -347,7 +324,7 @@ export async function generateCertificatePdf(data: CertificateData): Promise<voi
   serif(pdf, "normal", 7.5);
   toHexText(pdf, FAINT);
   pdf.text(
-    pdf.splitTextToSize("DIGITALLY CERTIFIED & ISSUED BY FLYBRIDGE EDUCATION GROUP", 150),
+    pdf.splitTextToSize("DIGITALLY CERTIFIED & ISSUED BY FLYBRIDGE EDUCATION GROUP", 200),
     sealcx,
     sealcy + sealR + 12,
     { align: "center" }

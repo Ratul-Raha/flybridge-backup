@@ -33,7 +33,6 @@ export default function CertificatePage({
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [courseTitle, setCourseTitle] = useState("");
   const [courseId, setCourseId] = useState("");
-  const [instructorName, setInstructorName] = useState("");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -65,7 +64,6 @@ export default function CertificatePage({
         const course = courseData.course;
         setCourseTitle(course?.title ?? "");
         setCourseId(course?.id ?? "");
-        setInstructorName(course?.instructor?.name ?? "FlyBridge Faculty");
         if (course?.id) {
           const progRes = await fetch(`/api/courses/${course.id}/progress`);
           if (progRes.ok) {
@@ -113,7 +111,6 @@ export default function CertificatePage({
         userEmail,
         courseTitle: courseTitle || params.slug.replace(/-/g, " "),
         courseSlug: params.slug,
-        instructorName,
         grade: progress?.grade ?? {
           percentage: 100,
           grade: "A",
@@ -300,25 +297,8 @@ export default function CertificatePage({
                 ))}
               </div>
 
-              {/* Footer: instructor signature + digital seal */}
-              <div className="mt-auto mb-4 sm:mb-5 w-full flex items-end justify-between px-2 sm:px-6">
-                <div className="text-left">
-                  <p
-                    className="leading-none"
-                    style={{
-                      fontFamily: "var(--font-hand), cursive",
-                      fontSize: "clamp(16px, 2.6vw, 24px)",
-                      color: "#1F2937",
-                    }}
-                  >
-                    {instructorName || "Course Instructor"}
-                  </p>
-                  <div className="mt-1 h-px w-32 sm:w-40" style={{ background: "#A8A29E" }} />
-                  <p className="mt-1 font-serif text-[8px] sm:text-[9px] uppercase tracking-[0.18em]" style={{ color: "#A8A29E" }}>
-                    Course Instructor
-                  </p>
-                </div>
-
+              {/* Footer: digital seal */}
+              <div className="mt-auto mb-4 sm:mb-5 w-full flex justify-center">
                 <div className="flex flex-col items-center">
                   <div
                     className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2"
@@ -326,7 +306,7 @@ export default function CertificatePage({
                   >
                     <BadgeCheck size={20} style={{ color: "#8A6D1E" }} />
                   </div>
-                  <p className="mt-1 font-serif text-[7px] sm:text-[8px] uppercase tracking-[0.14em] text-center max-w-[110px] sm:max-w-[130px]" style={{ color: "#A8A29E" }}>
+                  <p className="mt-1 font-serif text-[7px] sm:text-[8px] uppercase tracking-[0.14em] text-center max-w-[130px] sm:max-w-[150px]" style={{ color: "#A8A29E" }}>
                     Digitally Certified &amp; Issued by FlyBridge Education Group
                   </p>
                 </div>
