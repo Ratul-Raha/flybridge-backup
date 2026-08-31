@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Crown, ShoppingCart, BookOpen, Gauge } from "lucide-react";
+import { Users, Crown, ShoppingCart, BookOpen, Gauge, Download } from "lucide-react";
 
 type Overview = {
   totalUsers: number;
@@ -9,6 +9,8 @@ type Overview = {
   totalOrders: number;
   courseEnrollment: number;
   readinessRuns: number;
+  certificatesIssued: number;
+  certificatesDownloaded: number;
 };
 
 const CARDS: {
@@ -46,6 +48,16 @@ const CARDS: {
     icon: BookOpen,
     gradient: "linear-gradient(135deg,#10B981,#34D399)",
     caption: () => "Active course enrollments",
+  },
+  {
+    key: "certificatesDownloaded",
+    label: "Certificates downloaded",
+    icon: Download,
+    gradient: "linear-gradient(135deg,#0284C7,#06B6D4)",
+    caption: (v) =>
+      v.certificatesIssued > 0
+        ? `${Math.round((v.certificatesDownloaded / v.certificatesIssued) * 100)}% of issued downloaded`
+        : "None downloaded yet",
   },
   {
     key: "readinessRuns",
@@ -108,7 +120,7 @@ export function StatCards() {
 
   if (!data) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
         {CARDS.map((c) => (
           <div key={c.key} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
             <div className="w-11 h-11 rounded-lg mb-4" style={{ background: "var(--line)" }} />
@@ -121,7 +133,7 @@ export function StatCards() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
       {CARDS.map((c) => (
         <StatCard
           key={c.key}

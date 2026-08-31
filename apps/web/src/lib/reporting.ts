@@ -7,6 +7,7 @@ import { Order } from "@/lib/models/order";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { ReadinessRun } from "@/lib/models/readiness-run";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { CourseProgress } from "@/lib/models/course-progress";
 
 export type ReportContext = { days: number };
 
@@ -32,12 +33,24 @@ function lastNDays(n: number) {
 
 async function reportOverview() {
   await connectDb();
-  const [totalUsers, activeSubscriptions, totalOrders, courseEnrollment, readinessRuns] = await Promise.all([
+  const [
+    totalUsers,
+    activeSubscriptions,
+    totalOrders,
+    courseEnrollment,
+    readinessRuns,
+    certificatesIssued,
+    certificatesDownloaded,
+  ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ subscription: "paid" }),
     Order.countDocuments(),
     CourseEnrollment.countDocuments(),
     ReadinessRun.countDocuments(),
+    CourseProgress.countDocuments({ certificateIssued: true }),
+    CourseProgress.countDocuments({
+      certificateDownloadCount: { $gt: 0 },
+    }),
   ]);
 
   return {
@@ -46,6 +59,8 @@ async function reportOverview() {
     totalOrders,
     courseEnrollment,
     readinessRuns,
+    certificatesIssued,
+    certificatesDownloaded,
   };
 }
 

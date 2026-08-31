@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Award,
   BookOpen,
   CalendarDays,
   ChevronLeft,
@@ -36,6 +37,8 @@ type UserRow = {
   seminars: number;
   courses: number;
   downloads: number;
+  certificates: number;
+  certificateDownloaded: boolean;
   readiness: number | null;
   readinessRuns: number;
 };
@@ -48,6 +51,7 @@ type Stats = {
   moderators: number;
   newThisWeek: number;
   totalReadiness: number;
+  certDownloaders: number;
 };
 
 type DetailCourse = {
@@ -69,6 +73,14 @@ type DetailDownload = {
   createdAt: string;
 };
 
+type DetailCertificate = {
+  id: string;
+  course: { id: string; title: string; slug: string; image: string | null } | null;
+  issued: boolean;
+  downloadedAt: string | null;
+  downloadCount: number;
+};
+
 type DetailReadiness = {
   id: string;
   score: number;
@@ -86,11 +98,14 @@ type DetailData = {
     totalSeminars: number;
     totalDownloads: number;
     totalReadiness: number;
+    totalCertificates: number;
+    certificateDownloaded: boolean;
     latestReadinessScore: number | null;
   };
   courses: DetailCourse[];
   seminars: DetailSeminar[];
   downloads: DetailDownload[];
+  certificates: DetailCertificate[];
   readiness: DetailReadiness[];
 };
 
@@ -104,9 +119,9 @@ const scoreColor = (score: number): string => {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_62px_44px]";
+const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_72px_62px_44px]";
 
-const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_62px_44px]";
+const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_72px_62px_44px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -179,6 +194,7 @@ export function UserManage() {
   const [query, setQuery] = useState("");
   const [accountType, setAccountType] = useState("");
   const [subscription, setSubscription] = useState("");
+  const [certificateDownloaded, setCertificateDownloaded] = useState("");
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
@@ -200,6 +216,7 @@ export function UserManage() {
       if (debouncedQuery) params.set("q", debouncedQuery);
       if (accountType) params.set("accountType", accountType);
       if (subscription) params.set("subscription", subscription);
+      if (certificateDownloaded) params.set("certificateDownloaded", certificateDownloaded);
       if (sort && sort !== "newest") params.set("sort", sort);
       params.set("page", String(page));
       params.set("perPage", String(perPage));
@@ -217,7 +234,7 @@ export function UserManage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, accountType, subscription, sort, page, perPage]);
+  }, [debouncedQuery, accountType, subscription, certificateDownloaded, sort, page, perPage]);
 
   useEffect(() => {
     load();
@@ -335,8 +352,8 @@ export function UserManage() {
 
       {/* Stats */}
       {loading && !stats ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-[22px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
               <div className="w-11 h-11 rounded-2xl mb-4" style={{ background: "var(--line)" }} />
               <div className="h-[26px] w-16 rounded-lg mb-2" style={{ background: "var(--line)" }} />
@@ -346,13 +363,14 @@ export function UserManage() {
         </div>
       ) : (
         stats && (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {(
               [
                 { label: "Total users", value: stats.totalUsers, icon: Users, gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)", caption: "All registered accounts" },
                 { label: "Paid members", value: stats.paidUsers, icon: Crown, gradient: "linear-gradient(135deg,#F59E0B,#F97316)", caption: stats.totalUsers > 0 ? `${Math.round((stats.paidUsers / stats.totalUsers) * 100)}% of all users` : undefined },
                 { label: "Free members", value: stats.freeUsers, icon: UserPlus, gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)", caption: undefined },
                 { label: "Admins & mods", value: stats.admins + stats.moderators, icon: Shield, gradient: "linear-gradient(135deg,#10B981,#34D399)", caption: `${stats.moderators} moderators` },
+                { label: "Cert downloads", value: stats.certDownloaders, icon: Download, gradient: "linear-gradient(135deg,#0284C7,#06B6D4)", caption: "Users who downloaded a cert" },
                 { label: "New this week", value: stats.newThisWeek, icon: CalendarDays, gradient: "linear-gradient(135deg,#F43F5E,#FB7185)", caption: "Registered in last 7 days" },
               ] as const
             ).map((c) => (
@@ -436,6 +454,20 @@ export function UserManage() {
             <option value="free">Free</option>
           </select>
           <select
+            value={certificateDownloaded}
+            onChange={(e) => {
+              setCertificateDownloaded(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Filter by certificate download"
+          >
+            <option value="">Any certificate</option>
+            <option value="yes">Downloaded a certificate</option>
+            <option value="only">Only downloaded certificates</option>
+          </select>
+          <select
             value={sort}
             onChange={(e) => {
               setSort(e.target.value);
@@ -463,7 +495,7 @@ export function UserManage() {
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
             >
-              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Courses", "Files", "Readiness", "View"].map((c) => (
+              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Courses", "Certs", "Files", "Readiness", "View"].map((c) => (
                 <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                   {c}
                 </span>
@@ -521,6 +553,32 @@ export function UserManage() {
                     </span>
                     <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
                       {u.courses}
+                    </span>
+                    <span className="hidden lg:flex items-center justify-center">
+                      {u.certificates === 0 && !u.certificateDownloaded ? (
+                        <span className="text-[12px] text-center" style={{ color: "#A6ADC0" }}>
+                          —
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-[3px] font-semibold tabular-nums ${
+                            u.certificateDownloaded ? "" : "opacity-70"
+                          }`}
+                          style={
+                            u.certificateDownloaded
+                              ? { background: "rgba(2,132,199,0.12)", color: "#0284C7" }
+                              : { background: "var(--brand-soft)", color: "var(--brand)" }
+                          }
+                          title={
+                            u.certificateDownloaded
+                              ? "Downloaded certificate"
+                              : `${u.certificates} certificate${u.certificates === 1 ? "" : "s"} issued`
+                          }
+                        >
+                          {u.certificateDownloaded ? <Download size={10} /> : <Award size={10} />}
+                          {u.certificates}
+                        </span>
+                      )}
                     </span>
                     <span className="hidden lg:block text-[12.5px] tabular-nums text-center" style={{ color: "var(--body)" }}>
                       {u.downloads}
@@ -812,6 +870,24 @@ export function UserManage() {
                     </div>
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
+                        <Award size={14} style={{ color: "var(--brand)" }} />
+                        <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
+                          Certificates
+                        </p>
+                      </div>
+                      <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+                        {detail.stats.totalCertificates}
+                      </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--body)" }}>
+                        {detail.stats.certificateDownloaded
+                          ? "has downloaded"
+                          : detail.stats.totalCertificates > 0
+                            ? "issued"
+                            : "none yet"}
+                      </p>
+                    </div>
+                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex items-center gap-2 mb-2">
                         <Gauge size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
                           Readiness
@@ -910,6 +986,43 @@ export function UserManage() {
                             <p className="text-[12px] mt-0.5" style={{ color: "var(--body)" }}>
                               {d.resource?.fileType ?? "—"} · {fmtDate(d.createdAt)}
                             </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Downloaded certificates */}
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2" style={{ color: "var(--body)" }}>
+                      Certificates
+                    </p>
+                    {detail.certificates.length === 0 ? (
+                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                        No certificates yet.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                        {detail.certificates.map((c) => (
+                          <div key={c.id} className="flex items-center gap-3 px-4 py-3">
+                            {c.course?.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={c.course.image} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
+                                <Award size={15} style={{ color: "var(--brand)" }} />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                                {c.course?.title ?? "Deleted course"}
+                              </p>
+                              <p className="text-[11.5px] mt-0.5" style={{ color: "var(--body)" }}>
+                                {c.downloadCount > 0
+                                  ? `Downloaded ${c.downloadCount} time${c.downloadCount === 1 ? "" : "s"} · ${fmtDate(c.downloadedAt ?? "")}`
+                                  : "Issued · not downloaded yet"}
+                              </p>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -24,6 +24,8 @@ const courseProgressSchema = new Schema(
     completedQuizzes: { type: Number, default: 0 },
     passed: { type: Boolean, default: false },
     certificateIssued: { type: Boolean, default: false },
+    certificateDownloadedAt: { type: Date, default: null },
+    certificateDownloadCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -43,6 +45,8 @@ export type CourseProgressDoc = InferSchemaType<typeof courseProgressSchema> & {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  certificateDownloadedAt: Date | null;
+  certificateDownloadCount: number;
 };
 
 export const CourseProgress =

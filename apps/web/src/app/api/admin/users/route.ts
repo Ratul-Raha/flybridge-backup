@@ -6,6 +6,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
+import { CourseProgress } from "@/lib/models/course-progress";
 import { ACCOUNT_TYPES, SUBSCRIPTION_TYPES } from "@/lib/roles";
 
 const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
     const q = (searchParams.get("q") ?? "").trim().toLowerCase();
     const accountType = searchParams.get("accountType") ?? "";
     const subscription = searchParams.get("subscription") ?? "";
+    const certDownloaded = searchParams.get("certificateDownloaded") ?? "";
     const sort = searchParams.get("sort") ?? "newest";
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const perPage = Math.min(100, Math.max(1, Number(searchParams.get("perPage")) || 15));
@@ -43,6 +45,23 @@ export async function GET(request: NextRequest) {
     if (accountType && (ACCOUNT_TYPES as string[]).includes(accountType)) filter.accountType = accountType;
     if (subscription && (SUBSCRIPTION_TYPES as string[]).includes(subscription)) filter.subscription = subscription;
 
+    // Pre-compute the set of users who downloaded a certificate so we can
+    // filter on it without leaking the CourseProgress layout into the User query.
+    let downloadedUserIds: string[] | null = null;
+    if (certDownloaded === "yes" || certDownloaded === "only") {
+      const downloaded = await CourseProgress.find(
+        { certificateDownloadCount: { $gt: 0 } },
+        { user: 1 }
+      ).lean();
+      downloadedUserIds = downloaded.map((p) => p.user.toString());
+    }
+
+    if (certDownloaded === "yes") {
+      filter._id = { $in: downloadedUserIds };
+    } else if (certDownloaded === "only") {
+      filter._id = { $in: downloadedUserIds };
+    }
+
     const sortKey = SORT_MAP[sort] ?? SORT_MAP.newest;
 
     const total = await User.countDocuments(filter);
@@ -53,7 +72,7 @@ export async function GET(request: NextRequest) {
       .lean();
 
     const userIds = users.map((u) => u._id);
-    const [enrollCounts, regCounts, dlCounts, readinessAgg] = await Promise.all([
+    const [enrollCounts, regCounts, dlCounts, readinessAgg, certProgress] = await Promise.all([
       CourseEnrollment.aggregate([
         { $match: { user: { $in: userIds } } },
         { $group: { _id: "$user", count: { $sum: 1 } } },
@@ -77,6 +96,7 @@ export async function GET(request: NextRequest) {
           },
         },
       ]),
+      CourseProgress.find({ user: { $in: userIds } }).lean(),
     ]);
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
     const regMap = new Map(regCounts.map((r) => [r._id.toString(), r.count as number]));
@@ -84,17 +104,36 @@ export async function GET(request: NextRequest) {
     const readinessMap = new Map(
       readinessAgg.map((r) => [r._id.toString(), r as { score: number; runs: number }])
     );
+    const certCountMap = new Map<string, { count: number; downloaded: boolean }>();
+    for (const p of certProgress as {
+      user: { toString(): string };
+      certificateDownloadCount?: number;
+    }[]) {
+      const uid = p.user.toString();
+      const prev = certCountMap.get(uid) ?? { count: 0, downloaded: false };
+      prev.count += 1;
+      if ((p.certificateDownloadCount ?? 0) > 0) prev.downloaded = true;
+      certCountMap.set(uid, prev);
+    }
 
     const weekAgo = new Date(Date.now() - 7 * 86_400_000);
-    const [totalUsers, paidUsers, admins, moderators, newThisWeek, totalReadiness] =
-      await Promise.all([
-        User.countDocuments(),
-        User.countDocuments({ subscription: "paid" }),
-        User.countDocuments({ accountType: "admin" }),
-        User.countDocuments({ accountType: "moderator" }),
-        User.countDocuments({ createdAt: { $gte: weekAgo } }),
-        ReadinessRun.countDocuments(),
-      ]);
+    const [
+      totalUsers,
+      paidUsers,
+      admins,
+      moderators,
+      newThisWeek,
+      totalReadiness,
+      certDownloaders,
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ subscription: "paid" }),
+      User.countDocuments({ accountType: "admin" }),
+      User.countDocuments({ accountType: "moderator" }),
+      User.countDocuments({ createdAt: { $gte: weekAgo } }),
+      ReadinessRun.countDocuments(),
+      CourseProgress.distinct("user", { certificateDownloadCount: { $gt: 0 } }),
+    ]);
 
     return NextResponse.json({
       stats: {
@@ -105,9 +144,14 @@ export async function GET(request: NextRequest) {
         moderators,
         newThisWeek,
         totalReadiness,
+        certDownloaders: certDownloaders.length,
       },
       users: users.map((u) => {
         const readiness = readinessMap.get(u._id.toString());
+        const cert = certCountMap.get(u._id.toString()) ?? {
+          count: 0,
+          downloaded: false,
+        };
         return {
           id: u._id.toString(),
           name: u.name,
@@ -120,6 +164,8 @@ export async function GET(request: NextRequest) {
           seminars: regMap.get(u._id.toString()) ?? 0,
           courses: enrollMap.get(u._id.toString()) ?? 0,
           downloads: dlMap.get(u._id.toString()) ?? 0,
+          certificates: cert.count,
+          certificateDownloaded: cert.downloaded,
           readiness: readiness?.score ?? null,
           readinessRuns: readiness?.runs ?? 0,
         };

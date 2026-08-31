@@ -84,6 +84,8 @@ export async function GET(
         quizAvg,
         passed: Boolean(p?.passed),
         certificateIssued: Boolean(p?.certificateIssued),
+        certificateDownloadedAt: p?.certificateDownloadedAt ?? null,
+        certificateDownloadCount: p?.certificateDownloadCount ?? 0,
         completed,
       };
     });
@@ -92,6 +94,9 @@ export async function GET(
     const active = members.filter((m) => m.status === "active").length;
     const completedCount = members.filter((m) => m.completed).length;
     const certificates = members.filter((m) => m.certificateIssued).length;
+    const certificatesDownloaded = members.filter(
+      (m) => m.certificateDownloadCount > 0
+    ).length;
     const avgLessonProgress = total
       ? Math.round(members.reduce((sum, m) => sum + m.lessonProgress, 0) / total)
       : 0;
@@ -113,6 +118,7 @@ export async function GET(
         expired: total - active,
         completed: completedCount,
         certificates,
+        certificatesDownloaded,
         avgLessonProgress,
         avgQuizScore,
       },

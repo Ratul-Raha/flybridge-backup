@@ -105,6 +105,12 @@ export default function CertificatePage({
   }, [issuedCertId, certId]);
 
   const handlePrint = () => {
+    if (courseId) {
+      fetch(`/api/courses/${courseId}/certificate`, {
+        method: "POST",
+        cache: "no-store",
+      }).catch(() => {});
+    }
     window.print();
   };
 

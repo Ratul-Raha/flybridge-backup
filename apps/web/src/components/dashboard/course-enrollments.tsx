@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Download,
   GraduationCap,
   Search,
   Users,
@@ -31,6 +32,8 @@ type Member = {
   quizAvg: number;
   passed: boolean;
   certificateIssued: boolean;
+  certificateDownloadedAt: string | null;
+  certificateDownloadCount: number;
   completed: boolean;
 };
 
@@ -48,6 +51,7 @@ type Stats = {
   expired: number;
   completed: number;
   certificates: number;
+  certificatesDownloaded: number;
   avgLessonProgress: number;
   avgQuizScore: number;
 };
@@ -232,7 +236,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard
             label="Total members"
             value={stats.total}
@@ -266,6 +270,14 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
             value={stats.certificates}
             icon={Award}
             gradient="linear-gradient(135deg,#F59E0B,#F97316)"
+            caption={stats.certificates > 0 && stats.certificatesDownloaded > 0 ? `${Math.round((stats.certificatesDownloaded / stats.certificates) * 100)}% downloaded` : undefined}
+          />
+          <StatCard
+            label="Certificates downloaded"
+            value={stats.certificatesDownloaded}
+            icon={Download}
+            gradient="linear-gradient(135deg,#0EA5E9,#0284C7)"
+            caption="Downloaded / printed"
           />
         </div>
       )}
@@ -447,6 +459,20 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                     {m.certificateIssued && (
                       <span title="Certificate issued">
                         <Award size={13} style={{ color: "#F59E0B" }} />
+                      </span>
+                    )}
+                    {m.certificateDownloadCount > 0 && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-[4px] text-[10.5px] font-semibold"
+                        style={{ background: "rgba(2,132,199,0.12)", color: "#0284C7" }}
+                        title={
+                          m.certificateDownloadedAt
+                            ? `Downloaded ${new Date(m.certificateDownloadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · ${m.certificateDownloadCount} time${m.certificateDownloadCount === 1 ? "" : "s"}`
+                            : undefined
+                        }
+                      >
+                        <Download size={10} />
+                        {m.certificateDownloadCount}
                       </span>
                     )}
                   </div>

@@ -7,6 +7,7 @@ import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
 import { Notification } from "@/lib/models/notification";
+import { CourseProgress } from "@/lib/models/course-progress";
 import { ACCOUNT_TYPES, SUBSCRIPTION_TYPES } from "@/lib/roles";
 
 export async function GET(
@@ -26,7 +27,7 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const [enrollments, registrations, downloads, readiness, counts] =
+    const [enrollments, registrations, downloads, readiness, certs, counts] =
       await Promise.all([
         CourseEnrollment.find({ user: user._id })
           .sort({ createdAt: -1 })
@@ -47,16 +48,30 @@ export async function GET(
           .sort({ createdAt: -1 })
           .limit(100)
           .lean(),
+        CourseProgress.find({ user: user._id })
+          .sort({ certificateDownloadedAt: -1 })
+          .limit(100)
+          .populate("course", "title slug image")
+          .lean(),
         Promise.all([
           CourseEnrollment.countDocuments({ user: user._id }),
           SeminarRegistration.countDocuments({ user: user._id }),
           ResourceDownload.countDocuments({ user: user._id }),
           ReadinessRun.countDocuments({ user: user._id }),
+          CourseProgress.countDocuments({ user: user._id }),
         ]),
       ]);
 
-    const [totalCourses, totalSeminars, totalDownloads, totalReadiness] =
-      counts;
+    const [
+      totalCourses,
+      totalSeminars,
+      totalDownloads,
+      totalReadiness,
+      totalCertificates,
+    ] = counts;
+
+    const certificateDownloaded =
+      certs.find((c) => (c.certificateDownloadCount ?? 0) > 0) != null;
 
     return NextResponse.json({
       user: {
@@ -74,8 +89,29 @@ export async function GET(
         totalSeminars,
         totalDownloads,
         totalReadiness,
+        totalCertificates,
+        certificateDownloaded,
         latestReadinessScore: readiness[0]?.score ?? null,
       },
+      certificates: certs.map((c) => {
+        const course = c.course as
+          | { _id: { toString(): string }; title?: string; slug?: string; image?: string }
+          | null;
+        return {
+          id: c._id.toString(),
+          course: course
+            ? {
+                id: course._id.toString(),
+                title: course.title ?? "Unknown course",
+                slug: course.slug ?? "",
+                image: course.image ?? null,
+              }
+            : null,
+          issued: Boolean(c.certificateIssued),
+          downloadedAt: c.certificateDownloadedAt ?? null,
+          downloadCount: c.certificateDownloadCount ?? 0,
+        };
+      }),
       courses: enrollments.map((e) => ({
         id: e._id.toString(),
         course: e.course
@@ -199,6 +235,7 @@ export async function DELETE(
       ResourceDownload.deleteMany({ user: userId }),
       ReadinessRun.deleteMany({ user: userId }),
       Notification.deleteMany({ recipient: userId }),
+      CourseProgress.deleteMany({ user: userId }),
     ]);
     await User.deleteOne({ _id: userId });
 
