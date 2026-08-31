@@ -3,14 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
-  Award,
   ArrowLeft,
   Download,
-  Mail,
-  User,
   Loader2,
   ShieldCheck,
   Lock,
+  BadgeCheck,
 } from "lucide-react";
 
 type GradeData = {
@@ -35,12 +33,14 @@ export default function CertificatePage({
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [courseTitle, setCourseTitle] = useState("");
   const [courseId, setCourseId] = useState("");
+  const [instructorName, setInstructorName] = useState("");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [serverEligible, setServerEligible] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
+  const [issuedCertId, setIssuedCertId] = useState("");
 
   const certId = useCallback(() => {
     return `FB-${Date.now().toString(36).toUpperCase()}`;
@@ -53,7 +53,10 @@ export default function CertificatePage({
         const userData = await userRes.json();
         setUserName(userData.name ?? "");
         setUserEmail(userData.email ?? "");
-        setUserAvatar(userData.avatar ?? null);
+        setIsStaff(
+          userData.accountType === "admin" ||
+            userData.accountType === "moderator"
+        );
       }
 
       const courseRes = await fetch(`/api/courses?slug=${params.slug}`);
@@ -62,6 +65,7 @@ export default function CertificatePage({
         const course = courseData.course;
         setCourseTitle(course?.title ?? "");
         setCourseId(course?.id ?? "");
+        setInstructorName(course?.instructor?.name ?? "FlyBridge Faculty");
         if (course?.id) {
           const progRes = await fetch(`/api/courses/${course.id}/progress`);
           if (progRes.ok) {
@@ -82,6 +86,12 @@ export default function CertificatePage({
     loadData();
   }, [loadData]);
 
+  // Certificate ID is generated once per view/session so it stays stable
+  // between the preview and the actual PDF that gets downloaded.
+  useEffect(() => {
+    if (!issuedCertId) setIssuedCertId(certId());
+  }, [issuedCertId, certId]);
+
   const generateCertificate = async () => {
     if (!courseId) return;
     setGenerating(true);
@@ -101,15 +111,15 @@ export default function CertificatePage({
       await generateCertificatePdf({
         userName,
         userEmail,
-        userAvatar,
         courseTitle: courseTitle || params.slug.replace(/-/g, " "),
         courseSlug: params.slug,
+        instructorName,
         grade: progress?.grade ?? {
           percentage: 100,
           grade: "A",
           englishLevel: "Advanced (C2)",
         },
-        certId: certId(),
+        certId: issuedCertId,
         issuedAt: new Date(),
       });
     } catch (err) {
@@ -136,19 +146,20 @@ export default function CertificatePage({
 
   const grade = progress?.grade;
   const clientEligible =
-    grade &&
-    grade.passed &&
-    grade.completedQuizzes === grade.totalQuizzes;
+    isStaff ||
+    (grade &&
+      grade.passed &&
+      grade.completedQuizzes === grade.totalQuizzes);
 
-  const displayGrade = grade ?? {
-    percentage: 100,
-    grade: "A",
-    englishLevel: "Advanced (C2)",
-  };
+  const displayDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-      <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-[960px] mx-auto px-4 sm:px-6 py-10">
         <Link
           href={`/dashboard/courses/${params.slug}/learn`}
           className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-black/5 mb-8"
@@ -158,203 +169,173 @@ export default function CertificatePage({
           Back to course
         </Link>
 
-        {/* ============ Certificate Preview Card ============ */}
-        <div className="w-full" style={{ aspectRatio: "1.414 / 1" }}>
+        {/* ============ Certificate Preview ============ */}
+        <div className="w-full" style={{ aspectRatio: "1.294 / 1" }}>
           <div
-            className="relative w-full h-full rounded-[12px] overflow-hidden shadow-xl"
+            className="relative w-full h-full overflow-hidden shadow-lg"
             style={{
-              background:
-                "linear-gradient(180deg, #ffffff 0%, #ffffff 96%, #f2ead1 100%)",
-              border: "2.5px solid #C9A227",
+              background: "#FFFEFA",
+              border: "1px solid #D8C48C",
             }}
           >
-            {/* inner frame */}
-            <div
-              className="absolute inset-[10px] rounded-[8px]"
-              style={{ border: "1px solid #0FA968" }}
-            />
-            {/* top mint + bottom gold bands */}
-            <div className="absolute top-0 left-0 right-0 h-2.5 bg-[#E2F6EE]" />
-            <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#C9A227]" />
+            {/* Outer engraved-style frame */}
+            <div className="absolute inset-[14px] border-[3px]" style={{ borderColor: "#B8952F" }} />
+            <div className="absolute inset-[19px] border" style={{ borderColor: "#B8952F" }} />
 
-            {/* corner ornaments */}
+            {/* Corner miters */}
             {[
-              "top-3.5 left-3.5",
-              "top-3.5 right-3.5",
-              "bottom-3.5 left-3.5",
-              "bottom-3.5 right-3.5",
-            ].map((pos) => (
-              <div key={pos} className={`absolute ${pos} pointer-events-none`}>
-                <div className="w-5 h-5 rounded-full border-2 border-[#C9A227] flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#C9A227]" />
-                </div>
+              { pos: "top-[10px] left-[10px]", rotate: "0deg" },
+              { pos: "top-[10px] right-[10px]", rotate: "90deg" },
+              { pos: "bottom-[10px] right-[10px]", rotate: "180deg" },
+              { pos: "bottom-[10px] left-[10px]", rotate: "270deg" },
+            ].map((c) => (
+              <div
+                key={c.pos}
+                className={`absolute ${c.pos} w-6 h-6 pointer-events-none`}
+                style={{ transform: `rotate(${c.rotate})` }}
+              >
+                <div
+                  className="w-full h-full"
+                  style={{
+                    borderTop: "2px solid #B8952F",
+                    borderLeft: "2px solid #B8952F",
+                  }}
+                />
               </div>
             ))}
 
-            {/* Guaranteed-scale content via fixed pixel layout on a proportional wrapper */}
-            <div
-              className="absolute inset-0 flex flex-col items-center text-center px-6"
-              style={{ paddingTop: "4.5%" }}
-            >
-              {/* Logo */}
-              <picture className="h-auto" style={{ width: "42%" }}>
+            {/* Content */}
+            <div className="absolute inset-0 flex flex-col items-center text-center px-[6%]" style={{ paddingTop: "3.6%" }}>
+              {/* Wordmark */}
+              <picture style={{ width: "15%", minWidth: "64px" }}>
                 <img
                   src="/transparent-logo-dark.png"
                   alt="FlyBridge"
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain mx-auto"
                 />
               </picture>
               <p
-                className="mt-1 font-mono text-[9px] uppercase tracking-[0.28em]"
-                style={{ color: "var(--body)" }}
+                className="mt-2 font-serif text-[10px] sm:text-[11px] uppercase tracking-[0.32em]"
+                style={{ color: "#8A6D1E" }}
               >
                 FlyBridge Education Group
               </p>
 
-              {/* divider */}
               <div className="mt-3 flex items-center gap-3 w-full justify-center">
-                <div className="h-px w-12 bg-[#EBD9A8]" />
-                <div className="w-1.5 h-1.5 rotate-45 bg-[#C9A227]" />
-                <div className="h-px w-12 bg-[#EBD9A8]" />
+                <div className="h-px w-16 sm:w-24" style={{ background: "#B8952F" }} />
+                <div className="w-1.5 h-1.5 rotate-45" style={{ background: "#B8952F" }} />
+                <div className="h-px w-16 sm:w-24" style={{ background: "#B8952F" }} />
               </div>
 
-              {/* heading */}
-              <h2
-                className="mt-3 leading-tight"
+              <h1
+                className="mt-3 font-serif font-semibold uppercase tracking-[0.06em] leading-tight"
                 style={{
-                  fontFamily: "var(--font-hand), cursive",
-                  fontSize: "clamp(16px, 3.4vw, 30px)",
-                  color: "#C9A227",
+                  fontSize: "clamp(18px, 3.6vw, 32px)",
+                  color: "#1F2937",
                 }}
               >
                 Certificate of Completion
-              </h2>
-              <p className="mt-1 text-[11px] sm:text-[12px]" style={{ color: "var(--body)" }}>
-                This is to proudly certify that
+              </h1>
+
+              <p
+                className="mt-4 text-[11px] sm:text-[13px] italic font-serif"
+                style={{ color: "#57534E" }}
+              >
+                This certificate is proudly presented to
               </p>
 
-              {/* Avatar + name */}
-              <div className="mt-2.5 flex flex-col items-center">
-                <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-[3px] border-[#C9A227] ring-2 ring-[#0FA968]/40 overflow-hidden"
-                  style={{ background: "var(--mint-bg)" }}
-                >
-                  {userAvatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={userAvatar}
-                      alt={userName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      className="text-lg font-bold"
-                      style={{ color: "#0B7A4B" }}
-                    >
-                      {(userName || "S").trim().charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <p
-                  className="mt-1.5 leading-none"
-                  style={{
-                    fontFamily: "var(--font-hand), cursive",
-                    fontSize: "clamp(20px, 5vw, 44px)",
-                    color: "var(--ink)",
-                  }}
-                >
-                  {userName || "Student"}
-                </p>
-                <div className="mt-1 flex items-center gap-2 w-40 justify-center">
-                  <div className="h-px flex-1 bg-[#C9A227]" />
-                  <div className="w-1.5 h-1.5 rotate-45 bg-[#C9A227]" />
-                  <div className="h-px flex-1 bg-[#C9A227]" />
-                </div>
-              </div>
+              <p
+                className="mt-1.5 leading-none"
+                style={{
+                  fontFamily: "var(--font-hand), cursive",
+                  fontSize: "clamp(22px, 4.6vw, 40px)",
+                  color: "#111827",
+                }}
+              >
+                {userName || "Student Name"}
+              </p>
+              <div className="mt-1.5 h-px w-56 sm:w-72" style={{ background: "#D6D3D1" }} />
 
-              {/* completion line */}
-              <p className="mt-1 text-[11px] sm:text-[12px]" style={{ color: "var(--body)" }}>
-                has successfully completed the course
+              <p
+                className="mt-3 text-[11px] sm:text-[13px] italic font-serif"
+                style={{ color: "#57534E" }}
+              >
+                in recognition of the successful completion of the course
               </p>
               <p
-                className="mt-0.5 px-4 text-[13px] sm:text-[16px] font-bold text-center"
-                style={{ color: "#0B7A4B" }}
+                className="mt-1 px-4 font-serif font-bold text-[13px] sm:text-[17px]"
+                style={{ color: "#8A6D1E" }}
               >
                 {courseTitle || params.slug.replace(/-/g, " ")}
               </p>
 
-              {/* stats */}
-              <div className="mt-2.5 grid grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-[360px]">
+              <p
+                className="mt-2.5 max-w-[560px] text-[9.5px] sm:text-[11px] leading-relaxed font-serif"
+                style={{ color: "#78716C" }}
+              >
+                The recipient has fulfilled all requirements of the course and demonstrated
+                commitment to developing knowledge and skills in the field.
+              </p>
+
+              {/* Detail row */}
+              <div className="mt-4 flex items-center justify-center gap-4 sm:gap-8 w-full max-w-[560px]">
                 {[
-                  { label: "GRADE", value: displayGrade.grade },
-                  { label: "SCORE", value: `${displayGrade.percentage}%` },
-                  {
-                    label: "ENGLISH LEVEL",
-                    value: displayGrade.englishLevel.split(" ")[0],
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-lg px-2 py-1.5 text-center border"
-                    style={{ background: "#E2F6EE", borderColor: "#0FA968" }}
-                  >
-                    <p
-                      className="font-mono text-[8px] uppercase tracking-wider"
-                      style={{ color: "var(--body)" }}
-                    >
-                      {s.label}
-                    </p>
-                    <p className="text-[12px] sm:text-[15px] font-bold mt-0.5" style={{ color: "#0B7A4B" }}>
-                      {s.value}
-                    </p>
+                  { label: "Completion Date", value: displayDate },
+                  { label: "Certificate ID", value: progress?.certificateIssued ? issuedCertId : "FB-••••••" },
+                ].map((item, i) => (
+                  <div key={item.label} className="flex items-center gap-4 sm:gap-8">
+                    {i !== 0 && <div className="h-8 w-px" style={{ background: "#D6D3D1" }} />}
+                    <div className="text-center">
+                      <p
+                        className="font-serif text-[8px] sm:text-[9px] uppercase tracking-[0.18em]"
+                        style={{ color: "#A8A29E" }}
+                      >
+                        {item.label}
+                      </p>
+                      <p className="mt-0.5 font-serif text-[10px] sm:text-[12px] font-semibold" style={{ color: "#1F2937" }}>
+                        {item.value}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              {/* footer */}
-              <div className="mt-auto mb-3 w-full">
-                <div className="grid grid-cols-3 gap-2 text-center px-1">
-                  <div>
-                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                      Issued On
-                    </p>
-                    <p className="text-[10px] font-semibold" style={{ color: "var(--ink)" }}>
-                      {new Date().toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
+              {/* Footer: instructor signature + digital seal */}
+              <div className="mt-auto mb-4 sm:mb-5 w-full flex items-end justify-between px-2 sm:px-6">
+                <div className="text-left">
+                  <p
+                    className="leading-none"
+                    style={{
+                      fontFamily: "var(--font-hand), cursive",
+                      fontSize: "clamp(16px, 2.6vw, 24px)",
+                      color: "#1F2937",
+                    }}
+                  >
+                    {instructorName || "Course Instructor"}
+                  </p>
+                  <div className="mt-1 h-px w-32 sm:w-40" style={{ background: "#A8A29E" }} />
+                  <p className="mt-1 font-serif text-[8px] sm:text-[9px] uppercase tracking-[0.18em]" style={{ color: "#A8A29E" }}>
+                    Course Instructor
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div
+                    className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2"
+                    style={{ borderColor: "#B8952F", background: "#FBF6E8" }}
+                  >
+                    <BadgeCheck size={20} style={{ color: "#8A6D1E" }} />
                   </div>
-                  <div>
-                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                      Certificate ID
-                    </p>
-                    <p className="text-[10px] font-semibold" style={{ color: "var(--ink)" }}>
-                      {progress?.certificateIssued ? "Issued" : "FB-••••••"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                      Authorized Signature
-                    </p>
-                    <p
-                      className="leading-none text-[12px]"
-                      style={{
-                        fontFamily: "var(--font-hand), cursive",
-                        color: "#0B7A4B",
-                      }}
-                    >
-                      FlyBridge
-                    </p>
-                  </div>
+                  <p className="mt-1 font-serif text-[7px] sm:text-[8px] uppercase tracking-[0.14em] text-center max-w-[110px] sm:max-w-[130px]" style={{ color: "#A8A29E" }}>
+                    Digitally Certified &amp; Issued by FlyBridge Education Group
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ============ Download / status section ============ */}
+        {/* ============ Status / stats / download section ============ */}
         <div className="mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
             {grade && (
@@ -381,7 +362,7 @@ export default function CertificatePage({
               </div>
             )}
 
-            {clientEligible && serverEligible ? (
+            {clientEligible && (serverEligible || isStaff) ? (
               <button
                 type="button"
                 onClick={generateCertificate}
@@ -401,7 +382,7 @@ export default function CertificatePage({
                   </>
                 )}
               </button>
-            ) : clientEligible && !serverEligible ? (
+            ) : clientEligible ? (
               <button
                 type="button"
                 onClick={generateCertificate}

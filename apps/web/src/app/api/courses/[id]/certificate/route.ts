@@ -23,6 +23,11 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Staff (admin/moderator) may issue/download certificates at any time,
+  // regardless of quiz completion.
+  const isManager =
+    session.role === "admin" || session.role === "moderator";
+
   try {
     await connectDb();
 
@@ -39,7 +44,7 @@ export async function GET(
       course: course._id,
       status: "active",
     });
-    if (!enrolled) {
+    if (!enrolled && !isManager) {
       return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
     }
 
@@ -53,20 +58,30 @@ export async function GET(
       course: course._id,
     });
 
-    if (!progress) {
+    if (!isManager && !progress) {
       return NextResponse.json(
         { error: "Course not completed", eligible: false },
         { status: 403 }
       );
     }
 
-    const grade = calculateGrade(
-      progress.quizScores as { score: number }[],
-      totalLessons
-    );
+    const grade = progress
+      ? calculateGrade(
+          progress.quizScores as { score: number }[],
+          totalLessons
+        )
+      : {
+          percentage: 100,
+          grade: "A",
+          englishLevel: "Advanced (C2)",
+          passed: true,
+          totalQuizzes: totalLessons,
+          completedQuizzes: totalLessons,
+        };
 
     const eligible =
-      grade.passed && grade.completedQuizzes === grade.totalQuizzes;
+      isManager ||
+      (grade.passed && grade.completedQuizzes === grade.totalQuizzes);
 
     if (!eligible) {
       return NextResponse.json(
@@ -79,7 +94,7 @@ export async function GET(
       );
     }
 
-    if (!progress.certificateIssued) {
+    if (progress && !progress.certificateIssued) {
       progress.certificateIssued = true;
       await progress.save();
     }
