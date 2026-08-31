@@ -3,30 +3,32 @@ import { jsPDF } from "jspdf";
 export type CertificateData = {
   userName: string;
   userEmail: string;
+  userAvatar: string | null;
   courseTitle: string;
   courseSlug: string;
   grade: {
     percentage: number;
     grade: string;
     englishLevel: string;
+    completedQuizzes?: number;
+    totalQuizzes?: number;
   };
   certId: string;
   issuedAt: Date;
+  verifyUrl: string;
 };
 
 /* ------------------------------------------------------------------ */
-/*  Palette (matches the on-screen engraving design)                   */
+/*  Brand palette (modern flybridge)                                   */
 /* ------------------------------------------------------------------ */
 
-const PAPER = "#FFFEFA";
-const FRAME = "#B8952F";
-const GOLD_DARK = "#8A6D1E";
-const INK = "#1F2937";
-const NAME_INK = "#111827";
-const BODY_INK = "#57534E";
-const SOFT = "#78716C";
-const FAINT = "#A8A29E";
-const HAIRLINE = "#D6D3D1";
+const INK = "#122043";
+const BODY = "#5B6478";
+const BRAND = "#0FA968";
+const BRAND_DARK = "#0B7A4B";
+const BG_SOFT = "#F6F8FC";
+const LINE = "#E7EAF2";
+const WHITE = "#FFFFFF";
 
 /* ------------------------------------------------------------------ */
 /*  Asset / font helpers                                               */
@@ -84,6 +86,21 @@ function toHexText(pdf: jsPDF, hex: string) {
   pdf.setTextColor((n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff);
 }
 
+function sans(
+  pdf: jsPDF,
+  weight: "normal" | "bold" | "italic" | "bolditalic",
+  size: number
+) {
+  const name: Record<string, string> = {
+    normal: "helvetica",
+    bold: "helveticaBold",
+    italic: "helveticaOblique",
+    bolditalic: "helveticaBoldOblique",
+  };
+  pdf.setFont(name[weight]);
+  pdf.setFontSize(size);
+}
+
 let caveatRegistered = false;
 async function registerCaveat(pdf: jsPDF): Promise<boolean> {
   if (caveatRegistered) {
@@ -118,25 +135,6 @@ async function registerCaveat(pdf: jsPDF): Promise<boolean> {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Serif helper (Times matches the font-serif look of the preview)    */
-/* ------------------------------------------------------------------ */
-
-function serif(
-  pdf: jsPDF,
-  weight: "normal" | "bold" | "italic" | "bolditalic",
-  size: number
-) {
-  const name: Record<string, string> = {
-    normal: "times",
-    bold: "timesBold",
-    italic: "timesItalic",
-    bolditalic: "timesBoldItalic",
-  };
-  pdf.setFont(name[weight]);
-  pdf.setFontSize(size);
-}
-
-/* ------------------------------------------------------------------ */
 /*  Main generator                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -144,196 +142,279 @@ export async function generateCertificatePdf(data: CertificateData): Promise<voi
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   const W = pdf.internal.pageSize.getWidth();
   const H = pdf.internal.pageSize.getHeight();
+  const M = 44;
 
   const hasCaveat = await registerCaveat(pdf);
-  const logo = await loadImageDataUrl("/transparent-logo-dark.png");
+  const avatar = data.userAvatar
+    ? await loadImageDataUrl(data.userAvatar)
+    : null;
 
-  /* ---- Background: warm ivory ---- */
-  toHexFill(pdf, PAPER);
+  /* ---- Background ---- */
+  toHexFill(pdf, WHITE);
   pdf.rect(0, 0, W, H, "F");
 
-  /* ---- Engraved frames ---- */
-  const outerInset = 38;
-  const innerInset = 47;
-  toHexDraw(pdf, FRAME);
-  pdf.setLineWidth(3);
-  pdf.rect(outerInset, outerInset, W - outerInset * 2, H - outerInset * 2);
-  pdf.setLineWidth(1);
-  pdf.rect(innerInset, innerInset, W - innerInset * 2, H - innerInset * 2);
+  // Decorative wave bottom-left (soft)
+  pdf.saveGraphicsState();
+  pdf.setGState(new (pdf as any).GState({ opacity: 0.5 }));
+  pdf.setFillColor(BG_SOFT);
+  pdf.lines(
+    [
+      [0, 40],
+      [120, 0],
+      [160, 50],
+      [240, 10],
+      [300, 40],
+      [360, 0],
+      [400, 30],
+    ],
+    -60,
+    H - 160,
+    "F"
+  );
+  pdf.setFillColor(BRAND);
+  pdf.setGState(new (pdf as any).GState({ opacity: 0.06 }));
+  pdf.lines(
+    [
+      [0, 30],
+      [120, -20],
+      [170, 30],
+      [240, 0],
+      [300, 30],
+      [360, -10],
+      [400, 20],
+    ],
+    -60,
+    H - 120,
+    "F"
+  );
+  pdf.restoreGraphicsState();
 
-  // Corner miters (gold L-shapes)
-  const msize = 16;
-  const mdraw = (x: number, y: number) => {
-    toHexDraw(pdf, FRAME);
-    pdf.setLineWidth(2);
-    pdf.lines(
-      [
-        [0, 0],
-        [msize, 0],
-      ],
-      x,
-      y
-    );
-    pdf.lines(
-      [
-        [0, 0],
-        [0, msize],
-      ],
-      x,
-      y
-    );
-  };
-  mdraw(24, 24);
-  mdraw(W - 24 - msize, 24);
-  mdraw(W - 24 - msize, H - 24 - msize);
-  mdraw(24, H - 24 - msize);
-
+  /* ---- Top header: wordmark (left) + cert id (right) ---- */
   const cx = W / 2;
 
-  /* ---- Wordmark (small, centered) ---- */
-  let y = innerInset + 20;
-  if (logo) {
+  sans(pdf, "bold", 24);
+  toHexText(pdf, INK);
+  pdf.text("flybridge", M, M + 6);
+
+  sans(pdf, "bold", 7.5);
+  toHexText(pdf, BRAND);
+  pdf.text("EDUCATION GROUP", M, M + 17);
+
+  sans(pdf, "bold", 7);
+  toHexText(pdf, BODY);
+  pdf.text("CERTIFICATE ID", W - M, M + 6, { align: "right" });
+  sans(pdf, "bold", 11);
+  toHexText(pdf, INK);
+  pdf.text(data.certId, W - M, M + 18, { align: "right" });
+
+  /* ---- Ribbon badge (top-right) ---- */
+  const badgeR = 17;
+  const badgeX = W - M - 60;
+  const badgeY = M;
+  toHexDraw(pdf, BRAND);
+  pdf.setLineWidth(2);
+  toHexFill(pdf, WHITE);
+  pdf.circle(badgeX, badgeY, badgeR, "FD");
+  // award/check glyph inside
+  toHexDraw(pdf, BRAND);
+  pdf.setLineWidth(2);
+  pdf.line(badgeX - 4, badgeY, badgeX + 5, badgeY);
+  pdf.line(badgeX + 5, badgeY, badgeX + 5, badgeY - 6);
+
+  /* ---- Main: avatar (left) + text (right) ---- */
+  const avatarR = 40;
+  const avatarCX = M + avatarR + 16;
+  const avatarCY = M + 78;
+
+  if (avatar) {
     try {
-      const size = pngSize(logo);
-      const logoH = 40;
-      const logoW = size ? (logoH * size.w) / size.h : logoH * 2.57;
-      pdf.addImage(logo, "PNG", cx - logoW / 2, y, logoW, logoH);
-      y += logoH;
+      const size = pngSize(avatar);
+      if (size) {
+        const aspect = size.w / size.h;
+        let imgW = avatarR * 2;
+        let imgH = avatarR * 2;
+        if (aspect > 1) imgH = imgW / aspect;
+        else imgW = imgH * aspect;
+        pdf.saveGraphicsState();
+        pdf.circle(avatarCX, avatarCY, avatarR, "clip");
+        pdf.addImage(
+          avatar,
+          "JPEG",
+          avatarCX - imgW / 2,
+          avatarCY - imgH / 2,
+          imgW,
+          imgH
+        );
+        pdf.restoreGraphicsState();
+      }
     } catch {
-      /* logo embed failed — skip */
+      /* avatar failed */
     }
   }
+  toHexDraw(pdf, LINE);
+  pdf.setLineWidth(1.5);
+  pdf.circle(avatarCX, avatarCY, avatarR, "S");
+  if (!avatar) {
+    toHexFill(pdf, BG_SOFT);
+    pdf.circle(avatarCX, avatarCY, avatarR, "F");
+    sans(pdf, "bold", 30);
+    toHexText(pdf, BRAND);
+    const initial = (data.userName || "S").trim().charAt(0).toUpperCase() || "S";
+    pdf.text(initial, avatarCX, avatarCY + 11, { align: "center" });
+  }
 
-  /* ---- Tagline ---- */
-  y += 18;
-  serif(pdf, "normal", 10);
-  toHexText(pdf, GOLD_DARK);
-  pdf.text("FLYBRIDGE EDUCATION GROUP", cx, y, { align: "center" });
+  // Text column
+  const tx = avatarCX + avatarR + 24;
+  const tW = W - tx - M;
 
-  /* ---- Divider with diamond ---- */
-  y += 14;
-  const divHalf = 60;
-  toHexDraw(pdf, FRAME);
-  pdf.setLineWidth(1);
-  pdf.line(cx - divHalf, y, cx - 8, y);
-  pdf.line(cx + 8, y, cx + divHalf, y);
-  toHexFill(pdf, FRAME);
-  pdf.triangle(cx - 4, y, cx, y - 4, cx, y + 4, "F");
-  pdf.triangle(cx + 4, y, cx, y - 4, cx, y + 4, "F");
-
-  /* ---- Title ---- */
-  y += 30;
-  serif(pdf, "bold", 27);
+  sans(pdf, "bold", 34);
   toHexText(pdf, INK);
-  pdf.text("CERTIFICATE OF COMPLETION", cx, y, { align: "center" });
+  pdf.text("CERTIFICATE", tx, M + 52);
 
-  /* ---- Subtitle ---- */
-  y += 24;
-  serif(pdf, "italic", 12);
-  toHexText(pdf, BODY_INK);
-  pdf.text("This certificate is proudly presented to", cx, y, { align: "center" });
+  sans(pdf, "bold", 15);
+  toHexText(pdf, INK);
+  pdf.text("OF", tx, M + 68);
+  sans(pdf, "bold", 15);
+  toHexText(pdf, BRAND);
+  pdf.text("COMPLETION", tx + 18, M + 68);
 
-  /* ---- Name (handwritten) ---- */
-  y += 24;
+  toHexFill(pdf, BRAND);
+  pdf.roundedRect(tx, M + 74, 44, 3, 1.5, 1.5, "F");
+
+  sans(pdf, "normal", 11);
+  toHexText(pdf, BODY);
+  pdf.text("This is proudly presented to", tx, M + 96);
+
   if (hasCaveat) {
     pdf.setFont("Caveat", "normal");
-    pdf.setFontSize(46);
+    pdf.setFontSize(34);
   } else {
-    serif(pdf, "bold", 30);
+    sans(pdf, "bold", 24);
   }
-  toHexText(pdf, NAME_INK);
-  pdf.text(data.userName || "Student Name", cx, y, { align: "center" });
-
-  // hairline under name
-  y += 10;
-  const nameWidth = Math.min(pdf.getTextWidth(data.userName || "Student Name") + 30, 240);
-  toHexDraw(pdf, HAIRLINE);
-  pdf.setLineWidth(0.8);
-  pdf.line(cx - nameWidth / 2, y, cx + nameWidth / 2, y);
-
-  /* ---- Recognition line ---- */
-  y += 22;
-  serif(pdf, "italic", 12);
-  toHexText(pdf, BODY_INK);
-  pdf.text("in recognition of the successful completion of the course", cx, y, {
-    align: "center",
-  });
-
-  /* ---- Course title ---- */
-  y += 18;
-  serif(pdf, "bold", 16);
-  toHexText(pdf, GOLD_DARK);
-  const courseLines = pdf.splitTextToSize(data.courseTitle || "Course", 520);
-  pdf.text(courseLines, cx, y, { align: "center" });
-
-  /* ---- Supporting paragraph ---- */
-  y += 22;
-  serif(pdf, "normal", 9.5);
-  toHexText(pdf, SOFT);
-  const para = pdf.splitTextToSize(
-    "The recipient has fulfilled all requirements of the course and demonstrated commitment to developing knowledge and skills in the field.",
-    470
-  );
-  pdf.text(para, cx, y, { align: "center" });
-
-  /* ---- Detail row (Completion Date + Certificate ID) ---- */
-  y += 34;
-  const dateStr = data.issuedAt.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const detailY = y;
-  const leftX = cx - 120;
-  const rightX = cx + 120;
-
-  serif(pdf, "normal", 8);
-  toHexText(pdf, FAINT);
-  pdf.text("COMPLETION DATE", leftX, detailY, { align: "center" });
-  pdf.text("CERTIFICATE ID", rightX, detailY, { align: "center" });
-
-  serif(pdf, "bold", 10.5);
   toHexText(pdf, INK);
-  pdf.text(dateStr, leftX, detailY + 16, { align: "center" });
-  pdf.text(data.certId, rightX, detailY + 16, { align: "center" });
+  pdf.text(data.userName || "Student Name", tx, M + 120);
 
-  // vertical divider between the two
-  toHexDraw(pdf, HAIRLINE);
+  sans(pdf, "normal", 11);
+  toHexText(pdf, BODY);
+  pdf.text("for successfully completing the course", tx, M + 138);
+
+  // course title with icon dot
+  toHexFill(pdf, BG_SOFT);
+  pdf.roundedRect(tx, M + 146, 16, 16, 4, 4, "F");
+  toHexText(pdf, BRAND);
+  sans(pdf, "bold", 9);
+  pdf.text("✓", tx + 8, M + 157, { align: "center" });
+  sans(pdf, "bold", 13);
+  toHexText(pdf, BRAND_DARK);
+  const courseLines = pdf.splitTextToSize(data.courseTitle || "Course", tW - 26);
+  pdf.text(courseLines, tx + 24, M + 153, { align: "left" });
+
+  const afterCourseY = M + 153 + (courseLines.length - 1) * 15 + 14;
+
+  // supporting paragraph
+  sans(pdf, "normal", 8.5);
+  toHexText(pdf, BODY);
+  const para = pdf.splitTextToSize(
+    "The recipient has fulfilled all course requirements and demonstrated commitment to developing knowledge and skills in the field.",
+    tW
+  );
+  pdf.text(para, tx, afterCourseY, { align: "left" });
+
+  /* ---- Divider ---- */
+  const divY = Math.max(afterCourseY + para.length * 11 + 18, M + 200);
+  toHexDraw(pdf, LINE);
   pdf.setLineWidth(0.8);
-  pdf.line(cx, detailY - 6, cx, detailY + 22);
+  pdf.line(M, divY, W - M, divY);
 
-  /* ---- Footer: digital seal (centered) ---- */
-  const footY = H - innerInset - 34;
+  /* ---- Stats row ---- */
+  const statsY = divY + 16;
+  const boxW = (W - M * 2 - 18 * 3) / 4;
+  const boxH = 34;
+  const stats = [
+    { label: "OVERALL SCORE", value: `${data.grade.percentage}%` },
+    { label: "GRADE", value: data.grade.grade },
+    { label: "ENGLISH LEVEL", value: data.grade.englishLevel.split(" ")[0] },
+    { label: "QUIZZES DONE", value: `${data.grade.completedQuizzes ?? "—"}/${data.grade.totalQuizzes ?? "—"}` },
+  ];
 
-  const sealR = 26;
-  const sealcx = cx;
-  const sealcy = footY - 6;
+  stats.forEach((s, i) => {
+    const x = M + i * (boxW + 18);
+    toHexFill(pdf, BG_SOFT);
+    pdf.roundedRect(x, statsY, boxW, boxH, 6, 6, "F");
+    toHexDraw(pdf, LINE);
+    pdf.setLineWidth(0.7);
+    pdf.roundedRect(x, statsY, boxW, boxH, 6, 6, "S");
 
-  toHexFill(pdf, "#FBF6E8");
-  pdf.circle(sealcx, sealcy, sealR, "F");
-  toHexDraw(pdf, FRAME);
-  pdf.setLineWidth(2);
-  pdf.circle(sealcx, sealcy, sealR, "S");
+    sans(pdf, "bold", 6);
+    toHexText(pdf, BODY);
+    pdf.text(s.label, x + boxW / 2, statsY + 11, { align: "center" });
+    sans(pdf, "bold", 12);
+    toHexText(pdf, BRAND_DARK);
+    pdf.text(s.value, x + boxW / 2, statsY + 26, { align: "center" });
+  });
 
-  // checkmark
-  toHexDraw(pdf, GOLD_DARK);
-  pdf.setLineWidth(2.4);
-  pdf.line(sealcx - 8, sealcy, sealcx - 3, sealcy + 6);
-  pdf.line(sealcx - 3, sealcy + 6, sealcx + 9, sealcy - 8);
-
-  serif(pdf, "normal", 7.5);
-  toHexText(pdf, FAINT);
+  /* ---- Bottom row: verified note (left) + QR + date (right) ---- */
+  const bottomY = H - M - 10;
+  sans(pdf, "bold", 7);
+  toHexText(pdf, BRAND);
+  pdf.text("✓ VERIFIED", M, bottomY - 8, { align: "left" });
+  sans(pdf, "normal", 7);
+  toHexText(pdf, BODY);
   pdf.text(
-    pdf.splitTextToSize("DIGITALLY CERTIFIED & ISSUED BY FLYBRIDGE EDUCATION GROUP", 200),
-    sealcx,
-    sealcy + sealR + 12,
-    { align: "center" }
+    pdf.splitTextToSize(
+      "Digitally issued & verified by FlyBridge Education Group. Scan to confirm authenticity.",
+      tW * 0.6
+    ),
+    M,
+    bottomY - 1,
+    { align: "left" }
   );
 
-  /* ---- Email caption (bottom center, subtle) ---- */
-  serif(pdf, "normal", 7);
-  toHexText(pdf, FAINT);
-  pdf.text(data.userEmail || "", cx, H - innerInset - 8, { align: "center" });
+  // QR code (from verify URL)
+  const qrTarget: string = data.verifyUrl || data.certId;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(
+    qrTarget
+  )}`;
+  const qr = await loadImageDataUrl(qrSrc);
+  const qrBox = 58;
+  const qrX = W - M - qrBox;
+  const qrY = bottomY - qrBox;
+
+  if (qr) {
+    try {
+      pdf.addImage(qr, "PNG", qrX, qrY, qrBox, qrBox);
+    } catch {
+      /* qr failed */
+    }
+  } else {
+    toHexFill(pdf, BG_SOFT);
+    pdf.rect(qrX, qrY, qrBox, qrBox, "F");
+  }
+  toHexDraw(pdf, LINE);
+  pdf.setLineWidth(0.8);
+  pdf.rect(qrX, qrY, qrBox, qrBox);
+
+  // date next to QR
+  sans(pdf, "bold", 6.5);
+  toHexText(pdf, BODY);
+  pdf.text("COMPLETION DATE", qrX - 12, bottomY - 8, { align: "right" });
+  sans(pdf, "bold", 9);
+  toHexText(pdf, INK);
+  pdf.text(
+    data.issuedAt.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    qrX - 12,
+    bottomY - 1,
+    { align: "right" }
+  );
+
+  /* ---- Email caption (bottom center) ---- */
+  sans(pdf, "normal", 7);
+  toHexText(pdf, BODY);
+  pdf.text(data.userEmail || "", cx, H - 14, { align: "center" });
 
   pdf.save(`FlyBridge-Certificate-${data.courseSlug || "course"}.pdf`);
 }
