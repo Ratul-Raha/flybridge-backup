@@ -81,7 +81,13 @@ type DetailReadiness = {
 
 type DetailData = {
   user: UserRow;
-  stats: { totalCourses: number; totalSeminars: number; totalDownloads: number; totalReadiness: number };
+  stats: {
+    totalCourses: number;
+    totalSeminars: number;
+    totalDownloads: number;
+    totalReadiness: number;
+    latestReadinessScore: number | null;
+  };
   courses: DetailCourse[];
   seminars: DetailSeminar[];
   downloads: DetailDownload[];
@@ -761,7 +767,7 @@ export function UserManage() {
                   )}
 
                   {/* Activity summary */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen size={14} style={{ color: "var(--brand)" }} />
@@ -772,16 +778,22 @@ export function UserManage() {
                       <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
                         {detail.stats.totalCourses}
                       </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--body)" }}>
+                        enrolled
+                      </p>
                     </div>
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <BookOpen size={14} style={{ color: "var(--brand)" }} />
+                        <CalendarDays size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
                           Seminars
                         </p>
                       </div>
                       <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
                         {detail.stats.totalSeminars}
+                      </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--body)" }}>
+                        registered
                       </p>
                     </div>
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
@@ -794,6 +806,9 @@ export function UserManage() {
                       <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
                         {detail.stats.totalDownloads}
                       </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--body)" }}>
+                        resources
+                      </p>
                     </div>
                     <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
@@ -803,7 +818,13 @@ export function UserManage() {
                         </p>
                       </div>
                       <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
-                        {detail.stats.totalReadiness}
+                        {detail.stats.latestReadinessScore != null
+                          ? `${detail.stats.latestReadinessScore}%`
+                          : "—"}
+                      </p>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--body)" }}>
+                        {detail.stats.totalReadiness} assessment
+                        {detail.stats.totalReadiness === 1 ? "" : "s"}
                       </p>
                     </div>
                   </div>

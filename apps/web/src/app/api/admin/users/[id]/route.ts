@@ -26,24 +26,37 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const [enrollments, registrations, downloads, readiness] = await Promise.all([
-      CourseEnrollment.find({ user: user._id })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .populate("course", "title slug image badge price currency")
-        .lean(),
-      SeminarRegistration.find({ user: user._id })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .populate("seminar", "title dateTime type price")
-        .lean(),
-      ResourceDownload.find({ user: user._id })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .populate("resource", "title fileType fileUrl")
-        .lean(),
-      ReadinessRun.find({ user: user._id }).sort({ createdAt: -1 }).limit(100).lean(),
-    ]);
+    const [enrollments, registrations, downloads, readiness, counts] =
+      await Promise.all([
+        CourseEnrollment.find({ user: user._id })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .populate("course", "title slug image badge price currency")
+          .lean(),
+        SeminarRegistration.find({ user: user._id })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .populate("seminar", "title dateTime type price")
+          .lean(),
+        ResourceDownload.find({ user: user._id })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .populate("resource", "title fileType fileUrl")
+          .lean(),
+        ReadinessRun.find({ user: user._id })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .lean(),
+        Promise.all([
+          CourseEnrollment.countDocuments({ user: user._id }),
+          SeminarRegistration.countDocuments({ user: user._id }),
+          ResourceDownload.countDocuments({ user: user._id }),
+          ReadinessRun.countDocuments({ user: user._id }),
+        ]),
+      ]);
+
+    const [totalCourses, totalSeminars, totalDownloads, totalReadiness] =
+      counts;
 
     return NextResponse.json({
       user: {
@@ -57,10 +70,11 @@ export async function GET(
         createdAt: user.createdAt,
       },
       stats: {
-        totalCourses: enrollments.length,
-        totalSeminars: registrations.length,
-        totalDownloads: downloads.length,
-        totalReadiness: readiness.length,
+        totalCourses,
+        totalSeminars,
+        totalDownloads,
+        totalReadiness,
+        latestReadinessScore: readiness[0]?.score ?? null,
       },
       courses: enrollments.map((e) => ({
         id: e._id.toString(),
