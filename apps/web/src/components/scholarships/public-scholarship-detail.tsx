@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   Award,
   CalendarClock,
   Check,
@@ -15,7 +16,7 @@ import {
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
 
-export function PublicScholarshipDetail({ scholarship: s }: { scholarship: PublicScholarship }) {
+function ShareButton({ s }: { s: PublicScholarship }) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = async () => {
@@ -41,6 +42,20 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
     }
   };
 
+  return (
+    <button
+      type="button"
+      onClick={copyLink}
+      className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-[9px] text-[13px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
+      style={{ borderColor: "var(--line)", color: copied ? "#0FA968" : "var(--ink)" }}
+    >
+      {copied ? <Check size={14} /> : <Share2 size={14} />}
+      {copied ? "Link copied!" : "Share"}
+    </button>
+  );
+}
+
+export function PublicScholarshipDetail({ scholarship: s }: { scholarship: PublicScholarship }) {
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = s.level === "school" ? School : GraduationCap;
 
@@ -57,8 +72,8 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
       ),
     },
     {
-      label: "Amount",
-      value: s.amount || "—",
+      label: "Award",
+      value: <span style={{ color: "var(--brand-2)" }}>{s.amount || "—"}</span>,
     },
     {
       label: "Level",
@@ -84,67 +99,95 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
 
   return (
     <div>
+      {/* Top bar: breadcrumb + share */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href="/scholarships"
-          className="inline-flex items-center gap-2 text-[13px] font-medium transition-colors duration-200 hover:opacity-70"
-          style={{ color: "var(--brand)" }}
-        >
-          <ArrowLeft size={15} /> All scholarships
-        </Link>
-        <button
-          type="button"
-          onClick={copyLink}
-          className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-[8px] text-[13px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
-          style={{
-            borderColor: "var(--line)",
-            color: copied ? "#0FA968" : "var(--ink)",
-          }}
-        >
-          {copied ? <Check size={14} /> : <Share2 size={14} />}
-          {copied ? "Link copied!" : "Share"}
-        </button>
+        <div className="flex items-center gap-2 text-[12.5px] font-medium">
+          <Link href="/scholarships" className="inline-flex items-center gap-2 font-semibold transition-colors duration-200 hover:opacity-70" style={{ color: "var(--brand)" }}>
+            <ArrowLeft size={15} /> All scholarships
+          </Link>
+        </div>
+        <ShareButton s={s} />
       </div>
 
+      {/* Cover hero */}
       <div
-        className="mt-6 overflow-hidden rounded-lg border bg-white"
-        style={{ borderColor: "var(--line)" }}
+        className="relative mt-6 overflow-hidden rounded-2xl border"
+        style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -32px rgba(18,32,67,0.28)" }}
       >
-        <div className="p-[clamp(20px,4vw,36px)]">
+        {s.imageUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={s.imageUrl}
+              alt={s.title || s.institution}
+              className="h-[240px] w-full object-cover sm:h-[320px] lg:h-[380px]"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg,rgba(18,32,67,0.06) 0%,rgba(18,32,67,0.25) 50%,rgba(10,20,42,0.82) 100%)",
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="h-[220px] w-full sm:h-[300px] lg:h-[360px] flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#E2F6EE,#CDEFFE)" }}
+          >
+            <div
+              className="flex h-20 w-20 items-center justify-center rounded-2xl text-white"
+              style={{ background: "linear-gradient(135deg,#0FA968,#18A97A)", boxShadow: "0 18px 40px -18px rgba(15,169,104,0.6)" }}
+            >
+              <Award size={34} />
+            </div>
+          </div>
+        )}
+
+        {/* Overlay content */}
+        <div className="absolute inset-x-0 bottom-0 p-[clamp(20px,4vw,36px)]">
           <span
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]"
-            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+            className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] backdrop-blur"
+            style={{ color: "var(--brand-2)" }}
           >
             <Award size={12} />
             {s.institution}
           </span>
 
           <h1
-            className="mt-5 font-display text-[clamp(26px,4vw,38px)] font-semibold leading-[1.12] tracking-[-0.02em]"
-            style={{ color: "var(--ink)" }}
+            className="mt-3 font-display text-[clamp(24px,4vw,40px)] font-semibold leading-[1.1] tracking-[-0.02em] text-white"
           >
             {s.title || s.institution}
           </h1>
 
-          <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-4"
-            style={{ borderColor: "var(--line)", background: "var(--line)" }}
-          >
-            {facts.map((f) => (
-              <div key={f.label} className="bg-white px-4 py-3.5">
-                <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--body)" }}>
-                  {f.label}
-                </div>
-                <div className="mt-1.5 text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-                  {f.value}
-                </div>
-              </div>
-            ))}
-          </div>
+          {s.amount && (
+            <p className="mt-2 text-[clamp(16px,2vw,22px)] font-bold" style={{ color: "#7EF0BF" }}>
+              {s.amount}
+            </p>
+          )}
         </div>
       </div>
 
+      {/* Info strip */}
       <div
-        className="relative mt-6 select-none overflow-hidden rounded-lg border bg-white"
+        className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border sm:grid-cols-4"
+        style={{ borderColor: "var(--line)", background: "var(--line)" }}
+      >
+        {facts.map((f) => (
+          <div key={f.label} className="bg-white px-5 py-4">
+            <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--body)" }}>
+              {f.label}
+            </div>
+            <div className="mt-1.5 text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+              {f.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Locked details */}
+      <div
+        className="relative mt-6 select-none overflow-hidden rounded-2xl border bg-white"
         style={{ borderColor: "var(--line)" }}
       >
         <div aria-hidden="true" className="p-[clamp(20px,4vw,36px)]">
@@ -170,7 +213,7 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
         </div>
 
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-lg px-6 py-10 text-center"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl px-6 py-10 text-center"
           style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(3px)" }}
         >
           <div
@@ -189,10 +232,11 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href={`/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
-              className="rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
               style={{ background: "var(--brand)" }}
             >
               Create free account
+              <ArrowRight size={15} />
             </Link>
             <Link
               href={`/login?next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}

@@ -731,32 +731,42 @@ export function CourseManage() {
                   minHeight: "56px",
                 }}
               >
-                {/* Thumbnail */}
-                {c.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image} alt="" className="w-[40px] h-[40px] rounded-lg object-cover" />
-                ) : (
-                  <div
-                    className="w-[40px] h-[40px] rounded-lg flex items-center justify-center"
-                    style={{
-                      background: isPaid
-                        ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
-                        : "linear-gradient(135deg,#0FA968,#18A97A)",
-                    }}
-                  >
-                    <BookOpen size={15} className="text-white/70" />
-                  </div>
-                )}
+                {/* Thumbnail (click to open player) */}
+                <Link
+                  href={`/dashboard/courses/${c.slug}/learn`}
+                  className="block w-fit"
+                  title={`Open ${c.title}`}
+                >
+                  {c.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image} alt="" className="w-[40px] h-[40px] rounded-lg object-cover" />
+                  ) : (
+                    <div
+                      className="w-[40px] h-[40px] rounded-lg flex items-center justify-center"
+                      style={{
+                        background: isPaid
+                          ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
+                          : "linear-gradient(135deg,#0FA968,#18A97A)",
+                      }}
+                    >
+                      <BookOpen size={15} className="text-white/70" />
+                    </div>
+                  )}
+                </Link>
 
-                {/* Title + slug */}
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold truncate leading-tight" style={{ color: "var(--ink)" }}>
+                {/* Title + slug (click to open player) */}
+                <Link
+                  href={`/dashboard/courses/${c.slug}/learn`}
+                  className="min-w-0 group"
+                  title={`Open ${c.title}`}
+                >
+                  <p className="text-[13.5px] font-semibold truncate leading-tight group-hover:text-brand-2 transition-colors" style={{ color: "var(--ink)" }}>
                     {c.title}
                   </p>
                   <p className="text-[11px] font-mono truncate mt-0.5" style={{ color: "var(--body)" }}>
                     /{c.slug}
                   </p>
-                </div>
+                </Link>
 
                 {/* Status */}
                 <div className="flex items-center gap-2">

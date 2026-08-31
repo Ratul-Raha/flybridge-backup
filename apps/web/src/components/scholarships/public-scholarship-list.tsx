@@ -68,17 +68,13 @@ function ShareButton({
 }
 
 function ScholarshipCard({ s }: { s: PublicScholarship }) {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = levelIcon(s.level);
 
-  const detailHref = user
-    ? `/dashboard/scholarships/${s.id}`
-    : `/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`;
-
   return (
     <Link
-      href={loading ? `/scholarships/${s.id}` : detailHref}
+      href={`/scholarships/${s.id}`}
       className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
     >
