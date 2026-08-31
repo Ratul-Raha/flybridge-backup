@@ -47,16 +47,35 @@ function levelIcon(level: string) {
   return level === "school" ? School : GraduationCap;
 }
 
-function ShareButton({ id }: { id: string }) {
+function ShareButton({
+  id,
+  institution,
+  title,
+}: {
+  id: string;
+  institution: string;
+  title?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    const url = `${window.location.origin}/scholarships/${id}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: title || institution,
+          text: `Check out this scholarship: ${title || institution}`,
+          url,
+        });
+        return;
+      } catch {
+        /* user cancelled or share failed — fall through to clipboard */
+      }
+    }
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/scholarships/${id}`
-      );
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -319,7 +338,7 @@ export function ScholarshipBrowser() {
                           Details
                         </span>
                       )}
-                      <ShareButton id={s.id} />
+                      <ShareButton id={s.id} institution={s.institution} title={s.title} />
                     </div>
                   </div>
                 </div>

@@ -47,10 +47,21 @@ export function ScholarshipDetailView({ scholarship: s }: { scholarship: Scholar
   const [copied, setCopied] = useState(false);
 
   const copyLink = async () => {
+    const url = `${window.location.origin}/scholarships/${s.id}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: s.title || s.institution,
+          text: `Check out this scholarship: ${s.title || s.institution}`,
+          url,
+        });
+        return;
+      } catch {
+        /* user cancelled or share failed — fall through to clipboard */
+      }
+    }
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/scholarships/${s.id}`
-      );
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

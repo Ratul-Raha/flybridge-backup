@@ -11,16 +11,35 @@ function levelIcon(level: string) {
   return level === "school" ? School : GraduationCap;
 }
 
-function ShareButton({ id }: { id: string }) {
+function ShareButton({
+  id,
+  institution,
+  title,
+}: {
+  id: string;
+  institution: string;
+  title?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
-  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+  const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    const url = `${window.location.origin}/scholarships/${id}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: title || institution,
+          text: `Check out this scholarship: ${title || institution}`,
+          url,
+        });
+        return;
+      } catch {
+        /* user cancelled or share failed — fall through to clipboard */
+      }
+    }
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/scholarships/${id}`
-      );
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -33,7 +52,7 @@ function ShareButton({ id }: { id: string }) {
       type="button"
       title={copied ? "Copied!" : "Copy scholarship link"}
       aria-label={copied ? "Copied!" : "Copy scholarship link"}
-      onClick={copyLink}
+      onClick={handleShare}
       className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
       style={{
         background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)",
@@ -124,7 +143,7 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
           </span>
         )}
         <div className="flex items-center gap-3">
-          <ShareButton id={s.id} />
+          <ShareButton id={s.id} institution={s.institution} title={s.title} />
           <span
             className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
             style={{ color: "var(--brand)" }}
