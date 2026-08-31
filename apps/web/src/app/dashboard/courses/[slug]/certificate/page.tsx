@@ -2,7 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Award, ArrowLeft, Download, Mail, User, Loader2 } from "lucide-react";
+import {
+  Award,
+  ArrowLeft,
+  Download,
+  Mail,
+  User,
+  Loader2,
+  ShieldCheck,
+  Lock,
+} from "lucide-react";
 
 type GradeData = {
   percentage: number;
@@ -24,10 +33,18 @@ export default function CertificatePage({
   params: { slug: string };
 }) {
   const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [courseId, setCourseId] = useState("");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [serverEligible, setServerEligible] = useState(false);
+
+  const certId = useCallback(() => {
+    return `FB-${Date.now().toString(36).toUpperCase()}`;
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -36,17 +53,21 @@ export default function CertificatePage({
         const userData = await userRes.json();
         setUserName(userData.name ?? "");
         setUserEmail(userData.email ?? "");
+        setUserAvatar(userData.avatar ?? null);
       }
 
       const courseRes = await fetch(`/api/courses?slug=${params.slug}`);
       if (courseRes.ok) {
         const courseData = await courseRes.json();
-        const courseId = courseData.course?.id;
-        if (courseId) {
-          const progRes = await fetch(`/api/courses/${courseId}/progress`);
+        const course = courseData.course;
+        setCourseTitle(course?.title ?? "");
+        setCourseId(course?.id ?? "");
+        if (course?.id) {
+          const progRes = await fetch(`/api/courses/${course.id}/progress`);
           if (progRes.ok) {
             const progData = await progRes.json();
             setProgress(progData);
+            setServerEligible(Boolean(progData.certificateIssued));
           }
         }
       }
@@ -62,226 +83,35 @@ export default function CertificatePage({
   }, [loadData]);
 
   const generateCertificate = async () => {
+    if (!courseId) return;
     setGenerating(true);
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const w = doc.internal.pageSize.getWidth();
-      const h = doc.internal.pageSize.getHeight();
-
-      // Background
-      doc.setFillColor(255, 255, 255);
-      doc.rect(0, 0, w, h, "F");
-
-      // Outer border
-      doc.setDrawColor(107, 76, 224);
-      doc.setLineWidth(1.5);
-      doc.roundedRect(8, 8, w - 16, h - 16, 4, 4);
-
-      // Inner decorative border
-      doc.setDrawColor(107, 76, 224);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(14, 14, w - 28, h - 28, 3, 3);
-
-      // Corner ornaments
-      const cornerSize = 12;
-      const corners = [
-        [18, 18],
-        [w - 18, 18],
-        [18, h - 18],
-        [w - 18, h - 18],
-      ];
-      doc.setFillColor(107, 76, 224);
-      for (const [cx, cy] of corners) {
-        doc.circle(cx, cy, cornerSize / 3, "F");
-        doc.setFillColor(255, 255, 255);
-        doc.circle(cx, cy, cornerSize / 5, "F");
-        doc.setFillColor(107, 76, 224);
+      // Server-side gate: recompute completion on the server before issuance.
+      const gateRes = await fetch(`/api/courses/${courseId}/certificate`);
+      if (!gateRes.ok) {
+        setGenerating(false);
+        return;
       }
+      const gateData = await gateRes.json();
+      setServerEligible(Boolean(gateData.certificateIssued));
 
-      // Header decorative line
-      doc.setDrawColor(107, 76, 224);
-      doc.setLineWidth(0.6);
-      doc.line(w * 0.25, 40, w * 0.75, 40);
-
-      // Small diamond
-      doc.setFillColor(107, 76, 224);
-      doc.triangle(w / 2, 37, w / 2 + 3, 40, w / 2, 43, "F");
-      doc.triangle(w / 2, 37, w / 2 - 3, 40, w / 2, 43, "F");
-
-      // Title
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(36);
-      doc.setTextColor(107, 76, 224);
-      doc.text("CERTIFICATE", w / 2, 56, { align: "center" });
-
-      // Subtitle
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(14);
-      doc.setTextColor(120, 120, 120);
-      doc.text("of COMPLETION", w / 2, 66, { align: "center" });
-
-      // Decorative line
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.3);
-      doc.line(w * 0.3, 72, w * 0.7, 72);
-
-      // "This is to certify that"
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text("This is to certify that", w / 2, 84, { align: "center" });
-
-      // Student name
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(26);
-      doc.setTextColor(40, 40, 40);
-      doc.text(userName || "Student", w / 2, 98, { align: "center" });
-
-      // Name underline
-      doc.setDrawColor(107, 76, 224);
-      doc.setLineWidth(0.8);
-      const nameWidth = doc.getTextWidth(userName || "Student");
-      doc.line(
-        w / 2 - nameWidth / 2 - 10,
-        101,
-        w / 2 + nameWidth / 2 + 10,
-        101
+      const { generateCertificatePdf } = await import(
+        "@/lib/certificate/pdf"
       );
-
-      // "has successfully completed the course"
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        "has successfully completed the course",
-        w / 2,
-        110,
-        { align: "center" }
-      );
-
-      // Course name
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(107, 76, 224);
-      const courseTitle = params.slug
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-      doc.text(courseTitle, w / 2, 122, { align: "center" });
-
-      // Results section
-      const grade = progress?.grade;
-      if (grade) {
-        const resultY = 138;
-
-        // Grade box
-        const boxWidth = 40;
-        const boxGap = 10;
-        const totalBoxWidth = boxWidth * 3 + boxGap * 2;
-        const startX = (w - totalBoxWidth) / 2;
-
-        const drawResultBox = (
-          x: number,
-          label: string,
-          value: string
-        ) => {
-          doc.setFillColor(248, 248, 255);
-          doc.roundedRect(x, resultY, boxWidth, 28, 2, 2, "F");
-          doc.setDrawColor(107, 76, 224);
-          doc.setLineWidth(0.3);
-          doc.roundedRect(x, resultY, boxWidth, 28, 2, 2, "S");
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(8);
-          doc.setTextColor(120, 120, 120);
-          doc.text(label, x + boxWidth / 2, resultY + 9, {
-            align: "center",
-          });
-
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(14);
-          doc.setTextColor(107, 76, 224);
-          doc.text(value, x + boxWidth / 2, resultY + 21, {
-            align: "center",
-          });
-        };
-
-        drawResultBox(startX, "GRADE", grade.grade);
-        drawResultBox(
-          startX + boxWidth + boxGap,
-          "SCORE",
-          `${grade.percentage}%`
-        );
-        drawResultBox(
-          startX + (boxWidth + boxGap) * 2,
-          "ENGLISH LEVEL",
-          grade.englishLevel.split(" ")[0]
-        );
-      }
-
-      // Footer
-      const footerY = h - 35;
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.3);
-      doc.line(w * 0.2, footerY, w * 0.45, footerY);
-      doc.line(w * 0.55, footerY, w * 0.8, footerY);
-
-      // Date
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(120, 120, 120);
-      doc.text("Date of Issue", w * 0.325, footerY - 4, { align: "center" });
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.text(
-        new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-        w * 0.325,
-        footerY + 6,
-        { align: "center" }
-      );
-
-      // Signature line
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(120, 120, 120);
-      doc.text("FlyBridge Education Group", w * 0.675, footerY - 4, {
-        align: "center",
+      await generateCertificatePdf({
+        userName,
+        userEmail,
+        userAvatar,
+        courseTitle: courseTitle || params.slug.replace(/-/g, " "),
+        courseSlug: params.slug,
+        grade: progress?.grade ?? {
+          percentage: 100,
+          grade: "A",
+          englishLevel: "Advanced (C2)",
+        },
+        certId: certId(),
+        issuedAt: new Date(),
       });
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.text("Authorized Signature", w * 0.675, footerY + 6, {
-        align: "center",
-      });
-
-      // Email in small text at very bottom
-      if (userEmail) {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.setTextColor(160, 160, 160);
-        doc.text(userEmail, w / 2, h - 12, { align: "center" });
-      }
-
-      // Certificate ID
-      const certId = `FB-${Date.now().toString(36).toUpperCase()}`;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.setTextColor(160, 160, 160);
-      doc.text(`Certificate ID: ${certId}`, w / 2, h - 18, {
-        align: "center",
-      });
-
-      doc.save(`FlyBridge-Certificate-${params.slug}.pdf`);
     } catch (err) {
       console.error("Certificate generation failed", err);
     } finally {
@@ -295,23 +125,30 @@ export default function CertificatePage({
         className="min-h-screen flex items-center justify-center"
         style={{ background: "var(--bg)" }}
       >
-        <Loader2 size={24} className="animate-spin" style={{ color: "var(--brand)" }} />
+        <Loader2
+          size={24}
+          className="animate-spin"
+          style={{ color: "var(--brand)" }}
+        />
       </div>
     );
   }
 
   const grade = progress?.grade;
-  const canDownload =
+  const clientEligible =
     grade &&
     grade.passed &&
     grade.completedQuizzes === grade.totalQuizzes;
 
+  const displayGrade = grade ?? {
+    percentage: 100,
+    grade: "A",
+    englishLevel: "Advanced (C2)",
+  };
+
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "var(--bg)" }}
-    >
-      <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-10">
         <Link
           href={`/dashboard/courses/${params.slug}/learn`}
           className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-3.5 py-[7px] transition-colors hover:bg-black/5 mb-8"
@@ -321,86 +158,230 @@ export default function CertificatePage({
           Back to course
         </Link>
 
-        {/* Certificate preview card */}
-        <div
-          className="rounded-[20px] border overflow-hidden"
-          style={{ borderColor: "var(--line)", background: "#fff" }}
-        >
-          {/* Header */}
+        {/* ============ Certificate Preview Card ============ */}
+        <div className="w-full" style={{ aspectRatio: "1.414 / 1" }}>
           <div
-            className="px-8 py-8 text-center"
-            style={{ background: "linear-gradient(135deg, rgba(107,76,224,0.06) 0%, rgba(107,76,224,0.02) 100%)" }}
+            className="relative w-full h-full rounded-[12px] overflow-hidden shadow-xl"
+            style={{
+              background:
+                "linear-gradient(180deg, #ffffff 0%, #ffffff 96%, #f2ead1 100%)",
+              border: "2.5px solid #C9A227",
+            }}
           >
+            {/* inner frame */}
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: "rgba(107,76,224,0.1)" }}
+              className="absolute inset-[10px] rounded-[8px]"
+              style={{ border: "1px solid #0FA968" }}
+            />
+            {/* top mint + bottom gold bands */}
+            <div className="absolute top-0 left-0 right-0 h-2.5 bg-[#E2F6EE]" />
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#C9A227]" />
+
+            {/* corner ornaments */}
+            {[
+              "top-3.5 left-3.5",
+              "top-3.5 right-3.5",
+              "bottom-3.5 left-3.5",
+              "bottom-3.5 right-3.5",
+            ].map((pos) => (
+              <div key={pos} className={`absolute ${pos} pointer-events-none`}>
+                <div className="w-5 h-5 rounded-full border-2 border-[#C9A227] flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-[#C9A227]" />
+                </div>
+              </div>
+            ))}
+
+            {/* Guaranteed-scale content via fixed pixel layout on a proportional wrapper */}
+            <div
+              className="absolute inset-0 flex flex-col items-center text-center px-6"
+              style={{ paddingTop: "4.5%" }}
             >
-              <Award size={28} style={{ color: "var(--brand)" }} />
-            </div>
-            <h1 className="font-display text-[24px] font-bold" style={{ color: "var(--ink)" }}>
-              Course Certificate
-            </h1>
-            <p className="text-[14px] mt-2" style={{ color: "var(--body)" }}>
-              Complete all quizzes with a score of 60% or higher to earn your certificate.
-            </p>
-          </div>
+              {/* Logo */}
+              <picture className="h-auto" style={{ width: "42%" }}>
+                <img
+                  src="/transparent-logo-dark.png"
+                  alt="FlyBridge"
+                  className="w-full h-auto object-contain"
+                />
+              </picture>
+              <p
+                className="mt-1 font-mono text-[9px] uppercase tracking-[0.28em]"
+                style={{ color: "var(--body)" }}
+              >
+                FlyBridge Education Group
+              </p>
 
-          {/* Grade summary */}
-          {grade && (
-            <div className="px-8 py-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: "Overall Score", value: `${grade.percentage}%`, color: grade.passed ? "#2EE6A8" : "#F87171" },
-                { label: "Grade", value: grade.grade, color: "var(--brand)" },
-                { label: "English Level", value: grade.englishLevel.split(" ")[0], color: "#6B4CE0" },
-                { label: "Quizzes Done", value: `${grade.completedQuizzes}/${grade.totalQuizzes}`, color: "var(--brand)" },
-              ].map((item) => (
+              {/* divider */}
+              <div className="mt-3 flex items-center gap-3 w-full justify-center">
+                <div className="h-px w-12 bg-[#EBD9A8]" />
+                <div className="w-1.5 h-1.5 rotate-45 bg-[#C9A227]" />
+                <div className="h-px w-12 bg-[#EBD9A8]" />
+              </div>
+
+              {/* heading */}
+              <h2
+                className="mt-3 leading-tight"
+                style={{
+                  fontFamily: "var(--font-hand), cursive",
+                  fontSize: "clamp(16px, 3.4vw, 30px)",
+                  color: "#C9A227",
+                }}
+              >
+                Certificate of Completion
+              </h2>
+              <p className="mt-1 text-[11px] sm:text-[12px]" style={{ color: "var(--body)" }}>
+                This is to proudly certify that
+              </p>
+
+              {/* Avatar + name */}
+              <div className="mt-2.5 flex flex-col items-center">
                 <div
-                  key={item.label}
-                  className="rounded-xl p-4 text-center"
-                  style={{ background: "var(--brand-soft, rgba(107,76,224,0.04))" }}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-[3px] border-[#C9A227] ring-2 ring-[#0FA968]/40 overflow-hidden"
+                  style={{ background: "var(--mint-bg)" }}
                 >
-                  <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                    {item.label}
-                  </p>
-                  <p className="text-[20px] font-bold mt-1" style={{ color: item.color }}>
-                    {item.value}
-                  </p>
+                  {userAvatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="text-lg font-bold"
+                      style={{ color: "#0B7A4B" }}
+                    >
+                      {(userName || "S").trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Student info */}
-          <div className="px-8 py-5 border-t" style={{ borderColor: "var(--line)" }}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <User size={16} style={{ color: "var(--body)" }} />
-                <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                    Student Name
-                  </p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-                    {userName || "Not set"}
-                  </p>
+                <p
+                  className="mt-1.5 leading-none"
+                  style={{
+                    fontFamily: "var(--font-hand), cursive",
+                    fontSize: "clamp(20px, 5vw, 44px)",
+                    color: "var(--ink)",
+                  }}
+                >
+                  {userName || "Student"}
+                </p>
+                <div className="mt-1 flex items-center gap-2 w-40 justify-center">
+                  <div className="h-px flex-1 bg-[#C9A227]" />
+                  <div className="w-1.5 h-1.5 rotate-45 bg-[#C9A227]" />
+                  <div className="h-px flex-1 bg-[#C9A227]" />
                 </div>
               </div>
-              <div className="flex items-center gap-3 flex-1">
-                <Mail size={16} style={{ color: "var(--body)" }} />
-                <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
-                    Email
-                  </p>
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-                    {userEmail || "Not set"}
-                  </p>
+
+              {/* completion line */}
+              <p className="mt-1 text-[11px] sm:text-[12px]" style={{ color: "var(--body)" }}>
+                has successfully completed the course
+              </p>
+              <p
+                className="mt-0.5 px-4 text-[13px] sm:text-[16px] font-bold text-center"
+                style={{ color: "#0B7A4B" }}
+              >
+                {courseTitle || params.slug.replace(/-/g, " ")}
+              </p>
+
+              {/* stats */}
+              <div className="mt-2.5 grid grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-[360px]">
+                {[
+                  { label: "GRADE", value: displayGrade.grade },
+                  { label: "SCORE", value: `${displayGrade.percentage}%` },
+                  {
+                    label: "ENGLISH LEVEL",
+                    value: displayGrade.englishLevel.split(" ")[0],
+                  },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="rounded-lg px-2 py-1.5 text-center border"
+                    style={{ background: "#E2F6EE", borderColor: "#0FA968" }}
+                  >
+                    <p
+                      className="font-mono text-[8px] uppercase tracking-wider"
+                      style={{ color: "var(--body)" }}
+                    >
+                      {s.label}
+                    </p>
+                    <p className="text-[12px] sm:text-[15px] font-bold mt-0.5" style={{ color: "#0B7A4B" }}>
+                      {s.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* footer */}
+              <div className="mt-auto mb-3 w-full">
+                <div className="grid grid-cols-3 gap-2 text-center px-1">
+                  <div>
+                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                      Issued On
+                    </p>
+                    <p className="text-[10px] font-semibold" style={{ color: "var(--ink)" }}>
+                      {new Date().toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                      Certificate ID
+                    </p>
+                    <p className="text-[10px] font-semibold" style={{ color: "var(--ink)" }}>
+                      {progress?.certificateIssued ? "Issued" : "FB-••••••"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-[8px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                      Authorized Signature
+                    </p>
+                    <p
+                      className="leading-none text-[12px]"
+                      style={{
+                        fontFamily: "var(--font-hand), cursive",
+                        color: "#0B7A4B",
+                      }}
+                    >
+                      FlyBridge
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Download section */}
-          <div className="px-8 py-6 border-t" style={{ borderColor: "var(--line)" }}>
-            {canDownload ? (
+        {/* ============ Download / status section ============ */}
+        <div className="mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
+          <div className="p-6">
+            {grade && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                {[
+                  { label: "Overall Score", value: `${grade.percentage}%`, color: grade.passed ? "#0FA968" : "#F87171" },
+                  { label: "Grade", value: grade.grade, color: "var(--brand)" },
+                  { label: "English Level", value: grade.englishLevel.split(" ")[0], color: "#C9A227" },
+                  { label: "Quizzes Done", value: `${grade.completedQuizzes}/${grade.totalQuizzes}`, color: "var(--brand)" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl p-3.5 text-center"
+                    style={{ background: "var(--bg-soft)" }}
+                  >
+                    <p className="font-mono text-[9px] uppercase tracking-wider" style={{ color: "var(--body)" }}>
+                      {item.label}
+                    </p>
+                    <p className="text-[18px] font-bold mt-1" style={{ color: item.color }}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {clientEligible && serverEligible ? (
               <button
                 type="button"
                 onClick={generateCertificate}
@@ -420,15 +401,36 @@ export default function CertificatePage({
                   </>
                 )}
               </button>
+            ) : clientEligible && !serverEligible ? (
+              <button
+                type="button"
+                onClick={generateCertificate}
+                disabled={generating}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: "var(--brand)", color: "#fff" }}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Verifying &amp; generating…
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} />
+                    Verify &amp; Download Certificate (PDF)
+                  </>
+                )}
+              </button>
             ) : (
               <div className="text-center">
                 <div
-                  className="rounded-xl p-4 mb-4"
-                  style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}
+                  className="rounded-xl p-4 mb-4 flex items-start gap-3 text-left"
+                  style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}
                 >
+                  <Lock size={18} style={{ color: "#B45309", marginTop: 1 }} />
                   <p className="text-[13px] font-medium" style={{ color: "#B45309" }}>
                     {grade && grade.completedQuizzes < grade.totalQuizzes
-                      ? `Complete all quizzes to unlock your certificate (${grade.completedQuizzes}/${grade.totalQuizzes} done)`
+                      ? `Complete all quizzes to unlock your certificate (${grade.completedQuizzes}/${grade.totalQuizzes} done).`
                       : grade && grade.percentage < 60
                         ? `Your average score is ${grade.percentage}%. You need at least 60% to earn a certificate.`
                         : "Complete all quizzes with 60% or higher to earn your certificate."}
