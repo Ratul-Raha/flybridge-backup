@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
+import { ShareLeaderboardButton } from "@/components/leaderboard-share-button";
 import { computeLeaderboard, type LeaderboardEntry } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -234,6 +235,7 @@ export default async function LeaderboardPage() {
                 <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ background: "var(--brand)" }} />
                 Updated daily · Reshuffled Monday
               </div>
+              <ShareLeaderboardButton />
             </div>
 
             {entries.length === 0 ? (
