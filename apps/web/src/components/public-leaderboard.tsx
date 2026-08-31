@@ -30,7 +30,8 @@ export async function PublicLeaderboard() {
       name: e.user.name,
       avatar: e.user.avatar,
     }));
-  } catch {
+  } catch (error) {
+    console.error("PublicLeaderboard error", error);
     top = [];
   }
 

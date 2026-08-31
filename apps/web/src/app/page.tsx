@@ -6,6 +6,8 @@ import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
 import { PromoPopup } from "@/components/promo-popup";
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { computeLeaderboard, type LeaderboardEntry } from "@/lib/leaderboard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Leaderboard | FlyBridge",
   description:
@@ -60,7 +62,8 @@ export default async function LeaderboardPage() {
   try {
     const res = await computeLeaderboard({ limit: 10, periodDays: 7 });
     entries = res.entries;
-  } catch {
+  } catch (error) {
+    console.error("LeaderboardPage error", error);
     entries = [];
   }
 
