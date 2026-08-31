@@ -48,8 +48,8 @@ export async function PublicLeaderboard() {
           </div>
 
           <h2
-            className="mt-7 font-display font-semibold tracking-[-0.03em] leading-[1.06] text-balance"
-            style={{ fontSize: "clamp(32px,3.6vw,48px)", color: "var(--ink)" }}
+            className="mt-7 font-display font-medium tracking-[-0.02em] leading-[1.1] text-balance"
+            style={{ fontSize: "clamp(26px,3vw,38px)", color: "var(--ink)" }}
           >
             Consistency earns
             <br />

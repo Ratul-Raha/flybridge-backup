@@ -93,7 +93,7 @@ export default async function LeaderboardPage() {
                 FlyBridge · Weekly
               </div>
 
-              <h1 className="mt-7 font-display font-semibold leading-[1.05] tracking-[-0.03em] text-balance max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(46px,5.6vw,78px)" }}>
+              <h1 className="mt-7 font-display font-semibold leading-[1.1] tracking-[-0.02em] text-balance max-w-[600px]" style={{ color: "var(--ink)", fontSize: "clamp(36px,4.4vw,52px)" }}>
                 Progress has a{" "}
                 <span style={GRAD_TEXT}>scoreboard.</span>
               </h1>
@@ -226,7 +226,7 @@ export default async function LeaderboardPage() {
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
                   The board
                 </div>
-                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(32px,3.8vw,44px)", color: "var(--ink)" }}>
+                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(28px,3.4vw,38px)", color: "var(--ink)" }}>
                   This week&apos;s top 10
                 </h2>
               </div>
@@ -259,12 +259,12 @@ export default async function LeaderboardPage() {
                           background: isTop ? "linear-gradient(90deg, rgba(18,32,67,0.02), transparent 40%)" : undefined,
                         }}
                       >
-                        <span className="font-display text-[26px] sm:text-[30px] font-bold tracking-[-0.02em] leading-none" style={{ color: isTop ? metal!.num : "var(--body)" }}>
+                        <span className="font-display text-[18px] sm:text-[20px] font-semibold tracking-[-0.01em] leading-none" style={{ color: isTop ? metal!.num : "var(--body)" }}>
                           {String(rank).padStart(2, "0")}
                         </span>
                         <div className="flex min-w-0 items-center gap-4">
-                          <Avatar entry={entry} size={42} />
-                          <span className="min-w-0 truncate text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+                          <Avatar entry={entry} size={40} />
+                          <span className="min-w-0 truncate text-[15px] font-medium" style={{ color: "var(--ink)" }}>
                             {entry.user.name}
                           </span>
                         </div>
@@ -295,7 +295,7 @@ export default async function LeaderboardPage() {
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
                   How it works
                 </div>
-                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(30px,3.6vw,42px)", color: "var(--ink)" }}>
+                <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(28px,3.4vw,38px)", color: "var(--ink)" }}>
                   No luck involved.
                   <br />
                   Just learning.
@@ -379,7 +379,7 @@ export default async function LeaderboardPage() {
                 <span className="w-[6px] h-[6px] rounded-full" style={{ background: "#14B57E" }} />
                 Fresh board every Monday
               </div>
-              <h2 className="mt-7 font-display font-bold leading-[1.05] tracking-[-0.02em] text-white text-balance mx-auto max-w-[720px]" style={{ fontSize: "clamp(38px,5vw,64px)" }}>
+              <h2 className="mt-7 font-display font-semibold leading-[1.15] tracking-[-0.02em] text-white text-balance mx-auto max-w-[720px]" style={{ fontSize: "clamp(28px,3.4vw,40px)" }}>
                 Your name.
                 <br />
                 <span style={GRAD_TEXT}>Every Monday.</span>
