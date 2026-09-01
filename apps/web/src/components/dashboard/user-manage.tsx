@@ -209,17 +209,30 @@ export function UserManage() {
   const { user: me } = useAuth();
   const isAdmin = me?.accountType === "admin";
 
+  const [initParams] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
+  );
+
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [pagination, setPagination] = useState({ page: 1, perPage: 15, total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [query, setQuery] = useState("");
-  const [accountType, setAccountType] = useState("");
-  const [subscription, setSubscription] = useState("");
-  const [certificateDownloaded, setCertificateDownloaded] = useState("");
-  const [sort, setSort] = useState("newest");
+  const [query, setQuery] = useState(() => initParams?.get("q") ?? "");
+  const [accountType, setAccountType] = useState(() => initParams?.get("accountType") ?? "");
+  const [subscription, setSubscription] = useState(() => {
+    const v = initParams?.get("subscription") ?? "";
+    return v === "paid" || v === "free" ? v : "";
+  });
+  const [certificateDownloaded, setCertificateDownloaded] = useState(() => {
+    const v = initParams?.get("certificateDownloaded") ?? "";
+    return v === "yes" || v === "only" ? v : "";
+  });
+  const [sort, setSort] = useState(() => {
+    const v = initParams?.get("sort");
+    return v ? v : "newest";
+  });
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
 
@@ -390,39 +403,58 @@ export function UserManage() {
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {(
               [
-                { label: "Total users", value: stats.totalUsers, icon: Users, gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)", caption: "All registered accounts" },
-                { label: "Paid members", value: stats.paidUsers, icon: Crown, gradient: "linear-gradient(135deg,#F59E0B,#F97316)", caption: stats.totalUsers > 0 ? `${Math.round((stats.paidUsers / stats.totalUsers) * 100)}% of all users` : undefined },
-                { label: "Free members", value: stats.freeUsers, icon: UserPlus, gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)", caption: undefined },
-                { label: "Admins & mods", value: stats.admins + stats.moderators, icon: Shield, gradient: "linear-gradient(135deg,#10B981,#34D399)", caption: `${stats.moderators} moderators` },
-                { label: "Cert downloads", value: stats.certDownloaders, icon: Download, gradient: "linear-gradient(135deg,#0284C7,#06B6D4)", caption: "Users who downloaded a cert" },
-                { label: "New this week", value: stats.newThisWeek, icon: CalendarDays, gradient: "linear-gradient(135deg,#F43F5E,#FB7185)", caption: "Registered in last 7 days" },
+                { label: "Total users", value: stats.totalUsers, icon: Users, gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)", caption: "All registered accounts", filter: { reset: true } as const },
+                { label: "Paid members", value: stats.paidUsers, icon: Crown, gradient: "linear-gradient(135deg,#F59E0B,#F97316)", caption: stats.totalUsers > 0 ? `${Math.round((stats.paidUsers / stats.totalUsers) * 100)}% of all users` : undefined, filter: { subscription: "paid", reset: false } as const },
+                { label: "Free members", value: stats.freeUsers, icon: UserPlus, gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)", caption: undefined, filter: { subscription: "free", reset: false } as const },
+                { label: "Admins & mods", value: stats.admins + stats.moderators, icon: Shield, gradient: "linear-gradient(135deg,#10B981,#34D399)", caption: `${stats.moderators} moderators`, filter: { accountType: "admin", reset: false } as const },
+                { label: "Cert downloads", value: stats.certDownloaders, icon: Download, gradient: "linear-gradient(135deg,#0284C7,#06B6D4)", caption: "Users who downloaded a cert", filter: { certificateDownloaded: "yes", reset: false } as const },
+                { label: "New this week", value: stats.newThisWeek, icon: CalendarDays, gradient: "linear-gradient(135deg,#F43F5E,#FB7185)", caption: "Registered in last 7 days", filter: { reset: true } as const },
               ] as const
-            ).map((c) => (
-              <div
-                key={c.label}
-                className="relative rounded-[22px] border bg-white p-5 overflow-hidden"
-                style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
-              >
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08]" style={{ background: c.gradient }} />
-                <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white mb-4"
-                  style={{ background: c.gradient, boxShadow: `0 8px 18px -6px ${c.gradient}66` }}
+            ).map((c) => {
+              const clickable = true;
+              return (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => {
+                    const f = c.filter;
+                    setQuery("");
+                    setAccountType("accountType" in f && f.accountType ? f.accountType : "");
+                    setSubscription("subscription" in f && f.subscription ? f.subscription : "");
+                    setCertificateDownloaded("certificateDownloaded" in f && f.certificateDownloaded ? f.certificateDownloaded : "");
+                    setSort("newest");
+                    setPage(1);
+                  }}
+                  className={`group relative rounded-[22px] border bg-white p-5 overflow-hidden text-left transition-all duration-250 ${
+                    clickable ? "hover:-translate-y-1 cursor-pointer hover:shadow-[0_16px_36px_-16px_rgba(16,24,40,0.28)]" : "cursor-default"
+                  }`}
+                  style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
                 >
-                  <c.icon size={19} strokeWidth={2.2} />
-                </div>
-                <p className="font-display text-[26px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
-                  {c.value.toLocaleString()}
-                </p>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
-                  {c.label}
-                </p>
-                {c.caption && (
-                  <p className="text-[11.5px] mt-2.5 font-medium" style={{ color: "var(--body)" }}>
-                    {c.caption}
+                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08] transition-transform duration-500 group-hover:scale-150" style={{ background: c.gradient }} />
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white mb-4 transition-transform duration-250 group-hover:scale-110 group-hover:rotate-6"
+                    style={{ background: c.gradient, boxShadow: `0 8px 18px -6px ${c.gradient}66` }}
+                  >
+                    <c.icon size={19} strokeWidth={2.2} />
+                  </div>
+                  <p className="font-display text-[26px] font-semibold leading-none transition-colors duration-200 group-hover:text-[var(--brand)]" style={{ color: "var(--ink)" }}>
+                    {c.value.toLocaleString()}
                   </p>
-                )}
-              </div>
-            ))}
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
+                    {c.label}
+                  </p>
+                  {c.caption && (
+                    <p className="text-[11.5px] mt-2.5 font-medium" style={{ color: "var(--body)" }}>
+                      {c.caption}
+                    </p>
+                  )}
+                  <div
+                    className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    style={{ background: c.gradient }}
+                  />
+                </button>
+              );
+            })}
           </div>
         )
       )}
