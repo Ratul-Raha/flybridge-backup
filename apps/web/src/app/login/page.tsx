@@ -12,10 +12,25 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { mode?: string; next?: string };
+  searchParams: { mode?: string; next?: string; source?: string };
 }) {
-  const { mode, next } = searchParams;
+  const { mode, next, source } = searchParams;
   const safeNext = next?.startsWith("/") && !next.startsWith("//") ? next : null;
+
+  const safeSource =
+    typeof source === "string" && source.length > 0 && source.length <= 60
+      ? source
+      : null;
+
+  const derivedSource = safeSource
+    ? safeSource
+    : safeNext?.startsWith("/dashboard/scholarships")
+      ? "scholarship"
+      : safeNext?.startsWith("/dashboard/courses") || safeNext?.startsWith("/courses")
+        ? "course"
+        : safeNext?.startsWith("/dashboard/resources") || safeNext?.startsWith("/resources")
+          ? "resource"
+          : "direct";
 
   return (
     <main className="min-h-screen flex flex-col items-center px-[clamp(20px,4.5vw,56px)] pt-[clamp(96px,14vh,150px)] pb-16">
@@ -37,7 +52,7 @@ export default async function LoginPage({
           className="rounded-lg border bg-white p-[clamp(24px,5vw,40px)]"
           style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -32px rgba(18,32,67,0.18)" }}
         >
-          <AuthForm initialMode={mode === "register" ? "register" : "login"} next={safeNext} />
+          <AuthForm initialMode={mode === "register" ? "register" : "login"} next={safeNext} source={derivedSource} />
         </div>
 
         <p className="text-center text-[12.5px] leading-[1.6] mt-6" style={{ color: "var(--body)" }}>

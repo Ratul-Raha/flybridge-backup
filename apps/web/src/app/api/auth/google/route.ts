@@ -30,7 +30,11 @@ function isTransientDbError(error: unknown): boolean {
   return TRANSIENT_PATTERNS.some((p) => message.includes(p));
 }
 
-async function loadOrCreateUser(email: string, claims: Claims) {
+async function loadOrCreateUser(
+  email: string,
+  claims: Claims,
+  source?: string | null
+) {
   await connectDb();
 
   let user = await User.findOne({ email });
@@ -43,6 +47,7 @@ async function loadOrCreateUser(email: string, claims: Claims) {
       phone: claims.phone_number,
       accountType: "user",
       subscription: "free" as SubscriptionType,
+      signupSource: source ?? null,
     });
     try {
       await emitEvent("user.registered", {
@@ -75,6 +80,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing idToken" }, { status: 400 });
     }
 
+    const source =
+      typeof body?.source === "string" && body.source.length > 0
+        ? body.source.slice(0, 60)
+        : null;
+
     let claims;
     try {
       claims = await verifyIdToken(idToken);
@@ -92,12 +102,12 @@ export async function POST(request: NextRequest) {
 
     let user;
     try {
-      user = await loadOrCreateUser(email, claims);
+      user = await loadOrCreateUser(email, claims, source);
     } catch (dbError) {
       if (!isTransientDbError(dbError)) throw dbError;
       console.warn("auth/google transient db error, retrying", dbError);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      user = await loadOrCreateUser(email, claims);
+      user = await loadOrCreateUser(email, claims, source);
     }
 
     const session = await createSession({

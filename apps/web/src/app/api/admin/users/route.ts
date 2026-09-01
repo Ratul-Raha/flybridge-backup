@@ -160,6 +160,7 @@ export async function GET(request: NextRequest) {
           avatar: u.avatar ?? null,
           accountType: u.accountType,
           subscription: u.subscription,
+          signupSource: u.signupSource ?? null,
           createdAt: u.createdAt,
           seminars: regMap.get(u._id.toString()) ?? 0,
           courses: enrollMap.get(u._id.toString()) ?? 0,

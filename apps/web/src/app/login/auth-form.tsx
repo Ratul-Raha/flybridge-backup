@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 type Mode = "login" | "register";
 
-export function AuthForm({ initialMode, next }: { initialMode: Mode; next?: string | null }) {
+export function AuthForm({ initialMode, next, source }: { initialMode: Mode; next?: string | null; source?: string | null }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [signingIn, setSigningIn] = useState(false);
   const { user, error, signInWithGoogle } = useAuth();
@@ -17,7 +17,7 @@ export function AuthForm({ initialMode, next }: { initialMode: Mode; next?: stri
   const handleGoogleSignIn = async () => {
     setSigningIn(true);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(source ?? null);
     } finally {
       setSigningIn(false);
     }

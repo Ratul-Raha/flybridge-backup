@@ -31,6 +31,7 @@ const userSchema = new Schema(
       default: "free",
       index: true,
     },
+    signupSource: { type: String, default: null },
   },
   { timestamps: true }
 );

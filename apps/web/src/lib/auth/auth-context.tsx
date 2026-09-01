@@ -29,7 +29,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   error: string | null;
-  signInWithGoogle: () => Promise<string | null>;
+  signInWithGoogle: (source?: string | null) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 };
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, [refreshSession]);
 
-  const signInWithGoogle = useCallback(async (): Promise<string | null> => {
+  const signInWithGoogle = useCallback(async (source?: string | null): Promise<string | null> => {
     setError(null);
     try {
       if (!auth) throw new Error("Firebase is not configured. Add your Firebase config to apps/web/.env.local");
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken, source }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

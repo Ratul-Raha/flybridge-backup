@@ -33,6 +33,7 @@ type UserRow = {
   avatar: string | null;
   accountType: "admin" | "moderator" | "user";
   subscription: "free" | "paid";
+  signupSource: string | null;
   createdAt: string;
   seminars: number;
   courses: number;
@@ -119,9 +120,9 @@ const scoreColor = (score: number): string => {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_72px_62px_44px]";
+const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_44px]";
 
-const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_120px_72px_72px_72px_72px_62px_44px]";
+const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_44px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -157,6 +158,29 @@ function PlanBadge({ plan, sm }: { plan: string; sm?: boolean }) {
     >
       {paid && <Crown size={10} strokeWidth={2.4} />}
       {paid ? "Paid" : "Free"}
+    </span>
+  );
+}
+
+const SOURCE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
+  scholarship: { bg: "rgba(47,95,224,0.12)", fg: "#2F5FE0", label: "Scholarship" },
+  course: { bg: "rgba(15,169,104,0.12)", fg: "#0FA968", label: "Course" },
+  resource: { bg: "rgba(219,138,46,0.14)", fg: "#B45309", label: "Resource" },
+  direct: { bg: "rgba(148,163,184,0.14)", fg: "#64748B", label: "Direct" },
+};
+
+function SourceBadge({ source }: { source: string | null }) {
+  if (!source) {
+    return <span className="text-[12px]" style={{ color: "#A6ADC0" }}>—</span>;
+  }
+  const key = source.toLowerCase();
+  const s = SOURCE_STYLES[key] ?? { bg: "rgba(148,163,184,0.14)", fg: "#64748B", label: source };
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-full font-semibold px-2.5 py-[3px]"
+      style={{ background: s.bg, color: s.fg, fontSize: 10.5 }}
+    >
+      {s.label}
     </span>
   );
 }
@@ -495,7 +519,7 @@ export function UserManage() {
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
             >
-              {["User", "Phone", "Role", "Plan", "Joined", "Seminars", "Courses", "Certs", "Files", "Readiness", "View"].map((c) => (
+              {["User", "Phone", "Role", "Plan", "Source", "Joined", "Seminars", "Courses", "Certs", "Files", "Readiness", "View"].map((c) => (
                 <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                   {c}
                 </span>
@@ -532,6 +556,7 @@ export function UserManage() {
                     </div>
 
                     <span className="lg:hidden flex items-center gap-1.5 justify-end">
+                      <SourceBadge source={u.signupSource} />
                       <RoleBadge role={u.accountType} sm />
                       <PlanBadge plan={u.subscription} sm />
                     </span>
@@ -544,6 +569,9 @@ export function UserManage() {
                     </span>
                     <span className="hidden lg:block">
                       <PlanBadge plan={u.subscription} />
+                    </span>
+                    <span className="hidden lg:block">
+                      <SourceBadge source={u.signupSource} />
                     </span>
                     <span className="hidden lg:block text-[12.5px]" style={{ color: "var(--body)" }}>
                       {fmtDate(u.createdAt)}
