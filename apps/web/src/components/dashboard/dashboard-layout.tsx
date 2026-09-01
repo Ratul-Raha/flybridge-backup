@@ -328,7 +328,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const roleStyle = ROLE_STYLES[user?.accountType ?? "user"] ?? ROLE_STYLES.user;
 
-  if (isMobile && user?.accountType === "user") {
+  // Full-screen course experiences (lesson player, certificate) have their own
+  // mobile layout, so they must not be swallowed by the mobile app shell.
+  const isFullScreenCourse =
+    /^\/dashboard\/courses\/[^/]+\/(learn|certificate)/.test(pathname);
+
+  if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
     return <MobileUserApp />;
   }
 
