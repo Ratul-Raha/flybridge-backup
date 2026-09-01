@@ -45,13 +45,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function ScholarshipDetailPage({ params }: Params) {
+  const session = await readSession();
+  if (session?.userId) redirect(`/dashboard/scholarships/${params.id}`);
+
   try {
     await connectDb();
     const scholarship = await Scholarship.findOne({ _id: params.id, active: true });
     if (!scholarship) notFound();
-
-    const session = await readSession();
-    if (session?.userId) redirect(`/dashboard/scholarships/${params.id}`);
 
     return (
       <main>
