@@ -295,6 +295,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           },
           {
             kind: "link",
+            label: "Readiness",
+            href: "/dashboard/admin/readiness",
+            icon: Gauge,
+            active: pathname.startsWith("/dashboard/admin/readiness"),
+          },
+          {
+            kind: "link",
             label: "Automation",
             href: "/dashboard/admin/automations",
             icon: Workflow,

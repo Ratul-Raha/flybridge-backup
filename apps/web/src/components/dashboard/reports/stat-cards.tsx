@@ -79,7 +79,7 @@ const CARDS: {
     label: "Readiness checks",
     icon: Gauge,
     gradient: "linear-gradient(135deg,#F43F5E,#FB7185)",
-    href: "/dashboard/readiness",
+    href: "/dashboard/admin/readiness",
     caption: () => "Study abroad assessments run",
   },
 ];
