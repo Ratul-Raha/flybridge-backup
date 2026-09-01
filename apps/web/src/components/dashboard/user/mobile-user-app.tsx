@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -36,14 +37,23 @@ const TABS: { id: TabId; label: string; icon: LucideIcon; href: string }[] = [
   { id: "settings", label: "Settings", icon: SettingsIcon, href: "/dashboard/settings" },
 ];
 
-function tabFromPath(pathname: string): TabId {
-  if (pathname.startsWith("/dashboard/seminars")) return "seminars";
-  if (pathname.startsWith("/dashboard/courses")) return "courses";
-  if (pathname.startsWith("/dashboard/resources")) return "resources";
-  if (pathname.startsWith("/dashboard/scholarships")) return "scholarships";
-  if (pathname.startsWith("/dashboard/sop-generator")) return "sop";
-  if (pathname.startsWith("/dashboard/settings")) return "settings";
-  return "dashboard";
+// Routes the mobile shell renders itself. Any other /dashboard/* path
+// (readiness, notifications, detail pages, …) falls through to its real page.
+const OWNED: { tab: TabId; paths: string[] }[] = [
+  { tab: "dashboard", paths: ["/dashboard"] },
+  { tab: "seminars", paths: ["/dashboard/seminars", "/dashboard/seminars/mine"] },
+  { tab: "courses", paths: ["/dashboard/courses", "/dashboard/courses/mine"] },
+  { tab: "resources", paths: ["/dashboard/resources", "/dashboard/resources/mine"] },
+  { tab: "scholarships", paths: ["/dashboard/scholarships"] },
+  { tab: "sop", paths: ["/dashboard/sop-generator"] },
+  { tab: "settings", paths: ["/dashboard/settings"] },
+];
+
+function ownedTab(pathname: string): TabId | null {
+  for (const owned of OWNED) {
+    if (owned.paths.includes(pathname)) return owned.tab;
+  }
+  return null;
 }
 
 function subFromPath(pathname: string, tab: TabId): "all" | "mine" | null {
@@ -51,11 +61,12 @@ function subFromPath(pathname: string, tab: TabId): "all" | "mine" | null {
   return pathname.endsWith("/mine") ? "mine" : "all";
 }
 
-export function MobileUserApp() {
+export function MobileUserApp({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useAuth();
 
-  const tab = tabFromPath(pathname);
+  const owned = ownedTab(pathname);
+  const tab = owned ?? "dashboard";
   const sub = subFromPath(pathname, tab);
 
   const subParent: SectionParent | null =
@@ -97,25 +108,31 @@ export function MobileUserApp() {
 
       {/* Screen content */}
       <main className="flex-1 px-5 pt-5 pb-28">
-        {tab === "dashboard" && <MobileDashboardHome />}
+        {!owned ? (
+          <div>{children}</div>
+        ) : (
+          <>
+            {tab === "dashboard" && <MobileDashboardHome />}
 
-        {subParent && tab !== "resources" && (
-          <div className="mb-6">
-            <SectionTabs parent={subParent} active={sub ?? "all"} />
-          </div>
+            {subParent && tab !== "resources" && (
+              <div className="mb-6">
+                <SectionTabs parent={subParent} active={sub ?? "all"} />
+              </div>
+            )}
+
+            {tab === "seminars" && (sub === "mine" ? <MySeminars /> : <AllSeminars />)}
+            {tab === "courses" && (sub === "mine" ? <MyCourses /> : <AllCourses />)}
+            {tab === "resources" &&
+              (sub === "mine" ? (
+                <ResourceBrowser mobile initialSection="mine" />
+              ) : (
+                <ResourceBrowser mobile />
+              ))}
+            {tab === "scholarships" && <ScholarshipBrowser />}
+            {tab === "sop" && <SopGenerator mobile />}
+            {tab === "settings" && <MobileSettings />}
+          </>
         )}
-
-        {tab === "seminars" && (sub === "mine" ? <MySeminars /> : <AllSeminars />)}
-        {tab === "courses" && (sub === "mine" ? <MyCourses /> : <AllCourses />)}
-        {tab === "resources" &&
-          (sub === "mine" ? (
-            <ResourceBrowser mobile initialSection="mine" />
-          ) : (
-            <ResourceBrowser mobile />
-          ))}
-        {tab === "scholarships" && <ScholarshipBrowser />}
-        {tab === "sop" && <SopGenerator mobile />}
-        {tab === "settings" && <MobileSettings />}
       </main>
 
       {/* Bottom tab bar */}

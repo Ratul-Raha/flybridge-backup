@@ -341,7 +341,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     /^\/dashboard\/courses\/[^/]+\/(learn|certificate)/.test(pathname);
 
   if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
-    return <MobileUserApp />;
+    return <MobileUserApp>{children}</MobileUserApp>;
   }
 
   const toggleGroup = (label: string) =>
