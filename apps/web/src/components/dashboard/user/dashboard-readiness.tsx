@@ -69,7 +69,7 @@ function useCountUp(target: number, duration = 1200): number {
 function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-[24px] border p-6 sm:p-8" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-[14px] border p-6 sm:p-8" style={{ borderColor: "var(--line)" }}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="h-6 w-40 rounded-lg fb-shimmer" />
           <div className="h-9 w-36 rounded-full fb-shimmer" />
@@ -112,7 +112,7 @@ function ReadinessHero({ run, onRetake }: { run: StoredReadinessRun; onRetake: (
 
   return (
     <div
-      className="relative overflow-hidden rounded-[24px] text-white px-6 py-7 sm:px-8 sm:py-8"
+      className="relative overflow-hidden rounded-[14px] text-white px-6 py-7 sm:px-8 sm:py-8"
       style={{
         background: "linear-gradient(135deg, #071D14 0%, #0A3D2C 30%, #0FA968 68%, #2F5FE0 135%)",
         boxShadow: "0 30px 60px -24px rgba(15,169,104,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
@@ -234,7 +234,7 @@ function StatTile({
   pct?: number;
 }) {
   return (
-    <div className="group flex flex-col rounded-2xl border bg-white p-5 transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_36px_-20px_rgba(18,32,67,0.3)]" style={{ borderColor: "var(--line)" }}>
+    <div className="group flex flex-col rounded-xl border bg-white p-5 transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_36px_-20px_rgba(18,32,67,0.3)]" style={{ borderColor: "var(--line)" }}>
       <div className="flex items-center gap-2.5">
         <span
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
@@ -369,6 +369,7 @@ export function DashboardReadiness() {
               generating={false}
               error={null}
               onRetake={() => router.push("/readiness")}
+              showBanner={false}
             />
           ) : (
             <div
