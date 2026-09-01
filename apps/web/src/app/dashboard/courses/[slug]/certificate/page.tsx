@@ -51,7 +51,6 @@ export default function CertificatePage({
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [serverEligible, setServerEligible] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
   const [issuedCertId, setIssuedCertId] = useState("");
   const [origin, setOrigin] = useState("");
 
@@ -67,10 +66,6 @@ export default function CertificatePage({
         setUserName(userData.name ?? "");
         setUserEmail(userData.email ?? "");
         setUserAvatar(userData.avatar ?? null);
-        setIsStaff(
-          userData.accountType === "admin" ||
-            userData.accountType === "moderator"
-        );
       }
 
       const courseRes = await fetch(`/api/courses?slug=${params.slug}`);
@@ -130,7 +125,7 @@ export default function CertificatePage({
   }
 
   const grade = progress?.grade;
-  const unlocked = isStaff || (grade ? grade.passed : false);
+  const unlocked = grade ? grade.passed : false;
   const clientEligible = unlocked;
 
   const displayGrade = grade ?? {
@@ -491,7 +486,7 @@ export default function CertificatePage({
         {/* ============ Download / status section ============ */}
         <div className="no-print mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
-            {clientEligible && (serverEligible || isStaff) ? (
+            {clientEligible && serverEligible ? (
               <>
                 <button
                   type="button"

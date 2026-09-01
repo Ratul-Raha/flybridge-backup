@@ -23,8 +23,9 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Staff (admin/moderator) may issue/download certificates at any time,
-  // regardless of quiz completion.
+  // Staff (admin/moderator) may access the route at any time (to verify or
+  // preview), but are still subject to the same completion gate as everyone
+  // else — a certificate is only issued after all quizzes are taken at >=60%.
   const isManager =
     session.role === "admin" || session.role === "moderator";
 
@@ -53,35 +54,25 @@ export async function GET(
       0
     );
 
-    let progress = await CourseProgress.findOne({
+    const progress = await CourseProgress.findOne({
       user: session.userId,
       course: course._id,
     });
 
-    if (!isManager && !progress) {
+    if (!progress) {
       return NextResponse.json(
         { error: "Course not completed", eligible: false },
         { status: 403 }
       );
     }
 
-    const grade = progress
-      ? calculateGrade(
-          progress.quizScores as { score: number }[],
-          totalLessons
-        )
-      : {
-          percentage: 100,
-          grade: "A",
-          englishLevel: "Advanced (C2)",
-          passed: true,
-          totalQuizzes: totalLessons,
-          completedQuizzes: totalLessons,
-        };
+    const grade = calculateGrade(
+      progress.quizScores as { score: number }[],
+      totalLessons
+    );
 
     const eligible =
-      isManager ||
-      (grade.passed && grade.completedQuizzes === grade.totalQuizzes);
+      grade.passed && grade.completedQuizzes === grade.totalQuizzes;
 
     if (!eligible) {
       return NextResponse.json(
@@ -133,6 +124,8 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Staff (admin/moderator) may access the route (to verify/preview) but are
+  // still subject to the same completion gate as everyone else.
   const isManager =
     session.role === "admin" || session.role === "moderator";
 
@@ -166,36 +159,20 @@ export async function POST(
       course: course._id,
     });
 
-    let grade: {
-      percentage: number;
-      grade: string;
-      englishLevel: string;
-      passed: boolean;
-      totalQuizzes: number;
-      completedQuizzes: number;
-    };
-    if (progress) {
-      grade = calculateGrade(
-        progress.quizScores as { score: number }[],
-        totalLessons
+    if (!progress) {
+      return NextResponse.json(
+        { error: "Course not completed", eligible: false },
+        { status: 403 }
       );
-    } else {
-      const gradeEntry = {
-        percentage: 100,
-        grade: "A",
-        englishLevel: "Advanced (C2)",
-        passed: true,
-      };
-      grade = {
-        ...gradeEntry,
-        totalQuizzes: totalLessons,
-        completedQuizzes: totalLessons,
-      };
     }
 
+    const grade = calculateGrade(
+      progress.quizScores as { score: number }[],
+      totalLessons
+    );
+
     const eligible =
-      isManager ||
-      (grade.passed && grade.completedQuizzes === grade.totalQuizzes);
+      grade.passed && grade.completedQuizzes === grade.totalQuizzes;
 
     if (!eligible) {
       return NextResponse.json(
@@ -204,22 +181,11 @@ export async function POST(
       );
     }
 
-    const target =
-      progress ??
-      new CourseProgress({
-        user: session.userId,
-        course: course._id,
-        courseSlug: course.slug,
-        passed: true,
-        overallPercentage: 100,
-        totalQuizzes: totalLessons,
-        completedQuizzes: totalLessons,
-      });
-
-    target.certificateIssued = true;
-    target.certificateDownloadedAt = new Date();
-    target.certificateDownloadCount = (target.certificateDownloadCount ?? 0) + 1;
-    await target.save();
+    progress.certificateIssued = true;
+    progress.certificateDownloadedAt = new Date();
+    progress.certificateDownloadCount =
+      (progress.certificateDownloadCount ?? 0) + 1;
+    await progress.save();
 
     return NextResponse.json({ ok: true });
   } catch (error) {
