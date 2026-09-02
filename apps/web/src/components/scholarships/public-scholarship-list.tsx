@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, GraduationCap, Lock, School, Share2 } from "lucide-react";
+import { ArrowRight, Award, Check, GraduationCap, Lock, School, Share2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
@@ -75,78 +75,94 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
   return (
     <Link
       href={`/scholarships/${s.id}`}
-      className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
+      className="group flex h-full flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
     >
-      <span
-        className="truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em]"
-        style={{ color: "var(--brand-2)" }}
-      >
-        {s.institution}
-      </span>
-
-      <h3
-        className="mt-2 line-clamp-2 font-display text-[16px] font-semibold leading-snug transition-colors duration-200 group-hover:text-brand-2"
-        style={{ color: "var(--ink)" }}
-      >
-        {s.title || s.institution}
-      </h3>
-
-      {s.amount && (
-        <div className="mt-2.5 text-[15px] font-semibold" style={{ color: "var(--brand-2)" }}>
-          {s.amount}
+      {s.imageUrl ? (
+        <div className="relative aspect-[16/9]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={s.imageUrl} alt={s.title || s.institution} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+        </div>
+      ) : (
+        <div
+          className="relative aspect-[16/9] flex items-center justify-center"
+          style={{ background: "linear-gradient(135deg, rgba(107,76,224,0.10), rgba(15,169,104,0.08))" }}
+        >
+          <Award size={34} style={{ color: "var(--brand-2)" }} />
         </div>
       )}
 
-      <div
-        className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium"
-        style={{ color: "var(--body)" }}
-      >
-        {flag && <span className={`fi fi-${s.countryCode.toLowerCase()}`} />}
-        <span>{s.country || "—"}</span>
-        <span className="opacity-40">·</span>
-        <span className="inline-flex items-center gap-1 capitalize">
-          <Icon size={11} />
-          {LEVEL_LABELS[s.level] ?? "Any level"}
+      <div className="flex flex-1 flex-col p-5">
+        <span
+          className="truncate font-mono text-[10px] font-semibold uppercase tracking-[0.18em]"
+          style={{ color: "var(--brand-2)" }}
+        >
+          {s.institution}
         </span>
-        {s.deadline && (
-          <>
-            <span className="opacity-40">·</span>
-            <span>By {s.deadline}</span>
-          </>
-        )}
-      </div>
 
-      <div
-        className="mt-auto flex items-center justify-between gap-3 border-t pt-4"
-        style={{ borderColor: "var(--line)" }}
-      >
-        {user ? (
-          <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-            style={{ color: "#0FA968" }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#0FA968" }} />
-            Full details
-          </span>
-        ) : (
-          <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-            style={{ color: "var(--body)" }}
-          >
-            <Lock size={11} style={{ color: "var(--brand-2)" }} />
-            Members only
-          </span>
+        <h3
+          className="mt-2 line-clamp-2 font-display text-[16px] font-semibold leading-snug transition-colors duration-200 group-hover:text-brand-2"
+          style={{ color: "var(--ink)" }}
+        >
+          {s.title || s.institution}
+        </h3>
+
+        {s.amount && (
+          <div className="mt-2.5 text-[15px] font-semibold" style={{ color: "var(--brand-2)" }}>
+            {s.amount}
+          </div>
         )}
-        <div className="flex items-center gap-3">
-          <ShareButton id={s.id} institution={s.institution} title={s.title} />
-          <span
-            className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
-            style={{ color: "var(--brand)" }}
-          >
-            See details
-            <ArrowRight size={13} />
+
+        <div
+          className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium"
+          style={{ color: "var(--body)" }}
+        >
+          {flag && <span className={`fi fi-${s.countryCode.toLowerCase()}`} />}
+          <span>{s.country || "—"}</span>
+          <span className="opacity-40">·</span>
+          <span className="inline-flex items-center gap-1 capitalize">
+            <Icon size={11} />
+            {LEVEL_LABELS[s.level] ?? "Any level"}
           </span>
+          {s.deadline && (
+            <>
+              <span className="opacity-40">·</span>
+              <span>By {s.deadline}</span>
+            </>
+          )}
+        </div>
+
+        <div
+          className="mt-auto flex items-center justify-between gap-3 border-t pt-4"
+          style={{ borderColor: "var(--line)" }}
+        >
+          {user ? (
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+              style={{ color: "#0FA968" }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#0FA968" }} />
+              Full details
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+              style={{ color: "var(--body)" }}
+            >
+              <Lock size={11} style={{ color: "var(--brand-2)" }} />
+              Members only
+            </span>
+          )}
+          <div className="flex items-center gap-3">
+            <ShareButton id={s.id} institution={s.institution} title={s.title} />
+            <span
+              className="inline-flex items-center gap-1 text-[13px] font-semibold transition-all duration-200 group-hover:gap-2"
+              style={{ color: "var(--brand)" }}
+            >
+              See details
+              <ArrowRight size={13} />
+            </span>
+          </div>
         </div>
       </div>
     </Link>
