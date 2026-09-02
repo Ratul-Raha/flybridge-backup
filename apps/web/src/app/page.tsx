@@ -13,10 +13,10 @@ export default function HomePage() {
   return (
     <>
       <Nav />
+      <ScholarshipTicker href="/scholarships" />
       <main>
         <Hero />
         <PartnersStrip />
-        <ScholarshipTicker href="/scholarships" />
         <Programs />
         <PublicLeaderboard />
         <SuccessStories />
