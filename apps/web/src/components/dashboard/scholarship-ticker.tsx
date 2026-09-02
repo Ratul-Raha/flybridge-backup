@@ -14,7 +14,7 @@ type TickerScholarship = {
   deadline: string;
 };
 
-export function ScholarshipTicker() {
+export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?: string }) {
   const [items, setItems] = useState<TickerScholarship[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -57,7 +57,7 @@ export function ScholarshipTicker() {
         {[...entries, ...entries].map((e, i) => (
           <Link
             key={`${e.id}-${i}`}
-            href="/dashboard/scholarships"
+            href={href}
             className="flex items-center gap-2.5 py-2.5 whitespace-nowrap text-white/95 transition-opacity duration-200 hover:opacity-80"
           >
             <Award size={14} className="shrink-0 opacity-90" />
