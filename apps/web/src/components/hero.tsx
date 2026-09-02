@@ -69,7 +69,7 @@ export function Hero() {
   return (
     <>
       <section
-        className="hero-section pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
+        className="hero-section pt-[52px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
             "radial-gradient(860px 540px at 82% 2%, rgba(15,169,104,0.16), transparent 62%), radial-gradient(720px 480px at 6% 92%, rgba(47,95,224,0.13), transparent 60%), radial-gradient(680px 460px at 96% 88%, rgba(107,76,224,0.12), transparent 62%), radial-gradient(520px 380px at 0% 6%, rgba(219,138,46,0.13), transparent 60%), linear-gradient(180deg, #F2F7EE -6%, #FFFFFF 46%)",

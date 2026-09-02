@@ -13,7 +13,9 @@ export default function HomePage() {
   return (
     <>
       <Nav />
-      <ScholarshipTicker href="/scholarships" />
+      <div className="pt-[74px] px-[clamp(20px,4.5vw,56px)]">
+        <ScholarshipTicker href="/scholarships" />
+      </div>
       <main>
         <Hero />
         <PartnersStrip />
