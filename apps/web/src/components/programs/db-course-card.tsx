@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Star } from "lucide-react";
 import { BengaliText } from "../bengali-text";
 
 export type DbCourse = {
@@ -17,6 +17,7 @@ export type DbCourse = {
   image: string | null;
   level: string;
   upcoming: boolean;
+  averageRating?: number;
   modules: { title: string; lessons: { title: string }[] }[];
 };
 
@@ -142,6 +143,26 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
                 {m}
               </span>
             ))}
+          </div>
+        )}
+        {course.averageRating && course.averageRating > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-[2px]">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className="w-3 h-3"
+                  style={{
+                    color: i < Math.round(course.averageRating!) ? "#F59E0B" : "#DCE1EA",
+                    fill: i < Math.round(course.averageRating!) ? "#F59E0B" : "transparent",
+                  }}
+                  strokeWidth={1.5}
+                />
+              ))}
+            </span>
+            <span className="text-[11px] font-medium" style={{ color: "var(--ink)" }}>
+              {course.averageRating!.toFixed(1)}
+            </span>
           </div>
         )}
         <div className="mt-auto pt-4 border-t" style={{ borderColor: "var(--line)" }}>

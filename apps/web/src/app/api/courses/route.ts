@@ -22,6 +22,8 @@ function toDto(c: CourseDoc, enrollmentCount?: number) {
     published: c.published ?? false,
     featured: c.featured ?? false,
     upcoming: c.upcoming ?? false,
+    averageRating: c.averageRating ?? 0,
+    reviewCount: c.reviewCount ?? 0,
     ...(enrollmentCount !== undefined ? { enrollmentCount } : {}),
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,

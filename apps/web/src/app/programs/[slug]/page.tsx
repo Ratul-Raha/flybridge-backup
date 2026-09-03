@@ -9,6 +9,7 @@ import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { CourseReview } from "@/lib/models/course-review";
 import { readSession } from "@/lib/auth/session";
 import {
   BadgeCheck,
@@ -29,6 +30,7 @@ import { CheckoutForm } from "@/components/programs/checkout-form";
 import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 import { BengaliText } from "@/components/bengali-text";
+import { ReviewForm } from "@/components/programs/review-form";
 
 type Props = { params: { slug: string } };
 
@@ -412,7 +414,29 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import("mongoose").Types.ObjectId }; enrolled: boolean }) {
+type ReviewItem = {
+  id: string;
+  rating: number;
+  text: string;
+  userName: string;
+  userAvatar: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function DbCoursePage({
+  course,
+  enrolled,
+  reviews,
+  totalReviews,
+  userReview,
+}: {
+  course: CourseDoc & { _id: import("mongoose").Types.ObjectId };
+  enrolled: boolean;
+  reviews: ReviewItem[];
+  totalReviews: number;
+  userReview: { id: string; rating: number; text: string } | null;
+}) {
   const lessonCount = (course.modules ?? []).reduce((n, m) => n + (m.lessons?.length ?? 0), 0);
   const moduleCount = (course.modules ?? []).length;
   const isFree = (course.price ?? 0) <= 0;
@@ -660,6 +684,70 @@ function DbCoursePage({ course, enrolled }: { course: CourseDoc & { _id: import(
         )}
       </section>
 
+      {/* Reviews section */}
+      <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
+        <SectionHeading
+          eyebrow="RATINGS & REVIEWS"
+          title="What students say"
+          desc={totalReviews > 0 ? `Showing ${totalReviews} review${totalReviews === 1 ? "" : "s"}` : "Be the first to review this course."}
+        />
+
+        {totalReviews > 0 && (
+          <div className="mb-8 flex items-center gap-4 p-5 rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
+            <div className="text-center pr-6 border-r" style={{ borderColor: "var(--line)" }}>
+              <div className="text-[36px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                {(course.averageRating ?? 0).toFixed(1)}
+              </div>
+              <div className="mt-2">
+                <Stars value={course.averageRating ?? 0} size={14} />
+              </div>
+              <div className="text-[12px] mt-1.5" style={{ color: "var(--body)" }}>
+                {totalReviews} review{totalReviews === 1 ? "" : "s"}
+              </div>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = reviews.filter((r) => Math.round(r.rating) === star).length;
+                const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                return (
+                  <div key={star} className="flex items-center gap-2 text-[12px]">
+                    <span className="w-3 text-right" style={{ color: "var(--body)" }}>{star}</span>
+                    <Star className="w-3 h-3" style={{ color: "#F59E0B", fill: "#F59E0B" }} strokeWidth={1.5} />
+                    <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: "var(--line)" }}>
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#F59E0B" }} />
+                    </div>
+                    <span className="w-6 text-right" style={{ color: "var(--body)" }}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Review form */}
+        <div className="mb-8">
+          <ReviewForm courseId={course._id.toString()} existingReview={userReview} />
+        </div>
+
+        {/* Review list */}
+        {reviews.length > 0 && (
+          <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+            {reviews.map((review, i) => (
+              <div key={review.id} className={i > 0 ? "border-t" : ""} style={{ borderColor: "var(--line)" }}>
+                <ReviewCard review={{
+                  name: review.userName,
+                  rating: review.rating,
+                  date: new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                  text: review.text,
+                  helpful: 0,
+                  verified: false,
+                }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <style>{`
         .checkout-page {
           --body: #39445A;
@@ -689,7 +777,37 @@ export default async function ProgramPage({ params }: Props) {
         course: course._id,
         status: "active",
       }));
-    return <DbCoursePage course={course} enrolled={Boolean(enrolled)} />;
+
+    const [reviews, userReviewDoc] = await Promise.all([
+      CourseReview.find({ course: course._id })
+        .populate("user", "name avatar")
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean(),
+      session?.userId
+        ? CourseReview.findOne({ course: course._id, user: session.userId }).lean()
+        : null,
+    ]);
+
+    const reviewItems = reviews.map((r) => ({
+      id: r._id.toString(),
+      rating: r.rating,
+      text: r.text,
+      userName: (r.user as any)?.name ?? "Anonymous",
+      userAvatar: (r.user as any)?.avatar ?? null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    }));
+
+    return (
+      <DbCoursePage
+        course={course}
+        enrolled={Boolean(enrolled)}
+        reviews={reviewItems}
+        totalReviews={course.reviewCount ?? 0}
+        userReview={userReviewDoc ? { id: userReviewDoc._id.toString(), rating: userReviewDoc.rating, text: userReviewDoc.text } : null}
+      />
+    );
   }
 
   const details = courseDetails[params.slug];
@@ -738,6 +856,7 @@ export default async function ProgramPage({ params }: Props) {
     image: c.image ?? null,
     level: c.level ?? "",
     upcoming: c.upcoming ?? false,
+    averageRating: c.averageRating ?? 0,
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),

@@ -42,6 +42,8 @@ const courseSchema = new Schema(
     featured: { type: Boolean, default: false },
     upcoming: { type: Boolean, default: false },
     modules: { type: [moduleSchema], default: [] },
+    averageRating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
