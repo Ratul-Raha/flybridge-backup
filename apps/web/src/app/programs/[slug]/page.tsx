@@ -763,11 +763,12 @@ export default async function ProgramPage({ params }: Props) {
 
   await connectDb();
 
-  if (!program) {
-    const course = await Course.findOne({
-      slug: params.slug,
-      $or: [{ published: true }, { upcoming: true }],
-    });
+  const course = await Course.findOne({
+    slug: params.slug,
+    $or: [{ published: true }, { upcoming: true }],
+  });
+
+  if (!program || (program.hasDb && course)) {
     if (!course) notFound();
     const session = await readSession();
     const enrolled =
@@ -816,25 +817,22 @@ export default async function ProgramPage({ params }: Props) {
     : 30;
 
   let cta: CourseCta | undefined;
-  if (program.hasDb) {
-    const course = await Course.findOne({ slug: params.slug, published: true });
-    if (course) {
-      const session = await readSession();
-      const enrolled =
-        session?.userId &&
-        (await CourseEnrollment.exists({
-          user: session.userId,
-          course: course._id,
-          status: "active",
-        }));
-      cta = {
-        courseId: course._id.toString(),
-        slug: course.slug,
-        enrolled: Boolean(enrolled),
-        paid: (course.price ?? 0) > 0,
-        hasDb: true,
-      };
-    }
+  if (program.hasDb && course) {
+    const session = await readSession();
+    const enrolled =
+      session?.userId &&
+      (await CourseEnrollment.exists({
+        user: session.userId,
+        course: course._id,
+        status: "active",
+      }));
+    cta = {
+      courseId: course._id.toString(),
+      slug: course.slug,
+      enrolled: Boolean(enrolled),
+      paid: (course.price ?? 0) > 0,
+      hasDb: true,
+    };
   }
 
   const otherDbCourses = (
