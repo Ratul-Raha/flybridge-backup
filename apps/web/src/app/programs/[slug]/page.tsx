@@ -768,7 +768,7 @@ export default async function ProgramPage({ params }: Props) {
     $or: [{ published: true }, { upcoming: true }],
   });
 
-  if (!program || (program.hasDb && course)) {
+  if (!program) {
     if (!course) notFound();
     const session = await readSession();
     const enrolled =
@@ -834,6 +834,29 @@ export default async function ProgramPage({ params }: Props) {
       hasDb: true,
     };
   }
+
+  const sessionForReviews = await readSession();
+  const [liveReviews, userReviewDoc] = program.hasDb && course
+    ? await Promise.all([
+        CourseReview.find({ course: course._id })
+          .populate("user", "name avatar")
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .lean(),
+        sessionForReviews?.userId
+          ? CourseReview.findOne({ course: course._id, user: sessionForReviews.userId }).lean()
+          : null,
+      ])
+    : [[], null];
+  const liveReviewItems = liveReviews.map((r: any) => ({
+    id: r._id.toString(),
+    rating: r.rating,
+    text: r.text,
+    userName: r.user?.name ?? "Anonymous",
+    userAvatar: r.user?.avatar ?? null,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  }));
 
   const otherDbCourses = (
     await Course.find({
@@ -1089,7 +1112,75 @@ export default async function ProgramPage({ params }: Props) {
           </section>
 
           {/* Reviews */}
-          {details.reviews?.length ? (
+          {program.hasDb && course ? (
+            <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
+              <SectionHeading
+                eyebrow="RATINGS & REVIEWS"
+                title="What students say"
+                desc={
+                  liveReviewItems.length > 0
+                    ? `Showing ${liveReviewItems.length} review${liveReviewItems.length === 1 ? "" : "s"}`
+                    : "Be the first to review this course."
+                }
+              />
+
+              {liveReviewItems.length > 0 && (
+                <div className="mb-8 flex items-center gap-4 p-5 rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
+                  <div className="text-center pr-6 border-r" style={{ borderColor: "var(--line)" }}>
+                    <div className="text-[36px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                      {(course.averageRating ?? 0).toFixed(1)}
+                    </div>
+                    <div className="mt-2">
+                      <Stars value={course.averageRating ?? 0} size={14} />
+                    </div>
+                    <div className="text-[12px] mt-1.5" style={{ color: "var(--body)" }}>
+                      {liveReviewItems.length} review{liveReviewItems.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = liveReviewItems.filter((r) => Math.round(r.rating) === star).length;
+                      const pct = liveReviewItems.length > 0 ? (count / liveReviewItems.length) * 100 : 0;
+                      return (
+                        <div key={star} className="flex items-center gap-2 text-[12px]">
+                          <span className="w-3 text-right" style={{ color: "var(--body)" }}>{star}</span>
+                          <Star className="w-3 h-3" style={{ color: "#F59E0B", fill: "#F59E0B" }} strokeWidth={1.5} />
+                          <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: "var(--line)" }}>
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#F59E0B" }} />
+                          </div>
+                          <span className="w-6 text-right" style={{ color: "var(--body)" }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-8">
+                <ReviewForm
+                  courseId={course._id.toString()}
+                  existingReview={userReviewDoc ? { id: userReviewDoc._id.toString(), rating: userReviewDoc.rating, text: userReviewDoc.text } : null}
+                />
+              </div>
+
+              {liveReviewItems.length > 0 && (
+                <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                  {liveReviewItems.map((review, i) => (
+                    <div key={review.id} className={i > 0 ? "border-t" : ""} style={{ borderColor: "var(--line)" }}>
+                      <ReviewCard review={{
+                        name: review.userName,
+                        rating: review.rating,
+                        date: new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                        text: review.text,
+                        helpful: 0,
+                        verified: false,
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : details.reviews?.length ? (
             <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
               <SectionHeading
                 eyebrow="RATINGS & REVIEWS"
