@@ -53,7 +53,7 @@ export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?:
         maskImage: "linear-gradient(90deg, transparent, black 3%, black 97%, transparent)",
       }}
     >
-      <div className="fb-marquee-track flex items-center gap-8 pr-8 shrink-0">
+      <div className="fb-marquee-track flex items-center gap-8 pr-8 shrink-0" style={{ animationDuration: "60s" }}>
         {[...entries, ...entries].map((e, i) => (
           <Link
             key={`${e.id}-${i}`}
