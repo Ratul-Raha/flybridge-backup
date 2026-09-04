@@ -52,6 +52,9 @@ export async function PATCH(
     if (Array.isArray(body.modules)) {
       course.modules = body.modules as typeof course.modules;
     }
+    if (Array.isArray(body.books)) {
+      course.books = body.books as typeof course.books;
+    }
 
     await course.save();
     await emitEvent("course.updated", {

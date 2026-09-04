@@ -684,6 +684,60 @@ function DbCoursePage({
         )}
       </section>
 
+      {/* Course Books */}
+      {(course.books ?? []).length > 0 && (
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
+          <SectionHeading
+            eyebrow="COURSE MATERIALS"
+            title="Books & reading materials"
+            desc="Included with this course — download and study at your own pace"
+          />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(course.books ?? []).map((book, i) => (
+              <div
+                key={i}
+                className="flex flex-col gap-3 rounded-xl border p-5 bg-white transition hover:shadow-md"
+                style={{ borderColor: "var(--line)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex w-10 h-10 shrink-0 items-center justify-center rounded-lg"
+                    style={{ background: "var(--brand-soft)" }}
+                  >
+                    <BookOpen size={18} style={{ color: "var(--brand)" }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[14px] font-semibold leading-tight truncate" style={{ color: "var(--ink)" }}>
+                      {book.title}
+                    </h3>
+                    {book.description && (
+                      <p className="text-[12px] mt-0.5 truncate" style={{ color: "var(--body)" }}>
+                        {book.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <a
+                  href={book.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium rounded-lg border px-4 py-2 transition-all duration-200 hover:border-brand-2 hover:text-brand-2"
+                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <polyline points="9 15 12 18 15 15" />
+                  </svg>
+                  Download PDF
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Reviews section */}
       <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
         <SectionHeading

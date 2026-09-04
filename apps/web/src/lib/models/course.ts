@@ -18,6 +18,15 @@ const moduleSchema = new Schema(
   { _id: false }
 );
 
+const bookSchema = new Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    pdfUrl: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
+
 const courseSchema = new Schema(
   {
     slug: {
@@ -42,6 +51,7 @@ const courseSchema = new Schema(
     featured: { type: Boolean, default: false },
     upcoming: { type: Boolean, default: false },
     modules: { type: [moduleSchema], default: [] },
+    books: { type: [bookSchema], default: [] },
     averageRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

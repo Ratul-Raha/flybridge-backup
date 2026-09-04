@@ -108,6 +108,7 @@ export function LessonPlayer({
     title: string;
     image: string | null;
     modules: Module[];
+    books: { title: string; description: string; pdfUrl: string }[];
   };
   lessons: FlatLesson[];
   initialIndex: number;
@@ -366,6 +367,30 @@ export function LessonPlayer({
               </p>
             )}
           </div>
+
+          {course.books.length > 0 && (
+            <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
+                Course Books
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {course.books.map((book, i) => (
+                  <a
+                    key={i}
+                    href={book.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-black/5"
+                  >
+                    <FileText size={15} style={{ color: "var(--brand)" }} />
+                    <span className="text-[13px] font-medium truncate flex-1 min-w-0" style={{ color: "var(--ink)" }}>
+                      {book.title}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </aside>
 
         {/* Overlay for mobile sidebar */}

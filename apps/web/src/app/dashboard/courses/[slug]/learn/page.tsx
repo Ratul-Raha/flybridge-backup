@@ -128,6 +128,11 @@ export default async function LearnPage({ params, searchParams }: Props) {
             pdfUrl: l.pdfUrl ?? "",
           })),
         })),
+        books: (course.books ?? []).map((b) => ({
+          title: b.title,
+          description: b.description ?? "",
+          pdfUrl: b.pdfUrl,
+        })),
       }}
       initialIndex={initialIndex}
       lessons={lessons}

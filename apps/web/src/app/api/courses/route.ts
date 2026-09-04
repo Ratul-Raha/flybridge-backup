@@ -34,6 +34,11 @@ function toDto(c: CourseDoc, enrollmentCount?: number) {
         pdfUrl: l.pdfUrl ?? "",
       })),
     })),
+    books: (c.books ?? []).map((b) => ({
+      title: b.title,
+      description: b.description ?? "",
+      pdfUrl: b.pdfUrl,
+    })),
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
@@ -130,6 +135,7 @@ export async function POST(request: NextRequest) {
       featured: body.featured === true,
       upcoming: body.upcoming === true,
       modules: normalizeModules(body.modules),
+      books: normalizeBooks(body.books),
       createdBy: session!.userId,
     });
 
@@ -171,4 +177,18 @@ function normalizeModules(raw: unknown): { title: string; lessons: { title: stri
       return { title, lessons };
     })
     .filter((m) => m.title || m.lessons.length > 0);
+}
+
+function normalizeBooks(raw: unknown): { title: string; description: string; pdfUrl: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((b) => {
+      const book = (b ?? {}) as Record<string, unknown>;
+      return {
+        title: typeof book.title === "string" ? book.title.trim() : "",
+        description: typeof book.description === "string" ? book.description.trim() : "",
+        pdfUrl: typeof book.pdfUrl === "string" ? book.pdfUrl.trim() : "",
+      };
+    })
+    .filter((b) => b.title && b.pdfUrl);
 }

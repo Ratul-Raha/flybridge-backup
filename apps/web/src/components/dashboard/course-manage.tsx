@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 
 type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string };
 type Module = { title: string; lessons: Lesson[] };
+type Book = { title: string; description: string; pdfUrl: string };
 
 type Course = {
   id: string;
@@ -27,6 +28,7 @@ type Course = {
   upcoming: boolean;
   enrollmentCount?: number;
   modules: Module[];
+  books: Book[];
 };
 
 type FormState = {
@@ -45,6 +47,7 @@ type FormState = {
   featured: boolean;
   upcoming: boolean;
   modules: Module[];
+  books: Book[];
 };
 
 const inputClass =
@@ -66,6 +69,7 @@ const emptyForm: FormState = {
   featured: false,
   upcoming: false,
   modules: [],
+  books: [],
 };
 
 function emptyLesson(): Lesson {
@@ -140,6 +144,11 @@ export function CourseManage() {
           pdfUrl: l.pdfUrl ?? "",
         })),
       })),
+      books: (c.books ?? []).map((b) => ({
+        title: b.title,
+        description: b.description ?? "",
+        pdfUrl: b.pdfUrl,
+      })),
     });
     setFormOpen(true);
   };
@@ -160,6 +169,7 @@ export function CourseManage() {
           ...form,
           price: Number(form.price) || 0,
           modules: form.modules.filter((m) => m.title.trim() || m.lessons.length > 0),
+          books: form.books.filter((b) => b.title.trim() && b.pdfUrl),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -604,6 +614,122 @@ export function CourseManage() {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* ── Course Books ── */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                  Course Books
+                </h3>
+                <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                  Add PDF books or reading materials for this course
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    books: [...f.books, { title: "", description: "", pdfUrl: "" }],
+                  }))
+                }
+                className="inline-flex items-center gap-1.5 text-[12.5px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+              >
+                <Plus size={12} />
+                Add book
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {form.books.map((b, bi) => (
+                <div
+                  key={bi}
+                  className="flex flex-col gap-2 rounded-xl border p-4"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={b.title}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setForm((f) => ({
+                          ...f,
+                          books: f.books.map((x, i) => (i === bi ? { ...x, title: val } : x)),
+                        }));
+                      }}
+                      placeholder="Book title"
+                      className={inputClass}
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          books: f.books.filter((_, i) => i !== bi),
+                        }))
+                      }
+                      className="shrink-0 p-2 rounded-lg hover:bg-red-50 transition"
+                      style={{ color: "#DC2626" }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={b.description}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        books: f.books.map((x, i) => (i === bi ? { ...x, description: val } : x)),
+                      }));
+                    }}
+                    placeholder="Short description (optional)"
+                    className={inputClass}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={b.pdfUrl}
+                      readOnly
+                      placeholder="PDF URL"
+                      className={inputClass}
+                      style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
+                    />
+                    <label
+                      className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium rounded-lg border px-3 py-[10px] cursor-pointer hover:border-brand-2 hover:text-brand-2 transition-all duration-200 disabled:opacity-60"
+                      style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                    >
+                      <Upload size={12} />
+                      {b.pdfUrl ? "Replace PDF" : "Upload PDF"}
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleFile(e.target.files?.[0] ?? undefined, (url) =>
+                            setForm((f) => ({
+                              ...f,
+                              books: f.books.map((x, i) => (i === bi ? { ...x, pdfUrl: url } : x)),
+                            }))
+                          )
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
+              {form.books.length === 0 && (
+                <p className="text-[13px]" style={{ color: "var(--body)" }}>
+                  No books added yet — click &quot;Add book&quot; to include PDF materials.
+                </p>
+              )}
             </div>
           </div>
 
