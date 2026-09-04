@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
         url: seminar.url,
         image: seminar.image,
       },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
     });
 
     return NextResponse.json({ seminar: seminar.toObject() }, { status: 201 });

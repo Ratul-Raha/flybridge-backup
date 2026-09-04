@@ -12,7 +12,6 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
 import { readSession } from "@/lib/auth/session";
 import {
-  BadgeCheck,
   BookOpen,
   Check,
   Clock,
@@ -21,16 +20,14 @@ import {
   Pause,
   ShieldCheck,
   Star,
-  ThumbsUp,
   Volume2,
   Zap,
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
-import type { CourseDetails, Review } from "./course-data";
 import { courseDetails } from "./course-data";
 import { BengaliText } from "@/components/bengali-text";
-import { ReviewForm } from "@/components/programs/review-form";
+import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 
 type Props = { params: { slug: string } };
 
@@ -96,7 +93,13 @@ const play = (
 
 const arrow = (
   <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
-    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M5 12H19M19 12L13 6M19 12L13 18"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -120,13 +123,27 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
   );
 }
 
-function SectionHeading({ eyebrow, title, desc }: { eyebrow: string; title: string; desc?: string }) {
+function SectionHeading({
+  eyebrow,
+  title,
+  desc,
+}: {
+  eyebrow: string;
+  title: string;
+  desc?: string;
+}) {
   return (
     <div className="mb-7">
-      <div className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[10px]" style={{ color: "var(--brand-2)" }}>
+      <div
+        className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[10px]"
+        style={{ color: "var(--brand-2)" }}
+      >
         {eyebrow}
       </div>
-      <h2 className="font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(24px,2.6vw,30px)", color: "var(--ink)" }}>
+      <h2
+        className="font-semibold tracking-[-0.01em]"
+        style={{ fontSize: "clamp(24px,2.6vw,30px)", color: "var(--ink)" }}
+      >
         {title}
       </h2>
       {desc && (
@@ -171,24 +188,43 @@ function CourseHero({
       <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-[50px] items-center">
         <div>
           <div className="flex items-center gap-2 text-[12.5px] font-medium mb-6">
-            <Link href="/" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">
+            <Link
+              href="/"
+              style={{ color: "var(--body)" }}
+              className="hover:text-brand-2 transition-colors"
+            >
               Home
             </Link>
             <span style={{ color: "var(--body)" }}>/</span>
-            <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">
+            <Link
+              href="/programs"
+              style={{ color: "var(--body)" }}
+              className="hover:text-brand-2 transition-colors"
+            >
               Programs
             </Link>
             <span style={{ color: "var(--body)" }}>/</span>
             <span style={{ color: "var(--brand-2)" }}>{badge}</span>
           </div>
 
-          <p className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]" style={{ color: "var(--brand-2)" }}>
+          <p
+            className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]"
+            style={{ color: "var(--brand-2)" }}
+          >
             {badge.toUpperCase()} · COURSE
           </p>
 
-          <h1 className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]" style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}>
+          <h1
+            className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]"
+            style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}
+          >
             <BengaliText>{title}</BengaliText>
-            {subtitle && <> <BengaliText>{subtitle}</BengaliText></>}
+            {subtitle && (
+              <>
+                {" "}
+                <BengaliText>{subtitle}</BengaliText>
+              </>
+            )}
           </h1>
 
           {rating && (
@@ -197,7 +233,10 @@ function CourseHero({
               <span className="font-semibold" style={{ color: "var(--ink)" }}>
                 {rating.average}
               </span>
-              <span className="font-medium underline underline-offset-2" style={{ color: "var(--body)" }}>
+              <span
+                className="font-medium underline underline-offset-2"
+                style={{ color: "var(--body)" }}
+              >
                 ({rating.count} reviews)
               </span>
             </a>
@@ -206,11 +245,17 @@ function CourseHero({
           {price && (
             <div className="mt-[22px] pt-[20px] border-t border-line">
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-[32px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                <span
+                  className="text-[32px] font-bold leading-none"
+                  style={{ color: "var(--ink)" }}
+                >
                   {price}
                 </span>
                 {originalPrice && (
-                  <span className="text-[16px] font-medium line-through" style={{ color: "var(--body)", opacity: 0.65 }}>
+                  <span
+                    className="text-[16px] font-medium line-through"
+                    style={{ color: "var(--body)", opacity: 0.65 }}
+                  >
                     {originalPrice}
                   </span>
                 )}
@@ -224,7 +269,10 @@ function CourseHero({
                 )}
               </div>
               {access && (
-                <div className="mt-[10px] flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "var(--brand-2)" }}>
+                <div
+                  className="mt-[10px] flex items-center gap-1.5 text-[13px] font-medium"
+                  style={{ color: "var(--brand-2)" }}
+                >
                   <Clock className="w-4 h-4" />
                   {access} · One-time payment
                 </div>
@@ -232,7 +280,10 @@ function CourseHero({
             </div>
           )}
 
-          <p className="mt-[18px] max-w-[460px] text-[15px] leading-[1.7]" style={{ color: "var(--body)" }}>
+          <p
+            className="mt-[18px] max-w-[460px] text-[15px] leading-[1.7]"
+            style={{ color: "var(--body)" }}
+          >
             {desc}
           </p>
 
@@ -266,10 +317,17 @@ function CourseHero({
             )}
           </div>
 
-          <div className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
+          <div
+            className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium"
+            style={{ color: "var(--body)" }}
+          >
             {["Instant access", "Live support", "Verified certificate"].map((t) => (
               <span key={t} className="inline-flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
+                <Check
+                  className="w-3.5 h-3.5"
+                  strokeWidth={3}
+                  style={{ color: "var(--brand-2)" }}
+                />
                 {t}
               </span>
             ))}
@@ -285,8 +343,7 @@ function CourseHero({
             <div
               className="relative h-[200px]"
               style={{
-                background:
-                  "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)",
+                background: "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)",
               }}
             >
               {/* subtle glow */}
@@ -321,9 +378,7 @@ function CourseHero({
 
               {/* center label */}
               <div className="absolute bottom-[34px] inset-x-0 text-center">
-                <span className="text-[11.5px] font-medium text-white/75">
-                  Intro video · 01:24
-                </span>
+                <span className="text-[11.5px] font-medium text-white/75">Intro video · 01:24</span>
               </div>
             </div>
 
@@ -365,65 +420,6 @@ function CourseHero({
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
-  const initials = review.name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("");
-  return (
-    <div className="bg-white p-5">
-      <div className="flex items-center gap-3">
-        <span
-          className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-[13px] text-white shrink-0"
-          style={{ background: "var(--lav-ink)" }}
-        >
-          {initials}
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-              {review.name}
-            </span>
-            {review.verified && (
-              <span
-                className="inline-flex items-center gap-[3px] text-[10px] font-semibold px-1.5 py-[2px] rounded-full"
-                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-              >
-                <BadgeCheck className="w-3 h-3" />
-                VERIFIED BUYER
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-[3px]">
-            <Stars value={review.rating} size={13} />
-            <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-              {review.date}
-            </span>
-          </div>
-        </div>
-      </div>
-      <p className="mt-3.5 text-[14px] leading-[1.65]" style={{ color: "var(--body)" }}>
-        {review.text}
-      </p>
-      <div className="mt-3 flex items-center gap-1.5 text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
-        <ThumbsUp className="w-3.5 h-3.5" />
-        {review.helpful} found this helpful
-      </div>
-    </div>
-  );
-}
-
-type ReviewItem = {
-  id: string;
-  rating: number;
-  text: string;
-  userName: string;
-  userAvatar: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 function DbCoursePage({
   course,
   enrolled,
@@ -464,9 +460,21 @@ function DbCoursePage({
       {/* Breadcrumb */}
       <div className="px-[clamp(20px,4.5vw,56px)] pt-[120px] pb-4 max-w-[1320px] mx-auto">
         <div className="flex items-center gap-2 text-[12.5px] font-medium">
-          <Link href="/" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Home</Link>
+          <Link
+            href="/"
+            style={{ color: "var(--body)" }}
+            className="hover:text-brand-2 transition-colors"
+          >
+            Home
+          </Link>
           <span style={{ color: "var(--body)" }}>/</span>
-          <Link href="/programs" style={{ color: "var(--body)" }} className="hover:text-brand-2 transition-colors">Programs</Link>
+          <Link
+            href="/programs"
+            style={{ color: "var(--body)" }}
+            className="hover:text-brand-2 transition-colors"
+          >
+            Programs
+          </Link>
           <span style={{ color: "var(--body)" }}>/</span>
           <span style={{ color: "var(--brand-2)" }}>{checkoutCourse.badge}</span>
         </div>
@@ -484,11 +492,23 @@ function DbCoursePage({
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
                 style={{ background: "rgba(15,169,104,0.1)" }}
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0FA968" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#0FA968"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
               </div>
-              <h2 className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+              <h2
+                className="font-display text-[22px] font-semibold"
+                style={{ color: "var(--ink)" }}
+              >
                 You&apos;re enrolled in this course
               </h2>
               <p className="text-[14px] mt-2 mb-8" style={{ color: "var(--body)" }}>
@@ -507,180 +527,231 @@ function DbCoursePage({
             </div>
           </div>
         ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
-
-          {/* Left — product + form */}
-          <div className="space-y-8">
-            {/* Product card */}
-            <div className="rounded-lg border border-line bg-white overflow-hidden">
-              <div className="grid sm:grid-cols-[200px_1fr] gap-0">
-                <div
-                  className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
-                  style={{ background: "var(--brand-soft)" }}
-                >
-                  {checkoutCourse.image ? (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={checkoutCourse.image}
-                        alt={checkoutCourse.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(18,32,67,0.18), transparent 50%)" }} />
-                    </>
-                  ) : (
-                    <BookOpen size={36} className="text-white/40" />
-                  )}
-                </div>
-                <div className="p-5 sm:p-6 flex flex-col justify-center">
-                  <span
-                    className="font-mono text-[10px] font-semibold tracking-[0.3em] mb-2 inline-block w-fit"
-                    style={{ color: "var(--brand-2)" }}
-                  >
-                    {checkoutCourse.badge.toUpperCase()}
-                  </span>
-                  <h1 className="font-display text-[19px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                    <BengaliText>{checkoutCourse.title}</BengaliText>
-                    {checkoutCourse.subtitle && <> <BengaliText>{checkoutCourse.subtitle}</BengaliText></>}
-                  </h1>
-                  {(checkoutCourse.level || checkoutCourse.language) && (
-                    <div className="mt-2 flex items-center gap-2 text-[12px] font-medium" style={{ color: "var(--body)" }}>
-                      {checkoutCourse.level && <span>{checkoutCourse.level}</span>}
-                      {checkoutCourse.language && <>{checkoutCourse.level && <span>·</span>}<span>{checkoutCourse.language}</span></>}
-                    </div>
-                  )}
-                  {checkoutCourse.description && (
-                    <p className="mt-2 text-[13px] leading-[1.6] line-clamp-2" style={{ color: "var(--body)" }}>
-                      {checkoutCourse.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Checkout form */}
-            <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
-              <CheckoutForm course={checkoutCourse} />
-            </div>
-          </div>
-
-          {/* Right — order summary (sticky) */}
-          <aside className="lg:sticky lg:top-24">
-            <div
-              className="rounded-lg border border-line bg-white overflow-hidden"
-              style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
-            >
-              <div className="p-6">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] mb-5" style={{ color: "var(--body)" }}>
-                  Order summary
-                </p>
-
-                {/* Line item */}
-                <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
+            {/* Left — product + form */}
+            <div className="space-y-8">
+              {/* Product card */}
+              <div className="rounded-lg border border-line bg-white overflow-hidden">
+                <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                   <div
-                    className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                    className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
                     style={{ background: "var(--brand-soft)" }}
                   >
                     {checkoutCourse.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={checkoutCourse.image} alt="" className="w-full h-full object-cover" />
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={checkoutCourse.image}
+                          alt={checkoutCourse.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              "linear-gradient(to top, rgba(18,32,67,0.18), transparent 50%)",
+                          }}
+                        />
+                      </>
                     ) : (
-                      <BookOpen size={20} className="text-white/50" />
+                      <BookOpen size={36} className="text-white/40" />
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                      <BengaliText>{checkoutCourse.title}</BengaliText>
-                    </p>
-                    <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
-                      {checkoutCourse.badge}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Price breakdown */}
-                <div className="py-4 space-y-2.5 border-b" style={{ borderColor: "var(--line)" }}>
-                  <div className="flex items-center justify-between text-[13.5px]">
-                    <span style={{ color: "var(--body)" }}>Subtotal</span>
-                    <span className="font-medium" style={{ color: "var(--ink)" }}>
-                      {isFree ? "Free" : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                  <div className="p-5 sm:p-6 flex flex-col justify-center">
+                    <span
+                      className="font-mono text-[10px] font-semibold tracking-[0.3em] mb-2 inline-block w-fit"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      {checkoutCourse.badge.toUpperCase()}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[13.5px]">
-                    <span style={{ color: "var(--body)" }}>Tax</span>
-                    <span className="font-medium" style={{ color: "var(--ink)" }}>0.00</span>
+                    <h1
+                      className="font-display text-[19px] font-semibold leading-[1.3]"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      <BengaliText>{checkoutCourse.title}</BengaliText>
+                      {checkoutCourse.subtitle && (
+                        <>
+                          {" "}
+                          <BengaliText>{checkoutCourse.subtitle}</BengaliText>
+                        </>
+                      )}
+                    </h1>
+                    {(checkoutCourse.level || checkoutCourse.language) && (
+                      <div
+                        className="mt-2 flex items-center gap-2 text-[12px] font-medium"
+                        style={{ color: "var(--body)" }}
+                      >
+                        {checkoutCourse.level && <span>{checkoutCourse.level}</span>}
+                        {checkoutCourse.language && (
+                          <>
+                            {checkoutCourse.level && <span>·</span>}
+                            <span>{checkoutCourse.language}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {checkoutCourse.description && (
+                      <p
+                        className="mt-2 text-[13px] leading-[1.6] line-clamp-2"
+                        style={{ color: "var(--body)" }}
+                      >
+                        {checkoutCourse.description}
+                      </p>
+                    )}
                   </div>
                 </div>
-
-                {/* Total */}
-                <div className="flex items-center justify-between pt-4">
-                  <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>Total</span>
-                  <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                    {isFree ? "Free" : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
-                  </span>
-                </div>
-
-                {checkoutCourse.upcoming && (
-                  <div
-                    className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
-                    style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
-                  >
-                    This course is coming soon — join the waitlist to be notified.
-                  </div>
-                )}
               </div>
 
-              {/* What's included */}
-              <div className="px-6 pb-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
-                <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3" style={{ color: "var(--body)" }}>
-                  What&apos;s included
-                </p>
-                <ul className="space-y-2.5">
-                  {[
-                    "Instant access after enrollment",
-                    `${moduleCount} modules · ${lessonCount} lessons`,
-                    "Lifetime access — learn at your own pace",
-                    "Certificate of completion",
-                    "Live support from instructors",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-[13px]">
-                      <span
-                        className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Check className="w-[10px] h-[10px]" strokeWidth={3} />
-                      </span>
-                      <span style={{ color: "var(--ink)" }}>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Trust badges */}
-              <div className="px-6 pb-6">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { icon: Lock, label: "SSL Encrypted" },
-                    { icon: ShieldCheck, label: "30-day guarantee" },
-                    { icon: Zap, label: "Instant access" },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex flex-col items-center gap-1.5">
-                      <span
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </span>
-                      <span className="text-[10.5px] font-medium leading-tight" style={{ color: "var(--body)" }}>
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              {/* Checkout form */}
+              <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
+                <CheckoutForm course={checkoutCourse} />
               </div>
             </div>
-          </aside>
-        </div>
+
+            {/* Right — order summary (sticky) */}
+            <aside className="lg:sticky lg:top-24">
+              <div
+                className="rounded-lg border border-line bg-white overflow-hidden"
+                style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
+              >
+                <div className="p-6">
+                  <p
+                    className="text-[12px] font-semibold uppercase tracking-[0.08em] mb-5"
+                    style={{ color: "var(--body)" }}
+                  >
+                    Order summary
+                  </p>
+
+                  {/* Line item */}
+                  <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
+                    <div
+                      className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                      style={{ background: "var(--brand-soft)" }}
+                    >
+                      {checkoutCourse.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={checkoutCourse.image}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <BookOpen size={20} className="text-white/50" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[14px] font-semibold leading-snug"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        <BengaliText>{checkoutCourse.title}</BengaliText>
+                      </p>
+                      <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
+                        {checkoutCourse.badge}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Price breakdown */}
+                  <div className="py-4 space-y-2.5 border-b" style={{ borderColor: "var(--line)" }}>
+                    <div className="flex items-center justify-between text-[13.5px]">
+                      <span style={{ color: "var(--body)" }}>Subtotal</span>
+                      <span className="font-medium" style={{ color: "var(--ink)" }}>
+                        {isFree
+                          ? "Free"
+                          : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[13.5px]">
+                      <span style={{ color: "var(--body)" }}>Tax</span>
+                      <span className="font-medium" style={{ color: "var(--ink)" }}>
+                        0.00
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex items-center justify-between pt-4">
+                    <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                      Total
+                    </span>
+                    <span
+                      className="text-[22px] font-bold leading-none"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      {isFree
+                        ? "Free"
+                        : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                    </span>
+                  </div>
+
+                  {checkoutCourse.upcoming && (
+                    <div
+                      className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
+                      style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
+                    >
+                      This course is coming soon — join the waitlist to be notified.
+                    </div>
+                  )}
+                </div>
+
+                {/* What's included */}
+                <div className="px-6 pb-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
+                  <p
+                    className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3"
+                    style={{ color: "var(--body)" }}
+                  >
+                    What&apos;s included
+                  </p>
+                  <ul className="space-y-2.5">
+                    {[
+                      "Instant access after enrollment",
+                      `${moduleCount} modules · ${lessonCount} lessons`,
+                      "Lifetime access — learn at your own pace",
+                      "Certificate of completion",
+                      "Live support from instructors",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2.5 text-[13px]">
+                        <span
+                          className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                        >
+                          <Check className="w-[10px] h-[10px]" strokeWidth={3} />
+                        </span>
+                        <span style={{ color: "var(--ink)" }}>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Trust badges */}
+                <div className="px-6 pb-6">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      { icon: Lock, label: "SSL Encrypted" },
+                      { icon: ShieldCheck, label: "30-day guarantee" },
+                      { icon: Zap, label: "Instant access" },
+                    ].map(({ icon: Icon, label }) => (
+                      <div key={label} className="flex flex-col items-center gap-1.5">
+                        <span
+                          className="w-9 h-9 rounded-xl flex items-center justify-center"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        <span
+                          className="text-[10.5px] font-medium leading-tight"
+                          style={{ color: "var(--body)" }}
+                        >
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
         )}
       </section>
 
@@ -707,7 +778,10 @@ function DbCoursePage({
                     <BookOpen size={18} style={{ color: "var(--brand)" }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-[14px] font-semibold leading-tight truncate" style={{ color: "var(--ink)" }}>
+                    <h3
+                      className="text-[14px] font-semibold leading-tight truncate"
+                      style={{ color: "var(--ink)" }}
+                    >
                       {book.title}
                     </h3>
                     {book.description && (
@@ -724,7 +798,16 @@ function DbCoursePage({
                   className="inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium rounded-lg border px-4 py-2 transition-all duration-200 hover:border-brand-2 hover:text-brand-2"
                   style={{ color: "var(--ink)", borderColor: "var(--line)" }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                     <line x1="12" y1="18" x2="12" y2="12" />
@@ -739,68 +822,13 @@ function DbCoursePage({
       )}
 
       {/* Reviews section */}
-      <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
-        <SectionHeading
-          eyebrow="RATINGS & REVIEWS"
-          title="What students say"
-          desc={totalReviews > 0 ? `Showing ${totalReviews} review${totalReviews === 1 ? "" : "s"}` : "Be the first to review this course."}
-        />
-
-        {totalReviews > 0 && (
-          <div className="mb-8 flex items-center gap-4 p-5 rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
-            <div className="text-center pr-6 border-r" style={{ borderColor: "var(--line)" }}>
-              <div className="text-[36px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                {(course.averageRating ?? 0).toFixed(1)}
-              </div>
-              <div className="mt-2">
-                <Stars value={course.averageRating ?? 0} size={14} />
-              </div>
-              <div className="text-[12px] mt-1.5" style={{ color: "var(--body)" }}>
-                {totalReviews} review{totalReviews === 1 ? "" : "s"}
-              </div>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              {[5, 4, 3, 2, 1].map((star) => {
-                const count = reviews.filter((r) => Math.round(r.rating) === star).length;
-                const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-                return (
-                  <div key={star} className="flex items-center gap-2 text-[12px]">
-                    <span className="w-3 text-right" style={{ color: "var(--body)" }}>{star}</span>
-                    <Star className="w-3 h-3" style={{ color: "#F59E0B", fill: "#F59E0B" }} strokeWidth={1.5} />
-                    <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: "var(--line)" }}>
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#F59E0B" }} />
-                    </div>
-                    <span className="w-6 text-right" style={{ color: "var(--body)" }}>{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Review form */}
-        <div className="mb-8">
-          <ReviewForm courseId={course._id.toString()} existingReview={userReview} />
-        </div>
-
-        {/* Review list */}
-        {reviews.length > 0 && (
-          <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-            {reviews.map((review, i) => (
-              <div key={review.id} className={i > 0 ? "border-t" : ""} style={{ borderColor: "var(--line)" }}>
-                <ReviewCard review={{
-                  name: review.userName,
-                  rating: review.rating,
-                  date: new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-                  text: review.text,
-                  helpful: 0,
-                  verified: false,
-                }} />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <ReviewsSection
+        courseId={course._id.toString()}
+        reviews={reviews}
+        totalReviews={totalReviews}
+        averageRating={course.averageRating ?? 0}
+        userReview={userReview}
+      />
 
       <style>{`
         .checkout-page {
@@ -850,8 +878,11 @@ export default async function ProgramPage({ params }: Props) {
       text: r.text,
       userName: (r.user as any)?.name ?? "Anonymous",
       userAvatar: (r.user as any)?.avatar ?? null,
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
+      date: new Date(r.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
     }));
 
     return (
@@ -860,15 +891,21 @@ export default async function ProgramPage({ params }: Props) {
         enrolled={Boolean(enrolled)}
         reviews={reviewItems}
         totalReviews={course.reviewCount ?? 0}
-        userReview={userReviewDoc ? { id: userReviewDoc._id.toString(), rating: userReviewDoc.rating, text: userReviewDoc.text } : null}
+        userReview={
+          userReviewDoc
+            ? {
+                id: userReviewDoc._id.toString(),
+                rating: userReviewDoc.rating,
+                text: userReviewDoc.text,
+              }
+            : null
+        }
       />
     );
   }
 
   const details = courseDetails[params.slug];
-  const lessonCount = details
-    ? details.modules.reduce((n, m) => n + m.lessons.length, 0)
-    : 30;
+  const lessonCount = details ? details.modules.reduce((n, m) => n + m.lessons.length, 0) : 30;
 
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {
@@ -890,26 +927,30 @@ export default async function ProgramPage({ params }: Props) {
   }
 
   const sessionForReviews = await readSession();
-  const [liveReviews, userReviewDoc] = program.hasDb && course
-    ? await Promise.all([
-        CourseReview.find({ course: course._id })
-          .populate("user", "name avatar")
-          .sort({ createdAt: -1 })
-          .limit(20)
-          .lean(),
-        sessionForReviews?.userId
-          ? CourseReview.findOne({ course: course._id, user: sessionForReviews.userId }).lean()
-          : null,
-      ])
-    : [[], null];
+  const [liveReviews, userReviewDoc] =
+    program.hasDb && course
+      ? await Promise.all([
+          CourseReview.find({ course: course._id })
+            .populate("user", "name avatar")
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .lean(),
+          sessionForReviews?.userId
+            ? CourseReview.findOne({ course: course._id, user: sessionForReviews.userId }).lean()
+            : null,
+        ])
+      : [[], null];
   const liveReviewItems = liveReviews.map((r: any) => ({
     id: r._id.toString(),
     rating: r.rating,
     text: r.text,
     userName: r.user?.name ?? "Anonymous",
     userAvatar: r.user?.avatar ?? null,
-    createdAt: r.createdAt.toISOString(),
-    updatedAt: r.updatedAt.toISOString(),
+    date: new Date(r.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }),
   }));
 
   const otherDbCourses = (
@@ -964,17 +1005,34 @@ export default async function ProgramPage({ params }: Props) {
       <section className="px-[clamp(20px,4.5vw,56px)] pt-[20px] pb-[70px] max-w-[1320px] mx-auto">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
           <div>
-            <h2 className="font-display font-semibold tracking-[-0.01em]" style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}>
+            <h2
+              className="font-display font-semibold tracking-[-0.01em]"
+              style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
+            >
               Other programs you may like
             </h2>
             <p className="text-[15px] mt-2" style={{ color: "var(--body)" }}>
               More ways to build your international future.
             </p>
           </div>
-          <Link href="/programs" className="view-all font-medium text-[14px] inline-flex items-center gap-[6px] group" style={{ color: "var(--brand-2)" }}>
+          <Link
+            href="/programs"
+            className="view-all font-medium text-[14px] inline-flex items-center gap-[6px] group"
+            style={{ color: "var(--brand-2)" }}
+          >
             View all programs
-            <svg className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M5 12H19M19 12L13 6M19 12L13 18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         </div>
@@ -996,32 +1054,36 @@ export default async function ProgramPage({ params }: Props) {
           {/* Product section */}
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
             <div className="space-y-12">
-                {/* Facilities */}
-                <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                  {details.stats.map((stat) => (
-                    <div key={stat.label} className="flex items-baseline gap-2.5">
-                      <span className="font-mono text-[22px] font-medium leading-none" style={{ color: "var(--ink)" }}>
-                        {stat.value}
-                      </span>
-                      <span className="text-[13px]" style={{ color: "var(--body)" }}>
-                        {stat.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              {/* Facilities */}
+              <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                {details.stats.map((stat) => (
+                  <div key={stat.label} className="flex items-baseline gap-2.5">
+                    <span
+                      className="font-mono text-[22px] font-medium leading-none"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      {stat.value}
+                    </span>
+                    <span className="text-[13px]" style={{ color: "var(--body)" }}>
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
-                {/* What's included */}
-                <div>
-                  <SectionHeading
-                    eyebrow="WHAT'S INCLUDED"
-                    title="Everything in this program"
-                    desc={
-                      details.featuresDesc ??
-                      "From the first video to your approval — every resource is part of the same package."
-                    }
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    {(details.features ?? BLUEPRINT_FEATURES).map(({ icon: Icon, title, desc }, i) => (
+              {/* What's included */}
+              <div>
+                <SectionHeading
+                  eyebrow="WHAT'S INCLUDED"
+                  title="Everything in this program"
+                  desc={
+                    details.featuresDesc ??
+                    "From the first video to your approval — every resource is part of the same package."
+                  }
+                />
+                <div className="rounded-lg border border-line bg-white overflow-hidden">
+                  {(details.features ?? BLUEPRINT_FEATURES).map(
+                    ({ icon: Icon, title, desc }, i) => (
                       <div
                         key={title}
                         className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
@@ -1033,100 +1095,117 @@ export default async function ProgramPage({ params }: Props) {
                           <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
                         </span>
                         <div>
-                          <h3 className="text-[14.5px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                          <h3
+                            className="text-[14.5px] font-semibold leading-[1.3]"
+                            style={{ color: "var(--ink)" }}
+                          >
                             {title}
                           </h3>
-                          <p className="text-[13px] mt-[5px] leading-[1.55]" style={{ color: "var(--body)" }}>
+                          <p
+                            className="text-[13px] mt-[5px] leading-[1.55]"
+                            style={{ color: "var(--body)" }}
+                          >
                             {desc}
                           </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ),
+                  )}
                 </div>
+              </div>
 
-                {/* Course book */}
-                {details.book && (
-                  <div>
-                    <SectionHeading
-                      eyebrow="COURSE BOOK"
-                      title="The book is included in this program"
-                      desc={details.book.desc}
-                    />
-                    <div className="rounded-lg border border-line bg-white overflow-hidden">
-                      <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={details.book.image}
-                          alt={details.book.title}
-                          className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
-                          style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
-                        />
-                        <div className="flex flex-col gap-3">
-                          <span
-                            className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
-                            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                          >
-                            INCLUDED WITH COURSE
-                          </span>
-                          <h3 className="font-display text-[17px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                            {details.book.title}
-                          </h3>
-                          <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                            {details.book.includedNote}
-                          </p>
-                        </div>
+              {/* Course book */}
+              {details.book && (
+                <div>
+                  <SectionHeading
+                    eyebrow="COURSE BOOK"
+                    title="The book is included in this program"
+                    desc={details.book.desc}
+                  />
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
+                    <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={details.book.image}
+                        alt={details.book.title}
+                        className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
+                        style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
+                      />
+                      <div className="flex flex-col gap-3">
+                        <span
+                          className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                        >
+                          INCLUDED WITH COURSE
+                        </span>
+                        <h3
+                          className="font-display text-[17px] font-semibold leading-snug"
+                          style={{ color: "var(--ink)" }}
+                        >
+                          {details.book.title}
+                        </h3>
+                        <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                          {details.book.includedNote}
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* Outcomes */}
-                <div>
-                  <SectionHeading
-                    eyebrow="WHAT YOU WILL LEARN"
-                    title="Course outcomes"
-                    desc="By the end of this course you will be able to:"
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    {details.outcomes.map((o, i) => (
-                      <div
-                        key={o.title}
-                        className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                      >
-                        <span
-                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                        >
-                          <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                        </span>
-                        <div>
-                          <div className="text-[14px] font-medium leading-[1.5]" style={{ color: "var(--ink)" }}>
-                            {o.title}
-                          </div>
-                          {o.desc && (
-                            <div className="text-[13px] mt-[3px] leading-[1.6]" style={{ color: "var(--body)" }}>
-                              {o.desc}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
+              )}
 
-                {/* Curriculum */}
-                <div id="curriculum">
-                  <SectionHeading
-                    eyebrow="CURRICULUM"
-                    title="What is inside"
-                    desc={
-                      details.highlightsDesc ??
-                      "Everything you need to prepare with confidence, in one place."
-                    }
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    {(details.highlights ?? [
+              {/* Outcomes */}
+              <div>
+                <SectionHeading
+                  eyebrow="WHAT YOU WILL LEARN"
+                  title="Course outcomes"
+                  desc="By the end of this course you will be able to:"
+                />
+                <div className="rounded-lg border border-line bg-white overflow-hidden">
+                  {details.outcomes.map((o, i) => (
+                    <div
+                      key={o.title}
+                      className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                    >
+                      <span
+                        className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
+                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                      >
+                        <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+                      </span>
+                      <div>
+                        <div
+                          className="text-[14px] font-medium leading-[1.5]"
+                          style={{ color: "var(--ink)" }}
+                        >
+                          {o.title}
+                        </div>
+                        {o.desc && (
+                          <div
+                            className="text-[13px] mt-[3px] leading-[1.6]"
+                            style={{ color: "var(--body)" }}
+                          >
+                            {o.desc}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Curriculum */}
+              <div id="curriculum">
+                <SectionHeading
+                  eyebrow="CURRICULUM"
+                  title="What is inside"
+                  desc={
+                    details.highlightsDesc ??
+                    "Everything you need to prepare with confidence, in one place."
+                  }
+                />
+                <div className="rounded-lg border border-line bg-white overflow-hidden">
+                  {(
+                    details.highlights ?? [
                       {
                         title: "10 Videos",
                         sub: "Step-by-step video lessons, at your own pace",
@@ -1139,116 +1218,67 @@ export default async function ProgramPage({ params }: Props) {
                         title: "Resources",
                         sub: "Templates, checklists & practical tools included",
                       },
-                    ]).map((item, i) => (
-                      <div
-                        key={item.title}
-                        className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                    ]
+                  ).map((item, i) => (
+                    <div
+                      key={item.title}
+                      className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                    >
+                      <span
+                        className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
                       >
-                        <span
-                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                        <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+                      </span>
+                      <div>
+                        <div
+                          className="text-[14.5px] font-medium leading-[1.3]"
+                          style={{ color: "var(--ink)" }}
                         >
-                          <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                        </span>
-                        <div>
-                          <div className="text-[14.5px] font-medium leading-[1.3]" style={{ color: "var(--ink)" }}>
-                            {item.title}
-                          </div>
-                          <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
-                            {item.sub}
-                          </div>
+                          {item.title}
+                        </div>
+                        <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
+                          {item.sub}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
             </div>
           </section>
 
           {/* Reviews */}
           {program.hasDb && course ? (
-            <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
-              <SectionHeading
-                eyebrow="RATINGS & REVIEWS"
-                title="What students say"
-                desc={
-                  liveReviewItems.length > 0
-                    ? `Showing ${liveReviewItems.length} review${liveReviewItems.length === 1 ? "" : "s"}`
-                    : "Be the first to review this course."
-                }
-              />
-
-              {liveReviewItems.length > 0 && (
-                <div className="mb-8 flex items-center gap-4 p-5 rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
-                  <div className="text-center pr-6 border-r" style={{ borderColor: "var(--line)" }}>
-                    <div className="text-[36px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                      {(course.averageRating ?? 0).toFixed(1)}
-                    </div>
-                    <div className="mt-2">
-                      <Stars value={course.averageRating ?? 0} size={14} />
-                    </div>
-                    <div className="text-[12px] mt-1.5" style={{ color: "var(--body)" }}>
-                      {liveReviewItems.length} review{liveReviewItems.length === 1 ? "" : "s"}
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const count = liveReviewItems.filter((r) => Math.round(r.rating) === star).length;
-                      const pct = liveReviewItems.length > 0 ? (count / liveReviewItems.length) * 100 : 0;
-                      return (
-                        <div key={star} className="flex items-center gap-2 text-[12px]">
-                          <span className="w-3 text-right" style={{ color: "var(--body)" }}>{star}</span>
-                          <Star className="w-3 h-3" style={{ color: "#F59E0B", fill: "#F59E0B" }} strokeWidth={1.5} />
-                          <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: "var(--line)" }}>
-                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#F59E0B" }} />
-                          </div>
-                          <span className="w-6 text-right" style={{ color: "var(--body)" }}>{count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-8">
-                <ReviewForm
-                  courseId={course._id.toString()}
-                  existingReview={userReviewDoc ? { id: userReviewDoc._id.toString(), rating: userReviewDoc.rating, text: userReviewDoc.text } : null}
-                />
-              </div>
-
-              {liveReviewItems.length > 0 && (
-                <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
-                  {liveReviewItems.map((review, i) => (
-                    <div key={review.id} className={i > 0 ? "border-t" : ""} style={{ borderColor: "var(--line)" }}>
-                      <ReviewCard review={{
-                        name: review.userName,
-                        rating: review.rating,
-                        date: new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-                        text: review.text,
-                        helpful: 0,
-                        verified: false,
-                      }} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+            <ReviewsSection
+              courseId={course._id.toString()}
+              reviews={liveReviewItems}
+              totalReviews={liveReviewItems.length}
+              averageRating={course.averageRating ?? 0}
+              userReview={
+                userReviewDoc
+                  ? {
+                      id: userReviewDoc._id.toString(),
+                      rating: userReviewDoc.rating,
+                      text: userReviewDoc.text,
+                    }
+                  : null
+              }
+            />
           ) : details.reviews?.length ? (
-            <section id="reviews" className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
-              <SectionHeading
-                eyebrow="RATINGS & REVIEWS"
-                title="What students say"
-                desc="Real experiences from enrollees who prepared their study visa application with the Blueprint."
-              />
-              <div className="rounded-lg border border-line bg-white overflow-hidden">
-                {details.reviews.map((review, i) => (
-                  <div key={review.name} className={i > 0 ? "border-t border-line" : ""}>
-                    <ReviewCard review={review} />
-                  </div>
-                ))}
-              </div>
-            </section>
+            <ReviewsSection
+              reviews={(details.reviews ?? []).map((review, i) => ({
+                id: `${review.name}-${i}`,
+                userName: review.name,
+                rating: review.rating,
+                text: review.text,
+                date: review.date,
+                helpful: review.helpful,
+                verified: review.verified,
+              }))}
+              totalReviews={details.reviews?.length ?? 0}
+              averageRating={details.rating?.average ?? 0}
+            />
           ) : null}
         </>
       ) : (

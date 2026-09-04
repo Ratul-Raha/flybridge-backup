@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Save, Loader2 } from "lucide-react";
-import { SectionCard, PrimaryButton, fieldClass, Label } from "@/components/dashboard/automations/ui";
+import {
+  SectionCard,
+  PrimaryButton,
+  fieldClass,
+  Label,
+} from "@/components/dashboard/automations/ui";
 
 type PersonaConfig = {
   name: string;
@@ -17,7 +22,8 @@ type PersonaConfig = {
 const DEFAULT_CONFIG: PersonaConfig = {
   name: "Bridge Ops",
   avatar: "",
-  greeting: "Hi! I'm Bridge Ops, your FlyBridge admin assistant. Ask me anything about your business data or operations.",
+  greeting:
+    "Hi! I'm Bridge Ops, your FlyBridge admin assistant. Ask me anything about your business data or operations.",
   tone: "balanced",
   detailLevel: "balanced",
   systemPrompt: "",
@@ -29,6 +35,7 @@ export function PersonaTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savingError, setSavingError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/bot-config")
@@ -43,14 +50,30 @@ export function PersonaTab() {
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
+    setSavingError(null);
     try {
-      await fetch("/api/admin/bot-config", {
+      const payload = {
+        name: config.name,
+        avatar: config.avatar,
+        greeting: config.greeting,
+        tone: config.tone,
+        detailLevel: config.detailLevel,
+        systemPrompt: config.systemPrompt,
+        maxConversationLength: config.maxConversationLength,
+      };
+      const res = await fetch("/api/admin/bot-config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to save");
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      setSavingError(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -69,7 +92,10 @@ export function PersonaTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <SectionCard title="Bot Identity" subtitle="Configure how your bot looks and introduces itself">
+      <SectionCard
+        title="Bot Identity"
+        subtitle="Configure how your bot looks and introduces itself"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Bot Name</Label>
@@ -86,7 +112,9 @@ export function PersonaTab() {
             <input
               type="number"
               value={config.maxConversationLength}
-              onChange={(e) => setConfig({ ...config, maxConversationLength: Number(e.target.value) })}
+              onChange={(e) =>
+                setConfig({ ...config, maxConversationLength: Number(e.target.value) })
+              }
               className={fieldClass()}
               min={5}
               max={200}
@@ -133,7 +161,10 @@ export function PersonaTab() {
         </div>
       </SectionCard>
 
-      <SectionCard title="System Prompt" subtitle="Advanced: directly edit the base system prompt (leave empty for auto-generated)">
+      <SectionCard
+        title="System Prompt"
+        subtitle="Advanced: directly edit the base system prompt (leave empty for auto-generated)"
+      >
         <textarea
           value={config.systemPrompt}
           onChange={(e) => setConfig({ ...config, systemPrompt: e.target.value })}
@@ -150,6 +181,11 @@ export function PersonaTab() {
         {saved && (
           <span className="text-[12px] font-medium" style={{ color: "#059669" }}>
             Saved successfully
+          </span>
+        )}
+        {savingError && (
+          <span className="text-[12px] font-medium" style={{ color: "#DC2626" }}>
+            {savingError}
           </span>
         )}
       </div>

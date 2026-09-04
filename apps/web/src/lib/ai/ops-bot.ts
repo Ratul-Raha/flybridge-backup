@@ -135,27 +135,45 @@ async function streamLLMResponse(
     ...messages,
   ];
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    signal,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-oss-120b",
-      stream: true,
-      temperature: 0.3,
-      max_tokens: 4096,
-      messages: apiMessages,
-      tools: tools.length > 0 ? tools : undefined,
-      tool_choice: tools.length > 0 ? "auto" : undefined,
-    }),
-  });
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const MAX_ATTEMPTS = 3;
 
-  if (!res.ok || !res.body) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`LLM request failed (${res.status}): ${detail.slice(0, 300)}`);
+  let res: Response | null = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        stream: true,
+        temperature: 0.3,
+        max_tokens: 4096,
+        messages: apiMessages,
+        tools: tools.length > 0 ? tools : undefined,
+        tool_choice: tools.length > 0 ? "auto" : undefined,
+      }),
+    });
+
+    const retriable = res.status === 429 || res.status === 500 || res.status === 502 || res.status === 503;
+    if (!retriable || attempt === MAX_ATTEMPTS) break;
+
+    const waitMs = 800 * attempt + Math.floor(Math.random() * 400);
+    console.warn(`[ops-bot] LLM ${res.status} on attempt ${attempt}; retrying in ${waitMs}ms`);
+    await sleep(waitMs);
+  }
+
+  if (!res || !res.ok || !res.body) {
+    const detail = (await res?.text().catch(() => "")) ?? "";
+    const status = res?.status ?? 0;
+    const msg =
+      status === 429
+        ? `AI rate limit reached (${status}) — please wait a moment and try again`
+        : `LLM request failed (${status}): ${detail.slice(0, 300)}`;
+    throw new Error(msg);
   }
 
   const reader = res.body.getReader();
@@ -217,7 +235,12 @@ async function streamLLMResponse(
         }
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
-        throw error;
+        // Mid-stream reset (can happen on rate limits/quota) — annotate so the
+        // route can give a clear message instead of a generic "Stream interrupted".
+        const msg = error instanceof Error && error.message
+          ? error.message
+          : "LLM stream reset unexpectedly (possible rate limit)";
+        throw new Error(`AI stream interrupted: ${msg}`);
       } finally {
         reader.releaseLock();
 
@@ -301,7 +324,33 @@ export async function* streamOpsBotReply(
     };
   }
 
-  // Load enabled tools config
+  // Load enabled tools config (and sync any tools that are missing from the DB)
+  const existingToolIds = new Set(
+    (await BotTool.find({}, { toolId: 1 }).lean()).map((t) => t.toolId)
+  );
+  const missingTools = OPS_TOOLS.filter((t) => !existingToolIds.has(t.name));
+  if (missingTools.length > 0) {
+    await BotTool.insertMany(
+      missingTools.map((tool) => ({
+        toolId: tool.name,
+        name: tool.name
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        description: tool.description,
+        category: tool.description.includes("REQUIRES CONFIRMATION") ? "action" : "data",
+        enabled: true,
+        confirmationRequired: tool.description.includes("DESTRUCTIVE")
+          ? "destructive"
+          : tool.description.includes("REQUIRES CONFIRMATION")
+          ? "always"
+          : "never",
+        accessLevel: "admin" as const,
+        customInstructions: "",
+        parameters: tool.parameters,
+        isDestructive: tool.description.includes("DESTRUCTIVE"),
+      }))
+    );
+  }
   const enabledTools = await BotTool.find({ enabled: true }).lean();
   const enabledToolIds = new Set(enabledTools.map((t) => t.toolId));
 
@@ -430,7 +479,7 @@ export async function* streamOpsBotReply(
           toolId: tc.name,
           parameters: tc.arguments,
           confirmed: false,
-          status: "pending_confirmation" as unknown as "success",
+          status: "pending_confirmation",
           result: result.confirmationPreview,
         });
 

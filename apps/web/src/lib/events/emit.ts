@@ -33,7 +33,7 @@ export async function emitEvent(
   for (const handler of getHandlers(name)) {
     const started = Date.now();
     try {
-      await handler.run(payload);
+      await handler.run(payload, name);
       results[handler.name] = { ok: true };
       await EventLog.updateOne(
         { _id: log._id },

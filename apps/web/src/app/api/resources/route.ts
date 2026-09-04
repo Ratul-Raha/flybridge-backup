@@ -122,9 +122,12 @@ export async function POST(request: NextRequest) {
       fileName: typeof body.fileName === "string" ? body.fileName.trim() || undefined : undefined,
       fileSize: Number(body.fileSize) || 0,
       publicId: typeof body.publicId === "string" ? body.publicId.trim() || undefined : undefined,
-      thumbnail: typeof body.thumbnail === "string" ? body.thumbnail.trim() || undefined : undefined,
+      thumbnail:
+        typeof body.thumbnail === "string" ? body.thumbnail.trim() || undefined : undefined,
       thumbnailPublicId:
-        typeof body.thumbnailPublicId === "string" ? body.thumbnailPublicId.trim() || undefined : undefined,
+        typeof body.thumbnailPublicId === "string"
+          ? body.thumbnailPublicId.trim() || undefined
+          : undefined,
       releaseDate,
       access,
       price: access === "members" ? Math.max(0, Number(body.price) || 0) : 0,
@@ -143,6 +146,7 @@ export async function POST(request: NextRequest) {
         access: resource.access,
         price: resource.price,
       },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
     });
 
     return NextResponse.json({ resource: toDto(resource as ResourceDoc) }, { status: 201 });

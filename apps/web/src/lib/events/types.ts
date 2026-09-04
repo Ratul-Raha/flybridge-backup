@@ -38,6 +38,12 @@ export type UserPayload = {
   subscription?: string;
 };
 
+export type ActorPayload = {
+  userId?: string;
+  name?: string;
+  email?: string;
+};
+
 export type EventPayloadMap = {
   "user.registered": { user: UserPayload };
   "seminar.registration_created": {
@@ -45,26 +51,66 @@ export type EventPayloadMap = {
     user: UserPayload;
     seminar: SeminarPayload;
   };
-  "seminar.created": { seminar: SeminarPayload };
-  "seminar.updated": { seminar: Pick<SeminarPayload, "id" | "title"> };
-  "seminar.deleted": { seminar: Pick<SeminarPayload, "id" | "title"> };
-  "course.launched": {
-    course: { slug: string; title: string; desc?: string; badge?: string; price?: number; image?: string };
+  "seminar.created": { seminar: SeminarPayload; actor?: ActorPayload };
+  "seminar.updated": {
+    seminar: Pick<SeminarPayload, "id" | "title">;
+    actor?: ActorPayload;
+    changedFields?: string[];
   };
-  "course.created": { course: { id: string; slug: string; title: string; badge?: string; price?: number; image?: string } };
-  "course.updated": { course: { id: string; slug: string; title: string } };
-  "course.deleted": { course: { id: string; slug: string; title: string } };
+  "seminar.deleted": { seminar: Pick<SeminarPayload, "id" | "title">; actor?: ActorPayload };
+  "course.launched": {
+    course: {
+      slug: string;
+      title: string;
+      desc?: string;
+      badge?: string;
+      price?: number;
+      image?: string;
+    };
+  };
+  "course.created": {
+    course: {
+      id: string;
+      slug: string;
+      title: string;
+      badge?: string;
+      price?: number;
+      image?: string;
+    };
+    actor?: ActorPayload;
+  };
+  "course.updated": {
+    course: { id: string; slug: string; title: string };
+    actor?: ActorPayload;
+    changedFields?: string[];
+  };
+  "course.deleted": {
+    course: { id: string; slug: string; title: string };
+    actor?: ActorPayload;
+  };
   "course.enrolled": {
     enrollmentId: string;
     user: UserPayload;
     course: { id: string; slug: string; title: string; price?: number };
   };
   "order.created": {
-    order: { id: string; total: number; currency: string; status: string; items: { itemType: string; itemId: string; title?: string; price?: number }[] };
+    order: {
+      id: string;
+      total: number;
+      currency: string;
+      status: string;
+      items: { itemType: string; itemId: string; title?: string; price?: number }[];
+    };
     user: UserPayload;
   };
   "order.fulfilled": {
-    order: { id: string; total: number; currency: string; status: string; items: { itemType: string; itemId: string; title?: string; price?: number }[] };
+    order: {
+      id: string;
+      total: number;
+      currency: string;
+      status: string;
+      items: { itemType: string; itemId: string; title?: string; price?: number }[];
+    };
     user: UserPayload;
     course?: { slug: string; title: string };
   };
@@ -79,6 +125,7 @@ export type EventPayloadMap = {
       access?: "public" | "members";
       price?: number;
     };
+    actor?: ActorPayload;
   };
   "scholarship.created": {
     scholarship: {
@@ -91,6 +138,7 @@ export type EventPayloadMap = {
       amount?: string | null;
       deadline?: string | null;
     };
+    actor?: ActorPayload;
   };
 };
 

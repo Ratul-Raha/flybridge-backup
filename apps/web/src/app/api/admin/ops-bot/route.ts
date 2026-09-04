@@ -54,31 +54,44 @@ export async function POST(request: NextRequest) {
 
     const sse = new ReadableStream<Uint8Array>({
       async start(sseController) {
+        const heartbeat = setInterval(() => {
+          try {
+            sseController.enqueue(encoder.encode(": ping\n\n"));
+          } catch {
+            // stream already closed
+          }
+        }, 12_000);
+
+        const enqueue = (obj: unknown) => {
+          try {
+            sseController.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          } catch (e) {
+            if ((e as Error).name !== "TypeError") console.error("[ops-bot] enqueue failed:", e);
+          }
+        };
+
         try {
           for await (const chunk of stream) {
-            sseController.enqueue(
-              encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`)
-            );
+            enqueue(chunk);
           }
         } catch (error) {
           if ((error as Error).name === "AbortError") return;
           console.error("[ops-bot] Stream error:", error);
           const msg =
             error instanceof Error
-              ? error.message.includes("LLM request failed")
-                ? "AI provider error — please try again"
-                : error.message.includes("GROQ_API_KEY")
-                  ? "AI provider not configured"
-                  : error.message.includes("fetch failed") || error.message.includes("ECONNREFUSED")
-                    ? "Could not reach AI provider — check your connection"
-                    : "Stream interrupted"
+              ? error.message.includes("rate limit") || error.message.includes("429")
+                ? "AI rate limit reached — please wait a few seconds and try again"
+                : error.message.includes("LLM request failed")
+                  ? "AI provider error — please try again"
+                  : error.message.includes("GROQ_API_KEY")
+                    ? "AI provider not configured"
+                    : error.message.includes("fetch failed") || error.message.includes("ECONNREFUSED")
+                      ? "Could not reach AI provider — check your connection"
+                      : "Stream interrupted"
               : "Stream interrupted";
-          sseController.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ type: "error", error: msg })}\n\n`
-            )
-          );
+          enqueue({ type: "error", error: msg });
         } finally {
+          clearInterval(heartbeat);
           sseController.close();
         }
       },

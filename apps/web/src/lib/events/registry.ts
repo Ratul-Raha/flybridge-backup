@@ -2,7 +2,7 @@ import type { EventName, EventPayload } from "./types";
 
 export type EventHandler = {
   name: string;
-  run: (payload: EventPayload) => Promise<void>;
+  run: (payload: EventPayload, eventName: EventName) => Promise<void>;
 };
 
 const registry: Partial<Record<EventName, EventHandler[]>> = {};

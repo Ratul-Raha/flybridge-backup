@@ -17,6 +17,7 @@ import { BotConversation } from "./models/bot-conversation";
 import { BotMessage } from "./models/bot-message";
 import { BotAccess } from "./models/bot-access";
 import { BotAuditLog } from "./models/bot-audit-log";
+import { PushSubscription } from "./models/push-subscription";
 
 void User;
 void Seminar;
@@ -37,23 +38,25 @@ void BotConversation;
 void BotMessage;
 void BotAccess;
 void BotAuditLog;
+void PushSubscription;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";
 
 declare global {
   // eslint-disable-next-line no-var
-  var _mongoose: {
-    conn: mongoose.Connection | null;
-    promise: Promise<mongoose.Connection> | null;
-    listeners: boolean;
-  } | undefined;
+  var _mongoose:
+    | {
+        conn: mongoose.Connection | null;
+        promise: Promise<mongoose.Connection> | null;
+        listeners: boolean;
+      }
+    | undefined;
 }
 
 type Cache = NonNullable<typeof globalThis._mongoose>;
 
-const cached: Cache =
-  globalThis._mongoose ?? { conn: null, promise: null, listeners: false };
+const cached: Cache = globalThis._mongoose ?? { conn: null, promise: null, listeners: false };
 globalThis._mongoose = cached;
 
 function attachConnectionListeners(conn: mongoose.Connection) {

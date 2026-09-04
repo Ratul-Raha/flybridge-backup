@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import { EVENT_NAMES } from "@/lib/events/types";
 
 const botConfigSchema = new Schema(
   {
@@ -21,6 +22,18 @@ const botConfigSchema = new Schema(
     },
     systemPrompt: { type: String, default: "" },
     maxConversationLength: { type: Number, default: 50, min: 5, max: 200 },
+    channels: {
+      telegram: {
+        enabled: { type: Boolean, default: false },
+        botToken: { type: String, default: "" },
+        chatIds: { type: [String], default: [] },
+        events: {
+          type: [String],
+          enum: EVENT_NAMES as readonly string[],
+          default: [],
+        },
+      },
+    },
   },
   { timestamps: true }
 );

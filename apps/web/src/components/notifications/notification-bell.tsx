@@ -66,9 +66,7 @@ export function NotificationBell() {
 
   const markRead = useCallback(async (id: string) => {
     setUnreadCount((c) => Math.max(0, c - 1));
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     fetch(`/api/notifications/${id}`, { method: "PATCH" }).catch(() => {});
   }, []);
 
@@ -94,7 +92,7 @@ export function NotificationBell() {
         window.location.assign("/dashboard/scholarships");
       }
     },
-    [markRead]
+    [markRead],
   );
 
   if (!user) return null;
@@ -105,11 +103,7 @@ export function NotificationBell() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="relative w-[38px] h-[38px] rounded-full border border-line flex items-center justify-center bg-white hover:border-brand-2 hover:bg-brand-soft transition-all duration-250"
-        aria-label={
-          unreadCount > 0
-            ? `Notifications (${unreadCount} unread)`
-            : "Notifications"
-        }
+        aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
       >
         {unreadCount > 0 ? (
           <BellRing size={16} style={{ color: "var(--brand)" }} />
@@ -143,10 +137,16 @@ export function NotificationBell() {
             style={{ borderColor: "var(--line)" }}
           >
             <div>
-              <div className="font-display font-semibold text-[15px]" style={{ color: "var(--ink)" }}>
+              <div
+                className="font-display font-semibold text-[15px]"
+                style={{ color: "var(--ink)" }}
+              >
                 Notifications
               </div>
-              <div className="font-mono text-[10px] tracking-[0.2em] uppercase mt-[2px]" style={{ color: "var(--body)" }}>
+              <div
+                className="font-mono text-[10px] tracking-[0.2em] uppercase mt-[2px]"
+                style={{ color: "var(--body)" }}
+              >
                 {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
               </div>
             </div>
@@ -248,10 +248,7 @@ export function NotificationBell() {
             )}
           </div>
 
-          <div
-            className="border-t px-5 py-3 shrink-0"
-            style={{ borderColor: "var(--line)" }}
-          >
+          <div className="border-t px-5 py-3 shrink-0" style={{ borderColor: "var(--line)" }}>
             <a
               href="/dashboard/notifications"
               onClick={() => setOpen(false)}

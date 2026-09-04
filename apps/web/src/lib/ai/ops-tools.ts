@@ -151,6 +151,23 @@ export const OPS_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: "crawl_and_create_seminar",
+    description: "Crawl a webpage to extract event/seminar details and create a seminar. REQUIRES CONFIRMATION. Use when the user provides a URL and asks to create a seminar from it. The tool fetches the page, extracts title, description, date/time, image, and other details, then creates the seminar after confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "URL of the event page to crawl" },
+        title: { type: "string", description: "Override the extracted title (optional)" },
+        dateTime: { type: "string", description: "Override the extracted date/time in ISO 8601 format (optional)" },
+        type: { type: "string", enum: ["free", "paid"], description: "Override the extracted type (optional)" },
+        price: { type: "number", description: "Override the extracted price (optional)" },
+        duration: { type: "string", description: "Override the extracted duration (optional)" },
+        description: { type: "string", description: "Override the extracted description (optional)" },
+      },
+      required: ["url"],
+    },
+  },
+  {
     name: "update_seminar",
     description: "Update an existing seminar's details. REQUIRES CONFIRMATION. Use when the user wants to modify a seminar.",
     parameters: {
@@ -264,6 +281,25 @@ export const OPS_TOOLS: ToolDefinition[] = [
         applyUrl: { type: "string", description: "Application URL" },
       },
       required: ["institution", "title"],
+    },
+  },
+  {
+    name: "crawl_and_create_scholarship",
+    description: "Crawl a webpage to extract scholarship details and create a scholarship entry. REQUIRES CONFIRMATION. Use when the user provides a URL and asks to create a scholarship from it. The tool fetches the page, extracts institution, title, amount, eligibility, deadline, and other details, then creates the scholarship after confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "URL of the scholarship page to crawl" },
+        title: { type: "string", description: "Override the extracted title (optional)" },
+        institution: { type: "string", description: "Override the extracted institution (optional)" },
+        country: { type: "string", description: "Override the extracted country (optional)" },
+        amount: { type: "string", description: "Override the extracted amount (optional)" },
+        deadline: { type: "string", description: "Override the extracted deadline (optional)" },
+        eligibility: { type: "string", description: "Override the extracted eligibility (optional)" },
+        description: { type: "string", description: "Override the extracted description (optional)" },
+        applyUrl: { type: "string", description: "Override the extracted application URL (optional)" },
+      },
+      required: ["url"],
     },
   },
   {

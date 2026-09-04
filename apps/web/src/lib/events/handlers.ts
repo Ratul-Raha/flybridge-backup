@@ -1,8 +1,13 @@
 import "server-only";
 
+import mongoose from "mongoose";
 import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
 import { User } from "@/lib/models/user";
 import { Notification } from "@/lib/models/notification";
+import { BotConfig } from "@/lib/models/bot-config";
+import { notificationUrl, pushToUsers } from "@/lib/push";
+import { sendTelegramMessage, formatEventMessage } from "@/lib/notifications/telegram";
+import type { NotificationType } from "@/lib/models/notification";
 import type { EventPayload } from "./types";
 import type { EventHandler } from "./registry";
 
@@ -15,7 +20,7 @@ async function insertNotifications(
     seminar: string | undefined;
     registration: string | undefined;
     courseSlug: string | undefined;
-  }>
+  }>,
 ) {
   if (recipients.length === 0) return;
   await Notification.insertMany(
@@ -27,8 +32,20 @@ async function insertNotifications(
       seminar: fields.seminar,
       registration: fields.registration,
       courseSlug: fields.courseSlug,
-    }))
+    })),
   );
+
+  const userIds = recipients.map((r) => r._id as mongoose.Types.ObjectId);
+  void pushToUsers(userIds, {
+    title: fields.title ?? "",
+    body: fields.message ?? "",
+    url: notificationUrl((fields.type ?? "seminar_registration") as NotificationType, {
+      seminarId: fields.seminar,
+      courseSlug: fields.courseSlug,
+    }),
+  }).catch((error) => {
+    console.error("[push] failed to send event notification:", error);
+  });
 }
 
 export const notifyStaffOnUserRegistered: EventHandler = {
@@ -60,7 +77,8 @@ export const notifyStaffOnRegistration: EventHandler = {
   run: async (payload) => {
     const user = (payload.user ?? {}) as Record<string, unknown>;
     const seminar = (payload.seminar ?? {}) as Record<string, unknown>;
-    const registrationId = typeof payload.registrationId === "string" ? payload.registrationId : undefined;
+    const registrationId =
+      typeof payload.registrationId === "string" ? payload.registrationId : undefined;
     const seminarId = typeof seminar.id === "string" ? seminar.id : undefined;
     const userId = typeof user.id === "string" ? user.id : undefined;
 
@@ -164,4 +182,40 @@ export const notifyAllOnScholarshipCreated: EventHandler = {
   },
 };
 
+export const sendTelegramOnEvent: EventHandler = {
+  name: "sendTelegramOnEvent",
+  run: async (payload, eventName) => {
+    const config = await BotConfig.findOne().lean();
+    const telegram = (
+      config?.channels as
+        | {
+            telegram?: {
+              enabled?: boolean;
+              botToken?: string;
+              chatIds?: string[];
+              events?: string[];
+            };
+          }
+        | undefined
+    )?.telegram;
 
+    if (!telegram?.enabled || !telegram.botToken || !telegram.chatIds?.length) return;
+    if (!telegram.events?.includes(eventName as string)) return;
+
+    const text = formatEventMessage(eventName, payload as Record<string, unknown>);
+
+    // Send to all configured chat IDs; failures are caught per chat so a single
+    // bad chat ID can't block the event pipeline.
+    for (const chatId of telegram.chatIds) {
+      if (!chatId) continue;
+      try {
+        await sendTelegramMessage(telegram.botToken, chatId, text, "HTML");
+      } catch (error) {
+        console.error(
+          `[telegram] failed to send "${eventName}" to ${chatId}:`,
+          error instanceof Error ? error.message : error,
+        );
+      }
+    }
+  },
+};

@@ -36,6 +36,30 @@ export async function GET() {
       isDestructive: tool.description.includes("DESTRUCTIVE"),
     }));
     await BotTool.insertMany(defaults);
+  } else {
+    // Sync any new tools added to OPS_TOOLS that aren't in the DB yet
+    const existing = new Set(
+      (await BotTool.find({}, { toolId: 1 }).lean()).map((t) => t.toolId)
+    );
+    const newTools = OPS_TOOLS.filter((t) => !existing.has(t.name)).map((tool) => ({
+      toolId: tool.name,
+      name: tool.name
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      description: tool.description,
+      category: tool.description.includes("REQUIRES CONFIRMATION") ? "action" : "data",
+      enabled: true,
+      confirmationRequired: tool.description.includes("DESTRUCTIVE")
+        ? "destructive"
+        : tool.description.includes("REQUIRES CONFIRMATION")
+        ? "always"
+        : "never",
+      accessLevel: "admin" as const,
+      customInstructions: "",
+      parameters: tool.parameters,
+      isDestructive: tool.description.includes("DESTRUCTIVE"),
+    }));
+    if (newTools.length > 0) await BotTool.insertMany(newTools);
   }
 
   const tools = await BotTool.find().sort({ category: 1, toolId: 1 }).lean();

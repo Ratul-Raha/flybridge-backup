@@ -4,14 +4,29 @@ import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { emitEvent } from "@/lib/events/emit";
 
-function isManager(session: { role: string } | null) {
+function isManager(
+  session: { role: string; userId?: string; name?: string; email?: string } | null,
+) {
   return session && (session.role === "admin" || session.role === "moderator");
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+const SEMINAR_FIELD_LABELS: Record<string, string> = {
+  title: "Title",
+  description: "Description",
+  dateTime: "Date & time",
+  image: "Image",
+  type: "Type",
+  price: "Price",
+  url: "Meeting link",
+  duration: "Duration",
+};
+
+function eq(a: unknown, b: unknown): boolean {
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  return String(a ?? "") === String(b ?? "");
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
   if (!isManager(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -25,6 +40,9 @@ export async function PATCH(
     if (!seminar) {
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
+
+    const before: Record<string, unknown> = {};
+    for (const key of Object.keys(SEMINAR_FIELD_LABELS)) before[key] = seminar.get(key);
 
     if (typeof body.title === "string" && body.title.trim()) {
       seminar.title = body.title.trim();
@@ -54,8 +72,13 @@ export async function PATCH(
     }
 
     await seminar.save();
+    const changedFields = Object.keys(SEMINAR_FIELD_LABELS)
+      .filter((key) => key in body && !eq(before[key], seminar.get(key)))
+      .map((key) => SEMINAR_FIELD_LABELS[key]);
     await emitEvent("seminar.updated", {
       seminar: { id: seminar._id.toString(), title: seminar.title },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
+      changedFields,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -64,10 +87,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
   if (!isManager(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -82,6 +102,7 @@ export async function DELETE(
     await SeminarRegistration.deleteMany({ seminar: seminar._id });
     await emitEvent("seminar.deleted", {
       seminar: { id: seminar._id.toString(), title: seminar.title },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

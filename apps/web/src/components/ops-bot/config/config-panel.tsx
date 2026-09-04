@@ -7,6 +7,7 @@ import { PersonaTab } from "./persona-tab";
 import { CapabilitiesTab } from "./capabilities-tab";
 import { ToolsTab } from "./tools-tab";
 import { RulesTab } from "./rules-tab";
+import { ChannelsTab } from "./channels-tab";
 import { ConversationsTab } from "./conversations-tab";
 import { AuditTab } from "./audit-tab";
 
@@ -15,6 +16,7 @@ const TABS: Tab[] = [
   { id: "capabilities", label: "Capabilities" },
   { id: "tools", label: "Tools" },
   { id: "rules", label: "Rules" },
+  { id: "channels", label: "Channels" },
   { id: "conversations", label: "Conversations" },
   { id: "audit", label: "Audit Log" },
 ];
@@ -34,6 +36,7 @@ export function BotConfigPanel() {
         {activeTab === "capabilities" && <CapabilitiesTab />}
         {activeTab === "tools" && <ToolsTab />}
         {activeTab === "rules" && <RulesTab />}
+        {activeTab === "channels" && <ChannelsTab />}
         {activeTab === "conversations" && <ConversationsTab />}
         {activeTab === "audit" && <AuditTab />}
       </div>

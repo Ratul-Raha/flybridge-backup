@@ -10,10 +10,13 @@ import { Automation } from "@/lib/models/automation";
 import { AutomationRun } from "@/lib/models/automation-run";
 import { EventLog } from "@/lib/models/event-log";
 import { Notification } from "@/lib/models/notification";
+import { PushSubscription } from "@/lib/models/push-subscription";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { ReadinessRun } from "@/lib/models/readiness-run";
 import { CourseProgress } from "@/lib/models/course-progress";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { crawlUrl, crawlUrlForScholarship } from "@/lib/ops/crawler";
+import { pushToUsers } from "@/lib/push";
 
 export type ToolResult = {
   success: boolean;
@@ -47,7 +50,7 @@ export async function executeTool(
   toolId: string,
   params: Record<string, unknown>,
   ctx: ToolContext,
-  confirmed = false
+  confirmed = false,
 ): Promise<ToolResult> {
   await connectDb();
   const start = Date.now();
@@ -92,6 +95,9 @@ export async function executeTool(
       case "create_seminar":
         result = await createSeminar(params, confirmed);
         break;
+      case "crawl_and_create_seminar":
+        result = await crawlAndCreateSeminar(params, confirmed);
+        break;
       case "update_seminar":
         result = await updateSeminar(params, confirmed);
         break;
@@ -112,6 +118,9 @@ export async function executeTool(
         break;
       case "create_scholarship":
         result = await createScholarship(params, confirmed);
+        break;
+      case "crawl_and_create_scholarship":
+        result = await crawlAndCreateScholarship(params, confirmed);
         break;
       case "delete_user":
         result = await deleteUser(params, confirmed);
@@ -346,11 +355,7 @@ async function getOrders(params: Record<string, unknown>): Promise<ToolResult> {
   if (status) filter.status = status;
 
   const [orders, total] = await Promise.all([
-    Order.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate("user", "name email")
-      .lean(),
+    Order.find(filter).sort({ createdAt: -1 }).limit(limit).populate("user", "name email").lean(),
     Order.countDocuments(filter),
   ]);
 
@@ -379,12 +384,25 @@ async function getRevenueReport(params: Record<string, unknown>): Promise<ToolRe
   const [revenueAgg, topItems, statusBreakdown] = await Promise.all([
     Order.aggregate([
       { $match: { status: "completed", createdAt: { $gte: since } } },
-      { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 }, avg: { $avg: "$total" } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$total" },
+          count: { $sum: 1 },
+          avg: { $avg: "$total" },
+        },
+      },
     ]),
     Order.aggregate([
       { $match: { status: "completed", createdAt: { $gte: since } } },
       { $unwind: "$items" },
-      { $group: { _id: { title: "$items.title", type: "$items.itemType" }, revenue: { $sum: "$items.price" }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: { title: "$items.title", type: "$items.itemType" },
+          revenue: { $sum: "$items.price" },
+          count: { $sum: 1 },
+        },
+      },
       { $sort: { revenue: -1 } },
       { $limit: 10 },
     ]),
@@ -504,10 +522,7 @@ async function getScholarships(params: Record<string, unknown>): Promise<ToolRes
   if (activeOnly) filter.active = true;
   if (country) filter.country = { $regex: country, $options: "i" };
 
-  const scholarships = await Scholarship.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+  const scholarships = await Scholarship.find(filter).sort({ createdAt: -1 }).limit(limit).lean();
 
   return {
     success: true,
@@ -556,10 +571,7 @@ async function getAutomations(): Promise<ToolResult> {
 async function getEventLog(params: Record<string, unknown>): Promise<ToolResult> {
   const limit = Math.min(200, Math.max(1, (params.limit as number) ?? 20));
 
-  const events = await EventLog.find()
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+  const events = await EventLog.find().sort({ createdAt: -1 }).limit(limit).lean();
 
   return {
     success: true,
@@ -630,7 +642,7 @@ async function getReadinessStats(params: Record<string, unknown>): Promise<ToolR
 
 async function createSeminar(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const title = params.title as string;
   const dateTime = params.dateTime as string;
@@ -674,9 +686,89 @@ async function createSeminar(
   };
 }
 
+async function crawlAndCreateSeminar(
+  params: Record<string, unknown>,
+  confirmed: boolean,
+): Promise<ToolResult> {
+  const url = params.url as string;
+  if (!url) return { success: false, error: "url is required" };
+
+  let crawled;
+  try {
+    crawled = await crawlUrl(url);
+  } catch (e) {
+    return {
+      success: false,
+      error: `Failed to crawl URL: ${e instanceof Error ? e.message : "unknown error"}`,
+    };
+  }
+
+  const title = (params.title as string) || crawled.title;
+  const dateTime = (params.dateTime as string) || crawled.dateTime;
+  if (!title)
+    return {
+      success: false,
+      error: "Could not extract a title from the page. Please provide one.",
+    };
+  if (!dateTime)
+    return {
+      success: false,
+      error: "Could not extract a date/time from the page. Please provide one.",
+    };
+
+  const d = new Date(dateTime);
+  if (isNaN(d.getTime())) return { success: false, error: `Invalid date/time: ${dateTime}` };
+
+  const type = (params.type as "free" | "paid") || crawled.type || "free";
+  const price = (params.price as number) ?? crawled.price ?? 0;
+  const duration = (params.duration as string) || crawled.duration || "60 min";
+  const description = (params.description as string) || crawled.description || "";
+  const image = crawled.image || "";
+
+  if (!confirmed) {
+    return {
+      success: true,
+      requiresConfirmation: true,
+      confirmationPreview: {
+        title: "Crawl & Create Seminar",
+        description: `Crawled ${url} — create seminar "${title}"`,
+        details: {
+          title,
+          dateTime: d.toISOString(),
+          description: description.slice(0, 300) || "(none)",
+          type,
+          price,
+          duration,
+          image: image || "(none)",
+          crawledFrom: url,
+        },
+      },
+    };
+  }
+
+  const seminar = await Seminar.create({
+    title,
+    description,
+    dateTime: d,
+    type,
+    price: type === "paid" ? price : 0,
+    duration,
+    image,
+    url,
+  });
+
+  return {
+    success: true,
+    data: {
+      message: `Seminar "${title}" created from ${url}`,
+      seminarId: seminar._id.toString(),
+    },
+  };
+}
+
 async function updateSeminar(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const seminarId = params.seminarId as string;
   if (!seminarId) return { success: false, error: "seminarId is required" };
@@ -721,7 +813,7 @@ async function updateSeminar(
 
 async function updateUser(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const identifier = params.identifier as string;
   if (!identifier) return { success: false, error: "identifier is required" };
@@ -744,7 +836,11 @@ async function updateUser(
       confirmationPreview: {
         title: "Update User",
         description: `Update user "${user.name}" (${user.email})`,
-        details: { currentRole: user.accountType, currentSubscription: user.subscription, changes: updates },
+        details: {
+          currentRole: user.accountType,
+          currentSubscription: user.subscription,
+          changes: updates,
+        },
       },
     };
   }
@@ -759,7 +855,7 @@ async function updateUser(
 
 async function sendNotification(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const recipientType = params.recipientType as string;
   const title = params.title as string;
@@ -798,6 +894,13 @@ async function sendNotification(
 
   if (notifications.length > 0) {
     await Notification.insertMany(notifications);
+    void pushToUsers(
+      users.map((u) => u._id),
+      { title, body: message, url: "/dashboard/notifications" },
+      { urgency: "high" },
+    ).catch((error) => {
+      console.error("[push] failed to send admin broadcast:", error);
+    });
   }
 
   return {
@@ -808,7 +911,7 @@ async function sendNotification(
 
 async function toggleAutomation(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const automationId = params.automationId as string;
   const active = params.active === "true";
@@ -843,10 +946,7 @@ async function toggleAutomation(
   };
 }
 
-async function emitEvent(
-  params: Record<string, unknown>,
-  confirmed: boolean
-): Promise<ToolResult> {
+async function emitEvent(params: Record<string, unknown>, confirmed: boolean): Promise<ToolResult> {
   const eventName = params.eventName as string;
   if (!eventName) return { success: false, error: "eventName is required" };
 
@@ -857,7 +957,10 @@ async function emitEvent(
       confirmationPreview: {
         title: "Emit Event",
         description: `Manually trigger event "${eventName}"`,
-        details: { eventName, note: "This will trigger all registered handlers and matching automations" },
+        details: {
+          eventName,
+          note: "This will trigger all registered handlers and matching automations",
+        },
       },
     };
   }
@@ -873,16 +976,13 @@ async function emitEvent(
 
 async function updateCourse(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const courseSlug = params.courseSlug as string;
   if (!courseSlug) return { success: false, error: "courseSlug is required" };
 
   const course = await Course.findOne({
-    $or: [
-      { slug: courseSlug },
-      { title: { $regex: courseSlug, $options: "i" } },
-    ],
+    $or: [{ slug: courseSlug }, { title: { $regex: courseSlug, $options: "i" } }],
   }).lean();
 
   if (!course) return { success: false, error: `Course not found: ${courseSlug}` };
@@ -915,11 +1015,12 @@ async function updateCourse(
 
 async function createScholarship(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const institution = params.institution as string;
   const title = params.title as string;
-  if (!institution || !title) return { success: false, error: "institution and title are required" };
+  if (!institution || !title)
+    return { success: false, error: "institution and title are required" };
 
   if (!confirmed) {
     return {
@@ -958,9 +1059,89 @@ async function createScholarship(
   };
 }
 
+async function crawlAndCreateScholarship(
+  params: Record<string, unknown>,
+  confirmed: boolean,
+): Promise<ToolResult> {
+  const url = params.url as string;
+  if (!url) return { success: false, error: "url is required" };
+
+  let crawled;
+  try {
+    crawled = await crawlUrlForScholarship(url);
+  } catch (e) {
+    return {
+      success: false,
+      error: `Failed to crawl URL: ${e instanceof Error ? e.message : "unknown error"}`,
+    };
+  }
+
+  const title = (params.title as string) || crawled.title;
+  const institution = (params.institution as string) || crawled.institution;
+  if (!title)
+    return {
+      success: false,
+      error: "Could not extract a title from the page. Please provide one.",
+    };
+  if (!institution)
+    return {
+      success: false,
+      error: "Could not extract an institution from the page. Please provide one.",
+    };
+
+  const country = (params.country as string) || crawled.country || "";
+  const amount = (params.amount as string) || crawled.amount || "";
+  const deadline = (params.deadline as string) || crawled.deadline || "";
+  const eligibility = (params.eligibility as string) || crawled.eligibility || "";
+  const description = (params.description as string) || crawled.description || "";
+  const applyUrl = (params.applyUrl as string) || crawled.applyUrl || url;
+
+  if (!confirmed) {
+    return {
+      success: true,
+      requiresConfirmation: true,
+      confirmationPreview: {
+        title: "Crawl & Create Scholarship",
+        description: `Crawled ${url} — create scholarship "${title}" at ${institution}`,
+        details: {
+          institution,
+          title,
+          country: country || "(none)",
+          amount: amount || "(none)",
+          deadline: deadline || "(none)",
+          eligibility: eligibility?.slice(0, 200) || "(none)",
+          description: description?.slice(0, 300) || "(none)",
+          crawledFrom: url,
+        },
+      },
+    };
+  }
+
+  const scholarship = await Scholarship.create({
+    institution,
+    title,
+    rawText: description || title,
+    description,
+    country,
+    amount,
+    deadline,
+    eligibility,
+    applyUrl,
+    active: true,
+  });
+
+  return {
+    success: true,
+    data: {
+      message: `Scholarship "${title}" created from ${url}`,
+      scholarshipId: scholarship._id.toString(),
+    },
+  };
+}
+
 async function deleteUser(
   params: Record<string, unknown>,
-  confirmed: boolean
+  confirmed: boolean,
 ): Promise<ToolResult> {
   const identifier = params.identifier as string;
   if (!identifier) return { success: false, error: "identifier is required" };
@@ -980,7 +1161,8 @@ async function deleteUser(
           email: user.email,
           role: user.accountType,
           subscription: user.subscription,
-          warning: "This will also delete: enrollments, seminar registrations, resource downloads, readiness runs, course progress, notifications",
+          warning:
+            "This will also delete: enrollments, seminar registrations, resource downloads, readiness runs, course progress, notifications, push subscriptions",
         },
       },
     };
@@ -999,6 +1181,7 @@ async function deleteUser(
       ReadinessRun.deleteMany({ user: userId }).session(session),
       CourseProgress.deleteMany({ user: userId }).session(session),
       Notification.deleteMany({ recipient: userId }).session(session),
+      PushSubscription.deleteMany({ user: userId }).session(session),
       User.deleteOne({ _id: userId }).session(session),
     ]);
 

@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { Avatar } from "@/components/dashboard/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { PushEnabler } from "@/components/notifications/push-enabler";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
@@ -114,8 +115,16 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               label: "Seminars",
               icon: CalendarDays,
               children: [
-                { label: "All seminars", href: "/dashboard/seminars", active: pathname === "/dashboard/seminars" },
-                { label: "My seminars", href: "/dashboard/seminars/mine", active: pathname === "/dashboard/seminars/mine" },
+                {
+                  label: "All seminars",
+                  href: "/dashboard/seminars",
+                  active: pathname === "/dashboard/seminars",
+                },
+                {
+                  label: "My seminars",
+                  href: "/dashboard/seminars/mine",
+                  active: pathname === "/dashboard/seminars/mine",
+                },
               ],
             },
             {
@@ -123,8 +132,16 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               label: "Courses",
               icon: BookOpen,
               children: [
-                { label: "All courses", href: "/dashboard/courses", active: pathname === "/dashboard/courses" },
-                { label: "My courses", href: "/dashboard/courses/mine", active: pathname === "/dashboard/courses/mine" },
+                {
+                  label: "All courses",
+                  href: "/dashboard/courses",
+                  active: pathname === "/dashboard/courses",
+                },
+                {
+                  label: "My courses",
+                  href: "/dashboard/courses/mine",
+                  active: pathname === "/dashboard/courses/mine",
+                },
               ],
             },
             {
@@ -132,8 +149,16 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               label: "Resources",
               icon: FolderOpen,
               children: [
-                { label: "All resources", href: "/dashboard/resources", active: pathname === "/dashboard/resources" },
-                { label: "My resources", href: "/dashboard/resources/mine", active: pathname === "/dashboard/resources/mine" },
+                {
+                  label: "All resources",
+                  href: "/dashboard/resources",
+                  active: pathname === "/dashboard/resources",
+                },
+                {
+                  label: "My resources",
+                  href: "/dashboard/resources/mine",
+                  active: pathname === "/dashboard/resources/mine",
+                },
               ],
             },
             {
@@ -141,7 +166,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               label: "Scholarships",
               icon: Award,
               children: [
-                { label: "All scholarships", href: "/dashboard/scholarships", active: pathname === "/dashboard/scholarships" },
+                {
+                  label: "All scholarships",
+                  href: "/dashboard/scholarships",
+                  active: pathname === "/dashboard/scholarships",
+                },
               ],
             },
           ],
@@ -191,7 +220,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {
         title: "Overview",
         items: [
-          { kind: "link", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: pathname === "/dashboard" },
+          {
+            kind: "link",
+            label: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+            active: pathname === "/dashboard",
+          },
         ],
       },
     ];
@@ -354,8 +389,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Full-screen course experiences (lesson player, certificate) have their own
   // mobile layout, so they must not be swallowed by the mobile app shell.
-  const isFullScreenCourse =
-    /^\/dashboard\/courses\/[^/]+\/(learn|certificate)/.test(pathname);
+  const isFullScreenCourse = /^\/dashboard\/courses\/[^/]+\/(learn|certificate)/.test(pathname);
 
   if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
     return <MobileUserApp>{children}</MobileUserApp>;
@@ -382,7 +416,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <Icon size={17} strokeWidth={item.active ? 2.2 : 1.8} />
           {item.label}
           {item.active && (
-            <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+            <span
+              className="ml-auto w-1.5 h-1.5 rounded-full"
+              style={{ background: "var(--brand)" }}
+            />
           )}
         </Link>
       );
@@ -397,7 +434,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           onClick={() => toggleGroup(item.label)}
           className="flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[13.5px] font-medium transition-all duration-200"
           style={
-            open ? { background: "var(--brand-soft)", color: "var(--brand)" } : { color: "var(--body)" }
+            open
+              ? { background: "var(--brand-soft)", color: "var(--brand)" }
+              : { color: "var(--body)" }
           }
         >
           <Icon size={17} strokeWidth={open ? 2.2 : 1.8} />
@@ -409,7 +448,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           )}
         </button>
         {open && (
-          <div className="flex flex-col gap-0.5 ml-[22px] border-l pl-3" style={{ borderColor: "var(--line)" }}>
+          <div
+            className="flex flex-col gap-0.5 ml-[22px] border-l pl-3"
+            style={{ borderColor: "var(--line)" }}
+          >
             {item.children.map((child) => (
               <Link
                 key={child.href}
@@ -424,7 +466,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               >
                 {child.label}
                 {child.active && (
-                  <span className="ml-auto inline-block w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+                  <span
+                    className="ml-auto inline-block w-1.5 h-1.5 rounded-full"
+                    style={{ background: "var(--brand)" }}
+                  />
                 )}
               </Link>
             ))}
@@ -531,6 +576,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               user && (
                 <div className="flex items-center gap-3">
                   {user && <NotificationBell />}
+                  {user && <PushEnabler />}
                   <div className="relative" ref={avatarMenuRef}>
                     <button
                       type="button"
@@ -544,13 +590,25 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                     {avatarMenuOpen && (
                       <div
                         className="absolute right-0 top-full mt-2 w-56 rounded-lg border bg-white py-1.5 z-50"
-                        style={{ borderColor: "var(--line)", boxShadow: "0 8px 24px -4px rgba(18,32,67,0.12)" }}
+                        style={{
+                          borderColor: "var(--line)",
+                          boxShadow: "0 8px 24px -4px rgba(18,32,67,0.12)",
+                        }}
                       >
-                        <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--line)" }}>
-                          <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                        <div
+                          className="px-4 py-3"
+                          style={{ borderBottom: "1px solid var(--line)" }}
+                        >
+                          <p
+                            className="text-[13px] font-semibold truncate"
+                            style={{ color: "var(--ink)" }}
+                          >
                             {user.name}
                           </p>
-                          <p className="text-[11.5px] truncate mt-0.5" style={{ color: "var(--body)" }}>
+                          <p
+                            className="text-[11.5px] truncate mt-0.5"
+                            style={{ color: "var(--body)" }}
+                          >
                             {user.email}
                           </p>
                           <span
@@ -577,7 +635,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                             className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors hover:bg-[var(--bg-soft)] disabled:opacity-50"
                             style={{ color: "#C0392B" }}
                           >
-                            {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                            {signingOut ? (
+                              <Loader2 size={15} className="animate-spin" />
+                            ) : (
+                              <LogOut size={15} />
+                            )}
                             {signingOut ? "Signing out…" : "Sign out"}
                           </button>
                         </div>

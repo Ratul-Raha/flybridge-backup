@@ -19,7 +19,7 @@ const botAuditLogSchema = new Schema(
     confirmed: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ["success", "error", "cancelled"],
+      enum: ["success", "error", "cancelled", "pending_confirmation"],
       required: true,
     },
     result: { type: Schema.Types.Mixed, default: null },

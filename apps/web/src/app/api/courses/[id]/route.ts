@@ -5,14 +5,43 @@ import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { emitEvent } from "@/lib/events/emit";
 
-function isManager(session: { role: string } | null) {
+type EditSession = { role: string; userId?: string; name?: string; email?: string } | null;
+
+function isManager(session: EditSession) {
   return session && (session.role === "admin" || session.role === "moderator");
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+const COURSE_FIELD_LABELS: Record<string, string> = {
+  title: "Title",
+  slug: "Slug",
+  badge: "Badge",
+  subtitle: "Subtitle",
+  description: "Description",
+  level: "Level",
+  language: "Language",
+  pace: "Pace",
+  price: "Price",
+  currency: "Currency",
+  image: "Image",
+  published: "Published",
+  featured: "Featured",
+  upcoming: "Upcoming",
+  modules: "Modules",
+  books: "Books",
+};
+
+function actorFor(session: EditSession, userId?: string) {
+  return session
+    ? { name: session.name, email: session.email, userId: userId ?? session.userId }
+    : undefined;
+}
+
+function eq(a: unknown, b: unknown): boolean {
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  return String(a ?? "") === String(b ?? "");
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
   if (!isManager(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -27,6 +56,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
+    const before: Record<string, unknown> = {};
+    for (const key of Object.keys(COURSE_FIELD_LABELS)) before[key] = course.get(key);
+
     if (typeof body.title === "string" && body.title.trim()) {
       course.title = body.title.trim();
     }
@@ -38,7 +70,14 @@ export async function PATCH(
       }
       course.slug = raw;
     }
-    for (const field of ["badge", "subtitle", "description", "level", "language", "pace"] as const) {
+    for (const field of [
+      "badge",
+      "subtitle",
+      "description",
+      "level",
+      "language",
+      "pace",
+    ] as const) {
       if (typeof body[field] === "string") course[field] = body[field].trim();
     }
     if (typeof body.price === "number") course.price = Math.max(0, body.price);
@@ -57,8 +96,13 @@ export async function PATCH(
     }
 
     await course.save();
+    const changedFields = Object.keys(COURSE_FIELD_LABELS)
+      .filter((key) => key in body && !eq(before[key], course.get(key)))
+      .map((key) => COURSE_FIELD_LABELS[key]);
     await emitEvent("course.updated", {
       course: { id: course._id.toString(), slug: course.slug, title: course.title },
+      actor: actorFor(session),
+      changedFields,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -67,10 +111,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
   if (!isManager(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -86,6 +127,7 @@ export async function DELETE(
     await Course.findByIdAndDelete(course._id);
     await emitEvent("course.deleted", {
       course: { id: course._id.toString(), slug: course.slug, title: course.title },
+      actor: actorFor(session),
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -108,14 +108,13 @@ export async function POST(request: NextRequest) {
     const title = typeof body.title === "string" ? body.title.trim() : "";
     if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
 
-    const rawSlug = typeof body.slug === "string" && body.slug.trim()
-      ? body.slug.trim()
-      : slugify(title);
+    const rawSlug =
+      typeof body.slug === "string" && body.slug.trim() ? body.slug.trim() : slugify(title);
     const existing = await Course.findOne({ slug: rawSlug });
     if (existing) {
       return NextResponse.json(
         { error: `A course with slug "${rawSlug}" already exists` },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -129,7 +128,8 @@ export async function POST(request: NextRequest) {
       language: typeof body.language === "string" ? body.language.trim() : "",
       pace: typeof body.pace === "string" ? body.pace.trim() : "",
       price: Math.max(0, Number(body.price) || 0),
-      currency: typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
+      currency:
+        typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
       image: typeof body.image === "string" ? body.image.trim() || undefined : undefined,
       published: body.published === true,
       featured: body.featured === true,
@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
         price: course.price,
         image: course.image,
       },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
     });
 
     return NextResponse.json({ course: toDto(course) }, { status: 201 });
@@ -157,22 +158,29 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function normalizeModules(raw: unknown): { title: string; lessons: { title: string; duration?: string; videoUrl?: string; pdfUrl?: string }[] }[] {
+function normalizeModules(
+  raw: unknown,
+): {
+  title: string;
+  lessons: { title: string; duration?: string; videoUrl?: string; pdfUrl?: string }[];
+}[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((m) => {
       const mod = (m ?? {}) as Record<string, unknown>;
       const title = typeof mod.title === "string" ? mod.title.trim() : "";
       const lessons = Array.isArray(mod.lessons)
-        ? mod.lessons.map((l) => {
-            const lesson = (l ?? {}) as Record<string, unknown>;
-            return {
-              title: typeof lesson.title === "string" ? lesson.title.trim() : "",
-              duration: typeof lesson.duration === "string" ? lesson.duration.trim() : "",
-              videoUrl: typeof lesson.videoUrl === "string" ? lesson.videoUrl.trim() : "",
-              pdfUrl: typeof lesson.pdfUrl === "string" ? lesson.pdfUrl.trim() : "",
-            };
-          }).filter((l) => l.title)
+        ? mod.lessons
+            .map((l) => {
+              const lesson = (l ?? {}) as Record<string, unknown>;
+              return {
+                title: typeof lesson.title === "string" ? lesson.title.trim() : "",
+                duration: typeof lesson.duration === "string" ? lesson.duration.trim() : "",
+                videoUrl: typeof lesson.videoUrl === "string" ? lesson.videoUrl.trim() : "",
+                pdfUrl: typeof lesson.pdfUrl === "string" ? lesson.pdfUrl.trim() : "",
+              };
+            })
+            .filter((l) => l.title)
         : [];
       return { title, lessons };
     })

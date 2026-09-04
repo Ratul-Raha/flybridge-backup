@@ -88,10 +88,14 @@ export async function POST(request: NextRequest) {
 
     const institution = typeof body.institution === "string" ? body.institution.trim() : "";
     const rawText = typeof body.rawText === "string" ? body.rawText.trim() : "";
-    if (!institution) return NextResponse.json({ error: "Institution name is required" }, { status: 400 });
-    if (!rawText) return NextResponse.json({ error: "Scholarship text is required" }, { status: 400 });
+    if (!institution)
+      return NextResponse.json({ error: "Institution name is required" }, { status: 400 });
+    if (!rawText)
+      return NextResponse.json({ error: "Scholarship text is required" }, { status: 400 });
 
-    const level = ["any", "undergraduate", "graduate", "postgraduate", "school"].includes(body.level)
+    const level = ["any", "undergraduate", "graduate", "postgraduate", "school"].includes(
+      body.level,
+    )
       ? body.level
       : "any";
 
@@ -101,14 +105,16 @@ export async function POST(request: NextRequest) {
       title: typeof body.title === "string" ? body.title.trim() || institution : institution,
       description: typeof body.description === "string" ? body.description.trim() : "",
       country: typeof body.country === "string" ? body.country.trim() : "",
-      countryCode: typeof body.countryCode === "string" ? body.countryCode.trim().toUpperCase() : "",
+      countryCode:
+        typeof body.countryCode === "string" ? body.countryCode.trim().toUpperCase() : "",
       level,
       amount: typeof body.amount === "string" ? body.amount.trim() : "",
       deadline: typeof body.deadline === "string" ? body.deadline.trim() : "",
       eligibility: typeof body.eligibility === "string" ? body.eligibility.trim() : "",
       applyUrl: typeof body.applyUrl === "string" ? body.applyUrl.trim() : "",
       imageUrl: typeof body.imageUrl === "string" ? body.imageUrl.trim() : "",
-      imagePublicId: typeof body.imagePublicId === "string" ? body.imagePublicId.trim() || undefined : undefined,
+      imagePublicId:
+        typeof body.imagePublicId === "string" ? body.imagePublicId.trim() || undefined : undefined,
       active: body.active !== false,
       createdBy: session!.userId,
     });
@@ -124,9 +130,13 @@ export async function POST(request: NextRequest) {
         amount: scholarship.amount ?? null,
         deadline: scholarship.deadline ?? null,
       },
+      actor: { name: session?.name, email: session?.email, userId: session?.userId },
     });
 
-    return NextResponse.json({ scholarship: toDto(scholarship as ScholarshipDoc) }, { status: 201 });
+    return NextResponse.json(
+      { scholarship: toDto(scholarship as ScholarshipDoc) },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("scholarships POST error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
