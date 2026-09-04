@@ -24,6 +24,8 @@ import {
   ShoppingCart,
   Loader2,
   Award,
+  Bot,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -294,25 +296,40 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             active: pathname.startsWith("/dashboard/admin/orders"),
           },
           {
-            kind: "link",
-            label: "Readiness",
-            href: "/dashboard/admin/readiness",
-            icon: Gauge,
-            active: pathname.startsWith("/dashboard/admin/readiness"),
-          },
-          {
-            kind: "link",
-            label: "Automation",
-            href: "/dashboard/admin/automations",
+            kind: "group",
+            label: "Operations",
             icon: Workflow,
-            active: pathname.startsWith("/dashboard/admin/automations"),
+            children: [
+              {
+                label: "Readiness",
+                href: "/dashboard/admin/readiness",
+                active: pathname.startsWith("/dashboard/admin/readiness"),
+              },
+              {
+                label: "Automation",
+                href: "/dashboard/admin/automations",
+                active: pathname.startsWith("/dashboard/admin/automations"),
+              },
+              {
+                label: "Event Log",
+                href: "/dashboard/admin/events",
+                active: pathname.startsWith("/dashboard/admin/events"),
+              },
+            ],
           },
           {
             kind: "link",
-            label: "Event Log",
-            href: "/dashboard/admin/events",
-            icon: ListChecks,
-            active: pathname.startsWith("/dashboard/admin/events"),
+            label: "Ops Bot",
+            href: "/dashboard/admin/ops-bot",
+            icon: Bot,
+            active: pathname.startsWith("/dashboard/admin/ops-bot"),
+          },
+          {
+            kind: "link",
+            label: "Bot Config",
+            href: "/dashboard/admin/bot-config",
+            icon: SlidersHorizontal,
+            active: pathname.startsWith("/dashboard/admin/bot-config"),
           },
         ],
       });
