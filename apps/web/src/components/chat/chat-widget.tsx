@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 type ChatRole = "user" | "assistant";
@@ -63,6 +64,7 @@ function TypingDots() {
 }
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -72,6 +74,9 @@ export function ChatWidget() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // The Ops Bot widget owns the dashboard, so the public support bot hides there.
+  if (pathname.startsWith("/dashboard")) return null;
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
