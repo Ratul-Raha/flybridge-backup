@@ -74,6 +74,19 @@ function slugify(value: string): string {
     .slice(0, 90);
 }
 
+function extractJsonObject(text: string): Record<string, unknown> {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : text;
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start === -1 || end <= start) {
+    throw new Error(
+      `AI did not return a JSON object. Response preview: ${candidate.slice(0, 200)}`
+    );
+  }
+  return JSON.parse(candidate.slice(start, end + 1)) as Record<string, unknown>;
+}
+
 export async function generateBlogPost(
   subject: string,
   requestedTitle: string
@@ -86,6 +99,7 @@ export async function generateBlogPost(
     system,
     messages: [{ role: "user", content: user }] satisfies AiMessage[],
     jsonMode: true,
+    maxTokens: 6000,
   });
 
   const reader = stream.getReader();
@@ -101,10 +115,19 @@ export async function generateBlogPost(
     reader.releaseLock();
   }
 
-  const start = full.indexOf("{");
-  const end = full.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("AI returned invalid blog data");
-  const json = JSON.parse(full.slice(start, end + 1)) as Record<string, unknown>;
+  if (!full.trim()) {
+    throw new Error("AI returned an empty response");
+  }
+
+  let json: Record<string, unknown>;
+  try {
+    json = extractJsonObject(full);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`AI returned malformed JSON. Response preview: ${full.slice(0, 200)}`);
+    }
+    throw error;
+  }
 
   const title = cleanText(json.title) || requestedTitle;
   const content = cleanText(json.content);

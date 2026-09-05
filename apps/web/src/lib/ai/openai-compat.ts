@@ -11,6 +11,8 @@ type StreamOptions = {
   signal?: AbortSignal;
   /** Ask the provider for a strict JSON object response. */
   jsonMode?: boolean;
+  /** Max output tokens. Defaults to 1024. */
+  maxTokens?: number;
 };
 
 /** Parse an SSE "data: ..." line and return its JSON payload (null for [DONE]). */
@@ -39,6 +41,7 @@ export async function streamOpenAiCompatible({
   messages,
   signal,
   jsonMode,
+  maxTokens = 1024,
 }: StreamOptions): Promise<ReadableStream<AiStreamChunk>> {
   const res = await fetch(url, {
     method: "POST",
@@ -51,7 +54,7 @@ export async function streamOpenAiCompatible({
       model,
       stream: true,
       temperature: 0.3,
-      max_tokens: 1024,
+      max_tokens: maxTokens,
       messages: [{ role: "system", content: system }, ...messages],
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),

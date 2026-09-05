@@ -10,7 +10,7 @@ const DEFAULT_MODEL = "openai/gpt-oss-20b";
 export const groqProvider: AiProvider = {
   id: "groq",
 
-  async streamChat({ model, system, messages, signal, jsonMode }) {
+  async streamChat({ model, system, messages, signal, jsonMode, maxTokens }) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       throw new Error("GROQ_API_KEY is not configured");
@@ -24,6 +24,7 @@ export const groqProvider: AiProvider = {
       messages,
       signal,
       jsonMode,
+      maxTokens,
     });
   },
 };

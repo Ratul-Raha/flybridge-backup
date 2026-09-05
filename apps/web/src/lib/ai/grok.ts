@@ -17,7 +17,7 @@ const DEFAULT_MODEL = "grok-3-mini";
 export const grokProvider: AiProvider = {
   id: "grok",
 
-  async streamChat({ model, system, messages, signal, jsonMode }) {
+  async streamChat({ model, system, messages, signal, jsonMode, maxTokens }) {
     const apiKey = process.env.GROK_API_KEY;
 
     if (!apiKey) {
@@ -35,6 +35,7 @@ export const grokProvider: AiProvider = {
       messages,
       signal,
       jsonMode,
+      maxTokens,
     });
   },
 };
