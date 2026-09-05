@@ -19,7 +19,7 @@ const footerLinks = [
     title: "Company",
     links: [
       { label: "About", href: "/about" },
-      { label: "Blog", href: "https://coachrasel.com" },
+      { label: "Blog", href: "/blogs" },
     ],
   },
   {

@@ -50,13 +50,15 @@ export async function POST(request: NextRequest) {
     }
 
     const scopeParam = request.nextUrl.searchParams.get("scope");
-    const scope: "courses" | "resources" | "stories" | "scholarships" =
+    const scope: "courses" | "resources" | "stories" | "scholarships" | "blogs" =
       scopeParam === "courses"
         ? "courses"
         : scopeParam === "stories"
         ? "stories"
         : scopeParam === "scholarships"
         ? "scholarships"
+        : scopeParam === "blogs"
+        ? "blogs"
         : "resources";
     const base =
       scope === "courses"
@@ -65,6 +67,8 @@ export async function POST(request: NextRequest) {
         ? "flybridge/stories"
         : scope === "scholarships"
         ? "flybridge/scholarships"
+        : scope === "blogs"
+        ? "flybridge/blogs"
         : "flybridge/resources";
 
     const folder =

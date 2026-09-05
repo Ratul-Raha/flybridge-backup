@@ -26,6 +26,7 @@ import {
   Award,
   Bot,
   SlidersHorizontal,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -255,6 +256,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/resources",
             icon: FolderOpen,
             active: pathname.startsWith("/dashboard/resources"),
+          },
+          {
+            kind: "link",
+            label: "Blogs",
+            href: "/dashboard/blogs",
+            icon: Newspaper,
+            active: pathname.startsWith("/dashboard/blogs"),
           },
           {
             kind: "link",

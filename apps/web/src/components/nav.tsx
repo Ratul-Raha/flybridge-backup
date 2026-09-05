@@ -11,6 +11,7 @@ import { ProgramsMegaMenu } from "@/components/programs/programs-mega-menu";
 const links = [
   { label: "Programs", href: "/programs" },
   { label: "Seminars", href: "/seminars" },
+  { label: "Blog", href: "/blogs" },
   { label: "Scholarships", href: "/scholarships" },
   { label: "Partnership", href: "/partnership" },
   { label: "Resources", href: "/resources" },
