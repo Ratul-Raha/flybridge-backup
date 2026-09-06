@@ -1,15 +1,40 @@
 const partners = [
   "IDP Education",
   "British Council",
-  "Wichita State University",
   "Arizona State University",
-  "Northeastern University",
-  "UMass Boston",
-  "University of Toronto",
-  "University of British Columbia",
-  "York University",
-  "Simon Fraser University",
-  "Concordia University",
+  "Southern New Hampshire University",
+  "University of Central Oklahoma",
+  "Western University",
+  "Lakehead University",
+  "Laurentian University",
+  "Brock University",
+  "Yorkville University",
+  "University of Edinburgh",
+  "University of Bristol",
+  "University of Glasgow",
+  "University of Warwick",
+  "University of Manchester",
+  "Cardiff University",
+  "Durham University",
+  "University of Southampton",
+  "University of Birmingham",
+  "Edinburgh Napier University",
+  "Swansea University",
+  "Australian National University",
+  "UNSW Sydney",
+  "University of Western Australia",
+  "University of Technology Sydney",
+  "Macquarie University",
+  "Queensland University of Technology",
+  "Curtin University",
+  "Bond University",
+  "Deakin University",
+  "Griffith University",
+  "La Trobe University",
+  "Auckland University of Technology",
+  "Massey University",
+  "University of Canterbury",
+  "Victoria University of Wellington",
 ];
 
 export function PartnersStrip() {
@@ -23,7 +48,7 @@ export function PartnersStrip() {
               Trusted partners
             </div>
             <div className="text-[11px] mt-[3px] leading-none text-white/50">
-              50+ institutions, 12+ countries
+              40+ institutions, 12+ countries
             </div>
           </div>
         </div>

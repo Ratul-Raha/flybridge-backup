@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const stats = [
   { value: "12+", label: "Years of experience" },
-  { value: "50+", label: "Partner universities" },
+  { value: "40+", label: "Partner universities" },
   { value: "10,000+", label: "Students supported" },
   { value: "02", label: "Global strategic partners" },
 ];

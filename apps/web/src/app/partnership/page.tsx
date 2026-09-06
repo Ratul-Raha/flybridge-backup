@@ -6,7 +6,7 @@ import { UniversityNetwork } from "@/components/partnership/university-network";
 export const metadata: Metadata = {
   title: "Partnership | FlyBridge Education Group",
   description:
-    "FlyBridge partners with 50+ universities across the US, Canada and Europe, alongside IDP and the British Council, to deliver trusted pathways to global education.",
+    "FlyBridge partners with 40+ universities across the US, Canada, UK, Australia and New Zealand, alongside IDP and the British Council, to deliver trusted pathways to global education.",
 };
 
 const marqueeNames = [
@@ -101,8 +101,8 @@ export default function PartnershipPage() {
               </h1>
 
               <p className="mt-[22px] max-w-[540px] text-[16.5px] leading-[1.65]" style={{ color: "var(--body)" }}>
-                FlyBridge connects ambitious students with 50+ universities across the United States,
-                Canada and Europe — alongside world-class expertise from IDP and the British Council —
+                FlyBridge connects ambitious students with 40+ universities across the United States,
+                Canada, the UK, Australia and New Zealand — alongside world-class expertise from IDP and the British Council —
                 turning international ambition into a clear, credible path forward.
               </p>
 

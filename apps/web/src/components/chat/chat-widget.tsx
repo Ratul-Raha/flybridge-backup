@@ -75,9 +75,6 @@ export function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // The Ops Bot widget owns the dashboard, so the public support bot hides there.
-  if (pathname.startsWith("/dashboard")) return null;
-
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
@@ -197,6 +194,9 @@ export function ChatWidget() {
     },
     [input, messages, streaming]
   );
+
+  // The Ops Bot widget owns the dashboard, so the public support bot hides there.
+  if (pathname.startsWith("/dashboard")) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-[70] flex flex-col items-end" ref={rootRef}>

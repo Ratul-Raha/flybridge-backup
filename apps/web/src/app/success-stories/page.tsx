@@ -54,7 +54,7 @@ const videos: StoryVideo[] = [
 const outcomes = [
   {
     title: "Accepted into university",
-    desc: "Students in our Study Abroad track gain admission to partner universities across the US, Canada and Europe.",
+    desc: "Students in our Study Abroad track gain admission to partner universities across the US, Canada, UK, Australia and New Zealand.",
     icon: <path d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />,
   },
   {
@@ -128,7 +128,7 @@ export default function SuccessStoriesPage() {
               <div className="flex items-center gap-6 mt-[38px]">
                 {[
                   { value: "10,000+", label: "Learners guided" },
-                  { value: "50+", label: "University partners" },
+                  { value: "40+", label: "University partners" },
                   { value: "83%", label: "Success rate" },
                   { value: "4.8/5", label: "Average rating" },
                 ].map((s, i, arr) => (

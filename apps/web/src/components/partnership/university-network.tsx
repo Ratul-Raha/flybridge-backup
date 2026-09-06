@@ -8,68 +8,73 @@ type University = {
   location: string;
   country: string;
   flagCode: string;
-  region: "USA" | "Canada" | "Europe";
+  region: "USA" | "Canada" | "UK" | "Australia" | "NZ";
 };
 
 const REGION_LABEL: Record<University["region"], string> = {
   USA: "USA",
   Canada: "Canada",
-  Europe: "Europe",
+  UK: "UK",
+  Australia: "Australia",
+  NZ: "New Zealand",
 };
 
 const universities: University[] = [
+  // ── USA ───────────────────────────────────────────────────────
   { name: "Arizona State University", location: "Tempe, AZ", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Northeastern University", location: "Boston, MA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Massachusetts Boston", location: "Boston, MA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Boston University", location: "Boston, MA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "New York University", location: "New York, NY", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Columbia University", location: "New York, NY", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Emory University", location: "Atlanta, GA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Illinois Institute of Technology", location: "Chicago, IL", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University at Buffalo", location: "Buffalo, NY", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of California, Los Angeles", location: "Los Angeles, CA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Southern California", location: "Los Angeles, CA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Michigan", location: "Ann Arbor, MI", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Michigan State University", location: "East Lansing, MI", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Purdue University", location: "West Lafayette, IN", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Illinois Urbana-Champaign", location: "Urbana, IL", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Ohio State University", location: "Columbus, OH", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Florida", location: "Gainesville, FL", country: "United States", flagCode: "us", region: "USA" },
-  { name: "Georgia Institute of Technology", location: "Atlanta, GA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Washington", location: "Seattle, WA", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Maryland", location: "College Park, MD", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Texas at Austin", location: "Austin, TX", country: "United States", flagCode: "us", region: "USA" },
-  { name: "University of Toronto", location: "Toronto, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "York University", location: "Toronto, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of British Columbia", location: "Vancouver, BC", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "Simon Fraser University", location: "Burnaby, BC", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Victoria", location: "Victoria, BC", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "McGill University", location: "Montreal, QC", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "Concordia University", location: "Montreal, QC", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "McMaster University", location: "Hamilton, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Waterloo", location: "Waterloo, ON", country: "Canada", flagCode: "ca", region: "Canada" },
+  { name: "Southern New Hampshire University", location: "Manchester, NH", country: "United States", flagCode: "us", region: "USA" },
+  { name: "University of Central Oklahoma", location: "Edmond, OK", country: "United States", flagCode: "us", region: "USA" },
+
+  // ── Canada ────────────────────────────────────────────────────
   { name: "Western University", location: "London, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "Queen's University", location: "Kingston, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Ottawa", location: "Ottawa, ON", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Alberta", location: "Edmonton, AB", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Calgary", location: "Calgary, AB", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "Dalhousie University", location: "Halifax, NS", country: "Canada", flagCode: "ca", region: "Canada" },
-  { name: "University of Oxford", location: "Oxford", country: "United Kingdom", flagCode: "gb", region: "Europe" },
-  { name: "University of Cambridge", location: "Cambridge", country: "United Kingdom", flagCode: "gb", region: "Europe" },
-  { name: "Imperial College London", location: "London", country: "United Kingdom", flagCode: "gb", region: "Europe" },
-  { name: "University College London", location: "London", country: "United Kingdom", flagCode: "gb", region: "Europe" },
-  { name: "University of Edinburgh", location: "Edinburgh", country: "United Kingdom", flagCode: "gb", region: "Europe" },
-  { name: "Technical University of Munich", location: "Munich", country: "Germany", flagCode: "de", region: "Europe" },
-  { name: "Ludwig Maximilian University of Munich", location: "Munich", country: "Germany", flagCode: "de", region: "Europe" },
-  { name: "University of Amsterdam", location: "Amsterdam", country: "Netherlands", flagCode: "nl", region: "Europe" },
-  { name: "Delft University of Technology", location: "Delft", country: "Netherlands", flagCode: "nl", region: "Europe" },
-  { name: "Trinity College Dublin", location: "Dublin", country: "Ireland", flagCode: "ie", region: "Europe" },
-  { name: "Sciences Po", location: "Paris", country: "France", flagCode: "fr", region: "Europe" },
-  { name: "ETH Zurich", location: "Zurich", country: "Switzerland", flagCode: "ch", region: "Europe" },
-  { name: "University of Vienna", location: "Vienna", country: "Austria", flagCode: "at", region: "Europe" },
-  { name: "University of Copenhagen", location: "Copenhagen", country: "Denmark", flagCode: "dk", region: "Europe" },
-  { name: "University of Helsinki", location: "Helsinki", country: "Finland", flagCode: "fi", region: "Europe" },
-  { name: "Karolinska Institute", location: "Stockholm", country: "Sweden", flagCode: "se", region: "Europe" },
+  { name: "Lakehead University", location: "Thunder Bay, ON", country: "Canada", flagCode: "ca", region: "Canada" },
+  { name: "Laurentian University", location: "Sudbury, ON", country: "Canada", flagCode: "ca", region: "Canada" },
+  { name: "Brock University", location: "St. Catharines, ON", country: "Canada", flagCode: "ca", region: "Canada" },
+  { name: "Yorkville University", location: "Toronto, ON", country: "Canada", flagCode: "ca", region: "Canada" },
+
+  // ── UK ────────────────────────────────────────────────────────
+  { name: "University of Edinburgh", location: "Edinburgh", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Southampton", location: "Southampton", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Birmingham", location: "Birmingham", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Bristol", location: "Bristol", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Glasgow", location: "Glasgow", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Warwick", location: "Coventry", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Manchester", location: "Manchester", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Cardiff University", location: "Cardiff", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Durham University", location: "Durham", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Reading", location: "Reading", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Coventry University", location: "Coventry", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Northumbria University", location: "Newcastle upon Tyne", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Bournemouth University", location: "Bournemouth", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Greenwich", location: "London", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Hertfordshire", location: "Hatfield", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Chester", location: "Chester", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Edinburgh Napier University", location: "Edinburgh", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "Swansea University", location: "Swansea", country: "United Kingdom", flagCode: "gb", region: "UK" },
+
+  // ── Australia ─────────────────────────────────────────────────
+  { name: "Australian National University", location: "Canberra", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "UNSW Sydney", location: "Sydney", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "University of Western Australia", location: "Perth", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "University of Technology Sydney", location: "Sydney", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Macquarie University", location: "Sydney", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Queensland University of Technology", location: "Brisbane", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Curtin University", location: "Perth", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Bond University", location: "Gold Coast", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Deakin University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Griffith University", location: "Brisbane", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "La Trobe University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "University of Wollongong", location: "Wollongong", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "University of Canberra", location: "Canberra", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Charles Sturt University", location: "Bathurst, NSW", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Victoria University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
+  { name: "Edith Cowan University", location: "Perth", country: "Australia", flagCode: "au", region: "Australia" },
+
+  // ── New Zealand ───────────────────────────────────────────────
+  { name: "Auckland University of Technology", location: "Auckland", country: "New Zealand", flagCode: "nz", region: "NZ" },
+  { name: "Massey University", location: "Palmerston North", country: "New Zealand", flagCode: "nz", region: "NZ" },
+  { name: "University of Canterbury", location: "Christchurch", country: "New Zealand", flagCode: "nz", region: "NZ" },
+  { name: "Victoria University of Wellington", location: "Wellington", country: "New Zealand", flagCode: "nz", region: "NZ" },
 ];
 
 export function UniversityNetwork() {
@@ -114,7 +119,7 @@ export function UniversityNetwork() {
               className="font-display font-semibold tracking-[-0.01em] max-w-[620px]"
               style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
             >
-              Partner universities across the US, Canada &amp; Europe
+              Partner universities across the US, Canada, UK, Australia &amp; New Zealand
             </h2>
           </div>
           <p className="text-[15px] max-w-[380px]" style={{ color: "var(--body)" }}>
