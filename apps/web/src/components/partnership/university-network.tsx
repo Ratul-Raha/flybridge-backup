@@ -34,21 +34,14 @@ const universities: University[] = [
 
   // ── UK ────────────────────────────────────────────────────────
   { name: "University of Edinburgh", location: "Edinburgh", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Southampton", location: "Southampton", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Birmingham", location: "Birmingham", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "University of Bristol", location: "Bristol", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "University of Glasgow", location: "Glasgow", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "University of Warwick", location: "Coventry", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "University of Manchester", location: "Manchester", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "Cardiff University", location: "Cardiff", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "Durham University", location: "Durham", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Reading", location: "Reading", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "Coventry University", location: "Coventry", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "Northumbria University", location: "Newcastle upon Tyne", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "Bournemouth University", location: "Bournemouth", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Greenwich", location: "London", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Hertfordshire", location: "Hatfield", country: "United Kingdom", flagCode: "gb", region: "UK" },
-  { name: "University of Chester", location: "Chester", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Southampton", location: "Southampton", country: "United Kingdom", flagCode: "gb", region: "UK" },
+  { name: "University of Birmingham", location: "Birmingham", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "Edinburgh Napier University", location: "Edinburgh", country: "United Kingdom", flagCode: "gb", region: "UK" },
   { name: "Swansea University", location: "Swansea", country: "United Kingdom", flagCode: "gb", region: "UK" },
 
@@ -64,11 +57,6 @@ const universities: University[] = [
   { name: "Deakin University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
   { name: "Griffith University", location: "Brisbane", country: "Australia", flagCode: "au", region: "Australia" },
   { name: "La Trobe University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
-  { name: "University of Wollongong", location: "Wollongong", country: "Australia", flagCode: "au", region: "Australia" },
-  { name: "University of Canberra", location: "Canberra", country: "Australia", flagCode: "au", region: "Australia" },
-  { name: "Charles Sturt University", location: "Bathurst, NSW", country: "Australia", flagCode: "au", region: "Australia" },
-  { name: "Victoria University", location: "Melbourne", country: "Australia", flagCode: "au", region: "Australia" },
-  { name: "Edith Cowan University", location: "Perth", country: "Australia", flagCode: "au", region: "Australia" },
 
   // ── New Zealand ───────────────────────────────────────────────
   { name: "Auckland University of Technology", location: "Auckland", country: "New Zealand", flagCode: "nz", region: "NZ" },

@@ -10,34 +10,58 @@ export const metadata: Metadata = {
 };
 
 const marqueeNames = [
-  "Arizona State",
-  "Northeastern",
-  "UMass Boston",
-  "Illinois Tech",
-  "SUNY Buffalo",
-  "University of Toronto",
-  "UBC",
-  "York University",
-  "Simon Fraser",
-  "Concordia",
   "IDP Education",
   "British Council",
+  "Arizona State University",
+  "Southern New Hampshire University",
+  "University of Central Oklahoma",
+  "Western University",
+  "Lakehead University",
+  "Laurentian University",
+  "Brock University",
+  "Yorkville University",
+  "University of Edinburgh",
+  "University of Bristol",
+  "University of Glasgow",
+  "University of Warwick",
+  "University of Manchester",
+  "Cardiff University",
+  "Durham University",
+  "University of Southampton",
+  "University of Birmingham",
+  "Edinburgh Napier University",
+  "Swansea University",
+  "Australian National University",
+  "UNSW Sydney",
+  "University of Western Australia",
+  "University of Technology Sydney",
+  "Macquarie University",
+  "Queensland University of Technology",
+  "Curtin University",
+  "Bond University",
+  "Deakin University",
+  "Griffith University",
+  "La Trobe University",
+  "Auckland University of Technology",
+  "Massey University",
+  "University of Canterbury",
+  "Victoria University of Wellington",
 ];
 
 const strategicPartners = [
   {
     initials: "ID",
     name: "IDP Education",
-    role: "Study Abroad Partner",
+    role: "Study Abroad Network",
     color: "#0E7A8A",
     desc: "A global leader in international education, IDP works alongside FlyBridge to guide students through university selection, applications and enrolment — with direct access to trusted institutions across the world.",
   },
   {
     initials: "BC",
     name: "British Council",
-    role: "English Proficiency Partner",
+    role: "English Proficiency Network",
     color: "#C0392B",
-    desc: "As our official English assessment partner, the British Council equips learners with IELTS preparation and recognized language credentials — the foundation every international journey is built on.",
+    desc: "As our official English assessment network, the British Council equips learners with IELTS preparation and recognized language credentials — the foundation every international journey is built on.",
   },
 ];
 
@@ -257,7 +281,7 @@ export default function PartnershipPage() {
             <div className="flex items-end justify-between flex-wrap gap-6 mb-10">
               <div>
                 <div className="font-mono text-[11.5px] font-medium tracking-[0.4px] mb-4" style={{ color: "var(--brand-2)" }}>
-                  STRATEGIC PARTNERS
+                  STRATEGIC NETWORK
                 </div>
                 <h2
                   className="font-display font-semibold tracking-[-0.01em] max-w-[560px]"
@@ -267,7 +291,7 @@ export default function PartnershipPage() {
                 </h2>
               </div>
               <p className="text-[15px] max-w-[360px]" style={{ color: "var(--body)" }}>
-                Two of the world&apos;s most trusted names in international education stand behind every
+                Two of the world&apos;s most trusted names in international education power every
                 FlyBridge pathway.
               </p>
             </div>
@@ -353,7 +377,7 @@ export default function PartnershipPage() {
           </div>
         </section>
 
-        {/* ── BECOME A PARTNER ────────────────────────────────── */}
+        {/* ── JOIN THE NETWORK ────────────────────────────────── */}
         <section id="become-partner" className="px-[clamp(20px,4.5vw,56px)] pb-[100px]">
           <div className="max-w-[1320px] mx-auto">
             <div
@@ -371,7 +395,7 @@ export default function PartnershipPage() {
 
               <div className="relative">
                 <div className="font-mono text-mono-sm font-medium tracking-[0.2em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  Become a Partner
+                  Join the Network
                 </div>
                 <h2 className="font-display text-[clamp(28px,3.4vw,40px)] font-semibold leading-[1.15] tracking-[-0.02em] text-white text-balance mx-auto max-w-[660px]">
                   Let&apos;s build the next chapter of global education, together
@@ -391,7 +415,7 @@ export default function PartnershipPage() {
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
-                    Talk to our partnerships team
+                    Talk to our network team
                   </a>
                   <a
                     href="mailto:partnership@flybridge.com"
