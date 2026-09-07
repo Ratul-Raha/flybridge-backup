@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const courses = await Course.find({
       $or: [{ published: true }, { upcoming: true }],
     }).sort({ createdAt: -1 });
-    return NextResponse.json({ courses: courses.map(toDto) });
+    return NextResponse.json({ courses: courses.map((c) => toDto(c)) });
   } catch (error) {
     console.error("courses GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
