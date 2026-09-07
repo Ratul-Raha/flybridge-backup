@@ -136,8 +136,10 @@ export default function CertificatePage({
   }
 
   const grade = progress?.grade;
-  const unlocked = grade ? grade.passed : false;
-  const clientEligible = unlocked;
+  // The server gate is authoritative. Staff bypass all gates (they can always
+  // download), and completed students are issued by the gate on load. Trust it
+  // over the client-derived grade so managers can view/download any certificate.
+  const unlocked = serverEligible || (grade ? grade.passed : false);
 
   const displayGrade = grade ?? {
     percentage: 100,
@@ -497,7 +499,7 @@ export default function CertificatePage({
         {/* ============ Download / status section ============ */}
         <div className="no-print mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
-            {clientEligible && serverEligible ? (
+            {serverEligible ? (
               <>
                 <button
                   type="button"

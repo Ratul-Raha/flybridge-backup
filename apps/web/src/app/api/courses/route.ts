@@ -79,7 +79,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (slug) {
-      const course = await Course.findOne({ slug, published: true });
+      const session = await readSession();
+      const manager =
+        session && (session.role === "admin" || session.role === "moderator");
+      // Managers may resolve unpublished courses too (e.g., to preview or
+      // download a certificate for any course).
+      const course = await Course.findOne(
+        manager ? { slug } : { slug, published: true }
+      );
       if (!course) return NextResponse.json({ course: null });
       return NextResponse.json({ course: toDto(course) });
     }

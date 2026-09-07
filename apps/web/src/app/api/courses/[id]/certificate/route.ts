@@ -23,19 +23,21 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Staff (admin/moderator) may access the route at any time (to verify or
-  // preview), but are still subject to the same completion gate as everyone
-  // else — a certificate is only issued after all quizzes are taken at >=60%.
+  // Staff (admin/moderator) may access the route at any time to download a
+  // certificate for ANY course — bypassing enrollment, visibility, and the
+  // completion gate. Regular users must actually complete the course (all
+  // lessons quizzed at >=60%).
   const isManager =
     session.role === "admin" || session.role === "moderator";
 
   try {
     await connectDb();
 
-    const course = await Course.findOne({
-      _id: params.id,
-      $or: [{ published: true }, { upcoming: true }],
-    });
+    const course = await Course.findOne(
+      isManager
+        ? { _id: params.id }
+        : { _id: params.id, $or: [{ published: true }, { upcoming: true }] }
+    );
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -59,31 +61,55 @@ export async function GET(
       course: course._id,
     });
 
-    if (!progress) {
-      return NextResponse.json(
-        { error: "Course not completed", eligible: false },
-        { status: 403 }
+    if (!isManager) {
+      if (!progress) {
+        return NextResponse.json(
+          { error: "Course not completed", eligible: false },
+          { status: 403 }
+        );
+      }
+
+      const grade = calculateGrade(
+        progress.quizScores as { score: number }[],
+        totalLessons
       );
+
+      const eligible =
+        grade.passed && grade.completedQuizzes === grade.totalQuizzes;
+
+      if (!eligible) {
+        return NextResponse.json(
+          {
+            error: "Course not completed",
+            eligible: false,
+            grade,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (!progress.certificateIssued) {
+        progress.certificateIssued = true;
+        await progress.save();
+      }
+
+      return NextResponse.json({
+        eligible: true,
+        certificateIssued: true,
+        courseTitle: course.title,
+        courseSlug: course.slug,
+        grade,
+        issuedAt: new Date().toISOString(),
+      });
     }
 
-    const grade = calculateGrade(
-      progress.quizScores as { score: number }[],
-      totalLessons
-    );
-
-    const eligible =
-      grade.passed && grade.completedQuizzes === grade.totalQuizzes;
-
-    if (!eligible) {
-      return NextResponse.json(
-        {
-          error: "Course not completed",
-          eligible: false,
-          grade,
-        },
-        { status: 403 }
-      );
-    }
+    // Manager: issue unconditionally; mark the progress flag when a doc exists.
+    const grade = progress
+      ? calculateGrade(
+          progress.quizScores as { score: number }[],
+          totalLessons
+        )
+      : undefined;
 
     if (progress && !progress.certificateIssued) {
       progress.certificateIssued = true;
@@ -95,7 +121,7 @@ export async function GET(
       certificateIssued: true,
       courseTitle: course.title,
       courseSlug: course.slug,
-      grade,
+      grade: grade ?? null,
       issuedAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -124,18 +150,20 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Staff (admin/moderator) may access the route (to verify/preview) but are
-  // still subject to the same completion gate as everyone else.
+  // Staff (admin/moderator) may access the route at any time (to verify/preview
+  // or download for any course) without enrollment, visibility, or completion
+  // gates. Regular users are subject to them.
   const isManager =
     session.role === "admin" || session.role === "moderator";
 
   try {
     await connectDb();
 
-    const course = await Course.findOne({
-      _id: params.id,
-      $or: [{ published: true }, { upcoming: true }],
-    });
+    const course = await Course.findOne(
+      isManager
+        ? { _id: params.id }
+        : { _id: params.id, $or: [{ published: true }, { upcoming: true }] }
+    );
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
@@ -159,33 +187,37 @@ export async function POST(
       course: course._id,
     });
 
-    if (!progress) {
-      return NextResponse.json(
-        { error: "Course not completed", eligible: false },
-        { status: 403 }
+    if (!isManager) {
+      if (!progress) {
+        return NextResponse.json(
+          { error: "Course not completed", eligible: false },
+          { status: 403 }
+        );
+      }
+
+      const grade = calculateGrade(
+        progress.quizScores as { score: number }[],
+        totalLessons
       );
+
+      const eligible =
+        grade.passed && grade.completedQuizzes === grade.totalQuizzes;
+
+      if (!eligible) {
+        return NextResponse.json(
+          { error: "Course not completed", eligible: false },
+          { status: 403 }
+        );
+      }
     }
 
-    const grade = calculateGrade(
-      progress.quizScores as { score: number }[],
-      totalLessons
-    );
-
-    const eligible =
-      grade.passed && grade.completedQuizzes === grade.totalQuizzes;
-
-    if (!eligible) {
-      return NextResponse.json(
-        { error: "Course not completed", eligible: false },
-        { status: 403 }
-      );
+    if (progress) {
+      progress.certificateIssued = true;
+      progress.certificateDownloadedAt = new Date();
+      progress.certificateDownloadCount =
+        (progress.certificateDownloadCount ?? 0) + 1;
+      await progress.save();
     }
-
-    progress.certificateIssued = true;
-    progress.certificateDownloadedAt = new Date();
-    progress.certificateDownloadCount =
-      (progress.certificateDownloadCount ?? 0) + 1;
-    await progress.save();
 
     return NextResponse.json({ ok: true });
   } catch (error) {
