@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Search,
   Users,
+  X,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
@@ -54,6 +55,50 @@ type Stats = {
   certificatesDownloaded: number;
   avgLessonProgress: number;
   avgQuizScore: number;
+};
+
+type MemberLesson = {
+  title: string;
+  duration: string;
+  moduleIndex: number;
+  lessonIndex: number;
+  completed: boolean;
+  attempted: boolean;
+  score: number | null;
+  totalQuestions: number;
+  correctCount: number;
+  attempts: number;
+};
+
+type MemberModuleDetail = {
+  title: string;
+  lessons: MemberLesson[];
+};
+
+type MemberDetail = {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    phone: string | null;
+    subscription: string;
+  };
+  course: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+  summary: {
+    totalLessons: number;
+    completedLessons: number;
+    lessonProgress: number;
+    quizAvg: number;
+    passed: boolean;
+    totalQuizzes: number;
+    completedQuizzes: number;
+  };
+  modules: MemberModuleDetail[];
 };
 
 const selectClass =
@@ -115,6 +160,180 @@ function StatCard({
   );
 }
 
+function LessonRow({ lesson }: { lesson: MemberLesson }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div className="flex items-start gap-2.5 min-w-0">
+        {lesson.completed ? (
+          <CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: "#059669" }} />
+        ) : (
+          <span
+            className="mt-0.5 shrink-0 w-[15px] h-[15px] rounded-full border"
+            style={{ borderColor: "var(--line)" }}
+          />
+        )}
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>
+            {lesson.title}
+          </p>
+          <p className="text-[11px]" style={{ color: "var(--body)" }}>
+            {lesson.duration || "—"}
+            {lesson.attempted
+              ? ` · ${lesson.attempts} attempt${lesson.attempts === 1 ? "" : "s"}`
+              : " · Not attempted"}
+          </p>
+        </div>
+      </div>
+      {lesson.attempted ? (
+        <div className="shrink-0 text-right">
+          <span
+            className="font-mono text-[13px] font-semibold tabular-nums"
+            style={{ color: lesson.score! >= 60 ? "#059669" : "#C0392B" }}
+          >
+            {lesson.score}%
+          </span>
+          <p className="text-[10.5px] tabular-nums" style={{ color: "var(--body)" }}>
+            {lesson.correctCount}/{lesson.totalQuestions}
+          </p>
+        </div>
+      ) : (
+        <span
+          className="shrink-0 text-[11px] font-medium"
+          style={{ color: "var(--body)" }}
+        >
+          —
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MemberDetailPanel({
+  detail,
+  loading,
+  onClose,
+}: {
+  detail: MemberDetail | null;
+  loading: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black/30"
+      style={{ background: "rgba(15,23,42,0.35)" }}
+      onClick={onClose}
+    >
+      <aside
+        role="dialog"
+        aria-label="Member progress"
+        className="relative w-full max-w-[440px] h-full overflow-y-auto bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b bg-white"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--brand)" }}>
+              Member progress
+            </p>
+            {detail && (
+              <p className="text-[13px] font-medium truncate mt-0.5" style={{ color: "var(--body)" }}>
+                {detail.course.title}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150 hover:bg-[var(--bg-soft)]"
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Close"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        {loading ? (
+          <ScreenLoading label="Loading progress…" />
+        ) : !detail ? (
+          <div className="px-5 py-14 text-center" style={{ color: "var(--body)" }}>
+            <p className="text-[13px]">Could not load member progress.</p>
+          </div>
+        ) : (
+          <div className="px-5 py-5 flex flex-col gap-6">
+            {/* Member card */}
+            <div className="flex items-center gap-3">
+              <Avatar name={detail.user.name} src={detail.user.avatar} size={44} />
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                  {detail.user.name}
+                </p>
+                <p className="text-[12.5px] truncate" style={{ color: "var(--body)" }}>
+                  {detail.user.email}
+                </p>
+                {detail.user.subscription === "paid" && (
+                  <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.08em]" style={{ color: "#B7791F" }}>
+                    Paid member
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border p-3" style={{ borderColor: "var(--line)" }}>
+                <p className="font-display text-[20px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                  {detail.summary.completedLessons}/{detail.summary.totalLessons}
+                </p>
+                <p className="text-[10.5px] mt-1.5 font-medium" style={{ color: "var(--body)" }}>
+                  Lessons done
+                </p>
+              </div>
+              <div className="rounded-lg border p-3" style={{ borderColor: "var(--line)" }}>
+                <p className="font-display text-[20px] font-semibold leading-none" style={{ color: detail.summary.quizAvg >= 60 ? "#059669" : "#C0392B" }}>
+                  {detail.summary.quizAvg}%
+                </p>
+                <p className="text-[10.5px] mt-1.5 font-medium" style={{ color: "var(--body)" }}>
+                  Quiz avg
+                </p>
+              </div>
+              <div className="rounded-lg border p-3" style={{ borderColor: "var(--line)" }}>
+                <p className="font-display text-[20px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                  {detail.summary.completedQuizzes}/{detail.summary.totalQuizzes}
+                </p>
+                <p className="text-[10.5px] mt-1.5 font-medium" style={{ color: "var(--body)" }}>
+                  Quizzes passed
+                </p>
+              </div>
+            </div>
+
+            {/* Lessons */}
+            <div className="flex flex-col gap-5">
+              {detail.modules.map((mod, mi) => (
+                <div key={mi}>
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1"
+                    style={{ color: "var(--brand)" }}
+                  >
+                    {mod.title}
+                  </p>
+                  <div className="divide-y rounded-lg border px-4"
+                    style={{ borderColor: "var(--line)" }}
+                  >
+                    {mod.lessons.map((lesson) => (
+                      <LessonRow key={`${lesson.moduleIndex}:${lesson.lessonIndex}`} lesson={lesson} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}
+
 export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const [course, setCourse] = useState<CourseInfo | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -126,6 +345,9 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [detail, setDetail] = useState<MemberDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -141,6 +363,29 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
       setLoading(false);
     }
   }, [courseSlug]);
+
+  const openMember = useCallback(
+    async (userId: string) => {
+      setDetailOpen(true);
+      setDetailLoading(true);
+      setDetail(null);
+      try {
+        const res = await fetch(
+          `/api/courses/${encodeURIComponent(courseSlug)}/members/${userId}/progress`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Failed to load progress");
+        setDetail(data);
+      } catch (e) {
+        setDetail(null);
+        setError(e instanceof Error ? e.message : "Failed to load progress");
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [courseSlug]
+  );
 
   useEffect(() => {
     load();
@@ -364,10 +609,12 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
               return (
                 <div
                   key={m.id}
-                  className={`flex flex-col md:grid gap-1.5 md:gap-3 md:items-center px-5 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${
+                  onClick={() => openMember(m.userId)}
+                  className={`flex flex-col md:grid gap-1.5 md:gap-3 md:items-center px-5 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] cursor-pointer ${
                     idx > 0 ? "border-t" : ""
                   } ${GRID_COLS}`}
                   style={{ borderColor: "var(--line)" }}
+                  title={`View ${m.name}'s progress`}
                 >
                   <span
                     className="hidden md:block font-mono text-[11.5px] tabular-nums"
@@ -586,6 +833,14 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
             </button>
           </div>
         </div>
+      )}
+
+      {detailOpen && (
+        <MemberDetailPanel
+          detail={detail}
+          loading={detailLoading}
+          onClose={() => setDetailOpen(false)}
+        />
       )}
     </div>
   );
