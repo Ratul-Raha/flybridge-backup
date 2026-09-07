@@ -5,7 +5,7 @@ import { Course, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { emitEvent } from "@/lib/events/emit";
 
-function toDto(c: CourseDoc, enrollmentCount?: number) {
+function toDto(c: CourseDoc, enrollmentCount?: number, includeContent = false) {
   return {
     id: c._id.toString(),
     slug: c.slug,
@@ -30,14 +30,13 @@ function toDto(c: CourseDoc, enrollmentCount?: number) {
       lessons: (m.lessons ?? []).map((l) => ({
         title: l.title,
         duration: l.duration ?? "",
-        videoUrl: l.videoUrl ?? "",
-        pdfUrl: l.pdfUrl ?? "",
+        ...(includeContent ? { videoUrl: l.videoUrl ?? "", pdfUrl: l.pdfUrl ?? "" } : {}),
       })),
     })),
     books: (c.books ?? []).map((b) => ({
       title: b.title,
       description: b.description ?? "",
-      pdfUrl: b.pdfUrl,
+      ...(includeContent ? { pdfUrl: b.pdfUrl } : {}),
     })),
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
       ]);
       const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
       return NextResponse.json({
-        courses: courses.map((c) => toDto(c, enrollMap.get(c._id.toString()) ?? 0)),
+        courses: courses.map((c) => toDto(c, enrollMap.get(c._id.toString()) ?? 0, true)),
       });
     }
 

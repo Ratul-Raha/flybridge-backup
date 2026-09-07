@@ -23,15 +23,15 @@ type ResourceDto = {
   downloadCount: number;
 };
 
-function toDto(r: ResourceDoc): ResourceDto {
+function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
   return {
     id: r._id.toString(),
     title: r.title,
     description: r.description ?? "",
     category: r.category,
     fileType: r.fileType,
-    fileUrl: r.fileUrl,
-    fileName: r.fileName ?? null,
+    fileUrl: includeUrl ? r.fileUrl : "",
+    fileName: includeUrl ? (r.fileName ?? null) : null,
     fileSize: r.fileSize ?? 0,
     thumbnail: r.thumbnail ?? null,
     releaseDate: r.releaseDate,
@@ -42,12 +42,12 @@ function toDto(r: ResourceDoc): ResourceDto {
   };
 }
 
-async function withDownloadCounts(resources: ResourceDoc[]): Promise<ResourceDto[]> {
+async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false): Promise<ResourceDto[]> {
   const rows = await ResourceDownload.aggregate<{ _id: string; count: number }>([
     { $group: { _id: "$resource", count: { $sum: 1 } } },
   ]);
   const counts = new Map(rows.map((r) => [r._id.toString(), r.count]));
-  return resources.map((r) => ({ ...toDto(r), downloadCount: counts.get(r._id.toString()) ?? 0 }));
+  return resources.map((r) => ({ ...toDto(r, includeUrl), downloadCount: counts.get(r._id.toString()) ?? 0 }));
 }
 
 function isManager(session: { role: string } | null) {
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const resources = await Resource.find().sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, true) });
     }
 
     if (mine) {
@@ -76,11 +76,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, false) });
     }
 
     const resources = await Resource.find().sort({ releaseDate: -1 });
-    return NextResponse.json({ resources: await withDownloadCounts(resources) });
+    return NextResponse.json({ resources: await withDownloadCounts(resources, false) });
   } catch (error) {
     console.error("resources GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

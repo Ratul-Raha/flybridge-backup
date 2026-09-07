@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { Order } from "@/lib/models/order";
+import { assertSafeFetchUrl, assertSafeRedirectUrl } from "@/lib/url-safety";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -44,10 +45,6 @@ export async function GET(
       return NextResponse.json({ error: "No file attached" }, { status: 404 });
     }
 
-    if (resource.fileType === "link") {
-      return NextResponse.redirect(resource.fileUrl);
-    }
-
     const session = await readSession();
 
     if (resource.access !== "public") {
@@ -67,13 +64,28 @@ export async function GET(
       }
     }
 
+    if (resource.fileType === "link") {
+      try {
+        assertSafeRedirectUrl(resource.fileUrl);
+      } catch {
+        return NextResponse.json({ error: "Unsafe link target" }, { status: 400 });
+      }
+      return NextResponse.redirect(resource.fileUrl);
+    }
+
+    try {
+      await assertSafeFetchUrl(resource.fileUrl);
+    } catch {
+      return NextResponse.json({ error: "Unsafe file URL" }, { status: 400 });
+    }
+
     if (session?.userId) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
         console.error("resource download tracking error", e)
       );
     }
 
-    const upstream = await fetch(resource.fileUrl, { cache: "no-store" });
+    const upstream = await fetch(resource.fileUrl, { cache: "no-store", redirect: "error" });
     if (!upstream.ok || !upstream.body) {
       return NextResponse.json({ error: "File unavailable" }, { status: 502 });
     }

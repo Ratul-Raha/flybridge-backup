@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { Nav } from "@/components/nav";
@@ -54,6 +55,11 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
     const topCount = topRows[0]?.count ?? 0;
     const mostDownloaded = ownCount > 0 && ownCount === topCount;
 
+    const session = await readSession();
+    const isManager =
+      session?.role === "admin" || session?.role === "moderator";
+    const includeUrl = isManager || resource.access === "public";
+
     return (
       <main>
         <Nav />
@@ -69,7 +75,7 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
                 description: resource.description ?? "",
                 category: resource.category,
                 fileType: resource.fileType,
-                fileUrl: resource.fileUrl,
+                fileUrl: includeUrl ? resource.fileUrl : "",
                 fileName: resource.fileName ?? null,
                 fileSize: resource.fileSize ?? 0,
                 thumbnail: resource.thumbnail ?? null,

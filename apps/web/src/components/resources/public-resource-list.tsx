@@ -110,11 +110,11 @@ function ToolkitPanel({ recent }: { recent: ResourceCardData[] }) {
           {rows.map((r, i) => (
             <Link
               key={r.id}
-              href={r.fileUrl ? `/resources/${r.id}` : "#"}
-              target={r.fileUrl ? "_blank" : undefined}
-              rel={r.fileUrl ? "noreferrer" : undefined}
+              href={r.access === "public" ? `/resources/${r.id}` : "#"}
+              target={r.access === "public" ? "_blank" : undefined}
+              rel={r.access === "public" ? "noreferrer" : undefined}
               className="group block"
-              aria-hidden={!r.fileUrl}
+              aria-hidden={r.access !== "public"}
             >
               <TooltipCard r={r} />
               {i < rows.length - 1 && <div className="mx-2 h-px" style={{ background: "var(--line)" }} />}

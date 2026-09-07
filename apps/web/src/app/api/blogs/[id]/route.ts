@@ -34,8 +34,12 @@ export async function GET(
 ) {
   try {
     await connectDb();
+    const session = await readSession();
     const blog = await Blog.findById(params.id);
     if (!blog) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!blog.published && !isManager(session)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json({ blog: toDto(blog) });
   } catch (error) {
     console.error("blog GET error", error);

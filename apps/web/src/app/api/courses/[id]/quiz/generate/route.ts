@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { QuizPending } from "@/lib/models/quiz-pending";
 import { generateQuiz } from "@/lib/ai/quiz";
 
 export async function POST(
@@ -60,7 +61,22 @@ export async function POST(
       lesson.title
     );
 
-    return NextResponse.json({ questions });
+    await QuizPending.deleteMany({
+      user: session.userId,
+      course: course._id,
+      moduleIndex,
+      lessonIndex,
+    });
+
+    const pending = await QuizPending.create({
+      user: session.userId,
+      course: course._id,
+      moduleIndex,
+      lessonIndex,
+      questions,
+    });
+
+    return NextResponse.json({ quizId: pending._id.toString(), questions });
   } catch (error) {
     console.error("quiz generate error", error);
     const detail = error instanceof Error ? error.message : "Unknown error";

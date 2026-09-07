@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
 import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import { createOrder } from "@/lib/orders";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import type { SubscriptionType } from "@/lib/roles";
 
 type RegistrationBody = {
@@ -21,6 +23,15 @@ export async function POST(
   try {
     const body = (await request.json()) as RegistrationBody;
     await connectDb();
+
+    const ip = clientIp(request);
+    const limited = rateLimit(`seminar:register:${ip}`, 5, 60_000);
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again shortly." },
+        { status: 429 }
+      );
+    }
 
     const seminar = await Seminar.findById(params.id);
     if (!seminar) {
@@ -80,26 +91,28 @@ export async function POST(
         return NextResponse.json({ error: "Invalid token" }, { status: 401 });
       }
     } else {
+      const session = await readSession();
+      if (!session?.userId) {
+        return NextResponse.json(
+          { error: "Authentication required. Please sign in." },
+          { status: 401 }
+        );
+      }
+      user = await User.findById(session.userId);
+      if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      email = user.email?.toLowerCase() ?? "";
       if (!email) {
         return NextResponse.json(
-          { error: "Email is required" },
+          { error: "Account email is missing" },
           { status: 400 }
         );
       }
-      user = await User.findOne({ email });
-      if (user) {
-        if (name) user.name = name || user.name;
-        user.phone = phone || user.phone;
+      name = user.name?.trim() ?? "";
+      if (!user.phone && phone) {
+        user.phone = phone;
         await user.save();
-      } else {
-        user = await User.create({
-          name: name || email.split("@")[0],
-          email,
-          phone,
-          accountType: "user",
-          subscription: "free" as SubscriptionType,
-        });
-        userCreated = true;
       }
     }
 
@@ -124,8 +137,8 @@ export async function POST(
       user: {
         id: user._id.toString(),
         name: name || user.name,
-        email,
-        phone,
+        email: user.email ?? email,
+        phone: user.phone ?? phone,
       },
       itemType: "seminar",
       itemId: seminar._id.toString(),

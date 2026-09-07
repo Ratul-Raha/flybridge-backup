@@ -14,8 +14,8 @@ import {
 import { getCategoryColor } from "@/lib/resource-colors";
 
 function downloadHref(r: ResourceCardData) {
-  if (r.fileType === "link" || r.fileType === "image" || r.fileType === "video") {
-    return r.fileUrl;
+  if (r.fileType === "link") {
+    return `/api/resources/${r.id}/file`;
   }
   return `/api/resources/${r.id}/file?dl=1`;
 }

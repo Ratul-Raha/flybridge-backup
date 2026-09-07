@@ -40,6 +40,7 @@ export function LessonQuiz({
   onScoreUpdate?: (entry: { moduleIndex: number; lessonIndex: number; score: number; correctCount: number; totalQuestions: number }) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
+  const [quizId, setQuizId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -57,6 +58,7 @@ export function LessonQuiz({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || "Failed to load quiz");
+      setQuizId(data.quizId);
       setQuestions(data.questions);
       setAnswers({});
       setPhase("taking");
@@ -80,7 +82,7 @@ export function LessonQuiz({
         body: JSON.stringify({
           moduleIndex,
           lessonIndex,
-          questions,
+          quizId,
           answers: answerArray,
         }),
       });
@@ -96,6 +98,7 @@ export function LessonQuiz({
   };
 
   const resetQuiz = () => {
+    setQuizId(null);
     setQuestions([]);
     setAnswers({});
     setResults(null);

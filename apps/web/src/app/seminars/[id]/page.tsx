@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { Nav } from "@/components/nav";
 import { SeminarDetail } from "@/components/seminars/seminar-detail";
@@ -46,6 +47,18 @@ export default async function SeminarDetailPage({ params }: Params) {
       seminar: seminar._id,
     });
 
+    const session = await readSession();
+    const isManager =
+      session?.role === "admin" || session?.role === "moderator";
+    let hasAccessToUrl = isManager;
+    if (!hasAccessToUrl && session?.email) {
+      const registration = await SeminarRegistration.findOne({
+        seminar: seminar._id,
+        email: session.email.toLowerCase(),
+      });
+      hasAccessToUrl = !!registration;
+    }
+
     return (
       <main>
         <Nav />
@@ -60,7 +73,7 @@ export default async function SeminarDetailPage({ params }: Params) {
                 image: seminar.image ?? null,
                 type: seminar.type,
                 price: seminar.price ?? 0,
-                url: seminar.url ?? null,
+                url: hasAccessToUrl ? (seminar.url ?? null) : null,
                 duration: seminar.duration ?? null,
                 registrations,
               }}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { streamChatReply, type ChatRequestMessage } from "@/lib/ai/chat";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,6 +11,14 @@ type ChatBody = {
 };
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(`chat:${clientIp(request)}`, 10, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   let body: ChatBody = {};
   try {
     body = (await request.json()) as ChatBody;
@@ -62,9 +71,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("chat error", error);
-    const message = error instanceof Error ? error.message : "Something went wrong";
     return NextResponse.json(
-      { error: message.includes("GROQ_API_KEY") ? message : "Something went wrong" },
+      { error: "Something went wrong" },
       { status: 500 }
     );
   }

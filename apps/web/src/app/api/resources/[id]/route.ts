@@ -19,6 +19,8 @@ export async function GET(
     if (!resource) {
       return NextResponse.json({ error: "Resource not found" }, { status: 404 });
     }
+    const session = await readSession();
+    const includeUrl = isManager(session) || resource.access === "public";
     return NextResponse.json({
       resource: {
         id: resource._id.toString(),
@@ -26,8 +28,8 @@ export async function GET(
         description: resource.description ?? "",
         category: resource.category,
         fileType: resource.fileType,
-        fileUrl: resource.fileUrl,
-        fileName: resource.fileName ?? null,
+        fileUrl: includeUrl ? resource.fileUrl : "",
+        fileName: includeUrl ? (resource.fileName ?? null) : null,
         fileSize: resource.fileSize ?? 0,
         thumbnail: resource.thumbnail ?? null,
         releaseDate: resource.releaseDate,

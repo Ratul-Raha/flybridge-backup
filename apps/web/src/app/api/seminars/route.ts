@@ -4,7 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { emitEvent } from "@/lib/events/emit";
 
-async function withCounts(seminars: SeminarDocLike[]) {
+async function withCounts(seminars: SeminarDocLike[], includeUrl = false) {
   const counts = await SeminarRegistration.aggregate([
     { $group: { _id: "$seminar", count: { $sum: 1 } } },
   ]);
@@ -17,7 +17,7 @@ async function withCounts(seminars: SeminarDocLike[]) {
     image: s.image ?? null,
     type: s.type,
     price: s.price,
-    url: s.url ?? null,
+    url: includeUrl ? (s.url ?? null) : null,
     duration: s.duration ?? null,
     registrations: map.get(s._id.toString()) ?? 0,
   }));
@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
 
     const query = all ? {} : {};
     const seminars = await Seminar.find(query).sort({ dateTime: -1 });
-    return NextResponse.json({ seminars: await withCounts(seminars as SeminarDocLike[]) });
+    return NextResponse.json({
+      seminars: await withCounts(seminars as SeminarDocLike[], all),
+    });
   } catch (error) {
     console.error("seminars GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

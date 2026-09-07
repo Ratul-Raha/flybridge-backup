@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizAttempt } from "@/lib/models/quiz-attempt";
+import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
 import type { QuizQuestion } from "@/lib/ai/quiz";
 
@@ -83,17 +85,18 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { moduleIndex, lessonIndex, questions, answers } = body as {
+    const { moduleIndex, lessonIndex, quizId, answers } = body as {
       moduleIndex: number;
       lessonIndex: number;
-      questions: QuizQuestion[];
+      quizId: string;
       answers: SubmittedAnswer[];
     };
 
     if (
       typeof moduleIndex !== "number" ||
       typeof lessonIndex !== "number" ||
-      !Array.isArray(questions) ||
+      typeof quizId !== "string" ||
+      !mongoose.isValidObjectId(quizId) ||
       !Array.isArray(answers)
     ) {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
@@ -117,6 +120,29 @@ export async function POST(
     if (!enrolled) {
       return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
     }
+
+    const pending = await QuizPending.findOne({
+      _id: quizId,
+      user: session.userId,
+      course: course._id,
+    });
+    if (!pending) {
+      return NextResponse.json(
+        { error: "Quiz session not found. Please generate a new quiz." },
+        { status: 400 }
+      );
+    }
+    if (
+      pending.moduleIndex !== moduleIndex ||
+      pending.lessonIndex !== lessonIndex
+    ) {
+      return NextResponse.json(
+        { error: "Quiz session does not match lesson" },
+        { status: 400 }
+      );
+    }
+
+    const questions = pending.questions as QuizQuestion[];
 
     const answerMap = new Map<string, string>();
     for (const a of answers) {
@@ -166,6 +192,8 @@ export async function POST(
       totalQuestions,
       correctCount,
     });
+
+    await QuizPending.deleteOne({ _id: pending._id });
 
     // Update CourseProgress with quiz score (replace on retake)
     const totalLessons = (course.modules ?? []).reduce(

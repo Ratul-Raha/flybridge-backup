@@ -62,13 +62,6 @@ export function formatResourceDate(iso: string) {
 }
 
 export function fileHref(resource: ResourceCardData) {
-  if (
-    resource.fileType === "link" ||
-    resource.fileType === "image" ||
-    resource.fileType === "video"
-  ) {
-    return resource.fileUrl;
-  }
   return `/api/resources/${resource.id}/file`;
 }
 

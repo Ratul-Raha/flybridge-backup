@@ -8,6 +8,7 @@ import { resolvePath } from "./conditions";
 import { renderTemplate } from "./template";
 import { emailTemplateById } from "./email-templates";
 import { pushToUsers } from "@/lib/push";
+import { assertSafeFetchUrl } from "@/lib/url-safety";
 import { MAX_DELAY_SECONDS, type AutomationNode, type RecipientSetting } from "./types";
 import type { EventPayload } from "@/lib/events/types";
 
@@ -133,6 +134,12 @@ async function actionWebhook(node: AutomationNode, payload: EventPayload): Promi
   const url = (data.url ?? "").trim();
   if (!url) return { ok: false, error: "Webhook URL is required" };
 
+  try {
+    await assertSafeFetchUrl(url);
+  } catch (error) {
+    return { ok: false, error: `Webhook URL is not allowed: ${error instanceof Error ? error.message : "unsafe URL"}` };
+  }
+
   let headers: Record<string, string> = {};
   if (data.headers) {
     try {
@@ -150,6 +157,7 @@ async function actionWebhook(node: AutomationNode, payload: EventPayload): Promi
         ? undefined
         : JSON.stringify({ event: node.data.event ?? null, payload }),
     signal: AbortSignal.timeout(10_000),
+    redirect: "error",
   });
   if (!res.ok) {
     return { ok: false, error: `Webhook responded ${res.status}` };

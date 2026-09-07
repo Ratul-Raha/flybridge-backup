@@ -4,11 +4,20 @@ import {
   isReadinessAnswer,
 } from "@/lib/readiness/questions";
 import { generateReadinessReport } from "@/lib/ai/readiness";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(`readiness:${clientIp(request)}`, 10, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   let body: { answers?: unknown } = {};
   try {
     body = (await request.json()) as { answers?: unknown };
@@ -63,9 +72,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("readiness error", error);
-    const message = error instanceof Error ? error.message : "Something went wrong";
     return NextResponse.json(
-      { error: message.includes("GROQ_API_KEY") ? message : "Something went wrong" },
+      { error: "Something went wrong" },
       { status: 500 }
     );
   }

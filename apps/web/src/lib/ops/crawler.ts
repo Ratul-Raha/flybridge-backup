@@ -1,3 +1,5 @@
+import { assertSafeFetchUrl } from "@/lib/url-safety";
+
 export type CrawlResult = {
   title: string | null;
   description: string | null;
@@ -162,13 +164,15 @@ function extractPriceFromJsonLd(jsonLd: Record<string, unknown>): { type: "free"
 }
 
 export async function crawlUrl(url: string): Promise<CrawlResult> {
+  await assertSafeFetchUrl(url);
+
   const res = await fetch(url, {
     headers: {
       "User-Agent": "FlyBridgeBot/1.0 (seminar-crawler)",
       Accept: "text/html,application/xhtml+xml",
     },
     signal: AbortSignal.timeout(15_000),
-    redirect: "follow",
+    redirect: "error",
   });
 
   if (!res.ok) {
@@ -296,13 +300,15 @@ function guessEligibility(html: string): string | null {
 }
 
 export async function crawlUrlForScholarship(url: string): Promise<ScholarshipCrawlResult> {
+  await assertSafeFetchUrl(url);
+
   const res = await fetch(url, {
     headers: {
       "User-Agent": "FlyBridgeBot/1.0 (scholarship-crawler)",
       Accept: "text/html,application/xhtml+xml",
     },
     signal: AbortSignal.timeout(15_000),
-    redirect: "follow",
+    redirect: "error",
   });
 
   if (!res.ok) {

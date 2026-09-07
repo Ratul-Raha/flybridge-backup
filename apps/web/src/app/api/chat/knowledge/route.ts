@@ -8,11 +8,9 @@ export async function GET(request: NextRequest) {
   const reload = searchParams.get("reload") === "true";
 
   try {
-    if (reload) {
-      const session = await readSession();
-      if (!session || session.role !== "admin") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+    const session = await readSession();
+    if (!session || session.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const chunks = reload ? await reloadKnowledgeBase() : await loadKnowledgeBase();
