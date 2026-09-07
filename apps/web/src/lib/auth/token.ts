@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const JWKS_URI =
   "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -35,8 +35,4 @@ export async function verifyIdToken(idToken: string): Promise<GoogleClaims> {
     picture: payload.picture as string | undefined,
     phone_number: payload.phone_number as string | undefined,
   };
-}
-
-export function isJwtPayload(p: JWTPayload | null): p is JWTPayload {
-  return p !== null;
 }

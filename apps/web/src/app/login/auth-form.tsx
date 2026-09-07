@@ -63,8 +63,8 @@ export function AuthForm({ initialMode, next, source }: { initialMode: Mode; nex
         style={{ color: "var(--body)" }}
       >
         {mode === "login"
-          ? "Log in to continue your courses and progress."
-          : "Create a free account to save your courses and progress."}
+          ? "Sign in with Google to continue your courses and progress."
+          : "Sign up with Google — we'll create your free account if you're new."}
       </p>
 
       <div className="flex flex-col gap-3 mb-6">

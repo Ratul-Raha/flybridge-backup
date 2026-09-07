@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
+import { connectDb } from "@/lib/db";
 import type { AccountType, SubscriptionType } from "@/lib/roles";
 
 export const SESSION_COOKIE = "flybridge_session";
@@ -44,7 +45,7 @@ export async function readSession(): Promise<SessionUser | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    return {
+    const base: SessionUser = {
       uid: payload.sub as string,
       userId: payload.userId as string | undefined,
       name: payload.name as string,
@@ -53,8 +54,31 @@ export async function readSession(): Promise<SessionUser | null> {
       role: payload.role as AccountType,
       subscription: payload.subscription as SubscriptionType,
     };
+    return await applyLiveUser(base);
   } catch {
     return null;
+  }
+}
+
+async function applyLiveUser(session: SessionUser): Promise<SessionUser | null> {
+  if (!session.userId) return session;
+  try {
+    await connectDb();
+    const { User } = await import("@/lib/models/user");
+    const user = await User.findById(session.userId).select(
+      "accountType subscription name email avatar"
+    );
+    if (!user) return null;
+    return {
+      ...session,
+      name: user.name ?? session.name,
+      email: user.email ?? session.email,
+      avatar: user.avatar ?? session.avatar,
+      role: user.accountType as AccountType,
+      subscription: user.subscription as SubscriptionType,
+    };
+  } catch {
+    return session;
   }
 }
 
