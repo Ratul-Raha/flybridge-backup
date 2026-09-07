@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import {
   Award,
@@ -10,12 +11,20 @@ import {
   ChevronRight,
   Download,
   GraduationCap,
+  Loader2,
+  Lock,
   Search,
   Users,
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { CertificateFace, type CertificateGrade } from "@/components/dashboard/certificate-face";
+import { qrCodeDataUrl } from "@/lib/qr-code";
+import {
+  CERT_CAPTURE_WIDTH,
+  downloadCertificatePdf,
+} from "@/lib/download-certificate-pdf";
 
 type Member = {
   id: string;
@@ -32,10 +41,17 @@ type Member = {
   lessonProgress: number;
   quizAvg: number;
   passed: boolean;
+  completedQuizzes: number;
+  totalQuizzes: number;
+  eligibleForCertificate: boolean;
   certificateIssued: boolean;
   certificateDownloadedAt: string | null;
   certificateDownloadCount: number;
   completed: boolean;
+};
+
+type CertificateGradeData = CertificateGrade & {
+  passed?: boolean;
 };
 
 type CourseInfo = {
@@ -104,7 +120,8 @@ type MemberDetail = {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "grid-cols-[44px_minmax(0,1fr)_200px_115px_170px_95px_110px]";
+const GRID_COLS =
+  "grid-cols-[44px_minmax(0,1fr)_200px_100px_150px_90px_90px_80px_100px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -349,6 +366,19 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
 
+  const [certCapture, setCertCapture] = useState<{
+    userName: string;
+    courseTitle: string;
+    certId: string;
+    dateLabel: string;
+    grade: CertificateGradeData;
+    qrSrc: string;
+  } | null>(null);
+  const [certBusy, setCertBusy] = useState(false);
+  const [certError, setCertError] = useState("");
+
+  const certCaptureRef = useRef<HTMLDivElement>(null);
+
   const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/courses/${encodeURIComponent(courseSlug)}/enrollments`, { cache: "no-store" });
@@ -385,6 +415,76 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
       }
     },
     [courseSlug]
+  );
+
+  const downloadMemberCertificate = useCallback(
+    async (m: Member) => {
+      if (!m.userId || certBusy) return;
+      setCertError("");
+      setCertBusy(true);
+      setCertCapture(null);
+      try {
+        const key = encodeURIComponent(courseSlug);
+        const res = await fetch(
+          `/api/courses/${key}/members/${m.userId}/certificate`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (!res.ok || !data.eligible) {
+          setCertError(
+            (data.message as string) ??
+              `${m.name} has not completed all quizzes at 60% or higher yet.`
+          );
+          return;
+        }
+
+        const verifyUrl = `${window.location.origin}/verify/${data.certId}`;
+        const qrSrc = await qrCodeDataUrl(verifyUrl);
+        const dateLabel = new Date(
+          data.issuedAt ?? Date.now()
+        ).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        flushSync(() => {
+          setCertCapture({
+            userName: data.userName ?? m.name,
+            courseTitle: data.courseTitle ?? course?.title ?? "Course",
+            certId: data.certId,
+            dateLabel,
+            grade: data.grade,
+            qrSrc,
+          });
+        });
+
+        if (document.fonts?.ready) await document.fonts.ready;
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        const captureEl = certCaptureRef.current;
+        if (!captureEl) return;
+
+        const firstName = (data.userName ?? m.name).trim().split(/\s+/)[0];
+        await downloadCertificatePdf(
+          captureEl,
+          `FlyBridge-Certificate-${firstName}.pdf`
+        );
+
+        fetch(
+          `/api/courses/${key}/members/${m.userId}/certificate`,
+          { method: "POST", cache: "no-store" }
+        ).catch(() => {});
+      } catch {
+        setCertError(
+          "Could not generate a certificate for this member. Please try again."
+        );
+      } finally {
+        setCertBusy(false);
+        setCertCapture(null);
+      }
+    },
+    [courseSlug, course?.title, certBusy]
   );
 
   useEffect(() => {
@@ -575,6 +675,15 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
         </select>
       </div>
 
+      {certError && (
+        <div
+          className="rounded-xl p-4 text-[13px] font-medium"
+          style={{ background: "#FEF3F2", border: "1px solid #FECACA", color: "#B42318" }}
+        >
+          {certError}
+        </div>
+      )}
+
       {/* Table */}
       <div
         className="rounded-[14px] border bg-white overflow-hidden"
@@ -584,7 +693,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
           className={`hidden md:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
           style={{ borderColor: "var(--line)" }}
         >
-          {["#", "Member", "Email", "Enrolled", "Course progress", "Quiz avg", "Status"].map((c) => (
+          {["#", "Member", "Email", "Enrolled", "Course progress", "Quizzes", "Quiz avg", "Cert", "Status"].map((c) => (
             <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
               {c}
             </span>
@@ -676,10 +785,55 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                     </span>
                   </div>
 
+                  {/* Quizzes completed */}
+                  <span className="hidden md:block font-mono text-[12px] tabular-nums" style={{ color: "var(--body)" }}>
+                    {m.quizAvg || m.completedQuizzes || m.totalQuizzes ? (
+                      <span style={{ color: m.eligibleForCertificate ? "#059669" : "var(--body)" }}>
+                        {m.completedQuizzes}/{m.totalQuizzes}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+
                   {/* Quiz avg */}
                   <span className="hidden md:block font-mono text-[12px] tabular-nums" style={{ color: "var(--body)" }}>
                     {m.quizAvg}%
                   </span>
+
+                  {/* Cert download */}
+                  <div className="hidden md:flex items-center">
+                    <button
+                      type="button"
+                      disabled={certBusy || !m.eligibleForCertificate}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadMemberCertificate(m);
+                      }}
+                      title={
+                        m.eligibleForCertificate
+                          ? `Download ${m.name}'s certificate as PDF`
+                          : `Certificate locked — ${m.name} has not completed all quizzes at 60%+`
+                      }
+                      className="inline-flex h-8 items-center justify-center gap-1 rounded-full border px-2.5 text-[11px] font-semibold transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={
+                        m.eligibleForCertificate
+                          ? { background: "var(--brand)", color: "#fff", borderColor: "transparent", boxShadow: "0 1px 2px rgba(15,169,104,0.25)" }
+                          : { background: "var(--bg-soft)", color: "var(--body)", borderColor: "var(--line)" }
+                      }
+                    >
+                      {m.eligibleForCertificate ? (
+                        certBusy ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Download size={13} />
+                        )
+                      ) : (
+                        <Lock size={13} />
+                      )}
+                      <span>{m.eligibleForCertificate ? "PDF" : "Locked"}</span>
+                    </button>
+                  </div>
 
                   {/* Status */}
                   <div className="hidden md:flex items-center gap-1.5">
@@ -736,6 +890,9 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                       {m.lessonsCompleted}/{m.totalLessons} lessons
                     </span>
                     <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                      {m.completedQuizzes}/{m.totalQuizzes} quizzes
+                    </span>
+                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
                       Quiz avg {m.quizAvg}%
                     </span>
                     <span
@@ -748,6 +905,31 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
                     >
                       {m.status === "active" ? "Active" : "Expired"}
                     </span>
+                    <button
+                      type="button"
+                      disabled={certBusy || !m.eligibleForCertificate}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadMemberCertificate(m);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[10px] font-semibold transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={
+                        m.eligibleForCertificate
+                          ? { background: "var(--brand)", color: "#fff" }
+                          : { background: "var(--bg-soft)", color: "var(--body)" }
+                      }
+                    >
+                      {m.eligibleForCertificate ? (
+                        certBusy ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : (
+                          <Download size={10} />
+                        )
+                      ) : (
+                        <Lock size={10} />
+                      )}
+                      {m.eligibleForCertificate ? "Cert PDF" : "Cert locked"}
+                    </button>
                     {m.completed && (
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[10px] font-semibold"
@@ -841,6 +1023,27 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
           loading={detailLoading}
           onClose={() => setDetailOpen(false)}
         />
+      )}
+
+      {/* Off-screen fixed-width certificate used only for PDF capture when an
+          admin/moderator downloads a member's certificate. */}
+      {certCapture && (
+        <div
+          ref={certCaptureRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute"
+          style={{ left: -9999, top: 0, width: CERT_CAPTURE_WIDTH }}
+        >
+          <CertificateFace
+            unlocked
+            issuedCertId={certCapture.certId}
+            name={certCapture.userName}
+            courseTitle={certCapture.courseTitle}
+            dateLabel={certCapture.dateLabel}
+            qrSrc={certCapture.qrSrc}
+            grade={certCapture.grade}
+          />
+        </div>
       )}
     </div>
   );

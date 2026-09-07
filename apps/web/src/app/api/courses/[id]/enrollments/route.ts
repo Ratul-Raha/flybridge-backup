@@ -67,7 +67,12 @@ export async function GET(
         Math.round((lessonsCompleted / lessonDenominator) * 100),
         100
       );
+      const completedQuizzes = p?.completedQuizzes ?? scores.length;
+      const totalQuizzes = p?.totalQuizzes ?? totalLessons;
       const completed = Boolean(p && (p.passed || quizAvg >= 100));
+      const eligibleForCertificate = Boolean(
+        p && p.passed && completedQuizzes === totalQuizzes
+      );
       return {
         id: e._id.toString(),
         userId,
@@ -83,6 +88,9 @@ export async function GET(
         lessonProgress,
         quizAvg,
         passed: Boolean(p?.passed),
+        completedQuizzes,
+        totalQuizzes,
+        eligibleForCertificate,
         certificateIssued: Boolean(p?.certificateIssued),
         certificateDownloadedAt: p?.certificateDownloadedAt ?? null,
         certificateDownloadCount: p?.certificateDownloadCount ?? 0,

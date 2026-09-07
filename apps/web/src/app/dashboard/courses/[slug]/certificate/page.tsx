@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Loader2, Lock } from "lucide-react";
 import { useCertificateData } from "@/hooks/use-certificate-data";
 import { CertificateFace } from "@/components/dashboard/certificate-face";
 import { qrCodeDataUrl } from "@/lib/qr-code";
+import {
+  CERT_CAPTURE_WIDTH,
+  downloadCertificatePdf,
+} from "@/lib/download-certificate-pdf";
 
 export default function CertificatePage({
   params,
@@ -26,7 +30,10 @@ export default function CertificatePage({
 
   const [origin, setOrigin] = useState("");
   const [qrSrc, setQrSrc] = useState("");
-  const [opening, setOpening] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  const captureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") setOrigin(window.location.origin);
@@ -41,20 +48,29 @@ export default function CertificatePage({
     }
   }, [origin, issuedCertId, qrSrc]);
 
-  const handleDownload = () => {
-    // Record the issuance server-side without blocking the navigation.
+  const handleDownload = async () => {
+    // Record the issuance server-side without blocking the download.
     if (courseId) {
       fetch(`/api/courses/${courseId}/certificate`, {
         method: "POST",
         cache: "no-store",
       }).catch(() => {});
     }
-    // Open the print-ready page in a new tab. That page renders the full-size
-    // certificate and offers a one-click "Download PDF" button (a real .pdf
-    // download, not a print dialog).
-    setOpening(true);
-    window.open(`/dashboard/courses/${params.slug}/certificate/pdf`, "_blank", "noopener");
-    setTimeout(() => setOpening(false), 3000);
+
+    const el = captureRef.current;
+    if (!el) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      const firstName = (userName || "Student").trim().split(/\s+/)[0];
+      await downloadCertificatePdf(el, `FlyBridge-Certificate-${firstName}.pdf`);
+    } catch {
+      setDownloadError(
+        "Sorry, the PDF could not be generated in your browser. Please try the browser's print dialog (Ctrl/Cmd + P and choose Save as PDF) as a fallback, or try a different browser."
+      );
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading) {
@@ -109,6 +125,29 @@ export default function CertificatePage({
           grade={grade ?? null}
         />
 
+        {/* Off-screen, fixed-width copy used only for PDF capture. Keeping the
+            capture element at a constant width makes the responsive font/breakpoint
+            sizing resolve identically on mobile and desktop, so the saved PDF is
+            pixel-identical on every device. */}
+        {unlocked && (
+          <div
+            ref={captureRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute"
+            style={{ left: -9999, top: 0, width: CERT_CAPTURE_WIDTH }}
+          >
+            <CertificateFace
+              unlocked
+              issuedCertId={issuedCertId}
+              name={userName}
+              courseTitle={displayCourseTitle}
+              dateLabel={displayDate}
+              qrSrc={qrSrc}
+              grade={grade ?? null}
+            />
+          </div>
+        )}
+
         {/* ============ Download / status section ============ */}
         <div className="no-print mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
@@ -117,13 +156,14 @@ export default function CertificatePage({
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                  disabled={downloading}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                   style={{ background: "var(--brand)" }}
                 >
-                  {opening ? (
+                  {downloading ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Opening certificate…
+                      Downloading…
                     </>
                   ) : (
                     <>
@@ -132,10 +172,15 @@ export default function CertificatePage({
                     </>
                   )}
                 </button>
+                {downloadError && (
+                  <p className="mt-3 text-center text-[12px] leading-relaxed" style={{ color: "#B42318" }}>
+                    {downloadError}
+                  </p>
+                )}
                 <p className="mt-3 text-center text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
-                  Your certificate is ready. Click <strong>Download Certificate</strong> — it will
-                  open in a new tab along with the <strong>Download PDF</strong> option to save it
-                  directly as a high-resolution PDF.
+                  Click <strong>Download Certificate</strong> to save your certificate directly as a
+                  high-resolution PDF — no new tab needed. The same print-ready design is used on
+                  every device.
                 </p>
                 {issuedCertId && (
                   <p className="mt-2 text-center text-[12px]" style={{ color: "var(--body)" }}>
