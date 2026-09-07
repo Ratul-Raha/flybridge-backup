@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Download, FileDown, Loader2 } from "lucide-react";
 import { useCertificateData } from "@/hooks/use-certificate-data";
@@ -17,24 +17,25 @@ export default function CertificatePdfPage({
   params: { slug: string };
 }) {
   const router = useRouter();
-  const { courseTitle, userName, progress, serverEligible, loading } =
-    useCertificateData(params.slug);
+  const {
+    courseTitle,
+    userName,
+    progress,
+    serverEligible,
+    issuedCertId,
+    issuedAt,
+    loading,
+  } = useCertificateData(params.slug);
 
   const certRef = useRef<HTMLDivElement>(null);
-  const [issuedCertId, setIssuedCertId] = useState("");
   const [origin, setOrigin] = useState("");
   const [qrSrc, setQrSrc] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
-  const certId = useCallback(() => {
-    return `FB-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
-  }, []);
-
   useEffect(() => {
-    if (!issuedCertId) setIssuedCertId(certId());
     if (typeof window !== "undefined") setOrigin(window.location.origin);
-  }, [issuedCertId, certId]);
+  }, []);
 
   useEffect(() => {
     if (origin && issuedCertId && !qrSrc) {
@@ -115,11 +116,14 @@ export default function CertificatePdfPage({
   // same rule here so a deep link (e.g., a manager's email) still unlocks.
   const unlocked = serverEligible || (grade ? grade.passed : false);
 
-  const displayDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const displayDate = (issuedAt ? new Date(issuedAt) : new Date()).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
 
   const displayCourseTitle = courseTitle || params.slug.replace(/-/g, " ");
 

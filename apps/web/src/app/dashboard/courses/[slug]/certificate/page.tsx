@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Loader2, Lock } from "lucide-react";
 import { useCertificateData } from "@/hooks/use-certificate-data";
@@ -12,22 +12,25 @@ export default function CertificatePage({
 }: {
   params: { slug: string };
 }) {
-  const { courseId, courseTitle, userName, progress, serverEligible, loading } =
-    useCertificateData(params.slug);
+  const {
+    courseId,
+    courseTitle,
+    userName,
+    progress,
+    serverEligible,
+    issuedCertId,
+    issuedAt,
+    downloadCount,
+    loading,
+  } = useCertificateData(params.slug);
 
-  const [issuedCertId, setIssuedCertId] = useState("");
   const [origin, setOrigin] = useState("");
   const [qrSrc, setQrSrc] = useState("");
   const [opening, setOpening] = useState(false);
 
-  const certId = useCallback(() => {
-    return `FB-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
-  }, []);
-
   useEffect(() => {
-    if (!issuedCertId) setIssuedCertId(certId());
     if (typeof window !== "undefined") setOrigin(window.location.origin);
-  }, [issuedCertId, certId]);
+  }, []);
 
   useEffect(() => {
     if (origin && issuedCertId && !qrSrc) {
@@ -72,11 +75,14 @@ export default function CertificatePage({
   const grade = progress?.grade;
   const unlocked = serverEligible || (grade ? grade.passed : false);
 
-  const displayDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const displayDate = (issuedAt ? new Date(issuedAt) : new Date()).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
 
   const displayCourseTitle = courseTitle || params.slug.replace(/-/g, " ");
 
@@ -131,6 +137,17 @@ export default function CertificatePage({
                   open in a new tab along with the <strong>Download PDF</strong> option to save it
                   directly as a high-resolution PDF.
                 </p>
+                {issuedCertId && (
+                  <p className="mt-2 text-center text-[12px]" style={{ color: "var(--body)" }}>
+                    Scan the QR code on the certificate to verify it publicly at{" "}
+                    <span
+                      className="font-mono text-[11px] font-semibold"
+                      style={{ color: "var(--brand)" }}
+                    >
+                      {origin ? `${origin.replace(/^https?:\/\//, "")}/verify/${issuedCertId}` : `/verify/${issuedCertId}`}
+                    </span>
+                  </p>
+                )}
               </>
             ) : (
               <div className="text-center">

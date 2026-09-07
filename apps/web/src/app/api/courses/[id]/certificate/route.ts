@@ -4,7 +4,10 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseProgress } from "@/lib/models/course-progress";
-import { calculateGrade } from "@/lib/grading";
+import { calculateGrade, type GradeResult } from "@/lib/grading";
+import { findOrCreateCertificate } from "@/lib/certificates";
+import type { CertificateGradeSnapshot } from "@/lib/models/certificate";
+import { Types } from "mongoose";
 
 /**
  * Server-side gate for certificate issuance.
@@ -93,13 +96,25 @@ export async function GET(
         await progress.save();
       }
 
+      const cert = await findOrCreateCertificate({
+        userId: new Types.ObjectId(session.userId),
+        userName: session.name,
+        userEmail: session.email,
+        courseId: course._id,
+        courseTitle: course.title,
+        courseSlug: course.slug,
+        grade: toGradeSnapshot(grade),
+      });
+
       return NextResponse.json({
         eligible: true,
         certificateIssued: true,
+        certId: cert.certId,
         courseTitle: course.title,
         courseSlug: course.slug,
         grade,
-        issuedAt: new Date().toISOString(),
+        issuedAt: cert.issuedAt.toISOString(),
+        downloadCount: cert.downloadCount ?? 0,
       });
     }
 
@@ -116,13 +131,25 @@ export async function GET(
       await progress.save();
     }
 
+    const cert = await findOrCreateCertificate({
+      userId: new Types.ObjectId(session.userId),
+      userName: session.name,
+      userEmail: session.email,
+      courseId: course._id,
+      courseTitle: course.title,
+      courseSlug: course.slug,
+      grade: grade ? toGradeSnapshot(grade) : null,
+    });
+
     return NextResponse.json({
       eligible: true,
       certificateIssued: true,
+      certId: cert.certId,
       courseTitle: course.title,
       courseSlug: course.slug,
       grade: grade ?? null,
-      issuedAt: new Date().toISOString(),
+      issuedAt: cert.issuedAt.toISOString(),
+      downloadCount: cert.downloadCount ?? 0,
     });
   } catch (error) {
     console.error("certificate issuance error", error);
@@ -211,6 +238,13 @@ export async function POST(
       }
     }
 
+    const grade = progress
+      ? calculateGrade(
+          progress.quizScores as { score: number }[],
+          totalLessons
+        )
+      : undefined;
+
     if (progress) {
       progress.certificateIssued = true;
       progress.certificateDownloadedAt = new Date();
@@ -219,9 +253,31 @@ export async function POST(
       await progress.save();
     }
 
-    return NextResponse.json({ ok: true });
+    const cert = await findOrCreateCertificate({
+      userId: new Types.ObjectId(session.userId),
+      userName: session.name,
+      userEmail: session.email,
+      courseId: course._id,
+      courseTitle: course.title,
+      courseSlug: course.slug,
+      grade: grade ? toGradeSnapshot(grade) : null,
+    });
+    cert.downloadCount = (cert.downloadCount ?? 0) + 1;
+    await cert.save();
+
+    return NextResponse.json({ ok: true, certId: cert.certId });
   } catch (error) {
     console.error("certificate download tracking error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+}
+
+function toGradeSnapshot(grade: GradeResult): CertificateGradeSnapshot {
+  return {
+    percentage: grade.percentage,
+    grade: grade.grade,
+    englishLevel: grade.englishLevel,
+    totalQuizzes: grade.totalQuizzes,
+    completedQuizzes: grade.completedQuizzes,
+  };
 }

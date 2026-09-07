@@ -24,6 +24,9 @@ type UseCertificateData = {
   userAvatar: string | null;
   progress: CertificateProgressData | null;
   serverEligible: boolean;
+  issuedCertId: string;
+  issuedAt: string | null;
+  downloadCount: number;
   loading: boolean;
 };
 
@@ -35,6 +38,9 @@ export function useCertificateData(slug: string): UseCertificateData {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [progress, setProgress] = useState<CertificateProgressData | null>(null);
   const [serverEligible, setServerEligible] = useState(false);
+  const [issuedCertId, setIssuedCertId] = useState("");
+  const [issuedAt, setIssuedAt] = useState<string | null>(null);
+  const [downloadCount, setDownloadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -69,7 +75,13 @@ export function useCertificateData(slug: string): UseCertificateData {
           });
           if (certRes.ok) {
             const certData = await certRes.json();
-            if (certData?.eligible) setServerEligible(true);
+            if (certData?.eligible) {
+              setServerEligible(true);
+              if (certData.certId) setIssuedCertId(certData.certId);
+              if (certData.issuedAt) setIssuedAt(certData.issuedAt);
+              if (typeof certData.downloadCount === "number")
+                setDownloadCount(certData.downloadCount);
+            }
           }
         }
       }
@@ -92,6 +104,9 @@ export function useCertificateData(slug: string): UseCertificateData {
     userAvatar,
     progress,
     serverEligible,
+    issuedCertId,
+    issuedAt,
+    downloadCount,
     loading,
   };
 }
