@@ -79,7 +79,18 @@ export default function CertificatePage({
           if (progRes.ok) {
             const progData = await progRes.json();
             setProgress(progData);
-            setServerEligible(Boolean(progData.certificateIssued));
+          }
+
+          // Authoritative server-side gate: recomputes eligibility from the DB
+          // and flips certificateIssued to true when eligible. We must not gate
+          // on progress.certificateIssued — that flag is only set by this gate,
+          // so using it here would lock eligible users out permanently.
+          const certRes = await fetch(`/api/courses/${course.id}/certificate`, {
+            cache: "no-store",
+          });
+          if (certRes.ok) {
+            const certData = await certRes.json();
+            if (certData?.eligible) setServerEligible(true);
           }
         }
       }
