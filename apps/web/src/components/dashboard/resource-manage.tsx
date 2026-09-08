@@ -16,6 +16,10 @@ import {
   ExternalLink,
   Pencil,
   Download,
+  Library,
+  BarChart3,
+  TrendingUp,
+  CalendarRange,
   Search,
   Folder,
   Star,
@@ -208,20 +212,29 @@ export function ResourceManage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [accessFilter, setAccessFilter] = useState("all");
   const [sort, setSort] = useState("newest");
+  const [period, setPeriod] = useState<"all" | "7" | "30" | "90">("all");
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/resources?all=true", { cache: "no-store" });
+      const daysParam = period === "all" ? "" : `&days=${period}`;
+      const res = await fetch(`/api/resources?all=true${daysParam}`, { cache: "no-store" });
       const data = await res.json();
       setResources(data.resources ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }, []);
+  }, [period]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const stats = useMemo(() => {
+    const totalDownloads = resources.reduce((s, r) => s + r.downloadCount, 0);
+    const top = resources.reduce<ResourceItem | null>((best, r) => (best === null || r.downloadCount > best.downloadCount ? r : best), null);
+    const avg = resources.length > 0 ? Math.round(totalDownloads / resources.length) : 0;
+    return { totalDownloads, top, avg };
+  }, [resources]);
 
   const folders = useMemo(() => {
     const counts = new Map<string, number>();
@@ -423,6 +436,112 @@ export function ResourceManage() {
           {error}
         </p>
       )}
+
+      {/* Stats */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="font-display text-[15px] font-semibold flex items-center gap-2" style={{ color: "var(--ink)" }}>
+            <BarChart3 size={17} style={{ color: "var(--brand)" }} />
+            Downloads overview
+          </p>
+          <div className="flex gap-1 rounded-full border p-1" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
+            {(
+              [
+                { value: "all", label: "All time" },
+                { value: "90", label: "90d" },
+                { value: "30", label: "30d" },
+                { value: "7", label: "7d" },
+              ] as const
+            ).map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriod(p.value)}
+                className="rounded-full px-3.5 py-[6px] text-[12px] font-medium transition-colors duration-200"
+                style={
+                  period === p.value
+                    ? { background: "var(--brand)", color: "#fff" }
+                    : { color: "var(--body)" }
+                }
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#6E4CFF,#8B5CF6)" }}>
+                <Download size={19} strokeWidth={2.2} />
+              </div>
+              <CalendarRange size={15} style={{ color: "#A6ADC0" }} />
+            </div>
+            <p className="font-display text-[26px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+              {stats.totalDownloads.toLocaleString()}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
+              Downloads
+            </p>
+            <p className="text-[11.5px] mt-2 font-medium" style={{ color: "var(--body)" }}>
+              {period === "all" ? "Lifetime file downloads" : `Downloads in the last ${period} days`}
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+            <div className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4" style={{ background: "linear-gradient(135deg,#0EA5E9,#38BDF8)" }}>
+              <Library size={19} strokeWidth={2.2} />
+            </div>
+            <p className="font-display text-[26px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+              {resources.length.toLocaleString()}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
+              Total resources
+            </p>
+            <p className="text-[11.5px] mt-2 font-medium" style={{ color: "var(--body)" }}>
+              Files shared on the platform
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+            <div className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4" style={{ background: "linear-gradient(135deg,#F59E0B,#F97316)" }}>
+              <TrendingUp size={19} strokeWidth={2.2} />
+            </div>
+            {stats.top ? (
+              <>
+                <p className="font-display text-[22px] font-semibold leading-none truncate" title={stats.top.title} style={{ color: "var(--ink)" }}>
+                  {stats.top.downloadCount.toLocaleString()}
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2 truncate" style={{ color: "var(--body)" }}>
+                  {stats.top.title}
+                </p>
+                <p className="text-[11.5px] mt-2 font-medium truncate" style={{ color: "var(--body)" }}>
+                  Most downloaded
+                </p>
+              </>
+            ) : (
+              <p className="font-display text-[22px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                —
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+            <div className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4" style={{ background: "linear-gradient(135deg,#10B981,#34D399)" }}>
+              <BarChart3 size={19} strokeWidth={2.2} />
+            </div>
+            <p className="font-display text-[26px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+              {resources.length > 0 ? stats.avg.toLocaleString() : "—"}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2" style={{ color: "var(--body)" }}>
+              Avg downloads
+            </p>
+            <p className="text-[11.5px] mt-2 font-medium" style={{ color: "var(--body)" }}>
+              Per resource
+            </p>
+          </div>
+        </div>
+      </div>
 
       {formOpen && (
         <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
