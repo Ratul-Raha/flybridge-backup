@@ -231,7 +231,7 @@ export function ChannelsTab() {
       >
         {/* Enable toggle */}
         <div
-          className="flex items-center justify-between gap-4 mb-5 rounded-xl border p-4"
+          className="flex items-center justify-between gap-4 mb-5 rounded-lg border p-4"
           style={{ borderColor: "var(--line)" }}
         >
           <div>
@@ -294,7 +294,7 @@ export function ChannelsTab() {
               </span>
             </Label>
             <div
-              className="rounded-xl border px-3 py-2.5 text-[12px] leading-relaxed"
+              className="rounded-lg border px-3 py-2.5 text-[12px] leading-relaxed"
               style={{ borderColor: "var(--line)", color: "var(--body)" }}
             >
               Message{" "}

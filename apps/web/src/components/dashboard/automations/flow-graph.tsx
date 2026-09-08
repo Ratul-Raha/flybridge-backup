@@ -161,7 +161,7 @@ export function FlowGraph({
 
   return (
     <div
-      className="overflow-auto rounded-[22px] border bg-[#F8FAFD]"
+      className="overflow-auto rounded-lg border bg-[#F8FAFD]"
       style={{ borderColor: "var(--line)", maxHeight: "62vh" }}
     >
       <div className="mx-auto flex w-fit flex-col items-center px-10 py-8">
@@ -401,7 +401,7 @@ function NodePicker({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(18,22,42,0.5)" }}>
-      <div className="max-h-[82vh] w-full max-w-[620px] overflow-auto rounded-[22px] bg-white p-6" style={{ border: "1px solid var(--line)" }}>
+      <div className="max-h-[82vh] w-full max-w-[620px] overflow-auto rounded-lg bg-white p-6" style={{ border: "1px solid var(--line)" }}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
             Add nodes

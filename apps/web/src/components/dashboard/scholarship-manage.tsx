@@ -385,7 +385,7 @@ export function ScholarshipManage() {
       )}
 
       {formOpen && (
-        <div className="rounded-[14px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
           <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit scholarship" : "New scholarship"}
           </h2>
@@ -641,7 +641,7 @@ export function ScholarshipManage() {
 
       <div className="flex flex-col gap-3">
         {/* Toolbar */}
-        <div className="rounded-[14px] border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
           <div className="relative flex-1">
             <Search
               size={15}
@@ -682,7 +682,7 @@ export function ScholarshipManage() {
 
         {/* Card grid */}
         {filtered.length === 0 ? (
-          <div className="rounded-[14px] border bg-white px-4 py-12 text-center text-[13.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+          <div className="rounded-lg border bg-white px-4 py-12 text-center text-[13.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
             No scholarships match your search or filters.
           </div>
         ) : (

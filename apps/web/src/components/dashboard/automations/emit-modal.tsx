@@ -97,7 +97,7 @@ export function EmitModal({
             Event
           </label>
           <select
-            className="w-full rounded-xl border bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
+            className="w-full rounded-lg border bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             value={event}
             onChange={(e) => selectEvent(e.target.value)}
@@ -117,7 +117,7 @@ export function EmitModal({
             Payload (JSON)
           </label>
           <textarea
-            className="w-full min-h-[220px] resize-y rounded-xl border bg-[#F8FAFD] p-3 font-mono text-[12px] leading-relaxed outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
+            className="w-full min-h-[220px] resize-y rounded-lg border bg-[#F8FAFD] p-3 font-mono text-[12px] leading-relaxed outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             value={payload}
             onChange={(e) => setPayload(e.target.value)}
@@ -132,7 +132,7 @@ export function EmitModal({
         )}
 
         {result && (
-          <div className="rounded-xl border p-3.5 space-y-2" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border p-3.5 space-y-2" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center justify-between">
               <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
                 Event fired — log #{result.logId.slice(-6)}

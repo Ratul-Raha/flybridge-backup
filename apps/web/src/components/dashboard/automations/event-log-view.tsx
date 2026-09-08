@@ -90,7 +90,7 @@ export function EventLogView() {
                   </button>
 
                   {expanded === log.id && (
-                    <div className="mt-3 space-y-3 rounded-xl border p-3.5" style={{ borderColor: "var(--line)", background: "#F8FAFD" }}>
+                    <div className="mt-3 space-y-3 rounded-lg border p-3.5" style={{ borderColor: "var(--line)", background: "#F8FAFD" }}>
                       <div className="flex flex-wrap gap-1.5">
                         {log.handlers.length === 0 && (
                           <span className="text-[12px]" style={{ color: "var(--body)" }}>

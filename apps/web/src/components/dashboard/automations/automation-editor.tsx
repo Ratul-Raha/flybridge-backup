@@ -329,7 +329,7 @@ export function AutomationEditor({ id }: { id: string }) {
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(18,22,42,0.5)" }}>
-          <div className="w-full max-w-md rounded-[22px] bg-white p-6" style={{ border: "1px solid var(--line)" }}>
+          <div className="w-full max-w-md rounded-lg bg-white p-6" style={{ border: "1px solid var(--line)" }}>
             <h3 className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
               Delete this automation?
             </h3>

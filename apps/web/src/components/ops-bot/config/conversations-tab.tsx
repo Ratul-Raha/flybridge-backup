@@ -97,7 +97,7 @@ export function ConversationsTab() {
                 <button
                   type="button"
                   onClick={() => loadConversation(conv.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition hover:bg-[var(--bg-soft)]"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border text-left transition hover:bg-[var(--bg-soft)]"
                   style={{ borderColor: "var(--line)" }}
                 >
                   <MessageSquare size={16} style={{ color: "var(--brand)" }} />
@@ -120,7 +120,7 @@ export function ConversationsTab() {
                 </button>
 
                 {selectedId === conv.id && (
-                  <div className="ml-8 mt-2 mb-2 p-3 rounded-xl" style={{ background: "var(--bg-soft)" }}>
+                  <div className="ml-8 mt-2 mb-2 p-3 rounded-lg" style={{ background: "var(--bg-soft)" }}>
                     {loadingMessages ? (
                       <div className="flex items-center gap-2 text-[12px]" style={{ color: "var(--body)" }}>
                         <Loader2 size={13} className="animate-spin" />

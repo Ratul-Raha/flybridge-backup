@@ -342,7 +342,7 @@ export function ChatBody({ variant, renderToolbar, renderEmpty }: ChatBodyProps)
           messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-[1.65] break-words ${
+                className={`max-w-[85%] rounded-lg px-4 py-3 text-[13px] leading-[1.65] break-words ${
                   m.role === "user" ? "rounded-tr-sm text-white" : "rounded-tl-sm"
                 }`}
                 style={

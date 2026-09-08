@@ -391,7 +391,7 @@ export function UserManage() {
       {loading && !stats ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-[22px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+            <div key={i} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
               <div className="w-11 h-11 rounded-2xl mb-4" style={{ background: "var(--line)" }} />
               <div className="h-[26px] w-16 rounded-lg mb-2" style={{ background: "var(--line)" }} />
               <div className="h-[10px] w-24 rounded" style={{ background: "var(--line)" }} />
@@ -425,7 +425,7 @@ export function UserManage() {
                     setSort("newest");
                     setPage(1);
                   }}
-                  className={`group relative rounded-[22px] border bg-white p-5 overflow-hidden text-left transition-all duration-250 ${
+                  className={`group relative rounded-lg border bg-white p-5 overflow-hidden text-left transition-all duration-250 ${
                     clickable ? "hover:-translate-y-1 cursor-pointer hover:shadow-[0_16px_36px_-16px_rgba(16,24,40,0.28)]" : "cursor-default"
                   }`}
                   style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
@@ -461,7 +461,7 @@ export function UserManage() {
 
       {/* Toolbar */}
       <div
-        className="rounded-[14px] border bg-white p-3 flex flex-col lg:flex-row gap-3"
+        className="rounded-lg border bg-white p-3 flex flex-col lg:flex-row gap-3"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="relative flex-1">
@@ -546,7 +546,7 @@ export function UserManage() {
       ) : (
         <>
           {/* Table */}
-          <div className="rounded-[14px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
             <div
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
@@ -814,7 +814,7 @@ export function UserManage() {
                   </div>
 
                   {isAdmin && (
-                    <div className="rounded-[14px] border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
                         Access & plan
                       </p>
@@ -855,7 +855,7 @@ export function UserManage() {
 
                   {isAdmin && (
                     <div
-                      className="rounded-[14px] border p-4 flex flex-col gap-3"
+                      className="rounded-lg border p-4 flex flex-col gap-3"
                       style={{ borderColor: "rgba(192,57,43,0.35)", background: "rgba(192,57,43,0.045)" }}
                     >
                       <p className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#C0392B" }}>
@@ -886,7 +886,7 @@ export function UserManage() {
 
                   {/* Activity summary */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
@@ -900,7 +900,7 @@ export function UserManage() {
                         enrolled
                       </p>
                     </div>
-                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <CalendarDays size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
@@ -914,7 +914,7 @@ export function UserManage() {
                         registered
                       </p>
                     </div>
-                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <Download size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
@@ -928,7 +928,7 @@ export function UserManage() {
                         resources
                       </p>
                     </div>
-                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <Award size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
@@ -946,7 +946,7 @@ export function UserManage() {
                             : "none yet"}
                       </p>
                     </div>
-                    <div className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                    <div className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <Gauge size={14} style={{ color: "var(--brand)" }} />
                         <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
@@ -971,11 +971,11 @@ export function UserManage() {
                       Enrolled courses
                     </p>
                     {detail.courses.length === 0 ? (
-                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                      <p className="text-[13px] py-3 text-center rounded-lg border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
                         No course enrollments yet.
                       </p>
                     ) : (
-                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex flex-col divide-y rounded-lg border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                         {detail.courses.map((e) => (
                           <div key={e.id} className="flex items-center gap-3 px-4 py-3">
                             {e.course?.image ? (
@@ -1006,11 +1006,11 @@ export function UserManage() {
                       Registered seminars
                     </p>
                     {detail.seminars.length === 0 ? (
-                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                      <p className="text-[13px] py-3 text-center rounded-lg border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
                         No seminar registrations yet.
                       </p>
                     ) : (
-                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex flex-col divide-y rounded-lg border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                         {detail.seminars.map((s) => (
                           <div key={s.id} className="px-4 py-3">
                             <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
@@ -1033,11 +1033,11 @@ export function UserManage() {
                       Downloaded resources
                     </p>
                     {detail.downloads.length === 0 ? (
-                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                      <p className="text-[13px] py-3 text-center rounded-lg border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
                         No downloads yet.
                       </p>
                     ) : (
-                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex flex-col divide-y rounded-lg border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                         {detail.downloads.map((d) => (
                           <div key={d.id} className="px-4 py-3">
                             <p className="text-[13px] font-semibold truncate" style={{ color: "var(--ink)" }}>
@@ -1058,11 +1058,11 @@ export function UserManage() {
                       Certificates
                     </p>
                     {detail.certificates.length === 0 ? (
-                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                      <p className="text-[13px] py-3 text-center rounded-lg border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
                         No certificates yet.
                       </p>
                     ) : (
-                      <div className="flex flex-col divide-y rounded-[14px] border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex flex-col divide-y rounded-lg border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                         {detail.certificates.map((c) => (
                           <div key={c.id} className="flex items-center gap-3 px-4 py-3">
                             {c.course?.image ? (
@@ -1095,7 +1095,7 @@ export function UserManage() {
                       Readiness assessments
                     </p>
                     {detail.readiness.length === 0 ? (
-                      <p className="text-[13px] py-3 text-center rounded-[14px] border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
+                      <p className="text-[13px] py-3 text-center rounded-lg border border-dashed" style={{ color: "var(--body)", borderColor: "var(--line)" }}>
                         No assessments run yet.
                       </p>
                     ) : (
@@ -1103,7 +1103,7 @@ export function UserManage() {
                         {detail.readiness.map((r) => {
                           const color = scoreColor(r.score);
                           return (
-                            <div key={r.id} className="rounded-[14px] border bg-white p-4" style={{ borderColor: "var(--line)" }}>
+                            <div key={r.id} className="rounded-lg border bg-white p-4" style={{ borderColor: "var(--line)" }}>
                               <div className="flex items-center justify-between gap-3">
                                 <span
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-display text-[15px] font-bold tabular-nums"

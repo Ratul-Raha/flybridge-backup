@@ -182,7 +182,7 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
 
       {/* Toolbar */}
       <div
-        className="rounded-[14px] border bg-white p-3 flex flex-col md:flex-row gap-3"
+        className="rounded-lg border bg-white p-3 flex flex-col md:flex-row gap-3"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="relative flex-1">
@@ -215,7 +215,7 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
 
       {/* Table */}
       <div
-        className="rounded-[14px] border bg-white overflow-hidden"
+        className="rounded-lg border bg-white overflow-hidden"
         style={{ borderColor: "var(--line)" }}
       >
         <div

@@ -133,7 +133,7 @@ export function AutomationList() {
         ) : items.length === 0 ? (
           <div className="py-12 text-center">
             <div
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg"
               style={{ background: `${ACCENT}14`, color: ACCENT }}
             >
               <Workflow size={26} strokeWidth={1.8} />

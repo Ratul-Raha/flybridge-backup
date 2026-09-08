@@ -6,6 +6,11 @@ import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import { createOrder } from "@/lib/orders";
+import {
+  isStripeConfigured,
+  createCheckoutSession,
+} from "@/lib/payments/stripe";
+import type { OrderDoc } from "@/lib/models/order";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import type { SubscriptionType } from "@/lib/roles";
 
@@ -36,13 +41,6 @@ export async function POST(
     const seminar = await Seminar.findById(params.id);
     if (!seminar) {
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
-    }
-
-    if (seminar.type === "paid" && (seminar.price ?? 0) > 0) {
-      return NextResponse.json(
-        { error: "Payment for this seminar is coming soon." },
-        { status: 400 }
-      );
     }
 
     const phone = body.phone?.trim() ?? "";
@@ -144,6 +142,28 @@ export async function POST(
       itemId: seminar._id.toString(),
     });
 
+    let paymentUrl: string | null = null;
+    if (order && order.total > 0) {
+      if (!isStripeConfigured()) {
+        return NextResponse.json(
+          { error: "Payments are not configured yet. Please try again later." },
+          { status: 503 }
+        );
+      }
+
+      const checkout = await createCheckoutSession(order as OrderDoc, {
+        origin: request.nextUrl.origin,
+        email: user.email ?? email,
+        cancelPath: `/seminars/${seminar._id.toString()}`,
+      });
+
+      const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
+      orderDoc.gateway = "stripe";
+      orderDoc.gatewayRef = checkout.sessionId;
+      await orderDoc.save();
+      paymentUrl = checkout.url;
+    }
+
     const registration = await SeminarRegistration.findOne({
       seminar: seminar._id,
       email,
@@ -156,6 +176,7 @@ export async function POST(
         registration,
         orderId: order?._id?.toString() ?? null,
         requiresPayment: order ? order.total > 0 : false,
+        paymentUrl,
       },
       { status: duplicate ? 200 : 201 }
     );

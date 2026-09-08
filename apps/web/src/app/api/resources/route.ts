@@ -42,12 +42,21 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
   };
 }
 
-async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false): Promise<ResourceDto[]> {
+async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false, days?: number): Promise<ResourceDto[]> {
+  const match = days && days > 0 ? { createdAt: { $gte: lastNDays(days) } } : {};
   const rows = await ResourceDownload.aggregate<{ _id: string; count: number }>([
+    { $match: match },
     { $group: { _id: "$resource", count: { $sum: 1 } } },
   ]);
   const counts = new Map(rows.map((r) => [r._id.toString(), r.count]));
   return resources.map((r) => ({ ...toDto(r, includeUrl), downloadCount: counts.get(r._id.toString()) ?? 0 }));
+}
+
+function lastNDays(n: number) {
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+  from.setDate(from.getDate() - (n - 1));
+  return from;
 }
 
 function isManager(session: { role: string } | null) {
@@ -58,6 +67,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const all = searchParams.get("all") === "true";
   const mine = searchParams.get("mine") === "true";
+  const daysParam = Number(searchParams.get("days"));
+  const days = Number.isFinite(daysParam) && daysParam > 0 ? Math.min(Math.trunc(daysParam), 365) : undefined;
 
   try {
     const session = await readSession();
@@ -68,7 +79,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const resources = await Resource.find().sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources, true) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, true, days) });
     }
 
     if (mine) {
@@ -76,11 +87,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources, false) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, false, days) });
     }
 
     const resources = await Resource.find().sort({ releaseDate: -1 });
-    return NextResponse.json({ resources: await withDownloadCounts(resources, false) });
+    return NextResponse.json({ resources: await withDownloadCounts(resources, false, days) });
   } catch (error) {
     console.error("resources GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

@@ -467,7 +467,7 @@ export function CourseManage() {
 
               <div className="flex flex-col gap-3">
                 {form.modules.map((m, mi) => (
-                  <div key={mi} className="rounded-2xl border p-4" style={{ borderColor: "var(--line)" }}>
+                  <div key={mi} className="rounded-lg border p-4" style={{ borderColor: "var(--line)" }}>
                     <div className="flex items-center gap-2 mb-3">
                       <input
                         type="text"
@@ -495,7 +495,7 @@ export function CourseManage() {
 
                     <div className="flex flex-col gap-2.5">
                       {m.lessons.map((l, li) => (
-                        <div key={li} className="rounded-xl border p-3 flex flex-col gap-2" style={{ borderColor: "var(--line)" }}>
+                        <div key={li} className="rounded-lg border p-3 flex flex-col gap-2" style={{ borderColor: "var(--line)" }}>
                           <div className="flex items-center gap-2">
                             <input
                               type="text"
@@ -647,7 +647,7 @@ export function CourseManage() {
               {form.books.map((b, bi) => (
                 <div
                   key={bi}
-                  className="flex flex-col gap-2 rounded-xl border p-4"
+                  className="flex flex-col gap-2 rounded-lg border p-4"
                   style={{ borderColor: "var(--line)" }}
                 >
                   <div className="flex items-center gap-2">

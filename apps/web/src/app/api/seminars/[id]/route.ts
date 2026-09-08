@@ -59,8 +59,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
     if (body.type === "free" || body.type === "paid") {
       seminar.type = body.type;
-      if (body.type === "paid" && typeof body.price === "number") {
-        seminar.price = body.price;
+      if (body.type === "paid") {
+        const price = Number(body.price);
+        if (!isNaN(price) && price >= 0) {
+          seminar.price = price;
+        }
       }
       if (body.type === "free") seminar.price = 0;
     }

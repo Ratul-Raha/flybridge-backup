@@ -113,7 +113,7 @@ export function RulesTab() {
             {rules.map((rule) => (
               <div
                 key={rule.id}
-                className="p-4 rounded-xl border"
+                className="p-4 rounded-lg border"
                 style={{ borderColor: "var(--line)" }}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">

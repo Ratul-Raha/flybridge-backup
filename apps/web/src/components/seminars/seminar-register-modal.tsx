@@ -40,7 +40,7 @@ export function SeminarRegisterModal({
   const [message, setMessage] = useState<string | null>(null);
 
   const register = useCallback(
-    async (email: string) => {
+    async (email: string): Promise<"registered" | "paying" | false> => {
       const value = phone.trim();
       if (!value) {
         setPhoneError("Phone number is required");
@@ -56,13 +56,17 @@ export function SeminarRegisterModal({
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Registration failed");
+        if (data.requiresPayment && data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+          return "paying";
+        }
         setMessage(
           data.alreadyRegistered
             ? `You're already registered for "${seminar.title}".`
             : `You're registered for "${seminar.title}". A confirmation email is on its way to ${email}.`
         );
         onRegistered(seminar);
-        return true;
+        return "registered";
       } catch (e) {
         setError(e instanceof Error ? e.message : "Registration failed");
         return false;
@@ -77,16 +81,16 @@ export function SeminarRegisterModal({
     setError(null);
     setMessage(null);
     if (user) {
-      const ok = await register(user.email);
-      if (ok && user.accountType === "user") {
+      const status = await register(user.email);
+      if (status === "registered" && user.accountType === "user") {
         router.push(`/dashboard/seminars/mine/${seminar.id}`);
       }
       return;
     }
     const email = await signInWithGoogle();
     if (!email) return;
-    const ok = await register(email);
-    if (ok) router.push(`/dashboard/seminars/mine/${seminar.id}`);
+    const status = await register(email);
+    if (status === "registered") router.push(`/dashboard/seminars/mine/${seminar.id}`);
   };
 
   return (

@@ -16,7 +16,7 @@ export function ConfirmationCard({ preview, onConfirm, onCancel }: ConfirmationP
   const isDestructive = preview.title.includes("DELETE") || preview.title.includes("Destructive");
 
   return (
-    <div className="mt-3 rounded-xl border overflow-hidden" style={{ borderColor: isDestructive ? "#FCA5A5" : "var(--line)" }}>
+    <div className="mt-3 rounded-lg border overflow-hidden" style={{ borderColor: isDestructive ? "#FCA5A5" : "var(--line)" }}>
       <div
         className="flex items-center gap-2 px-3 py-2"
         style={{

@@ -116,7 +116,7 @@ export function NodeConfig({
             />
           </div>
         )}
-        <div className="rounded-xl p-3 text-[12px] leading-relaxed" style={{ background: "var(--line)", color: "var(--body)" }}>
+        <div className="rounded-lg p-3 text-[12px] leading-relaxed" style={{ background: "var(--line)", color: "var(--body)" }}>
           The flow branches below: <b style={{ color: "var(--ink)" }}>YES</b> continues when the condition matches, <b style={{ color: "var(--ink)" }}>NO</b> when it doesn't.
         </div>
       </div>
@@ -135,7 +135,7 @@ export function NodeConfig({
               <button
                 key={t}
                 onClick={() => setData({ actionType: t })}
-                className="rounded-xl border px-2 py-2 text-[11.5px] font-semibold transition"
+                className="rounded-lg border px-2 py-2 text-[11.5px] font-semibold transition"
                 style={
                   actionType === t
                     ? { borderColor: "#6E4CFF", background: "#6E4CFF14", color: "#6E4CFF" }
@@ -183,7 +183,7 @@ export function NodeConfig({
                   from the selected template.
                 </p>
                 {selectedTemplate && (
-                  <div className="rounded-xl border p-3 text-[12px] leading-relaxed" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                  <div className="rounded-lg border p-3 text-[12px] leading-relaxed" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
                     <span className="block font-semibold" style={{ color: "var(--ink)" }}>
                       {selectedTemplate.subject}
                     </span>

@@ -97,7 +97,7 @@ export function RunsHistory({ id }: { id: string }) {
                   </button>
 
                   {expanded === run.id && (
-                    <div className="mt-3 space-y-1.5 rounded-xl border p-3" style={{ borderColor: "var(--line)", background: "#F8FAFD" }}>
+                    <div className="mt-3 space-y-1.5 rounded-lg border p-3" style={{ borderColor: "var(--line)", background: "#F8FAFD" }}>
                       {run.steps.length === 0 && (
                         <p className="text-[12px]" style={{ color: "var(--body)" }}>
                           No steps executed.

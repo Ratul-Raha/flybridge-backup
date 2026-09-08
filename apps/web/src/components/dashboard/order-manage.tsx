@@ -97,11 +97,11 @@ function MetricCard({
 }) {
   return (
     <div
-      className="flex items-center gap-4 rounded-2xl border bg-white px-5 py-4"
+      className="flex items-center gap-4 rounded-lg border bg-white px-5 py-4"
       style={{ borderColor: "var(--line)" }}
     >
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
         style={{ background: iconBg }}
       >
         <Icon size={20} strokeWidth={2} style={{ color: "var(--ink)" }} />
@@ -137,10 +137,10 @@ function MetricCard({
 function MetricSkeleton() {
   return (
     <div
-      className="flex items-center gap-4 rounded-2xl border bg-white px-5 py-4"
+      className="flex items-center gap-4 rounded-lg border bg-white px-5 py-4"
       style={{ borderColor: "var(--line)" }}
     >
-      <div className="w-12 h-12 rounded-2xl shrink-0" style={{ background: "var(--bg-soft)" }} />
+      <div className="w-12 h-12 rounded-lg shrink-0" style={{ background: "var(--bg-soft)" }} />
       <div className="flex-1 space-y-2">
         <div className="h-3 w-16 rounded" style={{ background: "var(--bg-soft)" }} />
         <div className="h-5 w-20 rounded" style={{ background: "var(--bg-soft)" }} />
@@ -202,7 +202,7 @@ function RevenueChart({ data }: { data: OrderStats["chart"] }) {
 
   return (
     <div
-      className="rounded-2xl border bg-white p-5 flex-1 min-w-0"
+      className="rounded-lg border bg-white p-5 flex-1 min-w-0"
       style={{ borderColor: "var(--line)" }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -285,7 +285,7 @@ function StatusDonut({ data }: { data: OrderStats["statusDistribution"] }) {
 
   return (
     <div
-      className="rounded-2xl border bg-white p-5 w-full lg:w-[380px] shrink-0"
+      className="rounded-lg border bg-white p-5 w-full lg:w-[380px] shrink-0"
       style={{ borderColor: "var(--line)" }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -310,7 +310,7 @@ function TopItems({ items }: { items: OrderStats["topItems"] }) {
   const max = Math.max(...items.map((i) => i.orders), 1);
   return (
     <div
-      className="rounded-2xl border bg-white p-5"
+      className="rounded-lg border bg-white p-5"
       style={{ borderColor: "var(--line)" }}
     >
       <div className="flex items-center justify-between mb-5">
@@ -361,7 +361,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
   if (!orders || orders.length === 0) return null;
   return (
     <div
-      className="rounded-2xl border bg-white p-5"
+      className="rounded-lg border bg-white p-5"
       style={{ borderColor: "var(--line)" }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -390,7 +390,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
               style={{ borderBottom: i < orders.length - 1 ? "1px solid var(--line)" : "none" }}
             >
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[12px] font-bold"
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-[12px] font-bold"
                 style={{ background: sc.bg, color: sc.fg }}
               >
                 {(o.userName || o.userEmail || "?")[0].toUpperCase()}
@@ -529,7 +529,7 @@ export function OrderManage() {
       />
 
       {error && (
-        <div className="rounded-xl px-4 py-3 text-[13px]" style={{ background: "#FEF2F2", color: "#991B1B" }}>
+        <div className="rounded-lg px-4 py-3 text-[13px]" style={{ background: "#FEF2F2", color: "#991B1B" }}>
           {error}
         </div>
       )}
@@ -591,7 +591,7 @@ export function OrderManage() {
           </div>
 
           {/* ── Orders Table ── */}
-          <div className="rounded-2xl border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
             <div className="px-5 pt-5 pb-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="relative flex-1 max-w-sm w-full">
@@ -601,11 +601,11 @@ export function OrderManage() {
                     placeholder="Search orders..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-xl border bg-[var(--bg-soft)] pl-10 pr-4 py-2.5 text-[13px] outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand)]/20"
+                    className="w-full rounded-lg border bg-[var(--bg-soft)] pl-10 pr-4 py-2.5 text-[13px] outline-none transition-all focus:bg-white focus:ring-2 focus:ring-[var(--brand)]/20"
                     style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                   />
                 </div>
-                <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "var(--bg-soft)" }}>
+                <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: "var(--bg-soft)" }}>
                   {STATUS_OPTIONS.map((s) => (
                     <button
                       key={s}

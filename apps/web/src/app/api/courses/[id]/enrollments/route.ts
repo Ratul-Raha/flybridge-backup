@@ -69,7 +69,7 @@ export async function GET(
       );
       const completedQuizzes = p?.completedQuizzes ?? scores.length;
       const totalQuizzes = p?.totalQuizzes ?? totalLessons;
-      const completed = Boolean(p && (p.passed || quizAvg >= 100));
+      const completed = Boolean(p?.passed);
       const eligibleForCertificate = Boolean(
         p && p.passed && completedQuizzes === totalQuizzes
       );

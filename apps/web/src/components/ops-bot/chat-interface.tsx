@@ -69,7 +69,7 @@ export function OpsBotChat() {
 
   return (
     <div
-      className="flex flex-col h-[calc(100vh-120px)] rounded-2xl overflow-hidden border"
+      className="flex flex-col h-[calc(100vh-120px)] rounded-lg overflow-hidden border"
       style={{ borderColor: "var(--line)" }}
     >
       <ChatBody
@@ -113,7 +113,7 @@ export function OpsBotChat() {
         renderEmpty={({ send }) => (
           <div className="flex flex-col items-center justify-center h-full gap-6 py-6">
             <div
-              className="flex w-16 h-16 items-center justify-center rounded-2xl"
+              className="flex w-16 h-16 items-center justify-center rounded-lg"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(110,76,255,0.18), rgba(59,43,176,0.12))",

@@ -46,7 +46,7 @@ export function OpsBotWidget() {
     <div className="fixed bottom-5 right-5 z-[80] flex flex-col items-end" ref={rootRef}>
       {open && (
         <div
-          className="mb-3 flex w-[min(92vw,380px)] h-[min(62vh,540px)] flex-col overflow-hidden rounded-2xl border"
+          className="mb-3 flex w-[min(92vw,380px)] h-[min(62vh,540px)] flex-col overflow-hidden rounded-lg border"
           style={{
             borderColor: "var(--line)",
             background: "#fff",
@@ -91,7 +91,7 @@ export function OpsBotWidget() {
             renderEmpty={({ send }) => (
               <div className="flex flex-col gap-4 py-2">
                 <div
-                  className="max-w-[85%] rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-[13px] leading-[1.6]"
+                  className="max-w-[85%] rounded-lg rounded-tl-sm px-3.5 py-2.5 text-[13px] leading-[1.6]"
                   style={{
                     background: "#fff",
                     color: "var(--ink)",

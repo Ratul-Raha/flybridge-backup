@@ -108,7 +108,7 @@ export function CapabilitiesTab() {
         ].map((s) => (
           <div
             key={s.label}
-            className="flex items-center gap-2.5 rounded-xl border px-4 py-3"
+            className="flex items-center gap-2.5 rounded-lg border px-4 py-3"
             style={{ borderColor: "var(--line)", background: "#fff" }}
           >
             <span className="text-[20px] font-bold font-display" style={{ color: s.color }}>
@@ -129,7 +129,7 @@ export function CapabilitiesTab() {
             return (
               <div
                 key={f.name}
-                className="flex flex-col gap-2 rounded-xl border p-4"
+                className="flex flex-col gap-2 rounded-lg border p-4"
                 style={{ borderColor: "var(--line)" }}
               >
                 <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function CapabilitiesTab() {
             return (
               <div
                 key={tool.name}
-                className="rounded-xl border overflow-hidden"
+                className="rounded-lg border overflow-hidden"
                 style={{ borderColor: "var(--line)" }}
               >
                 {/* Tool header */}

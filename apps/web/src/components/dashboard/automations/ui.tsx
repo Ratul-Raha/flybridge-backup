@@ -21,7 +21,7 @@ export function SectionCard({
 }) {
   return (
     <div
-      className="rounded-[22px] border bg-white p-[clamp(18px,2.5vw,26px)]"
+      className="rounded-lg border bg-white p-[clamp(18px,2.5vw,26px)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
     >
       <div className="flex items-start justify-between gap-3 mb-4">
@@ -135,7 +135,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full rounded-[22px] bg-white p-6"
+        className="w-full rounded-lg bg-white p-6"
         style={{ maxWidth: width, border: "1px solid var(--line)" }}
         onClick={(e) => e.stopPropagation()}
       >

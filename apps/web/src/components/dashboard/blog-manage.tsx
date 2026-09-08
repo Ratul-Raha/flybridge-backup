@@ -64,7 +64,7 @@ const inputClass =
   "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30";
 
 const toolRowClass =
-  "flex flex-col gap-2 md:flex-row md:items-center border rounded-xl px-4 py-3 bg-white";
+  "flex flex-col gap-2 md:flex-row md:items-center border rounded-lg px-4 py-3 bg-white";
 const toolInputClass =
   "flex-1 text-[13.5px] rounded-lg border bg-white px-3.5 py-[9px] focus:outline-none focus:ring-2 focus:ring-brand-2/30";
 
@@ -281,7 +281,7 @@ export function BlogManage() {
       )}
 
       {formOpen && (
-        <div className="rounded-[14px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h2 className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
               {editingId ? "Edit blog post" : "New blog post"}
@@ -303,7 +303,7 @@ export function BlogManage() {
 
           {/* AI generation card */}
           {genOpen && !editingId && (
-            <div className="mb-6 rounded-[14px] border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(135deg, rgba(107,76,224,0.05), rgba(15,169,104,0.05))" }}>
+            <div className="mb-6 rounded-lg border p-5" style={{ borderColor: "var(--line)", background: "linear-gradient(135deg, rgba(107,76,224,0.05), rgba(15,169,104,0.05))" }}>
               <p className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--brand-2)" }}>
                 <Sparkles size={13} /> Draft with AI
               </p>
@@ -526,7 +526,7 @@ export function BlogManage() {
         </p>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="rounded-[14px] border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
             <div className="relative flex-1">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
               <input
@@ -550,7 +550,7 @@ export function BlogManage() {
             </select>
           </div>
 
-          <div className="rounded-[14px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
             {filtered.length === 0 ? (
               <div className="px-4 py-12 text-center text-[13.5px]" style={{ color: "var(--body)" }}>
                 No posts match your search or filters.

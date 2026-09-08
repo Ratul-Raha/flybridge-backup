@@ -26,7 +26,6 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
   const [seminar, setSeminar] = useState(initial);
   const [copied, setCopied] = useState(false);
   const [registering, setRegistering] = useState(false);
-  const [payNote, setPayNote] = useState(false);
 
   const upcoming = new Date(seminar.dateTime) >= new Date();
   const paid = seminar.type === "paid";
@@ -149,21 +148,14 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
             {upcoming ? (
               paid ? (
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPayNote(true)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                    style={{ background: "var(--brand)" }}
-                  >
-                    Buy now
-                  </button>
-                  {payNote && (
-                    <span className="text-[12.5px] max-w-[260px]" style={{ color: "var(--body)" }}>
-                      Payment for this seminar is coming soon — you can register for free once it launches.
-                    </span>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setRegistering(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "var(--brand)" }}
+                >
+                  Buy now{seminar.price ? ` · $${seminar.price}` : ""}
+                </button>
               ) : (
                 <button
                   type="button"

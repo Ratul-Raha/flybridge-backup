@@ -15,6 +15,7 @@ import {
   Trash2,
   ExternalLink,
   Pencil,
+  Download,
   Search,
   Folder,
   Star,
@@ -36,6 +37,7 @@ type ResourceItem = {
   access: "public" | "members";
   price: number;
   featured: boolean;
+  downloadCount: number;
 };
 
 type UploadedFile = {
@@ -183,7 +185,7 @@ function isValidUrl(url: string) {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_auto]";
+const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_72px_auto]";
 
 export function ResourceManage() {
   const { user } = useAuth();
@@ -264,6 +266,9 @@ export function ResourceManage() {
         break;
       case "largest":
         arr.sort((a, b) => b.fileSize - a.fileSize);
+        break;
+      case "downloads":
+        arr.sort((a, b) => b.downloadCount - a.downloadCount);
         break;
       default:
         arr.sort((a, b) => +new Date(b.releaseDate) - +new Date(a.releaseDate));
@@ -420,7 +425,7 @@ export function ResourceManage() {
       )}
 
       {formOpen && (
-        <div className="rounded-[14px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
           <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit resource" : "New resource"}
           </h2>
@@ -732,7 +737,7 @@ export function ResourceManage() {
 
           <div className="flex items-start gap-5">
             {/* Folder sidebar */}
-            <aside className="hidden lg:flex w-[220px] shrink-0 flex-col rounded-[14px] border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+            <aside className="hidden lg:flex w-[220px] shrink-0 flex-col rounded-lg border bg-white p-3" style={{ borderColor: "var(--line)" }}>
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] px-3 pb-2 pt-1" style={{ color: "#A6ADC0" }}>
                 Folders
               </p>
@@ -763,7 +768,7 @@ export function ResourceManage() {
             {/* File browser */}
             <div className="flex-1 min-w-0 flex flex-col gap-3">
               {/* Toolbar */}
-              <div className="rounded-[14px] border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
+              <div className="rounded-lg border bg-white p-3 flex flex-col md:flex-row gap-3" style={{ borderColor: "var(--line)" }}>
                 <div className="relative flex-1">
                   <Search
                     size={15}
@@ -815,12 +820,13 @@ export function ResourceManage() {
                     <option value="name-asc">Name (A–Z)</option>
                     <option value="name-desc">Name (Z–A)</option>
                     <option value="largest">Largest first</option>
+                    <option value="downloads">Most downloaded</option>
                   </select>
                 </div>
               </div>
 
               {/* List */}
-              <div className="rounded-[14px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+              <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
                 <div className={`hidden md:grid gap-3 px-4 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`} style={{ borderColor: "var(--line)" }}>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                     Name
@@ -836,6 +842,9 @@ export function ResourceManage() {
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                     Access
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    Downloads
                   </span>
                   <span />
                 </div>
@@ -892,6 +901,10 @@ export function ResourceManage() {
                                   <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
                                     {formatDate(r.releaseDate)}
                                   </span>
+                                  <span className="text-[11.5px] flex items-center gap-1" style={{ color: "var(--body)" }}>
+                                    <Download size={11} />
+                                    {r.downloadCount}
+                                  </span>
                                   <span
                                     className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
                                     style={
@@ -927,6 +940,11 @@ export function ResourceManage() {
                             >
                               {r.access === "members" ? "Members" : "Public"}
                             </span>
+                          </span>
+
+                          <span className="hidden md:flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--body)" }}>
+                            <Download size={13} />
+                            {r.downloadCount}
                           </span>
 
                           {/* Actions */}

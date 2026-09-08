@@ -49,14 +49,6 @@ export default function CertificatePage({
   }, [origin, issuedCertId, qrSrc]);
 
   const handleDownload = async () => {
-    // Record the issuance server-side without blocking the download.
-    if (courseId) {
-      fetch(`/api/courses/${courseId}/certificate`, {
-        method: "POST",
-        cache: "no-store",
-      }).catch(() => {});
-    }
-
     const el = captureRef.current;
     if (!el) return;
     setDownloading(true);
@@ -64,9 +56,17 @@ export default function CertificatePage({
     try {
       const firstName = (userName || "Student").trim().split(/\s+/)[0];
       await downloadCertificatePdf(el, `FlyBridge-Certificate-${firstName}.pdf`);
+      // Record the download only after the PDF was actually generated, so the
+      // counter reflects real downloads rather than clicks.
+      if (courseId) {
+        fetch(`/api/courses/${courseId}/certificate`, {
+          method: "POST",
+          cache: "no-store",
+        }).catch(() => {});
+      }
     } catch {
       setDownloadError(
-        "Sorry, the PDF could not be generated in your browser. Please try the browser's print dialog (Ctrl/Cmd + P and choose Save as PDF) as a fallback, or try a different browser."
+        "The PDF could not be generated in your browser. On iPhone/Safari, open the Share menu and choose \"Print\" or \"Save to Files\". Otherwise try a different browser."
       );
     } finally {
       setDownloading(false);

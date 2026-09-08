@@ -10,6 +10,40 @@ import { jsPDF } from "jspdf";
 export const CERT_CAPTURE_WIDTH = 1000;
 export const CERT_ASPECT = 1.55;
 
+function isIOSDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" &&
+      typeof navigator.maxTouchPoints === "number" &&
+      navigator.maxTouchPoints > 1)
+  );
+}
+
+function savePdf(pdf: jsPDF, fileName: string): void {
+  const output = pdf.output("bloburl");
+  const url = typeof output === "string" ? output : String(output);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // iOS Safari ignores the `download` attribute on anchors, so the click above
+  // silently does nothing on iPhone/iPad. Opening the PDF blob in a new tab is
+  // the reliable path there: Safari shows the PDF and the user taps the share
+  // button -> "Save to Files". Desktop and Android browsers just download via
+  // the anchor and the extra tab is skipped.
+  if (isIOSDevice()) {
+    window.setTimeout(() => {
+      window.open(url, "_blank");
+    }, 600);
+  }
+}
+
 export async function downloadCertificatePdf(
   el: HTMLElement,
   fileName: string
@@ -36,5 +70,5 @@ export async function downloadCertificatePdf(
     compress: true,
   });
   pdf.addImage(imgData, "PNG", 0, 0, pageWidthMm, pageHeightMm, undefined, "FAST");
-  pdf.save(fileName);
+  savePdf(pdf, fileName);
 }

@@ -158,7 +158,7 @@ export function ReadinessManage() {
 
       {/* Toolbar */}
       <div
-        className="rounded-[14px] border bg-white p-3 flex flex-col lg:flex-row gap-3"
+        className="rounded-lg border bg-white p-3 flex flex-col lg:flex-row gap-3"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="relative flex-1">
@@ -225,7 +225,7 @@ export function ReadinessManage() {
       ) : (
         <>
           {runs.length === 0 ? (
-            <div className="px-5 py-14 text-center rounded-[14px] border bg-white" style={{ borderColor: "var(--line)" }}>
+            <div className="px-5 py-14 text-center rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
               <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
                 No readiness checks found
               </p>
@@ -234,7 +234,7 @@ export function ReadinessManage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-[14px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+            <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
               {/* Header */}
               <div className="hidden lg:grid grid-cols-[minmax(0,1.4fr)_80px_120px_140px_130px_60px] gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] items-center" style={{ borderColor: "var(--line)" }}>
                 {["Member", "Score", "Level", "Country", "Taken", ""].map((c) => (
