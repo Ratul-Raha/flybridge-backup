@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Loader2, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 
 type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string };
@@ -77,12 +78,8 @@ function emptyLesson(): Lesson {
 }
 
 async function uploadFile(file: File): Promise<string> {
-  const fd = new FormData();
-  fd.append("file", file);
-  const res = await fetch("/api/uploads?scope=courses", { method: "POST", body: fd });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? "Upload failed");
-  return data.asset?.url ?? "";
+  const res = await uploadToStorage(file, "courses");
+  return res.ref;
 }
 
 export function CourseManage() {

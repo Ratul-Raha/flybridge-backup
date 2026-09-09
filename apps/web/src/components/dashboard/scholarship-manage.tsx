@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import {
   Award,
@@ -94,31 +95,10 @@ function uploadImage(
   file: File,
   onProgress: (pct: number) => void
 ): Promise<UploadedImage> {
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/uploads?scope=scholarships");
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && e.total > 0) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      let data: { asset?: { url?: string; publicId?: string }; error?: string } = {};
-      try {
-        data = JSON.parse(xhr.responseText);
-      } catch {
-        data = {};
-      }
-      if (xhr.status >= 200 && xhr.status < 300 && data.asset?.url) {
-        resolve({ url: data.asset.url, publicId: data.asset.publicId ?? "" });
-      } else {
-        reject(new Error(data.error ?? "Upload failed"));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Upload failed"));
-    xhr.send(formData);
-  });
+  return uploadToStorage(file, "scholarships", "file", onProgress).then((r) => ({
+    url: r.ref,
+    publicId: r.key,
+  }));
 }
 
 function formatDate(iso: string) {

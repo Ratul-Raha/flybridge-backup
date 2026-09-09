@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { readSession } from "@/lib/auth/session";
+import { signMediaUrl } from "@/lib/storage";
 import { LessonPlayer } from "@/components/programs/lesson-player";
 
 function LockedScreen({
@@ -99,18 +100,42 @@ export default async function LearnPage({ params, searchParams }: Props) {
     );
   }
 
-  const lessons = (course.modules ?? []).flatMap((m) =>
-    (m.lessons ?? []).map((l) => ({
-      moduleTitle: m.title,
-      title: l.title,
-      duration: l.duration ?? "",
-      videoUrl: l.videoUrl ?? "",
-      pdfUrl: l.pdfUrl ?? "",
-    }))
+  const lessons = await Promise.all(
+    (course.modules ?? []).flatMap((m) =>
+      (m.lessons ?? []).map(async (l) => ({
+        moduleTitle: m.title,
+        title: l.title,
+        duration: l.duration ?? "",
+        videoUrl: await signMediaUrl(l.videoUrl),
+        pdfUrl: await signMediaUrl(l.pdfUrl),
+      }))
+    )
   );
 
   const raw = Number.parseInt(searchParams.lesson ?? "0", 10);
   const initialIndex = Number.isNaN(raw) ? 0 : Math.min(Math.max(raw, 0), Math.max(lessons.length - 1, 0));
+
+  const signedModules = await Promise.all(
+    (course.modules ?? []).map(async (m) => ({
+      title: m.title,
+      lessons: await Promise.all(
+        (m.lessons ?? []).map(async (l) => ({
+          title: l.title,
+          duration: l.duration ?? "",
+          videoUrl: await signMediaUrl(l.videoUrl),
+          pdfUrl: await signMediaUrl(l.pdfUrl),
+        }))
+      ),
+    }))
+  );
+
+  const signedBooks = await Promise.all(
+    (course.books ?? []).map(async (b) => ({
+      title: b.title,
+      description: b.description ?? "",
+      pdfUrl: await signMediaUrl(b.pdfUrl),
+    }))
+  );
 
   return (
     <LessonPlayer
@@ -119,20 +144,8 @@ export default async function LearnPage({ params, searchParams }: Props) {
         slug: course.slug,
         title: course.title,
         image: course.image ?? null,
-        modules: (course.modules ?? []).map((m) => ({
-          title: m.title,
-          lessons: (m.lessons ?? []).map((l) => ({
-            title: l.title,
-            duration: l.duration ?? "",
-            videoUrl: l.videoUrl ?? "",
-            pdfUrl: l.pdfUrl ?? "",
-          })),
-        })),
-        books: (course.books ?? []).map((b) => ({
-          title: b.title,
-          description: b.description ?? "",
-          pdfUrl: b.pdfUrl,
-        })),
+        modules: signedModules,
+        books: signedBooks,
       }}
       initialIndex={initialIndex}
       lessons={lessons}

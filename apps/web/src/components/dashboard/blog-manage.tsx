@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/auth-context";
+import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { MarkdownEditor } from "@/components/blogs/markdown-editor";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
@@ -44,6 +45,7 @@ type FormState = {
   category: string;
   author: string;
   cover: string;
+  coverPublicId: string | null;
   featured: boolean;
   published: boolean;
 };
@@ -56,6 +58,7 @@ const emptyForm: FormState = {
   category: BLOG_CATEGORIES[0],
   author: "",
   cover: "",
+  coverPublicId: null,
   featured: false,
   published: false,
 };
@@ -134,6 +137,7 @@ export function BlogManage() {
       category: b.category ?? BLOG_CATEGORIES[0],
       author: b.author ?? "",
       cover: b.cover ?? "",
+      coverPublicId: b.coverPublicId ?? null,
       featured: b.featured ?? false,
       published: b.published ?? false,
     });
@@ -151,12 +155,8 @@ export function BlogManage() {
     setError(null);
     setUploadingCover(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/uploads?scope=blogs", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setForm((f) => ({ ...f, cover: data.asset?.url ?? "" }));
+      const res = await uploadToStorage(file, "blogs");
+      setForm((f) => ({ ...f, cover: res.ref, coverPublicId: res.key }));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -188,6 +188,7 @@ export function BlogManage() {
         category: data.category ?? BLOG_CATEGORIES[0],
         author: data.author ?? user?.name ?? "",
         cover: "",
+        coverPublicId: null,
         featured: false,
         published: false,
       });
@@ -224,8 +225,9 @@ export function BlogManage() {
           content: form.content,
           category: form.category,
           author: form.author,
-          cover: form.cover,
-          featured: form.featured,
+cover: form.cover,
+      coverPublicId: form.coverPublicId,
+      featured: form.featured,
           published: form.published,
         }),
       });

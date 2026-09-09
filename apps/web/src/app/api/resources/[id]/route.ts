@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { isResourceCategory } from "@/lib/resource-categories";
-import { destroyAsset } from "@/lib/cloudinary";
+import { deleteMediaRef } from "@/lib/storage";
 
 function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
@@ -133,10 +133,10 @@ export async function DELETE(
     }
 
     if (resource.publicId) {
-      await destroyAsset(resource.publicId, resource.fileType);
+      await deleteMediaRef(resource.publicId, resource.fileType);
     }
     if (resource.thumbnailPublicId) {
-      await destroyAsset(resource.thumbnailPublicId, "image");
+      await deleteMediaRef(resource.thumbnailPublicId, "image");
     }
 
     return NextResponse.json({ ok: true });

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 import {
@@ -96,52 +97,23 @@ function fileTypeMeta(fileType: string) {
   return FILE_TYPE_META[fileType] ?? FILE_TYPE_META.other;
 }
 
-function fileTypeFromUpload(asset: {
-  resourceType?: string;
-  format?: string;
-  fileName?: string;
-}): string {
-  const format = (asset.format ?? "").toLowerCase();
-  if (asset.resourceType === "image") return "image";
-  if (asset.resourceType === "video") return "video";
-  if (format === "pdf") return "pdf";
-  if (["mp3", "wav", "m4a", "aac"].includes(format)) return "audio";
+function fileTypeFromName(name: string): string {
+  if (/\.(png|jpe?g|webp|gif|svg)$/i.test(name)) return "image";
+  if (/\.(mp4|mov|webm)$/i.test(name)) return "video";
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (ext === "pdf") return "pdf";
+  if (["mp3", "wav", "m4a", "aac"].includes(ext)) return "audio";
   return "other";
 }
 
-function uploadFile(file: File, onProgress: (pct: number) => void): Promise<UploadedFile> {
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/uploads");
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && e.total > 0) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      let data: { asset?: unknown; error?: string } = {};
-      try {
-        data = JSON.parse(xhr.responseText);
-      } catch {
-        data = {};
-      }
-      if (xhr.status >= 200 && xhr.status < 300 && data.asset) {
-        const a = data.asset as any;
-        resolve({
-          url: a.url,
-          publicId: a.publicId,
-          fileName: file.name,
-          fileSize: a.bytes ?? file.size,
-          fileType: fileTypeFromUpload(a),
-        });
-      } else {
-        reject(new Error(data.error ?? "Upload failed"));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Upload failed"));
-    xhr.send(formData);
-  });
+function uploadFile(file: File, use: "file" | "thumbnail", onProgress: (pct: number) => void): Promise<UploadedFile> {
+  return uploadToStorage(file, "resources", use, onProgress).then((r) => ({
+    url: r.ref,
+    publicId: r.key,
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: fileTypeFromName(file.name),
+  }));
 }
 
 function formatBytes(bytes: number) {
@@ -165,7 +137,8 @@ function formatDate(iso: string) {
 }
 
 function fileHref(r: ResourceItem) {
-  if (r.fileType === "link" || r.fileType === "image" || r.fileType === "video") return r.fileUrl;
+  if (r.fileType === "link") return r.fileUrl;
+  if ((r.fileType === "image" || r.fileType === "video") && !r.fileUrl.startsWith("s3://")) return r.fileUrl;
   return `/api/resources/${r.id}/file`;
 }
 
@@ -331,7 +304,7 @@ export function ResourceManage() {
     setUploadingFile(target);
     setUploadProgress(0);
     try {
-      const uploaded = await uploadFile(file, setUploadProgress);
+      const uploaded = await uploadFile(file, target === "thumb" ? "thumbnail" : "file", setUploadProgress);
       if (target === "file") {
         setForm((f) => ({ ...f, file: uploaded }));
       } else {

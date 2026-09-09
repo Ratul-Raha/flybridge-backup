@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSession } from "@/lib/auth/session";
-import { destroyAsset } from "@/lib/cloudinary";
+import { deleteMediaRef } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   const session = await readSession();
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!publicId) {
       return NextResponse.json({ error: "publicId is required" }, { status: 400 });
     }
-    await destroyAsset(publicId, typeof body.resourceType === "string" ? body.resourceType : undefined);
+    await deleteMediaRef(publicId, typeof body.resourceType === "string" ? body.resourceType : undefined);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("uploads delete error", error);

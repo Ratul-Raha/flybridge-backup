@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Blog, type BlogDoc } from "@/lib/models/blog";
-import { destroyAsset } from "@/lib/cloudinary";
+import { deleteMediaRef } from "@/lib/storage";
 
 function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
@@ -85,7 +85,7 @@ export async function PATCH(
     if (typeof body.cover === "string") {
       // Clean up old cover if switching
       if (blog.cover && body.cover.trim() !== blog.cover && blog.coverPublicId) {
-        await destroyAsset(blog.coverPublicId, "image").catch(() => {});
+        await deleteMediaRef(blog.coverPublicId, "image").catch(() => {});
       }
       blog.cover = body.cover.trim() || undefined;
     }
@@ -119,7 +119,7 @@ export async function DELETE(
     if (!blog) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     if (blog.coverPublicId) {
-      await destroyAsset(blog.coverPublicId, "image").catch(() => {});
+      await deleteMediaRef(blog.coverPublicId, "image").catch(() => {});
     }
 
     return NextResponse.json({ ok: true });

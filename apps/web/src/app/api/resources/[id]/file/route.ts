@@ -5,6 +5,7 @@ import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { Order } from "@/lib/models/order";
 import { assertSafeFetchUrl, assertSafeRedirectUrl } from "@/lib/url-safety";
+import { isS3Ref, getS3Object } from "@/lib/storage";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -73,23 +74,6 @@ export async function GET(
       return NextResponse.redirect(resource.fileUrl);
     }
 
-    try {
-      await assertSafeFetchUrl(resource.fileUrl);
-    } catch {
-      return NextResponse.json({ error: "Unsafe file URL" }, { status: 400 });
-    }
-
-    if (session?.userId) {
-      ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
-        console.error("resource download tracking error", e)
-      );
-    }
-
-    const upstream = await fetch(resource.fileUrl, { cache: "no-store", redirect: "error" });
-    if (!upstream.ok || !upstream.body) {
-      return NextResponse.json({ error: "File unavailable" }, { status: 502 });
-    }
-
     const fileName = resource.fileName || `download.${extOf(resource.fileUrl)}`;
     const ext = extOf(fileName);
     const mime = MIME[ext] ?? "application/octet-stream";
@@ -103,9 +87,43 @@ export async function GET(
       "Content-Disposition",
       `${disposition}; filename="${asciiSafe(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
     );
+    headers.set("Cache-Control", "public, max-age=3600");
+
+    if (session?.userId) {
+      ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
+        console.error("resource download tracking error", e)
+      );
+    }
+
+    // New private S3 storage — pipe the object stream straight through.
+    if (isS3Ref(resource.fileUrl)) {
+      try {
+        const { stream, contentLength, contentType } = await getS3Object(resource.fileUrl);
+        if (!stream) {
+          return NextResponse.json({ error: "File unavailable" }, { status: 502 });
+        }
+        if (contentType) headers.set("Content-Type", contentType);
+        if (contentLength) headers.set("Content-Length", String(contentLength));
+        return new Response(stream, { status: 200, headers });
+      } catch (error) {
+        console.error("resource S3 file GET error", error);
+        return NextResponse.json({ error: "File unavailable" }, { status: 502 });
+      }
+    }
+
+    try {
+      await assertSafeFetchUrl(resource.fileUrl);
+    } catch {
+      return NextResponse.json({ error: "Unsafe file URL" }, { status: 400 });
+    }
+
+    const upstream = await fetch(resource.fileUrl, { cache: "no-store", redirect: "error" });
+    if (!upstream.ok || !upstream.body) {
+      return NextResponse.json({ error: "File unavailable" }, { status: 502 });
+    }
+
     const length = upstream.headers.get("content-length");
     if (length) headers.set("Content-Length", length);
-    headers.set("Cache-Control", "public, max-age=3600");
 
     return new Response(upstream.body, { status: 200, headers });
   } catch (error) {
