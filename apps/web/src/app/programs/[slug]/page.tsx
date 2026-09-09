@@ -964,6 +964,13 @@ export default async function ProgramPage({ params }: Props) {
     }),
   }));
 
+  const otherEnrollCounts = await CourseEnrollment.aggregate([
+    { $group: { _id: "$course", count: { $sum: 1 } } },
+  ]);
+  const otherEnrollmentMap = new Map(
+    otherEnrollCounts.map((r) => [r._id.toString(), r.count as number])
+  );
+
   const otherDbCourses = (
     await Course.find({
       slug: { $ne: params.slug },
@@ -971,24 +978,28 @@ export default async function ProgramPage({ params }: Props) {
     })
       .sort({ createdAt: -1 })
       .limit(4)
-  ).map((c) => ({
-    id: c._id.toString(),
-    slug: c.slug,
-    title: c.title,
-    badge: c.badge ?? "",
-    subtitle: c.subtitle ?? "",
-    description: c.description ?? "",
-    price: c.price ?? 0,
-    currency: c.currency ?? "USD",
-    image: c.image ?? null,
-    level: c.level ?? "",
-    upcoming: c.upcoming ?? false,
-    averageRating: c.averageRating ?? 0,
-    modules: (c.modules ?? []).map((m) => ({
-      title: m.title,
-      lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-    })),
-  })) as DbCourse[];
+  ).map((c) => {
+    const courseId = c._id.toString();
+    return {
+      id: courseId,
+      slug: c.slug,
+      title: c.title,
+      badge: c.badge ?? "",
+      subtitle: c.subtitle ?? "",
+      description: c.description ?? "",
+      price: c.price ?? 0,
+      currency: c.currency ?? "USD",
+      image: c.image ?? null,
+      level: c.level ?? "",
+      upcoming: c.upcoming ?? false,
+      averageRating: c.averageRating ?? 0,
+      enrollmentCount: otherEnrollmentMap.get(courseId) ?? 0,
+      modules: (c.modules ?? []).map((m) => ({
+        title: m.title,
+        lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+      })),
+    };
+  }) as DbCourse[];
 
   return (
     <div className="course-page">

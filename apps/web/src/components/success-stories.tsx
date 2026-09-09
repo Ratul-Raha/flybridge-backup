@@ -63,7 +63,7 @@ function ShieldIcon() {
   );
 }
 
-export function SuccessStories() {
+export function SuccessStories({ userCount = 10000 }: { userCount?: number }) {
   const VISIBLE = 4; // cards visible per "page" on large screens
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,7 +173,7 @@ export function SuccessStories() {
                 className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center font-mono text-[10px] font-semibold"
                 style={{ background: "var(--brand)", color: "#fff" }}
               >
-                10k+
+                {userCount >= 1000 ? `${(userCount / 1000).toFixed(userCount % 1000 === 0 ? 0 : 1)}k` : userCount}
               </div>
             </div>
             <span className="w-px h-9 shrink-0" style={{ background: "var(--line)" }} />
@@ -187,7 +187,7 @@ export function SuccessStories() {
                 <span className="text-[13px] font-bold ml-1.5" style={{ color: "var(--ink)" }}>4.8/5</span>
               </div>
               <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
-                Trusted by <span className="font-semibold" style={{ color: "var(--ink)" }}>10,000+</span> learners worldwide
+                Trusted by <span className="font-semibold" style={{ color: "var(--ink)" }}>{userCount.toLocaleString()}+</span> learners worldwide
               </p>
             </div>
           </div>

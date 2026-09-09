@@ -7,6 +7,8 @@ import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { TrackAccordion } from "@/components/programs/track-accordion";
 import { programs } from "@/lib/programs";
+import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,12 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
   const courses = await Course.find({
     $or: [{ published: true }, { upcoming: true }],
   }).sort({ createdAt: -1 });
+
+  const enrollCounts = await CourseEnrollment.aggregate([
+    { $group: { _id: "$course", count: { $sum: 1 } } },
+  ]);
+  const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+
   return courses.map((c) => ({
     id: c._id.toString(),
     slug: c.slug,
@@ -50,6 +58,7 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
     image: c.image ?? null,
     level: c.level ?? "",
     upcoming: c.upcoming ?? false,
+    enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
@@ -59,6 +68,7 @@ async function getPublishedCourses(): Promise<DbCourse[]> {
 
 export default async function ProgramsPage() {
   const dbCourses = await getPublishedCourses();
+  const totalUsers = await getTotalUsers();
   const hasDbCourses = dbCourses.length > 0;
   const visiblePrograms = programs.filter((p) => !(p.hasDb && hasDbCourses));
   const programCount = visiblePrograms.length + dbCourses.length;
@@ -139,7 +149,7 @@ export default async function ProgramsPage() {
                   </div>
                   <div>
                     <div className="text-[15px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
-                      10,000+ learners
+                      {formatUsersFull(totalUsers)} learners
                     </div>
                     <div className="text-[12px] mt-[5px]" style={{ color: "var(--body)" }}>
                       already building their journey abroad

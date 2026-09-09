@@ -188,6 +188,14 @@ function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }
         <span className="flex shrink-0 items-center gap-1.5">
           {(r.downloadCount ?? 0) > 0 && (r.downloadCount ?? 0) === topCount && <TrendingUp size={11} style={{ color: "#E08A17" }} />}
           <span
+            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+            style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
+            title="Total downloads"
+          >
+            <Download size={9} strokeWidth={2.6} />
+            {(r.downloadCount ?? 0).toLocaleString()}
+          </span>
+          <span
             className="rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold uppercase tracking-[0.08em]"
             style={{ background: "var(--bg-soft)", color: "var(--body)" }}
           >

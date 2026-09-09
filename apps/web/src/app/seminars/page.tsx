@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { SeminarsHero } from "@/components/seminars/seminars-hero";
 import { SeminarList } from "@/components/seminars/seminar-list";
+import { getTotalUsers } from "@/lib/site-stats";
 
 export const metadata: Metadata = {
   title: "Seminars | FlyBridge Education Group",
@@ -9,12 +10,14 @@ export const metadata: Metadata = {
     "Free live FlyBridge seminars on studying abroad, work permits and career guidance — plus recaps of recent sessions.",
 };
 
-export default function SeminarsPage() {
+export default async function SeminarsPage() {
+  const totalUsers = await getTotalUsers();
+
   return (
     <>
       <Nav />
       <main>
-        <SeminarsHero />
+        <SeminarsHero userCount={totalUsers} />
 
         <section className="px-[clamp(20px,4.5vw,56px)] pt-[70px] pb-[110px]">
           <div className="w-full max-w-[1320px] mx-auto">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { NetworkMap } from "@/components/network-map";
 import { UniversityNetwork } from "@/components/partnership/university-network";
+import { getTotalUsers } from "@/lib/site-stats";
 
 export const metadata: Metadata = {
   title: "Partnership | FlyBridge Education Group",
@@ -92,7 +93,9 @@ const workflowSteps = [
   },
 ];
 
-export default function PartnershipPage() {
+export default async function PartnershipPage() {
+  const totalUsers = await getTotalUsers();
+
   return (
     <>
       <Nav />
@@ -246,7 +249,7 @@ export default function PartnershipPage() {
                   </svg>
                 </span>
                 <div>
-                  <div className="font-display font-semibold text-[16px] leading-none" style={{ color: "var(--ink)" }}>10,000+</div>
+                  <div className="font-display font-semibold text-[16px] leading-none" style={{ color: "var(--ink)" }}>{totalUsers.toLocaleString()}+</div>
                   <div className="font-mono text-[9px] tracking-[1px] mt-[5px] uppercase" style={{ color: "var(--body)" }}>Learners guided</div>
                 </div>
               </div>

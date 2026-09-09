@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Plane } from "lucide-react";
 
-const STATS = [
-  { value: "10,000+", label: "Learners guided" },
+const STATS_BASE = [
+  { label: "Learners guided" },
   { value: "120+", label: "Sessions hosted" },
   { value: "15+", label: "Countries covered" },
 ];
@@ -129,7 +129,12 @@ function DepartureBoard() {
   );
 }
 
-export function SeminarsHero() {
+export function SeminarsHero({ userCount = 10000 }: { userCount?: number }) {
+  const stats = [
+    { value: `${userCount.toLocaleString()}+`, label: STATS_BASE[0].label },
+    ...STATS_BASE.slice(1),
+  ];
+
   return (
     <section className="relative overflow-hidden pt-[clamp(120px,15vh,150px)]">
       {/* Background image + overlays */}
@@ -191,7 +196,7 @@ export function SeminarsHero() {
 
           {/* Stats */}
           <div className="mt-9 flex max-w-[560px] flex-wrap items-center gap-x-8 gap-y-5">
-            {STATS.map((stat, i) => (
+            {stats.map((stat, i) => (
               <div key={stat.label} className="flex items-center gap-x-8">
                 <div>
                   <div
@@ -204,7 +209,7 @@ export function SeminarsHero() {
                     {stat.label}
                   </div>
                 </div>
-                {i < STATS.length - 1 && (
+                {i < stats.length - 1 && (
                   <span className="hidden h-9 w-px sm:block" style={{ background: "rgba(255,255,255,0.3)" }} />
                 )}
               </div>

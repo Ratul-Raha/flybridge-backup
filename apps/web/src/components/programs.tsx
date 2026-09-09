@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
+import { CourseEnrollment } from "@/lib/models/enrollment";
 import { programs } from "@/lib/programs";
 import { ProgramCard } from "./program-card";
 import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
@@ -11,6 +12,12 @@ async function getDbCourses(): Promise<DbCourse[]> {
     const courses = await Course.find({
       $or: [{ published: true }, { upcoming: true }],
     }).sort({ createdAt: -1 });
+
+    const enrollCounts = await CourseEnrollment.aggregate([
+      { $group: { _id: "$course", count: { $sum: 1 } } },
+    ]);
+    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+
     return courses.map((c) => ({
       id: c._id.toString(),
       slug: c.slug,
@@ -23,6 +30,7 @@ async function getDbCourses(): Promise<DbCourse[]> {
       image: c.image ?? null,
       level: c.level ?? "",
       upcoming: c.upcoming ?? false,
+      enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
       modules: (c.modules ?? []).map((m) => ({
         title: m.title,
         lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),

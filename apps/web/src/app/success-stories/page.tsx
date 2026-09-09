@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { HeroVideo, VideoGallery, type StoryVideo } from "@/components/story-video";
 import { SuccessStoriesGrid } from "@/components/success-stories-grid";
+import { getTotalUsers } from "@/lib/site-stats";
 
 export const metadata: Metadata = {
   title: "Success Stories | FlyBridge",
@@ -69,7 +70,9 @@ const outcomes = [
   },
 ];
 
-export default function SuccessStoriesPage() {
+export default async function SuccessStoriesPage() {
+  const totalUsers = await getTotalUsers();
+
   return (
     <>
       <Nav />
@@ -127,7 +130,7 @@ export default function SuccessStoriesPage() {
 
               <div className="flex items-center gap-6 mt-[38px]">
                 {[
-                  { value: "10,000+", label: "Learners guided" },
+                  { value: `${totalUsers.toLocaleString()}+`, label: "Learners guided" },
                   { value: "40+", label: "University partners" },
                   { value: "83%", label: "Success rate" },
                   { value: "4.8/5", label: "Average rating" },

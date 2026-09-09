@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Plane } from "lucide-react";
+import { getTotalUsers } from "@/lib/site-stats";
 
 export const metadata: Metadata = {
   title: "About | FlyBridge Education Group",
@@ -14,6 +15,14 @@ const stats = [
   { value: "10,000+", label: "Students supported" },
   { value: "02", label: "Global strategic partners" },
 ];
+
+function buildStats(totalUsers: number) {
+  return stats.map((s) =>
+    s.label === "Students supported"
+      ? { value: `${totalUsers.toLocaleString()}+`, label: s.label }
+      : s
+  );
+}
 
 const ecosystem = [
   {
@@ -95,7 +104,10 @@ function RouteConnector() {
   );
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const totalUsers = await getTotalUsers();
+  const statsRows = buildStats(totalUsers);
+
   return (
     <>
       <Nav />
@@ -180,7 +192,7 @@ export default function AboutPage() {
                 </span>
               </div>
               <div>
-                {stats.map((s, i) => (
+                {statsRows.map((s, i) => (
                   <div key={s.label} className="flex items-center gap-5 px-6 py-[18px]" style={{ borderTop: i === 0 ? undefined : "1px solid var(--line)" }}>
                     <span className="font-mono text-[10px] uppercase tracking-[0.25em]" style={{ color: "var(--body)" }}>
                       {s.label}

@@ -6,10 +6,13 @@ import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
 import { PromoPopup } from "@/components/promo-popup";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
+import { getTotalUsers } from "@/lib/site-stats";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const totalUsers = await getTotalUsers();
+
   return (
     <>
       <Nav />
@@ -17,11 +20,11 @@ export default function HomePage() {
         <ScholarshipTicker href="/scholarships" />
       </div>
       <main>
-        <Hero />
+        <Hero userCount={totalUsers} />
         <PartnersStrip />
         <Programs />
         <PublicLeaderboard />
-        <SuccessStories />
+        <SuccessStories userCount={totalUsers} />
       </main>
       <PromoPopup />
     </>

@@ -64,7 +64,7 @@ function CourseCard({ card }: { card: typeof courseCards[0] }) {
   );
 }
 
-export function Hero() {
+export function Hero({ userCount = 10000 }: { userCount?: number }) {
   const [videoOpen, setVideoOpen] = useState(false);
   return (
     <>
@@ -160,7 +160,7 @@ export function Hero() {
                 </div>
                 <div>
                   <div className="text-[14.5px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
-                    10,000+
+                    {userCount.toLocaleString()}+
                   </div>
                   <div className="text-[11.5px] mt-[4px]" style={{ color: "var(--body)" }}>
                     people have already joined
