@@ -41,6 +41,8 @@ type AuthContextValue = {
     signOut: () => Promise<void>;
     refreshSession: () => Promise<void>;
   };
+const SIGNUP_SOURCE_KEY = "flybridge_signup_source";
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -74,13 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pendingSourceRef = useRef<string | null>(null);
 
   const exchangeToken = useCallback(
-    async (idToken: string): Promise<string | null> => {
+    async (idToken: string, source: string | null): Promise<string | null> => {
       setError(null);
       try {
         const res = await fetch("/api/auth/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken, source: pendingSourceRef.current }),
+          body: JSON.stringify({ idToken, source }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(
     async (source?: string | null): Promise<string | null> => {
       setError(null);
+      pendingSourceRef.current = source ?? null;
       if (!auth) {
         setError("Firebase is not configured. Add your Firebase config to apps/web/.env.local");
         return null;
@@ -112,11 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const credential = await signInWithPopup(auth, provider);
         const idToken = await credential.user.getIdToken();
-        return exchangeToken(idToken);
+        return exchangeToken(idToken, source ?? null);
       } catch (e) {
         const code = (e as { code?: string })?.code ?? "";
         if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
-          pendingSourceRef.current = source ?? null;
+          // Redirects reload the page, so the source must survive in sessionStorage
+          // (the ref is reset on remount). getRedirectResult clears it afterwards.
+          if (source) sessionStorage.setItem(SIGNUP_SOURCE_KEY, source);
           await signInWithRedirect(auth, new GoogleAuthProvider());
           return null;
         }
@@ -133,8 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getRedirectResult(auth)
       .then(async (result) => {
         if (cancelled || !result?.user) return;
+        const stored = sessionStorage.getItem(SIGNUP_SOURCE_KEY);
+        const source = stored ?? pendingSourceRef.current;
+        sessionStorage.removeItem(SIGNUP_SOURCE_KEY);
+        pendingSourceRef.current = null;
         const idToken = await result.user.getIdToken();
-        exchangeToken(idToken);
+        exchangeToken(idToken, source);
       })
       .catch((e) => {
         const code = (e as { code?: string })?.code ?? "";

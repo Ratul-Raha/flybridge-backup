@@ -12,25 +12,26 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { mode?: string; next?: string; source?: string };
+  searchParams: { mode?: string; next?: string; source?: string; utm_source?: string; ref?: string };
 }) {
-  const { mode, next, source } = searchParams;
+  const { mode, next, source, utm_source, ref } = searchParams;
   const safeNext = next?.startsWith("/") && !next.startsWith("//") ? next : null;
 
-  const safeSource =
-    typeof source === "string" && source.length > 0 && source.length <= 60
-      ? source
+  const cleanSource = (value: string | undefined): string | null =>
+    typeof value === "string" && value.trim().length > 0 && value.trim().length <= 60
+      ? value.trim()
       : null;
 
-  const derivedSource = safeSource
-    ? safeSource
-    : safeNext?.startsWith("/dashboard/scholarships")
+  const derivedSource = cleanSource(source) ??
+    cleanSource(utm_source) ??
+    cleanSource(ref) ??
+    (safeNext?.startsWith("/dashboard/scholarships")
       ? "scholarship"
       : safeNext?.startsWith("/dashboard/courses") || safeNext?.startsWith("/courses")
         ? "course"
         : safeNext?.startsWith("/dashboard/resources") || safeNext?.startsWith("/resources")
           ? "resource"
-          : "direct";
+          : "direct");
 
   return (
     <main className="min-h-screen flex flex-col items-center px-[clamp(20px,4.5vw,56px)] pt-[clamp(96px,14vh,150px)] pb-16">

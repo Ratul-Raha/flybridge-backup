@@ -564,7 +564,7 @@ export function SignInGate({ onSignedIn }: { onSignedIn: () => void }) {
     if (busy) return;
     setBusy(true);
     try {
-      const email = await signInWithGoogle();
+      const email = await signInWithGoogle("readiness");
       if (email) onSignedIn();
     } finally {
       setBusy(false);

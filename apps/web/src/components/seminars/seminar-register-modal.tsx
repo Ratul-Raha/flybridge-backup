@@ -87,7 +87,7 @@ export function SeminarRegisterModal({
       }
       return;
     }
-    const email = await signInWithGoogle();
+    const email = await signInWithGoogle("seminar");
     if (!email) return;
     const status = await register(email);
     if (status === "registered") router.push(`/dashboard/seminars/mine/${seminar.id}`);
