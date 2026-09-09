@@ -23,7 +23,7 @@ const automationRunSchema = new Schema(
     eventLog: { type: Schema.Types.ObjectId, ref: "EventLog" },
     status: {
       type: String,
-      enum: ["completed", "completed_with_errors", "failed"],
+      enum: ["scheduled", "completed", "completed_with_errors", "failed"],
       default: "completed",
     },
     steps: { type: [runStepSchema], default: [] },

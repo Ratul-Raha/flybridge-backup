@@ -142,6 +142,35 @@ function firstName(name?: string | null): string {
   return first || "there";
 }
 
+function paragraph(text: string): string {
+  return `<tr><td style="padding:14px 40px 0;"><p style="margin:0;color:#4A5570;font-size:14px;line-height:1.7;">${esc(text)}</p></td></tr>`;
+}
+
+function sectionLabel(text: string): string {
+  return `<tr><td style="padding:26px 40px 0;"><p style="margin:0;color:#122043;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;">${esc(text)}</p></td></tr>`;
+}
+
+function checklist(items: string[]): string {
+  const rows = items
+    .map(
+      (item) =>
+        `<tr><td style="padding:0 0 13px;"><p style="margin:0;color:#4A5570;font-size:14px;line-height:1.65;"><span style="color:#0FA968;font-weight:800;">&#10003;</span>&nbsp;&nbsp;${esc(item)}</p></td></tr>`
+    )
+    .join("");
+  return `<tr><td style="padding:20px 40px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:16px;border:1px solid #E5EAF3;background:#F7FAFC;">
+      <tr><td style="padding:22px 24px;">${rows}</td></tr>
+    </table>
+  </td></tr>`;
+}
+
+function signoff(name: string, title?: string): string {
+  const titleLine = title
+    ? `<br/><span style="color:#8B93A7;">${esc(title)}</span>`
+    : "";
+  return `<tr><td style="padding:24px 40px 0;"><p style="margin:0;color:#4A5570;font-size:13px;line-height:1.6;">${esc(name)}${titleLine}</p></td></tr>`;
+}
+
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "registration-confirmation",
@@ -455,6 +484,151 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
             <p style="margin:0;color:#8B93A7;font-size:12px;line-height:1.7;">Questions? Just reply to this email — our team is happy to help you get started.</p>
           </td></tr>` +
           `<tr><td style="height:44px;"></td></tr>`
+      );
+    },
+  },
+  {
+    id: "nurture-welcome",
+    name: "Welcome to Flybridge",
+    description: "Instant welcome after signup — ecosystem positioning with dashboard quick links.",
+    events: ["user.registered"],
+    subject: "Welcome to Flybridge Education Group! 🎓",
+    previewBody:
+      "Warm welcome + first steps: free foundation modules, IELTS study materials and the Study Abroad Readiness tool.",
+    html: (payload: EventPayload) => {
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      return shell(
+        textBlock(
+          "Welcome aboard",
+          `Hi ${esc(who)}, welcome to Flybridge Education Group!`,
+          "We are thrilled to have you as part of our global learning community. At Flybridge, our goal is simple: to help you master IELTS and guide you step-by-step toward studying in top international destinations like the UK, Canada, and Australia."
+        ) +
+          sectionLabel("What you can do right now on your dashboard") +
+          checklist([
+            "Explore our free foundation modules.",
+            "Access high-quality IELTS study materials and cheatsheets.",
+            "Assess your Study Abroad eligibility with our tools.",
+          ]) +
+          cta(`${SITE_URL}/dashboard`, "Log in to your dashboard") +
+          note("Log in to your account anytime at flybridgeedu.com/dashboard.") +
+          signoff("Md Rasel Ahammed", "Founder & CEO, Flybridge Education Group") +
+          spacer()
+      );
+    },
+  },
+  {
+    id: "nurture-course",
+    name: "Free Spoken & IELTS Foundation nudge",
+    description: "Day-3 nudge to enroll in the free Spoken & IELTS Foundation Course.",
+    events: ["user.registered"],
+    subject: "Have you claimed your free IELTS Spoken & Foundation Course?",
+    previewBody: "Reminds the student to enroll in the free course and lists the benefits.",
+    html: (payload: EventPayload) => {
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      return shell(
+        textBlock(
+          "A quick check-in",
+          `Hi ${esc(who)}, have you claimed your free course yet?`,
+          "Have you enrolled in our Free Spoken & IELTS Foundation Course? If you haven't started, you're missing out on structured lessons designed to build your core grammar, fluency, and test-taking strategies."
+        ) +
+          sectionLabel("Why enroll today?") +
+          checklist([
+            "100% Free self-paced video modules.",
+            "Practical techniques for Reading, Listening, Speaking, and Writing.",
+            "Earn a Certificate upon passing your quizzes!",
+          ]) +
+          cta(`${SITE_URL}/programs/easy-smart-spoken-english`, "Enroll in the Free Course Now") +
+          note("(If you've already enrolled, keep going! Lesson 2 is waiting for you.)") +
+          signoff("Best,", "Flybridge Academic Team") +
+          spacer()
+      );
+    },
+  },
+  {
+    id: "nurture-resources",
+    name: "Free resources & practice sheets",
+    description: "Day-6 push for the free IELTS practice resources inside the student portal.",
+    events: ["user.registered"],
+    subject: "Free Download: Essential IELTS Reading & Speaking Practice Sheets 📚",
+    previewBody:
+      "Curated practice workbooks and strategy guides with a download CTA.",
+    html: (payload: EventPayload) => {
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      return shell(
+        textBlock(
+          "Smart preparation",
+          `Hi ${esc(who)}, practice with the right materials`,
+          "Smart preparation is all about practicing with the right materials. We have curated free IELTS practice workbooks, vocabulary sheets, and strategy frameworks inside your student portal."
+        ) +
+          sectionLabel("Featured Resources Available Now") +
+          checklist([
+            "IELTS Reading Pattern Recognition Guide",
+            "Speaking Part 2 & 3 Cue Card Templates",
+            "Listening Keyword Location Techniques",
+          ]) +
+          cta(`${SITE_URL}/resources`, "Access & Download Your Free Resources") +
+          note("Download them today and practice alongside your daily study schedule.") +
+          signoff("Happy Learning,", "Flybridge Education Group") +
+          spacer()
+      );
+    },
+  },
+  {
+    id: "nurture-readiness",
+    name: "Study Abroad readiness assessment",
+    description: "Day-9 nudge to run the AI-powered Study Abroad Readiness Checker.",
+    events: ["user.registered"],
+    subject: "How ready are you to Study Abroad? (Check your Readiness Score) ✈️",
+    previewBody:
+      "Friendly nudge toward the AI Readiness Checker with a 'check now' CTA.",
+    html: (payload: EventPayload) => {
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      return shell(
+        textBlock(
+          "Study abroad",
+          `How ready are you, ${esc(who)}?`,
+          "Preparing for IELTS is only half the journey — the real goal is securing your place at a top foreign university."
+        ) +
+          paragraph("Have you checked your Study Abroad Readiness Score on Flybridge yet? Our AI-powered Readiness Checker evaluates your academic profile, country preferences, and budget to give you an instant assessment.") +
+          cta(`${SITE_URL}/readiness`, "Check Your Readiness Score Now") +
+          note("(Already completed your assessment? Great job! Our counselors will review your profile shortlists.)") +
+          signoff("Best regards,", "Flybridge International Advisory Team") +
+          spacer()
+      );
+    },
+  },
+  {
+    id: "nurture-certificate",
+    name: "Certificate motivation & completion push",
+    description: "Day-12 (or 50%+ progress) push to finish quizzes and earn the verified certificate.",
+    events: ["user.registered", "course.progress_updated"],
+    subject: "Earn your Official Flybridge Certificate of Completion! 🏆",
+    previewBody:
+      "Motivates completion with next steps and the resume-course CTA.",
+    html: (payload: EventPayload) => {
+      const u = (payload.user ?? {}) as UserPayload;
+      const who = firstName(u.name);
+      return shell(
+        textBlock(
+          "Your achievement",
+          `Show off your progress, ${esc(who)}!`,
+          "Did you know? Achieving a 60% pass mark or higher across your course quizzes unlocks your Official Flybridge Certificate of Completion!"
+        ) +
+          paragraph("Each certificate comes with a unique Verification ID and QR Code, making it a great addition to your professional profile or portfolio.") +
+          sectionLabel("Your Next Steps") +
+          checklist([
+            "Complete your remaining course lessons.",
+            "Pass the end-of-module quizzes with at least 60%.",
+            "Download your verified certificate directly from your dashboard!",
+          ]) +
+          cta(`${SITE_URL}/dashboard/courses/mine`, "Resume Course & Get Certified") +
+          note("Finish your course today and show off your achievement!") +
+          signoff("Warmly,", "Ahmed Rasel — Founder & CEO, Flybridge Education Group") +
+          spacer()
       );
     },
   },

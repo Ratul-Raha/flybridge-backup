@@ -1,6 +1,6 @@
 import type { EventName } from "@/lib/events/types";
 import { EVENT_NAMES } from "@/lib/events/types";
-import { MAX_DELAY_SECONDS, type AutomationGraph, type AutomationNode, type AutomationEdge } from "./types";
+import { MAX_DELAY_MS, type AutomationGraph, type AutomationNode, type AutomationEdge } from "./types";
 
 export function makeId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -87,9 +87,16 @@ export function graphValidationErrors(graph: AutomationGraph): string[] {
       if (actionType === "delay") {
         const duration = Number(node.data.duration ?? 0);
         if (!(duration > 0)) errors.push("A delay action needs a duration greater than zero.");
-        const seconds = duration * (node.data.unit === "seconds" ? 1 : 60);
-        if (seconds > MAX_DELAY_SECONDS) {
-          errors.push(`A delay can be at most ${MAX_DELAY_SECONDS} seconds (${MAX_DELAY_SECONDS / 60} minutes).`);
+        const unitMs =
+          node.data.unit === "seconds"
+            ? 1000
+            : node.data.unit === "hours"
+              ? 60 * 60 * 1000
+              : node.data.unit === "days"
+                ? 24 * 60 * 60 * 1000
+                : 60 * 1000;
+        if (duration * unitMs > MAX_DELAY_MS) {
+          errors.push("A delay can be at most 365 days.");
         }
       }
     }

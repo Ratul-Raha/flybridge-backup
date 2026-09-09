@@ -46,3 +46,17 @@ Atlas blocks unknown IPs. Add your current IP:
 - Dashboards: `/dashboard` (general user home), `/dashboard/seminars` (all / manage), `/dashboard/seminars/mine`, `/dashboard/courses`, `/dashboard/courses/mine`, `/dashboard/resources`, `/dashboard/resources/mine`, `/dashboard/settings` (profile settings), `/dashboard/moderator` (moderator+), `/dashboard/admin` (admin only)
 - General user dashboard has web and mobile versions; mobile renders as a bottom-tab app shell (`apps/web/src/components/dashboard/user/mobile-user-app.tsx`)
 - Admin can change roles/plans via the admin dashboard users table (writes directly to the `users` collection)
+
+## Automations (nurture email sequence)
+
+- **Seed on demand:** every visit to `/dashboard/admin/automations` runs `seedDefaultAutomations()` (`apps/web/src/lib/automation/seed.ts`). Seeded defaults never overwrite admin edits — an automation is only created if a doc with the same name doesn't exist yet.
+- **New seeded campaigns (active by default):**
+  - **12-day onboarding nurture** — one `user.registered` flow that sends: instant welcome → day-3 free-course nudge → day-6 free resources → day-9 readiness nudge → day-12 certificate push. Each step skips users who've already enrolled / downloaded / assessed / earned progress (DB-aware condition operators).
+  - **Certificate push at 50% progress** — fires on `course.progress_updated` when a learner's course progress crosses 50% and they don't have a certificate yet.
+  - Seeding also deactivates the legacy standalone **"Welcome email"** automation (replaced by the nurture's day-0 welcome) — admin can re-enable it from the UI.
+- **Day-level delays:** the Delay node now supports hours/days (up to 365 days). Delays ≤ 1 min run inline; longer delays persist a pending run (`AutomationPending`) that the cron resumes.
+- **Cron:** `vercel.json` runs `/api/cron/automations` daily (`0 0 * * *`). Guarded by `CRON_SECRET` (header `x-cron-secret` or `Authorization: Bearer <secret>`).
+  - Set `CRON_SECRET` in Vercel (and `.env.local` for local runs).
+  - Manual test: `curl -H "x-cron-secret: $CRON_SECRET" https://<site>/api/cron/automations`
+- **DB-aware condition operators** (evaluate against the payload's `user.id`): `has_enrolled` (value = course slug, optional), `has_resource_download`, `has_readiness_run`, `has_certificate`, `progress_gte`, `progress_lt`.
+- **New events:** `course.progress_updated` (emitted on quiz submit).

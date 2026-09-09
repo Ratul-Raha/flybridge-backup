@@ -9,7 +9,7 @@ import { renderTemplate } from "./template";
 import { emailTemplateById } from "./email-templates";
 import { pushToUsers } from "@/lib/push";
 import { assertSafeFetchUrl } from "@/lib/url-safety";
-import { MAX_DELAY_SECONDS, type AutomationNode, type RecipientSetting } from "./types";
+import { MAX_DELAY_MS, SYNC_DELAY_MAX_MS, type AutomationNode, type RecipientSetting } from "./types";
 import type { EventPayload } from "@/lib/events/types";
 
 export type ActionResult = {
@@ -123,10 +123,32 @@ async function actionSendNotification(
 async function actionDelay(node: AutomationNode): Promise<ActionResult> {
   const duration = Math.max(0, Number(node.data.duration ?? 0));
   if (duration <= 0) return { ok: false, error: "Delay duration must be greater than zero" };
-  const unit = node.data.unit === "seconds" ? 1000 : 60 * 1000;
-  const ms = Math.min(duration * unit, MAX_DELAY_SECONDS * 1000);
-  await new Promise((resolve) => setTimeout(resolve, ms));
-  return { ok: true, detail: { waitedMs: ms, duration, unit: node.data.unit ?? "minutes" } };
+  const unit = node.data.unit === "seconds"
+    ? 1000
+    : node.data.unit === "hours"
+      ? 60 * 60 * 1000
+      : node.data.unit === "days"
+        ? 24 * 60 * 60 * 1000
+        : 60 * 1000;
+  const ms = Math.min(duration * unit, MAX_DELAY_MS);
+
+  // Short delays (≤1 min) keep running synchronously inside the event request.
+  if (ms <= SYNC_DELAY_MAX_MS) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    return { ok: true, detail: { waitedMs: ms, duration, unit: node.data.unit ?? "minutes" } };
+  }
+
+  // Long delays can't block the request — the engine persists a scheduled run
+  // that the cron resumes when the wait elapses.
+  return {
+    ok: true,
+    detail: {
+      scheduled: true,
+      scheduleAt: new Date(Date.now() + ms).toISOString(),
+      duration,
+      unit: node.data.unit ?? "minutes",
+    },
+  };
 }
 
 async function actionWebhook(node: AutomationNode, payload: EventPayload): Promise<ActionResult> {

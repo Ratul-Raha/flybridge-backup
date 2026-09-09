@@ -8,6 +8,7 @@ import { QuizAttempt } from "@/lib/models/quiz-attempt";
 import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
 import type { QuizQuestion } from "@/lib/ai/quiz";
+import { emitEvent } from "@/lib/events/emit";
 
 /* ------------------------------------------------------------------ */
 /*  Short-answer grading helpers                                       */
@@ -267,6 +268,29 @@ export async function POST(
       },
       { upsert: true }
     );
+
+    void emitEvent(
+      "course.progress_updated",
+      {
+        user: {
+          id: session.userId,
+          name: session.name,
+          email: session.email,
+        },
+        course: {
+          id: course._id.toString(),
+          slug: course.slug,
+          title: course.title,
+        },
+        progress: {
+          overallPercentage: avgScore,
+          passed,
+          certificateIssued: false,
+        },
+      }
+    ).catch((error) => {
+      console.error("course.progress_updated emit error", error);
+    });
 
     return NextResponse.json({ score, totalQuestions, correctCount, results });
   } catch (error) {

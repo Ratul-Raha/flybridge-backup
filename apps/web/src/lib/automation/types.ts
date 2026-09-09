@@ -10,13 +10,24 @@ export type ConditionOperator =
   | "exists"
   | "not_exists"
   | "gt"
-  | "lt";
+  | "lt"
+  | "has_enrolled"
+  | "has_resource_download"
+  | "has_readiness_run"
+  | "has_certificate"
+  | "progress_gte"
+  | "progress_lt";
 
 export type ActionType = "send_email" | "send_notification" | "webhook" | "delay";
 
-export type DelayUnit = "seconds" | "minutes";
+export type DelayUnit = "seconds" | "minutes" | "hours" | "days";
 
-export const MAX_DELAY_SECONDS = 600;
+/** Delays up to this budget run synchronously inside the event request. Anything
+ *  longer is persisted as a scheduled (pending) run and resumed by the cron. */
+export const SYNC_DELAY_MAX_MS = 60_000;
+
+/** Hard cap for a single delay step (365 days). */
+export const MAX_DELAY_MS = 365 * 24 * 60 * 60 * 1000;
 
 export type RecipientSetting = {
   mode: "path" | "fixed" | "role";

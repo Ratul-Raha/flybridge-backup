@@ -142,6 +142,27 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "study-visa-prep-us", title: "Student Visa Blueprint™", price: 2999 },
     }),
   },
+  "course.progress_updated": {
+    name: "course.progress_updated",
+    label: "Course progress updated",
+    description: "Fires whenever quiz progress is saved for a course.",
+    fields: [
+      "user.id",
+      "user.name",
+      "user.email",
+      "course.id",
+      "course.slug",
+      "course.title",
+      "progress.overallPercentage",
+      "progress.passed",
+      "progress.certificateIssued",
+    ],
+    samplePayload: () => ({
+      ...sampleUser(),
+      course: { id: "665f1c2a9e3b1c0012ab34cd", slug: "easy-smart-spoken-english", title: "Easy & Smart Spoken English" },
+      progress: { overallPercentage: 64, passed: true, certificateIssued: false },
+    }),
+  },
   "order.created": {
     name: "order.created",
     label: "Order created",

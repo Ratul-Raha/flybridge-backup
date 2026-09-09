@@ -22,6 +22,7 @@ type AutomationItem = {
 };
 
 const RUN_COLORS: Record<string, string> = {
+  scheduled: ACCENT,
   completed: EMERALD,
   completed_with_errors: AMBER,
   failed: ROSE,

@@ -9,6 +9,7 @@ export const EVENT_NAMES = [
   "course.updated",
   "course.deleted",
   "course.enrolled",
+  "course.progress_updated",
   "order.created",
   "order.fulfilled",
   "resource.created",
@@ -92,6 +93,11 @@ export type EventPayloadMap = {
     enrollmentId: string;
     user: UserPayload;
     course: { id: string; slug: string; title: string; price?: number };
+  };
+  "course.progress_updated": {
+    user: UserPayload;
+    course: { id: string; slug: string; title: string };
+    progress: { overallPercentage: number; passed: boolean; certificateIssued: boolean };
   };
   "order.created": {
     order: {

@@ -3,7 +3,6 @@
 import { EVENT_LIST } from "@/lib/events/catalog";
 import { triggerEventOf } from "@/lib/automation/graph";
 import { EMAIL_TEMPLATES, emailTemplateById, emailTemplatesForEvent } from "@/lib/automation/email-templates";
-import { MAX_DELAY_SECONDS } from "@/lib/automation/types";
 import type { AutomationNode, AutomationGraph, ActionType, ConditionOperator, DelayUnit, RecipientSetting } from "@/lib/automation/types";
 import { Label, fieldClass } from "./ui";
 
@@ -16,6 +15,12 @@ const OPERATORS: { value: ConditionOperator; label: string }[] = [
   { value: "not_exists", label: "does not exist" },
   { value: "gt", label: "is greater than" },
   { value: "lt", label: "is less than" },
+  { value: "has_enrolled", label: "has enrolled in (course by slug, e.g. easy-smart-spoken-english)" },
+  { value: "has_resource_download", label: "has downloaded a resource" },
+  { value: "has_readiness_run", label: "has completed a readiness assessment" },
+  { value: "has_certificate", label: "has earned a certificate" },
+  { value: "progress_gte", label: "course progress is ≥ (value %)" },
+  { value: "progress_lt", label: "course progress is < (value %)" },
 ];
 
 function actionTypeLabel(t: ActionType) {
@@ -243,11 +248,13 @@ export function NodeConfig({
               >
                 <option value="seconds">Seconds</option>
                 <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+                <option value="days">Days</option>
               </select>
             </div>
             <p className="text-[11.5px] leading-relaxed" style={{ color: "var(--body)" }}>
-              The flow pauses here before continuing. Maximum {MAX_DELAY_SECONDS / 60} minutes — the step runs inside
-              the event request, so longer delays need a queue system.
+              Short delays run inside the event request. Delays longer than a minute are scheduled and resumed
+              automatically by the daily cron — you can wait up to 365 days between steps.
             </p>
           </>
         )}

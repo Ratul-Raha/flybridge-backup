@@ -30,6 +30,12 @@ const OP_LABEL: Record<string, string> = {
   not_exists: "does not exist",
   gt: ">",
   lt: "<",
+  has_enrolled: "has enrolled in (course)",
+  has_resource_download: "has downloaded a resource",
+  has_readiness_run: "has completed readiness",
+  has_certificate: "has a certificate",
+  progress_gte: "course progress ≥",
+  progress_lt: "course progress <",
 };
 
 export type StepItem = { type: AutomationNodeType; actionType?: ActionType };
@@ -126,7 +132,7 @@ const PICKER_GROUPS: {
     items: [
       { key: "action:send_email", name: "Send email", desc: "Email users, subscribers or fixed addresses", icon: Mail },
       { key: "action:send_notification", name: "Send notification", desc: "In-app alert for admins or users", icon: Bell },
-      { key: "action:delay", name: "Delay", desc: "Pause the flow before the next step (max 10 min)", icon: Timer },
+      { key: "action:delay", name: "Delay", desc: "Pause the flow (up to 365 days, resumes via cron)", icon: Timer },
       { key: "action:webhook", name: "Webhook", desc: "POST the event payload to an external URL", icon: Webhook },
     ],
   },

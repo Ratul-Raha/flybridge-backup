@@ -19,6 +19,7 @@ import { BotAccess } from "./models/bot-access";
 import { BotAuditLog } from "./models/bot-audit-log";
 import { PushSubscription } from "./models/push-subscription";
 import { Blog } from "./models/blog";
+import { AutomationPending } from "./models/automation-pending";
 
 void User;
 void Seminar;
@@ -41,6 +42,7 @@ void BotAccess;
 void BotAuditLog;
 void PushSubscription;
 void Blog;
+void AutomationPending;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";
