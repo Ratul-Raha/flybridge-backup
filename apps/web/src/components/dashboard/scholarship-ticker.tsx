@@ -20,7 +20,7 @@ export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?:
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/scholarships?limit=6", { cache: "no-store" });
+      const res = await fetch("/api/public/scholarships?limit=6", { cache: "no-store" });
       const data = await res.json();
       setItems(Array.isArray(data.scholarships) ? data.scholarships : []);
     } catch {

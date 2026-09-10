@@ -229,23 +229,14 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
             The complete description, eligibility criteria and official
             application link unlock with a free account.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={`/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
-              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
-              style={{ background: "var(--brand)" }}
-            >
-              Create free account
-              <ArrowRight size={15} />
-            </Link>
-            <Link
-              href={`/login?next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
-              className="rounded-full border px-6 py-3 text-[13.5px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)]"
-              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            >
-              Log in
-            </Link>
-          </div>
+          <Link
+            href={`/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
+            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
+            style={{ background: "var(--brand)", boxShadow: "0 14px 30px -16px rgba(15,169,104,0.55)" }}
+          >
+            See full details
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </div>

@@ -73,8 +73,11 @@ export async function GET(request: NextRequest) {
         { $group: { _id: "$course", count: { $sum: 1 } } },
       ]);
       const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+      const sorted = courses
+        .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
+        .sort((a, b) => b.count - a.count);
       return NextResponse.json({
-        courses: courses.map((c) => toDto(c, enrollMap.get(c._id.toString()) ?? 0, true)),
+        courses: sorted.map(({ doc, count }) => toDto(doc, count, true)),
       });
     }
 
@@ -94,7 +97,14 @@ export async function GET(request: NextRequest) {
     const courses = await Course.find({
       $or: [{ published: true }, { upcoming: true }],
     }).sort({ createdAt: -1 });
-    return NextResponse.json({ courses: courses.map((c) => toDto(c)) });
+    const enrollCounts = await CourseEnrollment.aggregate([
+      { $group: { _id: "$course", count: { $sum: 1 } } },
+    ]);
+    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+    const sorted = courses
+      .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
+      .sort((a, b) => b.count - a.count);
+    return NextResponse.json({ courses: sorted.map(({ doc, count }) => toDto(doc, count)) });
   } catch (error) {
     console.error("courses GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

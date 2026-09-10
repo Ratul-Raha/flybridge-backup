@@ -136,21 +136,13 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
           className="mt-auto flex items-center justify-between gap-3 border-t pt-4"
           style={{ borderColor: "var(--line)" }}
         >
-          {user ? (
+          {user && (
             <span
               className="inline-flex items-center gap-1.5 text-[11px] font-medium"
               style={{ color: "#0FA968" }}
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#0FA968" }} />
               Full details
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-              style={{ color: "var(--body)" }}
-            >
-              <Lock size={11} style={{ color: "var(--brand-2)" }} />
-              Members only
             </span>
           )}
           <div className="flex items-center gap-3">

@@ -18,24 +18,26 @@ async function getDbCourses(): Promise<DbCourse[]> {
     ]);
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
 
-    return courses.map((c) => ({
-      id: c._id.toString(),
-      slug: c.slug,
-      title: c.title,
-      badge: c.badge ?? "",
-      subtitle: c.subtitle ?? "",
-      description: c.description ?? "",
-      price: c.price ?? 0,
-      currency: c.currency ?? "USD",
-      image: c.image ?? null,
-      level: c.level ?? "",
-      upcoming: c.upcoming ?? false,
-      enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
-      modules: (c.modules ?? []).map((m) => ({
-        title: m.title,
-        lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-      })),
-    }));
+    return courses
+      .map((c) => ({
+        id: c._id.toString(),
+        slug: c.slug,
+        title: c.title,
+        badge: c.badge ?? "",
+        subtitle: c.subtitle ?? "",
+        description: c.description ?? "",
+        price: c.price ?? 0,
+        currency: c.currency ?? "USD",
+        image: c.image ?? null,
+        level: c.level ?? "",
+        upcoming: c.upcoming ?? false,
+        enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
+        modules: (c.modules ?? []).map((m) => ({
+          title: m.title,
+          lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+        })),
+      }))
+      .sort((a, b) => b.enrollmentCount - a.enrollmentCount);
   } catch {
     return [];
   }

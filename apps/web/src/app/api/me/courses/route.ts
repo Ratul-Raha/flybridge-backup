@@ -53,6 +53,12 @@ export async function GET() {
     await connectDb();
 
     const courses = await Course.find({ published: true }).sort({ createdAt: -1 });
+    const enrollCounts = await CourseEnrollment.aggregate([
+      { $group: { _id: "$course", count: { $sum: 1 } } },
+    ]);
+    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+    courses.sort((a, b) => (enrollMap.get(b._id.toString()) ?? 0) - (enrollMap.get(a._id.toString()) ?? 0));
+
     const enrollments = await CourseEnrollment.find({ user: session.userId, status: "active" })
       .select("course createdAt")
       .lean();
