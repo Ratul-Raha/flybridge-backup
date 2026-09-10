@@ -222,13 +222,6 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
           >
             <Lock size={20} style={{ color: "var(--brand)" }} />
           </div>
-          <p className="font-display text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
-            Full details for members
-          </p>
-          <p className="max-w-[440px] text-[13.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
-            The complete description, eligibility criteria and official
-            application link unlock with a free account.
-          </p>
           <Link
             href={`/login?mode=register&next=${encodeURIComponent(`/dashboard/scholarships/${s.id}`)}`}
             className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"
