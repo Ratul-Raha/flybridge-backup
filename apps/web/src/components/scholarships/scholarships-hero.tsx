@@ -41,7 +41,7 @@ export function ScholarshipsHero() {
         >
           Real scholarships from universities and institutions around the world —
           amounts, deadlines and who can apply. We show you the headline; the
-          full story opens for members.
+          full story unlocks with one tap.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">

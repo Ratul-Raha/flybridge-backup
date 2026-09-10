@@ -11,7 +11,7 @@ const footerLinks = [
       { label: "Check Eligibility", href: "/readiness" },
       { label: "Scholarships", href: "/scholarships" },
       { label: "Resources", href: "/resources" },
-      { label: "English", href: "#" },
+      { label: "English", href: "/programs/easy-smart-spoken-english" },
       { label: "FAQ", href: "/faq" },
     ],
   },

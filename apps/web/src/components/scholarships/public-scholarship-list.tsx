@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, Award, Check, GraduationCap, Lock, School, Share2 } from "lucide-react";
-import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
 
@@ -68,7 +67,6 @@ function ShareButton({
 }
 
 function ScholarshipCard({ s }: { s: PublicScholarship }) {
-  const { user } = useAuth();
   const flag = countryByCode(s.countryCode)?.flag ?? "";
   const Icon = levelIcon(s.level);
 
@@ -136,15 +134,6 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
           className="mt-auto flex items-center justify-between gap-3 border-t pt-4"
           style={{ borderColor: "var(--line)" }}
         >
-          {user && (
-            <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-              style={{ color: "#0FA968" }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#0FA968" }} />
-              Full details
-            </span>
-          )}
           <div className="flex items-center gap-3">
             <ShareButton id={s.id} institution={s.institution} title={s.title} />
             <span
@@ -238,7 +227,7 @@ export function PublicScholarshipList() {
             Live scholarships
           </h2>
           <p className="text-[14px] mt-[6px]" style={{ color: "var(--body)" }}>
-            Headlines only — the full write-up is for members.
+            Real amounts and deadlines — tap any card to unlock the full write-up.
           </p>
         </div>
         {!loading && scholarships.length > 0 && (

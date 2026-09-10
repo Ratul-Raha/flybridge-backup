@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   GraduationCap,
   ArrowRight,
@@ -167,13 +168,17 @@ export function PromoPopup() {
             </div>
 
             {/* CTA */}
-            <button
-              type="button"
+            <Link
+              href="/programs/study-visa-prep-us"
+              onClick={() => {
+                localStorage.setItem("promo-popup-seen", "1");
+                setOpen(false);
+              }}
               className="group mt-4 inline-flex items-center gap-2 rounded-full bg-[#0F9D58] px-6 py-2.5 text-white transition-colors hover:bg-[#0C8A4C]"
             >
               <span className="text-[13.5px] font-bold">Get access now</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
+            </Link>
 
             {/* Intro offer — circular seal (mobile) */}
             <div className="sm:hidden flex justify-center mt-5">
