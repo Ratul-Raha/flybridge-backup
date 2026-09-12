@@ -250,13 +250,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             icon: BookOpen,
             active: pathname.startsWith("/dashboard/courses"),
           },
-{
-            kind: "link",
-            label: "Courses",
-            href: "/dashboard/courses",
-            icon: BookOpen,
-            active: pathname.startsWith("/dashboard/courses"),
-          },
           {
             kind: "link",
             label: "Mock Tests",
