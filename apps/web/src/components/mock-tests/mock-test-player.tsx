@@ -4,14 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
+  Ban,
   CheckCircle2,
   Clock,
+  EyeOff,
   FileText,
   Headphones,
   Loader2,
   RotateCcw,
   Send,
+  ShieldCheck,
   TimerReset,
 } from "lucide-react";
 import {
@@ -20,7 +24,7 @@ import {
   type TestDetail,
 } from "@/lib/mock-test-ui";
 
-type Phase = "loading" | "ready" | "submitting" | "result" | "error";
+type Phase = "loading" | "intro" | "ready" | "submitting" | "result" | "disqualified" | "error";
 
 type JudgeResult = {
   overallBand: number;
@@ -70,14 +74,23 @@ export function MockTestPlayer({
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [result, setResult] = useState<JudgeResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [introStep, setIntroStep] = useState<number | null>(null);
+  const [violations, setViolations] = useState(0);
+  const [leaveWarning, setLeaveWarning] = useState(false);
 
   const answersRef = useRef(answers);
   answersRef.current = answers;
   const submittedRef = useRef(false);
   const timedOutRef = useRef(false);
+  const phaseRef = useRef<Phase>(phase);
+  phaseRef.current = phase;
+  const violationsRef = useRef(0);
+  violationsRef.current = violations;
+  const startedAtRef = useRef(0);
 
   const [page, setPage] = useState(0);
 
@@ -114,8 +127,8 @@ export function MockTestPlayer({
   }, [flattened]);
 
   const clearAll = () => {
-    if (typeof window !== "undefined" && !window.confirm("Clear all your answers on this test?")) return;
     setAnswers({});
+    setClearConfirmOpen(false);
   };
 
   const readingPages = useMemo(() => {
@@ -171,7 +184,8 @@ export function MockTestPlayer({
         setSecondsLeft(t.durationMinutes * 60);
         setTimerActive(true);
       }
-      setPhase("ready");
+      setIntroStep(null);
+      setPhase("intro");
       return id;
     },
     [testId]
@@ -330,7 +344,7 @@ export function MockTestPlayer({
             value={typeof current?.text === "string" ? current.text : ""}
             onChange={(e) => setText(q.qid, e.target.value)}
             placeholder="Type your answer here…"
-            className="w-full rounded-lg border-b-2 bg-transparent px-1 py-1.5 text-[14px] transition-colors focus:outline-none focus:ring-0"
+            className="w-full select-text rounded-lg border-b-2 bg-transparent px-1 py-1.5 text-[14px] transition-colors focus:outline-none focus:ring-0"
             style={{ borderColor: answered ? "var(--brand)" : "var(--line)", color: "var(--ink)" }}
           />
         </div>
@@ -418,6 +432,208 @@ export function MockTestPlayer({
     setPage(Math.max(0, Math.min(i, (readingPages?.length ?? 1) - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const beginTest = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      // fullscreen unavailable (e.g. embedded iframe) - continue anyway
+    }
+    startedAtRef.current = Date.now();
+    setIntroStep(3);
+  };
+
+  const registerViolation = () => {
+    if (phaseRef.current !== "ready") return;
+    if (Date.now() - startedAtRef.current < 2000) return;
+    const next = violationsRef.current + 1;
+    violationsRef.current = next;
+    setViolations(next);
+    if (next >= 2) {
+      setPhase("disqualified");
+      setTimerActive(false);
+      setSecondsLeft(0);
+    } else {
+      setLeaveWarning(true);
+      window.setTimeout(() => setLeaveWarning(false), 4000);
+    }
+  };
+
+  // 3..2..1..GO countdown after the user begins
+  useEffect(() => {
+    if (phase !== "intro" || introStep === null) return;
+    if (introStep <= 0) {
+      const t = setTimeout(() => {
+        setPhase("ready");
+        setIntroStep(null);
+      }, 1000);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setIntroStep((s) => (s === null ? s : s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [phase, introStep]);
+
+  // Fullscreen + leave/minimize detection
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") registerViolation();
+    };
+    const onBlur = () => registerViolation();
+    const onFullscreenChange = () => {
+      if (phaseRef.current !== "ready") return;
+      if (document.fullscreenElement) return;
+      registerViolation();
+      try {
+        if (document.documentElement.requestFullscreen) {
+          void document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("blur", onBlur);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("blur", onBlur);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, [registerViolation]);
+
+  // Block copy/paste/print/devtools while the test is running
+  useEffect(() => {
+    if (phase !== "ready") return;
+    const prevent = (e: Event) => e.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (e.ctrlKey || e.metaKey) {
+        if (["c", "x", "u", "s", "p"].includes(k)) e.preventDefault();
+        if (e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
+      }
+      if (e.key === "F12") e.preventDefault();
+    };
+    document.addEventListener("copy", prevent);
+    document.addEventListener("cut", prevent);
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("copy", prevent);
+      document.removeEventListener("cut", prevent);
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [phase]);
+
+  // Leave fullscreen on result/disqualify/error screens
+  useEffect(() => {
+    if (phase === "result" || phase === "disqualified" || phase === "error") {
+      try {
+        if (document.fullscreenElement) void document.exitFullscreen();
+      } catch {
+        // ignore
+      }
+    }
+  }, [phase]);
+
+  if (phase === "disqualified") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "var(--bg)" }}>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: "rgba(192,57,43,0.12)" }}>
+          <Ban size={26} style={{ color: "#C0392B" }} />
+        </div>
+        <p className="font-display text-[22px] font-semibold" style={{ color: "var(--ink)" }}>
+          Attempt disqualified
+        </p>
+        <p className="max-w-[440px] text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+          The test window was minimized or left multiple times. Your attempt has been flagged as
+          disqualified and will not be graded.
+        </p>
+        <Link
+          href="/dashboard/mock-tests"
+          className="mt-2 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+          style={{ background: "var(--brand)" }}
+        >
+          <ArrowLeft size={15} /> Back to mock tests
+        </Link>
+      </div>
+    );
+  }
+
+  if (phase === "intro") {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6"
+        style={{ background: "linear-gradient(165deg, #171040 0%, #2A1C5E 55%, #1B2A5E 100%)" }}
+      >
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: "#8FA3FF" }}>
+          IELTS mock test · {SKILL_META[test?.skill ?? "reading"].label}
+        </p>
+        <h1 className="font-display mt-3 text-center text-[26px] font-bold text-white sm:text-[32px]">
+          {test?.title}
+        </h1>
+
+        {introStep === null ? (
+          <>
+            <div
+              className="mt-9 w-full max-w-[520px] space-y-4 rounded-2xl border p-6"
+              style={{ borderColor: "rgba(255,255,255,0.16)", background: "rgba(255,255,255,0.06)", backdropFilter: "blur(8px)" }}
+            >
+              <div className="flex items-start gap-3">
+                <ShieldCheck size={18} className="mt-0.5 shrink-0" style={{ color: "#8FA3FF" }} />
+                <p className="text-[13px] leading-[1.7]" style={{ color: "rgba(255,255,255,0.9)" }}>
+                  The test runs in <span className="font-semibold text-white">full screen</span> for the
+                  entire duration.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <EyeOff size={18} className="mt-0.5 shrink-0" style={{ color: "#8FA3FF" }} />
+                <p className="text-[13px] leading-[1.7]" style={{ color: "rgba(255,255,255,0.9)" }}>
+                  <span className="font-semibold text-white">Copying is disabled.</span> You cannot select,
+                  copy or print the passage or questions.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <Ban size={18} className="mt-0.5 shrink-0" style={{ color: "#FF9E9E" }} />
+                <p className="text-[13px] leading-[1.7]" style={{ color: "rgba(255,255,255,0.9)" }}>
+                  <span className="font-semibold text-white">Do not minimize or leave this window.</span>{` `}
+                  Leaving the test window is a violation — two violations will disqualify your attempt.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void beginTest()}
+              className="mt-9 inline-flex items-center gap-2 rounded-full px-10 py-4 text-[15px] font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-[0_12px_36px_-8px_rgba(111,76,224,0.7)]"
+              style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)" }}
+            >
+              Start mock test →
+            </button>
+            <p className="mt-5 max-w-[420px] text-center text-[12.5px] leading-[1.6]" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Pressing Esc, tabbing away, switching windows or minimizing counts as leaving the test.
+              Your timer starts after the countdown.
+            </p>
+          </>
+        ) : (
+          <div className="flex flex-col items-center">
+            <span className="font-display text-[120px] font-black leading-none text-white drop-shadow-[0_10px_40px_rgba(111,76,224,0.55)] sm:text-[150px]">
+              {introStep === 0 ? "GO!" : introStep}
+            </span>
+            <p className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.2em]" style={{ color: "#C7D0FF" }}>
+              {introStep === 0 ? "Good luck!" : "Get ready…"}
+            </p>
+          </div>
+        )}
+
+        <p className="absolute bottom-6 font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.4)" }}>
+          Full screen · Copying disabled · Minimizing disqualifies
+        </p>
+      </div>
+    );
+  }
 
   if (phase === "result") {
     return (
@@ -554,7 +770,7 @@ export function MockTestPlayer({
   const submitDisabled = submitting || (hasTimer && secondsLeft <= 0);
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div className="min-h-screen select-none" style={{ background: "var(--bg)" }}>
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur" style={{ borderColor: "var(--line)" }}>
         <div className="flex h-16 items-center justify-between gap-3 px-5">
@@ -802,7 +1018,7 @@ export function MockTestPlayer({
               <div className="mt-1 flex flex-col-reverse items-stretch gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
-                  onClick={clearAll}
+                  onClick={() => setClearConfirmOpen(true)}
                   className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[12.5px] font-semibold transition-colors hover:bg-[var(--bg-soft)]"
                   style={{ color: "var(--body)" }}
                 >
@@ -842,6 +1058,58 @@ export function MockTestPlayer({
           </div>
         )}
       </div>
+
+      {/* Leave warning toast */}
+      {leaveWarning && phase === "ready" && (
+        <div className="fixed inset-x-0 top-4 z-[55] flex justify-center px-4">
+          <div
+            className="flex items-center gap-2.5 rounded-2xl border bg-white px-5 py-3.5 shadow-[0_18px_40px_-18px_rgba(192,57,43,0.5)]"
+            style={{ borderColor: "rgba(192,57,43,0.4)", color: "var(--ink)" }}
+          >
+            <AlertTriangle size={17} className="shrink-0" style={{ color: "#C0392B" }} />
+            <p className="text-[12.5px] font-medium leading-[1.5]">
+              You minimized or left the test window — this is a violation. Doing it again
+              disqualifies your attempt.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Clear answers confirm modal */}
+      {clearConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={() => setClearConfirmOpen(false)}>
+          <div
+            className="w-full max-w-[380px] rounded-2xl border bg-white p-6"
+            style={{ borderColor: "var(--line)", boxShadow: "0 24px 64px -20px rgba(18,32,67,0.35)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+              Clear all answers?
+            </h3>
+            <p className="mt-2 text-[13px] leading-[1.6]" style={{ color: "var(--body)" }}>
+              This removes every answer you&apos;ve entered on this test so far. This can&apos;t be undone.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={clearAll}
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: "#C0392B" }}
+              >
+                <RotateCcw size={14} /> Clear answers
+              </button>
+              <button
+                type="button"
+                onClick={() => setClearConfirmOpen(false)}
+                className="px-4 py-3 text-[13.5px] font-medium"
+                style={{ color: "var(--body)" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm modal */}
       {confirmOpen && (
@@ -916,7 +1184,7 @@ function TaskWriter({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Write your answer here…"
           rows={9}
-          className="mt-4 w-full resize-y rounded-xl border bg-[#FBFBFD] px-4 py-3 text-[13.5px] leading-[1.8] focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+          className="mt-4 w-full select-text resize-y rounded-xl border bg-[#FBFBFD] px-4 py-3 text-[13.5px] leading-[1.8] focus:outline-none focus:ring-2 focus:ring-brand-2/30"
           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
         />
         <div className="mt-2 flex items-center justify-between">
