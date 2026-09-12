@@ -73,17 +73,17 @@ async function toTestDto(
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
   const manager = isManager(session);
+  if (!manager) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     await connectDb();
 
     const bundle = await MockTestBundle.findById(params.id);
     if (!bundle) return NextResponse.json({ bundle: null, tests: [] });
-    if (!manager && !bundle.published) return NextResponse.json({ bundle: null, tests: [] });
 
-    const tests = (await MockTest.find(
-      manager ? { bundle: bundle._id } : { bundle: bundle._id, status: "published" }
-    )
+    const tests = (await MockTest.find({ bundle: bundle._id })
       .sort({ order: 1, createdAt: 1 })
       .lean()) as unknown as StaffTest[];
 

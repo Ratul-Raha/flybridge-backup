@@ -3,10 +3,14 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
 
+function isManager(session: { role: string } | null): boolean {
+  return !!(session && (session.role === "admin" || session.role === "moderator"));
+}
+
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!session || !session.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isManager(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
@@ -17,9 +21,6 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
     if (!attempt) {
       return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
-    }
-    if (attempt.user.toString() !== session.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const test =

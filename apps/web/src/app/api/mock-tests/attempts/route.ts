@@ -3,18 +3,19 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
 
+function isManager(session: { role: string } | null): boolean {
+  return !!(session && (session.role === "admin" || session.role === "moderator"));
+}
+
 export async function GET() {
   const session = await readSession();
-  if (!session || !session.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isManager(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     await connectDb();
-    const attempts = await MockTestAttempt.find({
-      user: session.userId,
-      status: { $ne: "in_progress" },
-    })
+    const attempts = await MockTestAttempt.find({ status: { $ne: "in_progress" } })
       .sort({ submittedAt: -1 })
       .populate("test", "title skill")
       .lean();

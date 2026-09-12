@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
@@ -39,12 +39,9 @@ export default async function MockTestBundlePage({ params }: Params) {
 
     const session = await readSession();
     const isManager = session?.role === "admin" || session?.role === "moderator";
-    if (!isManager && !bundle.published) notFound();
+    if (!isManager) redirect("/");
 
-    const testCount = await MockTest.countDocuments({
-      bundle: bundle._id,
-      ...(isManager ? {} : { status: "published" }),
-    });
+    const testCount = await MockTest.countDocuments({ bundle: bundle._id });
 
     return (
       <main>

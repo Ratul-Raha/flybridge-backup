@@ -3,7 +3,6 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest } from "@/lib/models/mock-test";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
-import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 import { judgeMockTestAttempt } from "@/lib/ai/ielts-judge";
 import { emitEvent } from "@/lib/events/emit";
 
@@ -13,8 +12,8 @@ function isManager(session: { role: string } | null): boolean {
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!session || !session.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isManager(session) || !session?.userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
@@ -23,17 +22,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const test = await MockTest.findById(params.id);
     if (!test) return NextResponse.json({ error: "Test not found" }, { status: 404 });
-    if (!isManager(session) && test.status !== "published") {
-      return NextResponse.json({ error: "Test not available" }, { status: 403 });
-    }
-
-    const ownership = await resolveMockTestOwnership(session.userId);
-    if (!isManager(session) && !testIsOwned(ownership, test)) {
-      return NextResponse.json(
-        { error: "Purchase required to take this test" },
-        { status: 403 }
-      );
-    }
 
     const attemptId = typeof body.attemptId === "string" ? body.attemptId : "";
     const attempt = attemptId

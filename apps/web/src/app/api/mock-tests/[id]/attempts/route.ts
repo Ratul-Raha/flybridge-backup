@@ -3,7 +3,6 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest } from "@/lib/models/mock-test";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
-import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 
 function isManager(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -11,25 +10,14 @@ function isManager(session: { role: string } | null): boolean {
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!session || !session.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!isManager(session) || !session?.userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     await connectDb();
     const test = await MockTest.findById(params.id);
     if (!test) return NextResponse.json({ error: "Test not found" }, { status: 404 });
-    if (!isManager(session) && test.status !== "published") {
-      return NextResponse.json({ error: "Test not available" }, { status: 403 });
-    }
-
-    const ownership = await resolveMockTestOwnership(session.userId);
-    if (!isManager(session) && !testIsOwned(ownership, test)) {
-      return NextResponse.json(
-        { error: "Purchase required to take this test" },
-        { status: 403 }
-      );
-    }
 
     const existing = await MockTestAttempt.findOne({
       user: session.userId,

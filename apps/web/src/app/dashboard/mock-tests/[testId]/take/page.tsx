@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest } from "@/lib/models/mock-test";
-import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 import { MockTestPlayer } from "@/components/mock-tests/mock-test-player";
 
 export const metadata: Metadata = {
@@ -21,6 +20,11 @@ export default async function TestTakePage({ params, searchParams }: Props) {
     redirect(`/login?next=${encodeURIComponent(`/dashboard/mock-tests/${params.testId}/take`)}`);
   }
 
+  const isStaff = session.role === "admin" || session.role === "moderator";
+  if (!isStaff) {
+    redirect("/dashboard");
+  }
+
   await connectDb();
   const test = await MockTest.findById(params.testId);
   if (!test) {
@@ -30,32 +34,6 @@ export default async function TestTakePage({ params, searchParams }: Props) {
         desc="The test you're looking for could not be found."
         href="/dashboard/mock-tests"
         label="Back to mock tests"
-      />
-    );
-  }
-
-  const isStaff = session.role === "admin" || session.role === "moderator";
-  const ownership = await resolveMockTestOwnership(session.userId);
-  const owned = testIsOwned(ownership, test);
-
-  if (!isStaff && test.status !== "published") {
-    return (
-      <LockedScreen
-        title="This test isn&apos;t live yet"
-        desc="The test opens as soon as it is published. Check back soon."
-        href="/dashboard/mock-tests"
-        label="Back to mock tests"
-      />
-    );
-  }
-
-  if (!isStaff && !owned) {
-    return (
-      <LockedScreen
-        title="This test is part of a practice pack"
-        desc="Buy the pack to unlock this test with unlimited attempts and AI band feedback."
-        href={test.bundle ? `/mock-tests/${test.bundle.toString()}` : "/dashboard/mock-tests"}
-        label="View pack"
       />
     );
   }

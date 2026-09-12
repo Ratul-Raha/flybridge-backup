@@ -2,14 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest, type MockTestDoc } from "@/lib/models/mock-test";
-import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { Course } from "@/lib/models/course";
-import {
-  countMockTestQuestions,
-  resolveMockTestOwnership,
-  testIsOwned,
-  type MockTestOwnership,
-} from "@/lib/mock-tests";
+import { countMockTestQuestions } from "@/lib/mock-tests";
 
 function isManager(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -62,7 +56,9 @@ function sanitizeContent(
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  const manager = isManager(session);
+  if (!isManager(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   try {
     await connectDb();
@@ -75,24 +71,7 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
     if (!test) return NextResponse.json({ test: null });
 
-    let ownership: MockTestOwnership | null = null;
-    if (session && session.userId) {
-      ownership = await resolveMockTestOwnership(session.userId);
-    }
-    const owned = ownership
-      ? testIsOwned(ownership, { bundle: test.bundle?._id ?? "", course: test.course })
-      : false;
-
     const bundle = test.bundle;
-    if (!manager && !owned) {
-      const bundleDoc = await MockTestBundle.findById(bundle?._id ?? params.id).lean();
-      if (!bundleDoc?.published) {
-        return NextResponse.json({ test: null });
-      }
-    }
-    if (!manager && test.status !== "published") {
-      return NextResponse.json({ test: null });
-    }
 
     let courseLink: { id: string; title: string; slug: string } | null = null;
     if (test.course) {
@@ -124,9 +103,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
         status: test.status,
         durationMinutes: test.durationMinutes ?? 0,
         questionCount: test.questionCount ?? 0,
-        owned,
-        content: sanitizeContent(test.content, manager),
-        ...(manager ? { answerKey: test.answerKey ?? "" } : {}),
+        owned: false,
+        content: sanitizeContent(test.content, true),
+        answerKey: test.answerKey ?? "",
         createdAt: test.createdAt,
         updatedAt: test.updatedAt,
       },

@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     const session = await readSession();
     const manager = isManager(session);
 
-    if (all && !manager) {
+    if (!manager) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

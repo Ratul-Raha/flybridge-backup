@@ -148,23 +148,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             },
             {
               kind: "group",
-              label: "Mock Tests",
-              icon: ListChecks,
-              children: [
-                {
-                  label: "My mock tests",
-                  href: "/dashboard/mock-tests",
-                  active: pathname.startsWith("/dashboard/mock-tests"),
-                },
-                {
-                  label: "All mock tests",
-                  href: "/mock-tests",
-                  active: pathname.startsWith("/mock-tests"),
-                },
-              ],
-            },
-            {
-              kind: "group",
               label: "Resources",
               icon: FolderOpen,
               children: [

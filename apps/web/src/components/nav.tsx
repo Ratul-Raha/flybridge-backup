@@ -10,7 +10,6 @@ import { ProgramsMegaMenu } from "@/components/programs/programs-mega-menu";
 
 const links = [
   { label: "Programs", href: "/programs" },
-  { label: "Mock Tests", href: "/mock-tests" },
   { label: "Seminars", href: "/seminars" },
   { label: "Blog", href: "/blogs" },
   { label: "Scholarships", href: "/scholarships" },
