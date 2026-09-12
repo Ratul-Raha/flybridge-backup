@@ -428,6 +428,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     return <MobileUserApp>{children}</MobileUserApp>;
   }
 
+  // The mock-test player runs as its own full-screen, proctored experience,
+  // so it must not be wrapped by the dashboard sidebar/header.
+  const isTakePlayer = /^\/dashboard\/mock-tests\/[^/]+\/take(\/.*)?$/.test(pathname);
+  if (isTakePlayer) {
+    return <div className="min-h-screen" style={{ background: "var(--bg)" }}>{children}</div>;
+  }
+
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !(prev[label] ?? false) }));
 
