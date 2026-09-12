@@ -17,6 +17,7 @@ const scriptFont = Dancing_Script({
 export type CertificateGrade = {
   percentage: number;
   grade: string;
+  performance?: string;
   englishLevel: string;
   completedQuizzes: number;
   totalQuizzes: number;
@@ -183,6 +184,7 @@ export function CertificateFace({
             {[
               { label: "Score", value: `${grade.percentage}%` },
               { label: "Grade", value: grade.grade },
+              { label: "Performance", value: grade.performance ?? "—" },
               { label: "Level", value: grade.englishLevel.split(" ")[0] },
               { label: "Quizzes", value: `${grade.completedQuizzes}/${grade.totalQuizzes}` },
             ].map((s, i) => (

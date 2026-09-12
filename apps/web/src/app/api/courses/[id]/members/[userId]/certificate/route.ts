@@ -226,6 +226,7 @@ function toGradeSnapshot(grade: GradeResult): CertificateGradeSnapshot {
   return {
     percentage: grade.percentage,
     grade: grade.grade,
+    performance: grade.performance,
     englishLevel: grade.englishLevel,
     totalQuizzes: grade.totalQuizzes,
     completedQuizzes: grade.completedQuizzes,

@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { Seminar } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
+import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import type { OrderItemType } from "@/lib/models/order";
 
 export type Product = {
@@ -61,6 +62,20 @@ export async function resolveProduct(
       currency: "USD",
       image: r.thumbnail ?? null,
       url: null,
+    };
+  }
+
+  if (itemType === "mock-bundle") {
+    const b = await MockTestBundle.findById(itemId).lean();
+    if (!b || !b.published) return null;
+    return {
+      itemType,
+      itemId: b._id.toString(),
+      title: b.title,
+      price: b.price,
+      currency: b.currency,
+      image: b.image ?? null,
+      url: `/mock-tests/${b._id.toString()}`,
     };
   }
 

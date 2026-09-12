@@ -1,7 +1,7 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
 export const ORDER_STATUSES = ["pending", "completed", "failed", "cancelled", "refunded"] as const;
-export const ORDER_ITEM_TYPES = ["course", "seminar", "resource"] as const;
+export const ORDER_ITEM_TYPES = ["course", "seminar", "resource", "mock-bundle"] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type OrderItemType = (typeof ORDER_ITEM_TYPES)[number];

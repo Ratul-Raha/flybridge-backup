@@ -148,6 +148,23 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             },
             {
               kind: "group",
+              label: "Mock Tests",
+              icon: ListChecks,
+              children: [
+                {
+                  label: "My mock tests",
+                  href: "/dashboard/mock-tests",
+                  active: pathname.startsWith("/dashboard/mock-tests"),
+                },
+                {
+                  label: "All mock tests",
+                  href: "/mock-tests",
+                  active: pathname.startsWith("/mock-tests"),
+                },
+              ],
+            },
+            {
+              kind: "group",
               label: "Resources",
               icon: FolderOpen,
               children: [
@@ -250,12 +267,19 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             icon: BookOpen,
             active: pathname.startsWith("/dashboard/courses"),
           },
+{
+            kind: "link",
+            label: "Courses",
+            href: "/dashboard/courses",
+            icon: BookOpen,
+            active: pathname.startsWith("/dashboard/courses"),
+          },
           {
             kind: "link",
-            label: "Resources",
-            href: "/dashboard/resources",
-            icon: FolderOpen,
-            active: pathname.startsWith("/dashboard/resources"),
+            label: "Mock Tests",
+            href: "/dashboard/mock-tests",
+            icon: ListChecks,
+            active: pathname.startsWith("/dashboard/mock-tests"),
           },
           {
             kind: "link",
@@ -398,7 +422,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Full-screen course experiences (lesson player, certificate) have their own
   // mobile layout, so they must not be swallowed by the mobile app shell.
-  const isFullScreenCourse = /^\/dashboard\/courses\/[^/]+\/(learn|certificate)/.test(pathname);
+  const isFullScreenCourse = /^(\/dashboard\/courses\/[^/]+\/(learn|certificate)|\/dashboard\/mock-tests\/[^/]+\/take)/.test(pathname);
 
   if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
     return <MobileUserApp>{children}</MobileUserApp>;

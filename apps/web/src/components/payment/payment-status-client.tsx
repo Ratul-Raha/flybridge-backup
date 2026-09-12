@@ -101,8 +101,13 @@ export function PaymentStatusClient({
 
   const copy = COPY[kind];
   const isSeminar = itemType === "seminar" && !!itemId;
-  const ctaHref = isSeminar ? `/seminars/${itemId}` : "/dashboard/courses";
-  const ctaLabel = isSeminar ? "Go to seminar" : "Go to my courses";
+  const isMockBundle = itemType === "mock-bundle" && !!itemId;
+  const ctaHref = isSeminar
+    ? `/seminars/${itemId}`
+    : isMockBundle
+      ? "/dashboard/mock-tests"
+      : "/dashboard/courses";
+  const ctaLabel = isSeminar ? "Go to seminar" : isMockBundle ? "Go to my tests" : "Go to my courses";
 
   return (
     <div

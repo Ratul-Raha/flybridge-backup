@@ -37,6 +37,7 @@ type FlatLesson = {
 type GradeData = {
   percentage: number;
   grade: string;
+  performance?: string;
   englishLevel: string;
   passed: boolean;
   totalQuizzes: number;
@@ -275,7 +276,11 @@ export function LessonPlayer({
             <p className="text-[11px] mt-1.5" style={{ color: "var(--body)" }}>
               {completedCount}/{totalLessons} lessons completed
               {grade && grade.completedQuizzes > 0 && (
-                <> · Avg: {grade.percentage}%</>
+                <>
+                  {" "}
+                  · Avg: {grade.percentage}%
+                  {grade.performance ? ` · ${grade.performance}` : ""}
+                </>
               )}
             </p>
           </div>

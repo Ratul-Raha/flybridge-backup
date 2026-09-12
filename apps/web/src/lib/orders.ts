@@ -6,6 +6,8 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
+import { MockTestBundle } from "@/lib/models/mock-test-bundle";
+import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
 import { resolveProduct, type Product } from "@/lib/products";
 import type { EventPayload } from "@/lib/events/types";
@@ -64,6 +66,14 @@ export async function isAlreadyFulfilled(
       email: user.email,
     });
     return !!registration;
+  }
+
+  if (itemType === "mock-bundle") {
+    const enrollment = await MockTestEnrollment.findOne({
+      user: user.id,
+      bundle: itemId,
+    });
+    return !!enrollment;
   }
 
   return false;
@@ -139,6 +149,32 @@ export async function fulfillFreeItem(
         price: seminar.price,
         url: seminar.url,
         image: seminar.image,
+      },
+    });
+  }
+
+  if (product.itemType === "mock-bundle") {
+    const bundle = await MockTestBundle.findById(product.itemId);
+    if (!bundle) throw new Error("Product not found");
+
+    const enrollment = await MockTestEnrollment.findOneAndUpdate(
+      { user: user.id, bundle: bundle._id },
+      {
+        $setOnInsert: {
+          user: user.id,
+          bundle: bundle._id,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    await emitEvent("mock-bundle.purchased", {
+      enrollmentId: enrollment._id.toString(),
+      user: userPayload(user),
+      bundle: {
+        id: bundle._id.toString(),
+        title: bundle.title,
+        price: bundle.price,
       },
     });
   }
@@ -300,6 +336,33 @@ export async function fulfillOrder(
         price: seminar.price,
         url: seminar.url,
         image: seminar.image,
+      },
+    });
+  }
+
+  if (item.itemType === "mock-bundle") {
+    const bundle = await MockTestBundle.findById(item.itemId);
+    if (!bundle) throw new Error("Bundle not found");
+
+    const enrollment = await MockTestEnrollment.findOneAndUpdate(
+      { user: order.user, bundle: bundle._id },
+      {
+        $setOnInsert: {
+          user: order.user,
+          bundle: bundle._id,
+          order: order._id,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    await emitEvent("mock-bundle.purchased", {
+      enrollmentId: enrollment._id.toString(),
+      user: userPayload(buyer),
+      bundle: {
+        id: bundle._id.toString(),
+        title: bundle.title,
+        price: bundle.price,
       },
     });
   }

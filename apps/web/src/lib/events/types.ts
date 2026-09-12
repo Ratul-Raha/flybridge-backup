@@ -14,6 +14,9 @@ export const EVENT_NAMES = [
   "order.fulfilled",
   "resource.created",
   "scholarship.created",
+  "mock-bundle.created",
+  "mock-bundle.purchased",
+  "mock-test.submitted",
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];
@@ -145,6 +148,20 @@ export type EventPayloadMap = {
       deadline?: string | null;
     };
     actor?: ActorPayload;
+  };
+  "mock-bundle.created": {
+    bundle: { id: string; slug: string; title: string; price?: number; badge?: string };
+    actor?: ActorPayload;
+  };
+  "mock-bundle.purchased": {
+    enrollmentId: string;
+    user: UserPayload;
+    bundle: { id: string; title: string; price?: number };
+  };
+  "mock-test.submitted": {
+    attemptId: string;
+    user: UserPayload;
+    test: { id: string; title: string; skill?: string };
   };
 };
 

@@ -248,6 +248,43 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       },
     }),
   },
+  "mock-bundle.created": {
+    name: "mock-bundle.created",
+    label: "Mock test bundle published",
+    description: "Fires when a mock test bundle is created in the admin console.",
+    fields: ["bundle.id", "bundle.slug", "bundle.title", "bundle.price", "bundle.badge"],
+    samplePayload: () => ({
+      bundle: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        slug: "ielts-academic-pack",
+        title: "IELTS Academic Pack",
+        price: 1999,
+        badge: "Academic",
+      },
+    }),
+  },
+  "mock-bundle.purchased": {
+    name: "mock-bundle.purchased",
+    label: "Mock test bundle purchased",
+    description: "Fires when a user's order for a mock test bundle is fulfilled.",
+    fields: ["enrollmentId", "user.id", "user.name", "user.email", "bundle.id", "bundle.title", "bundle.price"],
+    samplePayload: () => ({
+      ...sampleUser(),
+      enrollmentId: "665f1c2a9e3b1c0012ab34cd",
+      bundle: { id: "665f1c2a9e3b1c0012ab34cd", title: "IELTS Academic Pack", price: 1999 },
+    }),
+  },
+  "mock-test.submitted": {
+    name: "mock-test.submitted",
+    label: "Mock test submitted",
+    description: "Fires when a user submits a mock test and receives their band score.",
+    fields: ["attemptId", "user.id", "user.name", "user.email", "test.id", "test.title", "test.skill"],
+    samplePayload: () => ({
+      ...sampleUser(),
+      attemptId: "665f1c2a9e3b1c0012ab34cd",
+      test: { id: "665f1c2a9e3b1c0012ab34cd", title: "IELTS Reading Mock 01", skill: "reading" },
+    }),
+  },
 };
 
 export const EVENT_LIST: EventCatalogEntry[] = EVENT_NAMES.map((name) => EVENT_CATALOG[name]);

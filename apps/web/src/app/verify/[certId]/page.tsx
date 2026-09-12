@@ -6,7 +6,7 @@ import { Award, BadgeCheck, Loader2, ShieldAlert, ShieldQuestion } from "lucide-
 
 type VerifyState =
   | { status: "loading" }
-  | { status: "valid"; recipientName: string; courseTitle: string; courseSlug: string; issuedAt: string; grade: { percentage: number; grade: string; englishLevel: string; totalQuizzes: number; completedQuizzes: number } | null }
+  | { status: "valid"; recipientName: string; courseTitle: string; courseSlug: string; issuedAt: string; grade: { percentage: number; grade: string; performance?: string; englishLevel: string; totalQuizzes: number; completedQuizzes: number } | null }
   | { status: "invalid"; reason: string };
 
 const REASON_COPY: Record<string, { title: string; body: string }> = {
@@ -202,6 +202,11 @@ export default function VerifyPage({ params }: { params: { certId: string } }) {
                           style={{ color: "var(--brand)" }}
                         >
                           {state.grade.grade} &middot; {state.grade.percentage}%
+                          {state.grade.performance ? (
+                            <span className="block text-[12px] font-medium uppercase">
+                              {state.grade.performance}
+                            </span>
+                          ) : null}
                         </dd>
                       </div>
                     )}

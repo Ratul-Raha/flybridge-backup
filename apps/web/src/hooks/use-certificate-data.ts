@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 export type CertificateGradeData = {
   percentage: number;
   grade: string;
+  performance?: string;
   englishLevel: string;
   passed: boolean;
   totalQuizzes: number;

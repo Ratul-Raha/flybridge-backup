@@ -8,6 +8,7 @@ const gradeSnapshotSchema = new Schema(
   {
     percentage: { type: Number, required: true, min: 0, max: 100 },
     grade: { type: String, required: true },
+    performance: { type: String, required: false },
     englishLevel: { type: String, required: true },
     totalQuizzes: { type: Number, required: true, min: 0 },
     completedQuizzes: { type: Number, required: true, min: 0 },
@@ -50,6 +51,7 @@ certificateSchema.index({ user: 1, course: 1 }, { unique: true });
 export type CertificateGradeSnapshot = {
   percentage: number;
   grade: string;
+  performance?: string;
   englishLevel: string;
   totalQuizzes: number;
   completedQuizzes: number;

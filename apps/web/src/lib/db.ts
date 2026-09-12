@@ -20,6 +20,10 @@ import { BotAuditLog } from "./models/bot-audit-log";
 import { PushSubscription } from "./models/push-subscription";
 import { Blog } from "./models/blog";
 import { AutomationPending } from "./models/automation-pending";
+import { MockTest } from "./models/mock-test";
+import { MockTestBundle } from "./models/mock-test-bundle";
+import { MockTestEnrollment } from "./models/mock-test-enrollment";
+import { MockTestAttempt } from "./models/mock-test-attempt";
 
 void User;
 void Seminar;
@@ -43,6 +47,10 @@ void BotAuditLog;
 void PushSubscription;
 void Blog;
 void AutomationPending;
+void MockTest;
+void MockTestBundle;
+void MockTestEnrollment;
+void MockTestAttempt;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

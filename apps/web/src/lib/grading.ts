@@ -1,6 +1,7 @@
 export type GradeResult = {
   percentage: number;
   grade: string;
+  performance: string;
   englishLevel: string;
   passed: boolean;
   totalQuizzes: number;
@@ -19,6 +20,7 @@ export function calculateGrade(quizScores: { score: number }[], totalLessons: nu
   return {
     percentage,
     grade: getGradeLetter(percentage),
+    performance: getPerformanceLabel(percentage),
     englishLevel: getEnglishLevel(percentage),
     passed: percentage >= 60 && completedQuizzes === totalQuizzes,
     totalQuizzes,
@@ -28,11 +30,18 @@ export function calculateGrade(quizScores: { score: number }[], totalLessons: nu
 
 function getGradeLetter(pct: number): string {
   if (pct >= 90) return "A+";
-  if (pct >= 85) return "A";
-  if (pct >= 80) return "A-";
+  if (pct >= 80) return "A";
   if (pct >= 70) return "B";
   if (pct >= 60) return "C";
   return "F";
+}
+
+function getPerformanceLabel(pct: number): string {
+  if (pct >= 90) return "Outstanding";
+  if (pct >= 80) return "Excellent";
+  if (pct >= 70) return "Very Good";
+  if (pct >= 60) return "Good";
+  return "Not passed";
 }
 
 function getEnglishLevel(pct: number): string {

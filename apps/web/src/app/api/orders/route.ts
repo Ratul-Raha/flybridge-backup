@@ -117,6 +117,8 @@ export async function POST(request: NextRequest) {
         cancelPath = `/seminars/${item.itemId}`;
       } else if (item?.itemType === "resource") {
         cancelPath = `/resources/${item.itemId}`;
+      } else if (item?.itemType === "mock-bundle") {
+        cancelPath = `/mock-tests/${item.itemId}`;
       }
 
       const checkout = await createCheckoutSession(order as OrderDoc, {

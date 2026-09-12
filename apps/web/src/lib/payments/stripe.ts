@@ -24,6 +24,7 @@ export function cancelPathFor(itemType: OrderItemType, itemId: string): string {
   if (itemType === "course") return `/programs/${itemId}/checkout`;
   if (itemType === "seminar") return `/seminars/${itemId}`;
   if (itemType === "resource") return `/resources/${itemId}`;
+  if (itemType === "mock-bundle") return `/mock-tests/${itemId}`;
   return "/dashboard";
 }
 
