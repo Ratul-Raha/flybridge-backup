@@ -27,6 +27,8 @@ const testSectionSchema = new Schema(
     type: { type: String, trim: true },
     instructions: { type: String, trim: true },
     passage: { type: String },
+    image: { type: String, trim: true },
+    imagePlacement: { type: String, trim: true },
     questions: { type: [testQuestionSchema], default: [] },
   },
   { _id: false }

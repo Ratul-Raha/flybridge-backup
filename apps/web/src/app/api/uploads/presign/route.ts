@@ -21,7 +21,7 @@ const MAX_SIZES: Record<string, number> = {
 const ALLOWED_EXTENSIONS =
   /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|png|jpe?g|webp|gif|svg|mp4|mov|webm|mp3|wav|m4a|aac|txt|csv|zip)$/i;
 
-const SCOPES: StorageScope[] = ["courses", "resources", "stories", "scholarships", "blogs"];
+const SCOPES: StorageScope[] = ["courses", "resources", "stories", "scholarships", "blogs", "mock-tests"];
 
 const MIME_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",

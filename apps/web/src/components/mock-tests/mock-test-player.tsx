@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -43,6 +43,38 @@ function isAnswered(a?: AnswerValue): boolean {
     (typeof a?.choice === "number" && a.choice >= 0) ||
     (typeof a?.text === "string" && a.text.trim().length > 0)
   );
+}
+
+const IMG_TOKEN_RE = /(\!\[([^\]]*)\]\(([^)\s]+)\)|\{\{img:([^}]+)\}\})/g;
+
+/** Renders `![alt](url)` and `{{img:url}}` markers as inline images so figures
+ *  can be placed at any exact point inside passages, instructions or prompts. */
+function inlineRich(text?: string): ReactNode {
+  if (!text) return text ?? "";
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  let m: RegExpExecArray | null;
+  IMG_TOKEN_RE.lastIndex = 0;
+  while ((m = IMG_TOKEN_RE.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const url = (m[3] ?? m[4] ?? "").trim();
+    if (url) {
+      const alt = m[2]?.trim() || "Figure";
+      parts.push(
+        <img
+          key={key++}
+          src={url}
+          alt={alt}
+          className="my-2 block max-w-full rounded-lg border bg-white object-contain"
+          style={{ borderColor: "var(--line)" }}
+        />
+      );
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length > 0 ? parts : text;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -367,7 +399,7 @@ export function MockTestPlayer({
               {num}
             </span>
             <p className="text-[14px] font-medium leading-[1.65]" style={{ color: "var(--ink)" }}>
-              {q.prompt}
+              {inlineRich(q.prompt)}
             </p>
           </div>
           {answered && <CheckCircle2 size={17} className="mt-1 shrink-0" style={{ color: "#0FA968" }} />}
@@ -390,6 +422,19 @@ export function MockTestPlayer({
       .map((q) => questionIndex[q.qid])
       .filter((n): n is number => Boolean(n));
     const range = qNums.length ? `${Math.min(...qNums)}–${Math.max(...qNums)}` : "";
+    const placement: "above" | "below-passage" | "below" =
+      section.imagePlacement && ["above", "below-passage", "below"].includes(section.imagePlacement)
+        ? section.imagePlacement
+        : "below-passage";
+    const sectionImage = section.image ? (
+      <div className="mb-4 overflow-hidden rounded-xl border bg-[#FBFBFD]" style={{ borderColor: "var(--line)" }}>
+        <img
+          src={section.image}
+          alt={section.type ? `Section figure: ${section.type}` : "Section figure"}
+          className="block w-full object-contain"
+        />
+      </div>
+    ) : null;
     return (
       <div key={section.id ?? `s${si}`} className="mb-7">
         <div className="mb-3 flex flex-wrap items-center gap-2.5">
@@ -405,23 +450,26 @@ export function MockTestPlayer({
             {section.type ? (TYPE_LABELS[section.type] ?? section.type) : "Questions"}
           </span>
         </div>
+        {placement === "above" && sectionImage}
         {section.instructions && (
           <div className="mb-4 rounded-xl border bg-[#FBFBFD] px-5 py-4" style={{ borderColor: "var(--line)" }}>
             <p className="text-[12.5px] leading-[1.7]" style={{ color: "var(--ink)" }}>
-              {section.instructions}
+              {inlineRich(section.instructions)}
             </p>
           </div>
         )}
         {section.passage && (
           <div className="mb-4 overflow-hidden rounded-xl border bg-[#FBFBFD]" style={{ borderColor: "var(--line)" }}>
             <div className="max-h-[320px] overflow-y-auto whitespace-pre-line px-5 py-4 text-[13px] leading-[1.8]" style={{ color: "var(--ink)" }}>
-              {section.passage}
+              {inlineRich(section.passage)}
             </div>
           </div>
         )}
+        {placement === "below-passage" && sectionImage}
         <div className="flex flex-col gap-3">
           {(section.questions ?? []).map((q, qi) => renderQuestion(q, qi))}
         </div>
+        {placement === "below" && sectionImage}
       </div>
     );
   };
@@ -911,7 +959,7 @@ export function MockTestPlayer({
                           </span>
                         </div>
                         <div className="max-h-[72vh] overflow-y-auto whitespace-pre-line px-5 py-5 text-[13.5px] leading-[1.85]" style={{ color: "var(--ink)" }}>
-                          {currentPage.text}
+                          {inlineRich(currentPage.text)}
                         </div>
                       </div>
                     </div>
@@ -1177,7 +1225,7 @@ function TaskWriter({
       </div>
       <div className="px-5 py-5">
         <p className="whitespace-pre-line text-[13.5px] leading-[1.8]" style={{ color: "var(--ink)" }}>
-          {prompt}
+          {inlineRich(prompt)}
         </p>
         <textarea
           value={value}

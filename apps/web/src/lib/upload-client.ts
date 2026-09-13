@@ -1,4 +1,4 @@
-export type UploadScope = "courses" | "resources" | "stories" | "scholarships" | "blogs";
+export type UploadScope = "courses" | "resources" | "stories" | "scholarships" | "blogs" | "mock-tests";
 
 export type StoredUpload = {
   /** What callers persist in URL fields — full public URL for images,

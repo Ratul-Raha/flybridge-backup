@@ -57,6 +57,8 @@ export type TestDetail = {
       type?: string;
       instructions?: string;
       passage?: string;
+      image?: string;
+      imagePlacement?: "above" | "below-passage" | "below";
       questions: {
         qid: string;
         type?: string;

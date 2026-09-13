@@ -10,7 +10,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export const S3_REGION = process.env.AWS_REGION ?? "eu-north-1";
 export const S3_BUCKET = process.env.S3_BUCKET ?? "";
 
-export type StorageScope = "courses" | "resources" | "stories" | "scholarships" | "blogs";
+export type StorageScope = "courses" | "resources" | "stories" | "scholarships" | "blogs" | "mock-tests";
 export type StorageKind = "image" | "pdf" | "video" | "audio" | "file";
 export type Visibility = "public" | "private";
 

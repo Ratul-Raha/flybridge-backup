@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Trash2, Wand2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { uploadToStorage } from "@/lib/upload-client";
 import {
   SKILL_META,
   formatPrice,
@@ -41,6 +42,30 @@ const emptyTestForm = {
   answerKey: "",
 };
 
+type ManagedSection = {
+  id?: string;
+  type?: string;
+  instructions?: string;
+  passage?: string;
+  image?: string;
+  imagePlacement?: string;
+  questions?: { qid?: string; prompt?: string; type?: string }[];
+};
+
+const SECTION_PLACEMENTS = [
+  { value: "above", label: "Above passage & instructions" },
+  { value: "below-passage", label: "Below passage, above questions" },
+  { value: "below", label: "After questions" },
+] as const;
+
+function sectionPreview(s: ManagedSection): string {
+  const fromInstructions = s.instructions?.trim() ?? "";
+  if (fromInstructions) return fromInstructions.slice(0, 70);
+  const firstPrompt = s.questions?.find((q) => (q.prompt ?? "").trim())?.prompt?.trim() ?? "";
+  if (firstPrompt) return firstPrompt.slice(0, 70);
+  return "No instructions or questions yet";
+}
+
 export function MockTestManage() {
   const { user } = useAuth();
 
@@ -63,6 +88,9 @@ export function MockTestManage() {
   const [savingTest, setSavingTest] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [deletingTestId, setDeletingTestId] = useState<string | null>(null);
+  const [uploadingSection, setUploadingSection] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [copiedToken, setCopiedToken] = useState<number | null>(null);
 
   const loadBundles = useCallback(async () => {
     try {
@@ -355,6 +383,78 @@ export function MockTestManage() {
     () => bundles.find((b) => b.id === activeBundleId) ?? null,
     [bundles, activeBundleId]
   );
+
+  const parsedContent = useMemo(() => {
+    if (!testForm.contentJson.trim()) return null;
+    try {
+      const v = JSON.parse(testForm.contentJson);
+      return v && typeof v === "object" ? (v as { sections?: ManagedSection[] }) : null;
+    } catch {
+      return null;
+    }
+  }, [testForm.contentJson]);
+
+  const contentSections = parsedContent?.sections ?? [];
+
+  const updateSections = (fn: (secs: ManagedSection[]) => void) => {
+    const current = parsedContent ?? {};
+    const next = JSON.parse(JSON.stringify(contentSections)) as ManagedSection[];
+    fn(next);
+    setTestForm((f) => ({
+      ...f,
+      contentJson: JSON.stringify({ ...current, sections: next }, null, 2),
+    }));
+  };
+
+  const uploadSectionImage = async (i: number, file: File) => {
+    if (!file || uploadingSection !== null) return;
+    setUploadingSection(i);
+    setUploadProgress(0);
+    try {
+      const uploaded = await uploadToStorage(file, "mock-tests", "file", (pct) =>
+        setUploadProgress(pct)
+      );
+      updateSections((secs) => {
+        const s = secs[i];
+        if (!s) return;
+        s.image = uploaded.ref;
+        if (!s.imagePlacement) s.imagePlacement = "below-passage";
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Image upload failed");
+    } finally {
+      setUploadingSection(null);
+      setUploadProgress(null);
+    }
+  };
+
+  const removeSectionImage = (i: number) => {
+    updateSections((secs) => {
+      const s = secs[i];
+      if (s) {
+        delete s.image;
+        delete s.imagePlacement;
+      }
+    });
+  };
+
+  const setSectionPlacement = (i: number, placement: string) => {
+    updateSections((secs) => {
+      if (secs[i]) secs[i].imagePlacement = placement;
+    });
+  };
+
+  const copySectionToken = async (i: number) => {
+    const url = contentSections[i]?.image;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(`![Section image](${url})`);
+      setCopiedToken(i);
+      window.setTimeout(() => setCopiedToken((c) => (c === i ? null : c)), 1500);
+    } catch {
+      setError("Clipboard unavailable — copy the image URL from the field instead.");
+    }
+  };
 
   if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
 
@@ -850,6 +950,116 @@ export function MockTestManage() {
                           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                         />
                       </div>
+
+                      {contentSections.length > 0 && (
+                        <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Attach images to sections
+                            </p>
+                            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                              Figures are placed above/below the passage (choose below) or inline — paste{" "}
+                              <code className="font-mono" style={{ color: "var(--brand-2)" }}>![alt](url)</code>{" "}
+                              anywhere in the passage, instructions or a question prompt to pin it exactly.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-2.5">
+                            {contentSections.map((s, i) => {
+                              const uploading = uploadingSection === i;
+                              return (
+                                <div
+                                  key={s.id ?? i}
+                                  className="flex flex-col gap-3 rounded-xl border bg-white p-3"
+                                  style={{ borderColor: "var(--line)" }}
+                                >
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                                      Section {i + 1}
+                                    </span>
+                                    {s.type && (
+                                      <span className="shrink-0 text-[11.5px] font-medium capitalize" style={{ color: "var(--body)" }}>
+                                        {s.type}
+                                      </span>
+                                    )}
+                                    <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: "var(--body)" }}>
+                                      {sectionPreview(s)}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50" style={{ background: "var(--brand)" }}>
+                                      {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
+                                      {uploading ? `Uploading ${uploadProgress ?? 0}%` : s.image ? "Replace image" : "Upload image"}
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={uploading}
+                                        onChange={(e) => {
+                                          const f = e.target.files?.[0];
+                                          if (f) void uploadSectionImage(i, f);
+                                          e.target.value = "";
+                                        }}
+                                      />
+                                    </label>
+
+                                    <select
+                                      value={s.imagePlacement ?? "below-passage"}
+                                      onChange={(e) => setSectionPlacement(i, e.target.value)}
+                                      className="rounded-full border bg-white px-3 py-2 text-[12.5px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                    >
+                                      {SECTION_PLACEMENTS.map((p) => (
+                                        <option key={p.value} value={p.value}>
+                                          {p.label}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    {s.image && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => void copySectionToken(i)}
+                                          className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                        >
+                                          {copiedToken === i ? <Check size={12} style={{ color: "#0FA968" }} /> : <Copy size={12} />}
+                                          {copiedToken === i ? "Copied" : "Copy inline link"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => removeSectionImage(i)}
+                                          className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                          style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                        >
+                                          <X size={12} /> Remove
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {s.image && (
+                                    <div className="flex items-center gap-3 rounded-lg border p-2" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={s.image} alt="" className="h-16 w-24 shrink-0 rounded-lg object-cover" />
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={s.image}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        className="w-full min-w-0 rounded-lg border bg-white px-3 py-2 font-mono text-[11px] focus:outline-none"
+                                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex flex-col gap-2 md:col-span-2">
                         <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
