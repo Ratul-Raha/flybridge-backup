@@ -50,7 +50,6 @@ const mockTestContentSchema = new Schema(
     passages: { type: [testPassageSchema], default: [] },
     audioUrl: { type: String, trim: true },
     audioPublicId: { type: String, trim: true },
-    videoUrl: { type: String, trim: true },
     sections: { type: [testSectionSchema], default: [] },
     writingTask1: { type: String },
     writingTask2: { type: String },
