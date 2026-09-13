@@ -50,6 +50,10 @@ function sanitizeContent(
     sections,
     writingTask1: content.writingTask1,
     writingTask2: content.writingTask2,
+    writingTask1Image: content.writingTask1Image,
+    writingTask1ImagePlacement: content.writingTask1ImagePlacement,
+    writingTask2Image: content.writingTask2Image,
+    writingTask2ImagePlacement: content.writingTask2ImagePlacement,
     ...(includeAnswers
       ? {}
       : { sections, hasAudio: !!(content.audioUrl || content.audioPublicId) }),

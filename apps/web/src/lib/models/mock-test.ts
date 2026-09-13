@@ -53,6 +53,10 @@ const mockTestContentSchema = new Schema(
     sections: { type: [testSectionSchema], default: [] },
     writingTask1: { type: String },
     writingTask2: { type: String },
+    writingTask1Image: { type: String, trim: true },
+    writingTask1ImagePlacement: { type: String, trim: true },
+    writingTask2Image: { type: String, trim: true },
+    writingTask2ImagePlacement: { type: String, trim: true },
   },
   { _id: false }
 );

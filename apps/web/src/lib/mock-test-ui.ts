@@ -71,6 +71,10 @@ export type TestDetail = {
     }[];
     writingTask1?: string;
     writingTask2?: string;
+    writingTask1Image?: string;
+    writingTask1ImagePlacement?: "above" | "below";
+    writingTask2Image?: string;
+    writingTask2ImagePlacement?: "above" | "below";
   };
   createdAt: string;
 };

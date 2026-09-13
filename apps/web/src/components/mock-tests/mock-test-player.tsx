@@ -899,6 +899,8 @@ export function MockTestPlayer({
                 <TaskWriter
                   label="Writing Task 1"
                   prompt={test.content.writingTask1}
+                  image={test.content.writingTask1Image}
+                  imagePlacement={test.content.writingTask1ImagePlacement}
                   value={typeof answers["writingTask1"]?.text === "string" ? answers["writingTask1"].text ?? "" : ""}
                   onChange={(v) => setText("writingTask1", v)}
                 />
@@ -907,6 +909,8 @@ export function MockTestPlayer({
                 <TaskWriter
                   label="Writing Task 2"
                   prompt={test.content.writingTask2}
+                  image={test.content.writingTask2Image}
+                  imagePlacement={test.content.writingTask2ImagePlacement}
                   value={typeof answers["writingTask2"]?.text === "string" ? answers["writingTask2"].text ?? "" : ""}
                   onChange={(v) => setText("writingTask2", v)}
                 />
@@ -1208,14 +1212,28 @@ export function MockTestPlayer({
 function TaskWriter({
   label,
   prompt,
+  image,
+  imagePlacement,
   value,
   onChange,
 }: {
   label: string;
   prompt: string;
+  image?: string;
+  imagePlacement?: "above" | "below";
   value: string;
   onChange: (v: string) => void;
 }) {
+  const placement = imagePlacement === "above" ? "above" : "below";
+  const taskImage = image ? (
+    <div className="mb-4 overflow-hidden rounded-xl border bg-[#FBFBFD]" style={{ borderColor: "var(--line)" }}>
+      <img
+        src={image}
+        alt={`${label} figure`}
+        className="block w-full object-contain"
+      />
+    </div>
+  ) : null;
   return (
     <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
       <div className="border-b px-5 py-3" style={{ borderColor: "var(--line)" }}>
@@ -1224,9 +1242,11 @@ function TaskWriter({
         </span>
       </div>
       <div className="px-5 py-5">
+        {placement === "above" && taskImage}
         <p className="whitespace-pre-line text-[13.5px] leading-[1.8]" style={{ color: "var(--ink)" }}>
           {inlineRich(prompt)}
         </p>
+        {placement === "below" && taskImage}
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}

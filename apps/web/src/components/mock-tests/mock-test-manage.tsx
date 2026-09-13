@@ -52,11 +52,28 @@ type ManagedSection = {
   questions?: { qid?: string; prompt?: string; type?: string }[];
 };
 
+type ManagedWritingContent = {
+  sections?: ManagedSection[];
+  writingTask1?: string;
+  writingTask2?: string;
+  writingTask1Image?: string;
+  writingTask1ImagePlacement?: string;
+  writingTask2Image?: string;
+  writingTask2ImagePlacement?: string;
+};
+
 const SECTION_PLACEMENTS = [
   { value: "above", label: "Above passage & instructions" },
   { value: "below-passage", label: "Below passage, above questions" },
   { value: "below", label: "After questions" },
 ] as const;
+
+const WRITING_PLACEMENTS = [
+  { value: "above", label: "Above the task" },
+  { value: "below", label: "Below the task, above answer box" },
+] as const;
+
+type ManagedWritingTask = "t1" | "t2";
 
 function sectionPreview(s: ManagedSection): string {
   const fromInstructions = s.instructions?.trim() ?? "";
@@ -91,6 +108,8 @@ export function MockTestManage() {
   const [uploadingSection, setUploadingSection] = useState<number | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [copiedToken, setCopiedToken] = useState<number | null>(null);
+  const [uploadingTask, setUploadingTask] = useState<ManagedWritingTask | null>(null);
+  const [copiedTask, setCopiedTask] = useState<ManagedWritingTask | null>(null);
 
   const loadBundles = useCallback(async () => {
     try {
@@ -388,13 +407,82 @@ export function MockTestManage() {
     if (!testForm.contentJson.trim()) return null;
     try {
       const v = JSON.parse(testForm.contentJson);
-      return v && typeof v === "object" ? (v as { sections?: ManagedSection[] }) : null;
+      return v && typeof v === "object" ? (v as ManagedWritingContent) : null;
     } catch {
       return null;
     }
   }, [testForm.contentJson]);
 
   const contentSections = parsedContent?.sections ?? [];
+
+  const taskFields = (task: ManagedWritingTask) =>
+    task === "t1"
+      ? { text: "writingTask1", image: "writingTask1Image", placement: "writingTask1ImagePlacement" }
+      : { text: "writingTask2", image: "writingTask2Image", placement: "writingTask2ImagePlacement" };
+
+  const updateWritingTask = (task: ManagedWritingTask, patch: { image?: string; placement?: string }) => {
+    const f = taskFields(task);
+    setTestForm((form) => {
+      let current: Record<string, unknown> = {};
+      if (form.contentJson.trim()) {
+        try {
+          current = JSON.parse(form.contentJson) as Record<string, unknown>;
+        } catch {
+          return form;
+        }
+      }
+      const next = { ...current };
+      if (patch.image) next[f.image] = patch.image;
+      if (patch.placement !== undefined) next[f.placement] = patch.placement;
+      if (next[f.image] && !next[f.placement]) next[f.placement] = "below";
+      if (!next[f.image]) {
+        delete next[f.image];
+        delete next[f.placement];
+      }
+      return { ...form, contentJson: JSON.stringify(next, null, 2) };
+    });
+  };
+
+  const uploadWritingImage = async (task: ManagedWritingTask, file: File) => {
+    if (!file || uploadingTask !== null) return;
+    setUploadingTask(task);
+    setUploadProgress(0);
+    try {
+      const uploaded = await uploadToStorage(file, "mock-tests", "file", (pct) =>
+        setUploadProgress(pct)
+      );
+      updateWritingTask(task, { image: uploaded.ref });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Image upload failed");
+    } finally {
+      setUploadingTask(null);
+      setUploadProgress(null);
+    }
+  };
+
+  const removeWritingImage = (task: ManagedWritingTask) =>
+    updateWritingTask(task, { image: "" });
+
+  const setWritingPlacement = (task: ManagedWritingTask, placement: string) =>
+    updateWritingTask(task, { placement });
+
+  const copyWritingToken = async (task: ManagedWritingTask) => {
+    const f = taskFields(task);
+    const url = parsedContent?.[f.image as keyof ManagedWritingContent] as string | undefined;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(`![Section image](${url})`);
+      setCopiedTask(task);
+      window.setTimeout(() => setCopiedTask((c) => (c === task ? null : c)), 1500);
+    } catch {
+      setError("Clipboard unavailable — copy the image URL from the field instead.");
+    }
+  };
+
+  const writingTaskRows = [
+    { task: "t1" as const, label: "Writing Task 1", text: parsedContent?.writingTask1, image: parsedContent?.writingTask1Image, placement: parsedContent?.writingTask1ImagePlacement },
+    { task: "t2" as const, label: "Writing Task 2", text: parsedContent?.writingTask2, image: parsedContent?.writingTask2Image, placement: parsedContent?.writingTask2ImagePlacement },
+  ].filter((r) => !!r.text);
 
   const updateSections = (fn: (secs: ManagedSection[]) => void) => {
     const current = parsedContent ?? {};
@@ -1057,6 +1145,112 @@ export function MockTestManage() {
                                         type="text"
                                         readOnly
                                         value={s.image}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        className="w-full min-w-0 rounded-lg border bg-white px-3 py-2 font-mono text-[11px] focus:outline-none"
+                                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {testForm.skill === "writing" && writingTaskRows.length > 0 && (
+                        <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Attach images to writing tasks
+                            </p>
+                            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                              IELTS Task 1 often needs a chart/diagram. Figures are placed above or below the
+                              task — or paste{" "}
+                              <code className="font-mono" style={{ color: "var(--brand-2)" }}>![alt](url)</code>{" "}
+                              inside the task text to pin it exactly.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-2.5">
+                            {writingTaskRows.map((r) => {
+                              const uploading = uploadingTask === r.task;
+                              return (
+                                <div
+                                  key={r.task}
+                                  className="flex flex-col gap-3 rounded-xl border bg-white p-3"
+                                  style={{ borderColor: "var(--line)" }}
+                                >
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                                      {r.label}
+                                    </span>
+                                    <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: "var(--body)" }}>
+                                      {r.text?.slice(0, 70)}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50" style={{ background: "var(--brand)" }}>
+                                      {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
+                                      {uploading ? `Uploading ${uploadProgress ?? 0}%` : r.image ? "Replace image" : "Upload image"}
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={uploading}
+                                        onChange={(e) => {
+                                          const fl = e.target.files?.[0];
+                                          if (fl) void uploadWritingImage(r.task, fl);
+                                          e.target.value = "";
+                                        }}
+                                      />
+                                    </label>
+
+                                    <select
+                                      value={r.placement ?? "below"}
+                                      onChange={(e) => setWritingPlacement(r.task, e.target.value)}
+                                      className="rounded-full border bg-white px-3 py-2 text-[12.5px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                    >
+                                      {WRITING_PLACEMENTS.map((p) => (
+                                        <option key={p.value} value={p.value}>
+                                          {p.label}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    {r.image && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => void copyWritingToken(r.task)}
+                                          className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                        >
+                                          {copiedTask === r.task ? <Check size={12} style={{ color: "#0FA968" }} /> : <Copy size={12} />}
+                                          {copiedTask === r.task ? "Copied" : "Copy inline link"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => removeWritingImage(r.task)}
+                                          className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                          style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                        >
+                                          <X size={12} /> Remove
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {r.image && (
+                                    <div className="flex items-center gap-3 rounded-lg border p-2" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={r.image} alt="" className="h-16 w-24 shrink-0 rounded-lg object-cover" />
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={r.image}
                                         onFocus={(e) => e.currentTarget.select()}
                                         className="w-full min-w-0 rounded-lg border bg-white px-3 py-2 font-mono text-[11px] focus:outline-none"
                                         style={{ borderColor: "var(--line)", color: "var(--body)" }}
