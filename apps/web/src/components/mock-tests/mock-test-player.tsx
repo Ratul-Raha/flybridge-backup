@@ -881,12 +881,17 @@ export function MockTestPlayer({
             <div className="flex items-center gap-3">
               <Headphones size={18} style={{ color: "var(--brand-2)" }} />
               <p className="text-[13px]" style={{ color: "var(--body)" }}>
-                Audio for this listening test is attached. Play it before answering.
+                Media for this listening test is attached. Play it before answering.
               </p>
             </div>
-            {test?.content?.audioUrl && (
+            {test?.content?.videoUrl ? (
               // eslint-disable-next-line jsx-a11y/media-has-caption
-              <audio controls src={test.content.audioUrl} className="w-full" />
+              <video controls src={test.content.videoUrl} className="w-full max-h-[480px] rounded-lg" />
+            ) : (
+              test?.content?.audioUrl && (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <audio controls src={test.content.audioUrl} className="w-full" />
+              )
             )}
           </div>
         )}

@@ -54,6 +54,8 @@ type ManagedSection = {
 
 type ManagedWritingContent = {
   sections?: ManagedSection[];
+  audioUrl?: string;
+  videoUrl?: string;
   writingTask1?: string;
   writingTask2?: string;
   writingTask1Image?: string;
@@ -439,6 +441,23 @@ export function MockTestManage() {
         delete next[f.image];
         delete next[f.placement];
       }
+      return { ...form, contentJson: JSON.stringify(next, null, 2) };
+    });
+  };
+
+  const updateContentField = (key: string, value: string) => {
+    setTestForm((form) => {
+      let current: Record<string, unknown> = {};
+      if (form.contentJson.trim()) {
+        try {
+          current = JSON.parse(form.contentJson) as Record<string, unknown>;
+        } catch {
+          return form;
+        }
+      }
+      const next = { ...current };
+      if (value.trim()) next[key] = value.trim();
+      else delete next[key];
       return { ...form, contentJson: JSON.stringify(next, null, 2) };
     });
   };
@@ -1033,6 +1052,37 @@ export function MockTestManage() {
                           {generating ? "Generating structure…" : "Generate structure with AI"}
                         </button>
                       </div>
+
+                      {testForm.skill === "listening" && (
+                        <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Listening media (audio or video URL)
+                            </p>
+                            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                              Paste the audio or video URL for this listening test. Video takes priority when both are set.
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2.5">
+                            <input
+                              type="text"
+                              value={parsedContent?.audioUrl ?? ""}
+                              onChange={(e) => updateContentField("audioUrl", e.target.value)}
+                              placeholder="Audio URL (e.g. https://…/listening-part-1.mp3)"
+                              className={inputClass + " font-mono text-[12px]"}
+                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                            />
+                            <input
+                              type="text"
+                              value={parsedContent?.videoUrl ?? ""}
+                              onChange={(e) => updateContentField("videoUrl", e.target.value)}
+                              placeholder="Video URL (e.g. https://…/listening-part-1.mp4 or /video/listening.mp4)"
+                              className={inputClass + " font-mono text-[12px]"}
+                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex flex-col gap-2 md:col-span-2">
                         <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
