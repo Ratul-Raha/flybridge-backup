@@ -342,6 +342,7 @@ function normalizeContent(
     passages,
     audioUrl: "",
     audioPublicId: "",
+    videoUrl: "",
     sections,
     writingTask1: typeof raw.writingTask1 === "string" ? raw.writingTask1 : "",
     writingTask2: typeof raw.writingTask2 === "string" ? raw.writingTask2 : "",

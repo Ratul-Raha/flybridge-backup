@@ -50,6 +50,7 @@ export type TestDetail = {
       text: string;
     }[];
     audioUrl?: string;
+    videoUrl?: string;
     hasAudio?: boolean;
     sections: {
       id?: string;
