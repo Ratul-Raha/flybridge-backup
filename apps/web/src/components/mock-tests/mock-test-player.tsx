@@ -142,7 +142,7 @@ export function MockTestPlayer({
   );
 
   const isWriting = test?.skill === "writing";
-  const hasTimer = !isWriting && (test?.durationMinutes ?? 0) > 0;
+  const hasTimer = (test?.durationMinutes ?? 0) > 0;
   const lowTime = hasTimer && secondsLeft > 0 && secondsLeft <= 60;
   const flattened = useMemo(
     () =>

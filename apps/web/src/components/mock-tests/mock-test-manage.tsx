@@ -822,7 +822,14 @@ export function MockTestManage() {
                         </label>
                         <select
                           value={testForm.skill}
-                          onChange={(e) => setTestForm({ ...testForm, skill: e.target.value as MockTestSkill })}
+                          onChange={(e) => {
+                            const next = e.target.value as MockTestSkill;
+                            setTestForm({
+                              ...testForm,
+                              skill: next,
+                              ...(next === "writing" ? { answerText: "", answerKey: "" } : {}),
+                            });
+                          }}
                           className={inputClass}
                           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                         >
@@ -910,19 +917,21 @@ export function MockTestManage() {
                         />
                       </div>
 
-                      <div className="flex flex-col gap-2 md:col-span-2">
-                        <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                          Answer key / answers text (optional)
-                        </label>
-                        <textarea
-                          value={testForm.answerText}
-                          onChange={(e) => setTestForm({ ...testForm, answerText: e.target.value })}
-                          rows={3}
-                          placeholder={"Paste the answers key so AI can mark correct options…"}
-                          className={inputClass + " resize-y font-mono text-[12px]"}
-                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                        />
-                      </div>
+                      {testForm.skill !== "writing" && (
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                          <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                            Answer key / answers text (optional)
+                          </label>
+                          <textarea
+                            value={testForm.answerText}
+                            onChange={(e) => setTestForm({ ...testForm, answerText: e.target.value })}
+                            rows={3}
+                            placeholder={"Paste the answers key so AI can mark correct options…"}
+                            className={inputClass + " resize-y font-mono text-[12px]"}
+                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                          />
+                        </div>
+                      )}
 
                       <div className="md:col-span-2">
                         <button
@@ -1061,19 +1070,21 @@ export function MockTestManage() {
                         </div>
                       )}
 
-                      <div className="flex flex-col gap-2 md:col-span-2">
-                        <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                          Answer key (raw text, used by the AI grader)
-                        </label>
-                        <textarea
-                          value={testForm.answerKey}
-                          onChange={(e) => setTestForm({ ...testForm, answerKey: e.target.value })}
-                          rows={3}
-                          placeholder={"e.g. 1: A  2: True  3: NO MORE THAN TWO WORDS…"}
-                          className={inputClass + " resize-y font-mono text-[12px]"}
-                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                        />
-                      </div>
+                      {testForm.skill !== "writing" && (
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                          <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                            Answer key (raw text, used by the AI grader)
+                          </label>
+                          <textarea
+                            value={testForm.answerKey}
+                            onChange={(e) => setTestForm({ ...testForm, answerKey: e.target.value })}
+                            rows={3}
+                            placeholder={"e.g. 1: A  2: True  3: NO MORE THAN TWO WORDS…"}
+                            className={inputClass + " resize-y font-mono text-[12px]"}
+                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3 mt-5">

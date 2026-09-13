@@ -21,6 +21,8 @@ function sanitizeContent(
         type: s.type,
         instructions: s.instructions,
         passage: s.passage,
+        image: s.image,
+        imagePlacement: s.imagePlacement,
         questions: (s.questions ?? []).map((q) => ({
           qid: q.qid,
           type: q.type,
