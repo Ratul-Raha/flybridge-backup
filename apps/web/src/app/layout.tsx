@@ -4,6 +4,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/caveat";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
+import { NavigationProgress } from "@/components/navigation-progress";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { ReadinessFab } from "@/components/readiness/readiness-fab";
 import { AuthProvider } from "@/lib/auth/auth-context";
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <AuthProvider>
+          <NavigationProgress />
           {children}
           <FooterWithRoutes />
           <ReadinessFab />
