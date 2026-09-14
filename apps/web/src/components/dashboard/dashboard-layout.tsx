@@ -252,6 +252,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           },
           {
             kind: "link",
+            label: "Resources",
+            href: "/dashboard/resources",
+            icon: FolderOpen,
+            active: pathname.startsWith("/dashboard/resources"),
+          },
+          {
+            kind: "link",
             label: "Mock Tests",
             href: "/dashboard/mock-tests",
             icon: ListChecks,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CreditCard, Smartphone } from "lucide-react";
+import { Check } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
 
 export type PickableCurrency = "USD" | "BDT";
@@ -9,26 +9,37 @@ export type PickerPrices = { USD?: number; BDT?: number } | null | undefined;
 
 type OptionDef = {
   code: PickableCurrency;
-  brand: string;
-  title: string;
-  note: string;
+  name: string;
+  priceLabel: string;
   methods: string[];
+  logo: string;
+  logoInvert?: boolean;
+  background: string;
+  accent: string;
+  pill: string;
 };
 
 const OPTIONS: OptionDef[] = [
   {
     code: "USD",
-    brand: "Stripe",
-    title: "International cards",
-    note: "Secure card checkout · USD",
+    name: "Stripe",
+    priceLabel: "USD",
     methods: ["Visa", "Mastercard", "Amex", "Apple Pay"],
+    logo: "/payments/stripe.svg",
+    logoInvert: true,
+    background: "linear-gradient(135deg, #635BFF 0%, #5438FF 100%)",
+    accent: "#635BFF",
+    pill: "#FFFFFF",
   },
   {
     code: "BDT",
-    brand: "bKash",
-    title: "Mobile wallet · BDT",
-    note: "Instant local payment",
+    name: "EPS",
+    priceLabel: "BDT",
     methods: ["bKash", "Nagad", "Rocket", "Upay"],
+    logo: "/payments/eps.png",
+    background: "linear-gradient(135deg, #1C7A5E 0%, #0D6B4F 100%)",
+    accent: "#1C7A5E",
+    pill: "#FFFFFF",
   },
 ];
 
@@ -47,6 +58,8 @@ export function PaymentMethodPicker({
   const pair: { code: PickableCurrency; amount: number }[] = [];
   if (usd !== null) pair.push({ code: "USD", amount: usd });
   if (bdt !== null) pair.push({ code: "BDT", amount: bdt });
+
+  const amountFor = (code: PickableCurrency) => (code === "USD" ? usd : bdt);
 
   return (
     <div className="space-y-3">
@@ -71,80 +84,69 @@ export function PaymentMethodPicker({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2.5">
-        {OPTIONS.filter(
-          (o) => (o.code === "USD" && usd !== null) || (o.code === "BDT" && bdt !== null)
-        ).map((option) => {
+      <div className="flex flex-col gap-3">
+        {OPTIONS.filter((o) => {
+          if (o.code === "USD") return usd !== null;
+          return bdt !== null;
+        }).map((option) => {
           const selected = value === option.code;
-          const amount = option.code === "USD" ? usd : bdt;
-          const Icon = option.code === "USD" ? CreditCard : Smartphone;
+          const amount = amountFor(option.code);
           return (
             <button
               key={option.code}
               type="button"
               onClick={() => onChange(option.code)}
               aria-pressed={selected}
-              className="flex items-start gap-3.5 rounded-xl border bg-white p-4 text-left transition-all duration-200"
+              className="relative w-full overflow-hidden rounded-2xl p-5 text-center transition-all duration-200"
               style={{
-                borderColor: selected ? "var(--brand-2)" : "var(--line)",
+                background: option.background,
                 boxShadow: selected
-                  ? "0 10px 26px -14px rgba(47,95,224,0.4)"
-                  : "none",
+                  ? `0 18px 40px -18px ${option.accent}80`
+                  : "0 8px 24px -16px rgba(0,0,0,0.28)",
+                outline: selected ? `3px solid ${option.accent}` : "none",
+                outlineOffset: 2,
               }}
             >
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors duration-200"
                 style={{
-                  background: selected ? "var(--brand-soft)" : "var(--bg-soft)",
-                  color: selected ? "var(--brand-2)" : "var(--body)",
+                  borderColor: selected ? "#fff" : "rgba(255,255,255,0.45)",
+                  background: selected ? "#fff" : "transparent",
                 }}
               >
-                <Icon size={20} />
+                {selected && <Check size={11} strokeWidth={4} style={{ color: option.accent }} />}
               </span>
 
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="text-[14px] font-bold" style={{ color: "var(--ink)" }}>
-                    {option.brand}
-                    <span className="ml-1.5 font-medium text-[12px]" style={{ color: "var(--body)" }}>
-                      {option.title}
-                    </span>
-                  </span>
-                  <span
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200"
-                    style={{
-                      borderColor: selected ? "var(--brand-2)" : "var(--line)",
-                      background: selected ? "var(--brand-2)" : "transparent",
-                    }}
-                  >
-                    {selected && <Check size={11} strokeWidth={3.5} style={{ color: "#fff" }} />}
-                  </span>
-                </span>
+              <span className="mx-auto mb-3 flex h-12 w-32 items-center justify-center rounded-xl bg-white px-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={option.logo}
+                  alt={option.name}
+                  width={100}
+                  height={26}
+                  style={{
+                    height: 26,
+                    width: "auto",
+                    objectFit: "contain",
+                    ...(option.logoInvert ? { filter: "brightness(0) invert(1)" } : null),
+                  }}
+                />
+              </span>
 
-                <span className="mt-0.5 block text-[11.5px]" style={{ color: "var(--body)" }}>
-                  {amount !== null && (
-                    <span className="font-semibold" style={{ color: "var(--brand-2)" }}>
-                      {formatMoney(amount, option.code)}{" "}
-                    </span>
-                  )}
-                  {option.note}
+              {amount !== null && (
+                <span className="block text-[20px] font-extrabold leading-tight text-white">
+                  {formatMoney(amount, option.code)}
                 </span>
+              )}
+              <span className="mt-1 block text-[12px] font-medium text-white/80">
+                {option.methods.join(" · ")}
+              </span>
 
-                <span className="mt-2 flex flex-wrap gap-1.5">
-                  {option.methods.map((m) => (
-                    <span
-                      key={m}
-                      className="rounded-full border px-2.5 py-[3px] text-[10px] font-semibold uppercase tracking-[0.04em]"
-                      style={{
-                        borderColor: selected ? "var(--brand-2)" : "var(--line)",
-                        background: selected ? "var(--brand-soft)" : "var(--bg-soft)",
-                        color: "var(--body)",
-                      }}
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </span>
+              <span
+                className="mt-3.5 inline-flex w-full items-center justify-center rounded-xl py-2.5 text-[14px] font-bold transition-transform duration-200 group-hover:scale-[1.02]"
+                style={{ background: option.pill, color: option.accent }}
+              >
+                Pay with {option.name}
               </span>
             </button>
           );
