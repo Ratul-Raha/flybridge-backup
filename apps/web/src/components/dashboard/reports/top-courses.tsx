@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "./card";
+import { useCurrency } from "@/components/dashboard/currency-context";
 
 type TopItem = {
   title: string;
@@ -19,6 +20,7 @@ const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
 
 export function TopCourses() {
   const [items, setItems] = useState<TopItem[]>([]);
+  const { moneyUsd } = useCurrency();
 
   useEffect(() => {
     fetch("/api/admin/orders-stats", { cache: "no-store" })
@@ -62,9 +64,9 @@ export function TopCourses() {
                     <td className="py-3 text-right font-semibold" style={{ color: "var(--ink)" }}>
                       {item.orders}
                     </td>
-                    <td className="py-3 text-right font-medium" style={{ color: "var(--ink)" }}>
-                      ${item.revenue.toLocaleString()}
-                    </td>
+<td className="py-3 text-right font-medium" style={{ color: "var(--ink)" }}>
+  {moneyUsd(item.revenue)}
+</td>
                   </tr>
                 );
               })}

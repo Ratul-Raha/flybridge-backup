@@ -4,10 +4,33 @@ export type SupportedCurrency = (typeof MULTI_CURRENCY_CODES)[number];
 export type CurrencyPrices = Partial<Record<SupportedCurrency, number>>;
 export type StoredPrices = { [K in SupportedCurrency]?: number | null | undefined };
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
+export const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: "$",
   BDT: "৳",
 };
+
+/** Units of each currency that equal 1 USD (base currency for stats). */
+export const USD_TO_BDT = 120;
+export const CURRENCY_RATES: Record<string, number> = { USD: 1, BDT: USD_TO_BDT };
+
+export function toBaseUsd(amount: number, currency: string): number {
+  const code = (currency ?? "USD").toUpperCase();
+  const rate = CURRENCY_RATES[code] ?? 1;
+  return amount / rate;
+}
+
+export function fromBaseUsd(amountUsd: number, currency: string): number {
+  const code = (currency ?? "USD").toUpperCase();
+  const rate = CURRENCY_RATES[code] ?? 1;
+  return amountUsd * rate;
+}
+
+export function convertAmount(amount: number, from: string, to: string): number {
+  const fromCode = (from ?? "USD").toUpperCase();
+  const toCode = (to ?? "USD").toUpperCase();
+  if (fromCode === toCode || amount === 0) return amount;
+  return fromBaseUsd(toBaseUsd(amount, fromCode), toCode);
+}
 
 export type PriceInput = {
   price?: number;

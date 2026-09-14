@@ -12,6 +12,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Card } from "./card";
+import { useCurrency } from "@/components/dashboard/currency-context";
 
 type OrderStats = {
   totalOrders: number;
@@ -90,6 +91,7 @@ function Metric({
 
 export function OrderOverview() {
   const [data, setData] = useState<OrderStats | null>(null);
+  const { moneyUsd, money } = useCurrency();
 
   useEffect(() => {
     fetch("/api/admin/orders-stats", { cache: "no-store" })
@@ -123,7 +125,7 @@ export function OrderOverview() {
           <Metric
             icon={DollarSign}
             label="Revenue"
-            value={data ? `$${data.totalRevenue.toLocaleString()}` : "\u2014"}
+            value={data ? moneyUsd(data.totalRevenue) : "\u2014"}
             color="#10B981"
           />
           <Metric
@@ -148,7 +150,7 @@ export function OrderOverview() {
           <Metric
             icon={TrendingUp}
             label="Avg. order value"
-            value={data ? `$${data.avgOrderValue.toLocaleString()}` : "\u2014"}
+            value={data ? moneyUsd(data.avgOrderValue) : "\u2014"}
             color="#0EA5E9"
           />
           <Metric
@@ -214,7 +216,7 @@ export function OrderOverview() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[11.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                    {o.total === 0 ? "Free" : `$${o.total.toLocaleString()}`}
+                    {o.total === 0 ? "Free" : money(o.total, o.currency)}
                   </p>
                   <p className="text-[9.5px]" style={{ color: "var(--body)" }}>{ago}</p>
                 </div>

@@ -2,6 +2,22 @@ import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order } from "@/lib/models/order";
+import { USD_TO_BDT } from "@/lib/pricing";
+
+/** Converts an order field into its USD equivalent based on the order currency. */
+function usdStage(field: string) {
+  return {
+    $addFields: {
+      usd: {
+        $cond: [
+          { $eq: [{ $toUpper: { $ifNull: ["$currency", "USD"] } }, "BDT"] },
+          { $divide: [`$${field}`, USD_TO_BDT] },
+          `$${field}`,
+        ],
+      },
+    },
+  };
+}
 
 export async function GET() {
   const session = await readSession();
@@ -37,14 +53,16 @@ export async function GET() {
       Order.countDocuments({ total: 0, status: "completed" }),
       Order.aggregate([
         { $match: { status: "completed" } },
-        { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
+        usdStage("total"),
+        { $group: { _id: null, total: { $sum: "$usd" }, avg: { $avg: "$usd" } } },
       ]),
       Order.aggregate([
+        usdStage("total"),
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
             count: { $sum: 1 },
-            revenue: { $sum: "$total" },
+            revenue: { $sum: "$usd" },
           },
         },
         { $sort: { _id: 1 } },
@@ -52,12 +70,13 @@ export async function GET() {
       Order.aggregate([
         { $unwind: "$items" },
         { $match: { status: "completed" } },
+        usdStage("items.price"),
         {
           $group: {
             _id: { title: "$items.title", itemType: "$items.itemType" },
             orders: { $sum: 1 },
-            revenue: { $sum: "$items.price" },
-            avgPrice: { $avg: "$items.price" },
+            revenue: { $sum: "$usd" },
+            avgPrice: { $avg: "$usd" },
           },
         },
         { $sort: { orders: -1 } },

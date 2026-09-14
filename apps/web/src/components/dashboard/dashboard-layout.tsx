@@ -32,6 +32,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { Avatar } from "@/components/dashboard/avatar";
+import { CurrencyProvider, CurrencySelector } from "@/components/dashboard/currency-context";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { PushEnabler } from "@/components/notifications/push-enabler";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
@@ -536,7 +537,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--bg)" }}>
+    <CurrencyProvider>
+      <div className="min-h-screen flex" style={{ background: "var(--bg)" }}>
       <aside
         className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-[264px] border-r bg-white z-30 overflow-y-auto"
         style={{ borderColor: "var(--line)" }}
@@ -598,6 +600,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             ) : (
               user && (
                 <div className="flex items-center gap-3">
+                  {user?.accountType === "admin" && <CurrencySelector />}
                   {user && <NotificationBell />}
                   {user && <PushEnabler />}
                   <div className="relative" ref={avatarMenuRef}>
@@ -679,6 +682,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       {user?.accountType === "admin" && <OpsBotWidget />}
-    </div>
+      </div>
+    </CurrencyProvider>
   );
 }
