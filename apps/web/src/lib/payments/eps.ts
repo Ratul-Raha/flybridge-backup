@@ -21,10 +21,10 @@ const ENDPOINTS: Record<
   { token: string; initialize: string; verify: string }
 > = {
   sandbox: {
-    token: "https://sandbox-pgapi.eps.com.bd/v1/Auth/GetToken",
-    initialize: "https://sandbox-pgapi.eps.com.bd/v1/EPSEngine/InitializeEPS",
+    token: "https://sandboxpgapi.eps.com.bd/v1/Auth/GetToken",
+    initialize: "https://sandboxpgapi.eps.com.bd/v1/EPSEngine/InitializeEPS",
     verify:
-      "https://sandbox-pgapi.eps.com.bd/v1/EPSEngine/CheckMerchantTransactionStatus",
+      "https://sandboxpgapi.eps.com.bd/v1/EPSEngine/CheckMerchantTransactionStatus",
   },
   production: {
     token: "https://pgapi.eps.com.bd/v1/Auth/GetToken",
@@ -292,6 +292,7 @@ export async function verifyEPSTransaction(
 
   const data = (await res.json()) as {
     Status?: string;
+    transactionStatus?: string;
     MerchantTransactionId?: string;
     EpsTransactionId?: string;
     TotalAmount?: string;
@@ -303,7 +304,7 @@ export async function verifyEPSTransaction(
   }
 
   return {
-    status: data.Status ?? "Unknown",
+    status: data.Status ?? data.transactionStatus ?? "Unknown",
     merchantTransactionId: data.MerchantTransactionId ?? params.merchantTransactionId ?? "",
     epsTransactionId: data.EpsTransactionId ?? params.epsTransactionId ?? "",
     totalAmount: data.TotalAmount ?? "",

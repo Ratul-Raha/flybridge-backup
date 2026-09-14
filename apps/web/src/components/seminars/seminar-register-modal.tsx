@@ -174,11 +174,16 @@ export function SeminarRegisterModal({
             </div>
 
             {isPaid && (
-              <PaymentMethodPicker
-                prices={seminar.prices}
-                value={currency}
-                onChange={setCurrency}
-              />
+              <div>
+                <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                  Payment method
+                </p>
+                <PaymentMethodPicker
+                  prices={seminar.prices}
+                  value={currency}
+                  onChange={setCurrency}
+                />
+              </div>
             )}
 
             <button

@@ -15,7 +15,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { priceTextFor } from "@/lib/pricing";
 import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   SKILL_META,
@@ -119,7 +118,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
           : "Sign in to get it"
       : submitting
         ? "Redirecting to payment…"
-        : `Buy pack · ${priceTextFor(bundle, currency)}`;
+        : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`;
 
   return (
     <div>
@@ -232,6 +231,9 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
 
           {!anyOwned && !isFree && (
             <div className="mt-4">
+              <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                Payment method
+              </p>
               <PaymentMethodPicker
                 prices={bundle.prices}
                 value={currency}

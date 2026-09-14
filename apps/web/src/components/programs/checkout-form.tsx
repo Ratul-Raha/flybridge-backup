@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { priceTextFor } from "@/lib/pricing";
 import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 
@@ -171,10 +170,10 @@ export function CheckoutForm({ course }: { course: Props }) {
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
           {submitting
-            ? "Processing…"
+            ? "Redirecting to payment…"
             : isFree
               ? "Get it for free"
-              : `Pay ${priceTextFor(course, currency)}`}
+              : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`}
         </button>
       )}
 

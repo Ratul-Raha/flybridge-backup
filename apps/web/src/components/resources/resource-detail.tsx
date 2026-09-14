@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { priceTextFor } from "@/lib/pricing";
 import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   fileTypeMeta,
@@ -156,7 +155,7 @@ export function ResourceDetail({
   };
 
   const primaryLabel = needsPayment
-    ? `Buy now · ${priceTextFor(r, currency)}`
+    ? `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`
     : needsLogin
       ? "Sign in to download"
       : isFree
@@ -342,7 +341,7 @@ export function ResourceDetail({
                   {submitting && <Loader2 size={15} className="animate-spin" />}
                   {submitting
                     ? "Redirecting to payment…"
-                    : `Pay ${priceTextFor(r, currency)}`}
+                    : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`}
                 </button>
               </div>
             )}
