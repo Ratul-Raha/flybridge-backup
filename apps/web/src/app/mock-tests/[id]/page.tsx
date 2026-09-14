@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { MockTest } from "@/lib/models/mock-test";
+import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { MockTestBundleDetail } from "@/components/mock-tests/bundle-detail";
 
@@ -57,6 +58,7 @@ export default async function MockTestBundlePage({ params }: Params) {
                 image: bundle.image ?? null,
                 price: bundle.price ?? 0,
                 currency: bundle.currency ?? "USD",
+                prices: cleanPrices(bundle.prices),
                 featured: bundle.featured ?? false,
                 testCount,
               }}

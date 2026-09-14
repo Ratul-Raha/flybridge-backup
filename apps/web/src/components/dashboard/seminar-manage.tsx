@@ -14,6 +14,7 @@ type Seminar = {
   image: string | null;
   type: "free" | "paid";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   url: string | null;
   duration: string | null;
   registrations: number;
@@ -29,6 +30,7 @@ const emptyForm = {
   duration: "",
   type: "free" as "free" | "paid",
   price: "",
+  bdtPrice: "",
   image: "",
   url: "",
 };
@@ -73,6 +75,7 @@ export function SeminarManage() {
       duration: s.duration ?? "",
       type: s.type,
       price: s.price ? String(s.price) : "",
+      bdtPrice: s.prices?.BDT ? String(s.prices.BDT) : "",
       image: s.image ?? "",
       url: s.url ?? "",
     });
@@ -91,7 +94,13 @@ export function SeminarManage() {
       const res = await fetch(url, {
         method: editingId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          prices: {
+            USD: form.type === "paid" ? Math.max(0, Number(form.price) || 0) : 0,
+            BDT: form.type === "paid" ? Math.max(0, Number(form.bdtPrice) || 0) : 0,
+          },
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Save failed");
@@ -223,21 +232,37 @@ export function SeminarManage() {
             </div>
 
             {form.type === "paid" && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                  Price (USD)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="25"
-                  className={inputClass}
-                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                />
-              </div>
+              <>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Price (USD)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    placeholder="25"
+                    className={inputClass}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Price (BDT)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.bdtPrice}
+                    onChange={(e) => setForm({ ...form, bdtPrice: e.target.value })}
+                    placeholder="optional, e.g. 3480"
+                    className={inputClass}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                </div>
+              </>
             )}
 
             <div className="flex flex-col gap-2 md:col-span-2">

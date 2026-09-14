@@ -23,6 +23,7 @@ type Course = {
   pace: string;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
   image: string | null;
   published: boolean;
   featured: boolean;
@@ -42,6 +43,7 @@ type FormState = {
   language: string;
   pace: string;
   price: string;
+  bdtPrice: string;
   currency: string;
   image: string;
   published: boolean;
@@ -64,6 +66,7 @@ const emptyForm: FormState = {
   language: "",
   pace: "",
   price: "",
+  bdtPrice: "",
   currency: "USD",
   image: "",
   published: false,
@@ -127,6 +130,7 @@ export function CourseManage() {
       language: c.language ?? "",
       pace: c.pace ?? "",
       price: c.price ? String(c.price) : "",
+      bdtPrice: c.prices?.BDT ? String(c.prices.BDT) : "",
       currency: c.currency ?? "USD",
       image: c.image ?? "",
       published: c.published ?? false,
@@ -165,6 +169,10 @@ export function CourseManage() {
         body: JSON.stringify({
           ...form,
           price: Number(form.price) || 0,
+          prices: {
+            USD: Number(form.price) || 0,
+            BDT: Number(form.bdtPrice) || 0,
+          },
           modules: form.modules.filter((m) => m.title.trim() || m.lessons.length > 0),
           books: form.books.filter((b) => b.title.trim() && b.pdfUrl),
         }),
@@ -357,10 +365,11 @@ export function CourseManage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Price</label>
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Price (USD)</label>
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 placeholder="0 = free"
@@ -370,7 +379,20 @@ export function CourseManage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Currency</label>
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Price (BDT)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.bdtPrice}
+                onChange={(e) => setForm({ ...form, bdtPrice: e.target.value })}
+                placeholder="optional, e.g. 3480"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Primary currency</label>
               <input
                 type="text"
                 value={form.currency}

@@ -1,5 +1,10 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
+const pricesSchema = new Schema(
+  { USD: { type: Number, min: 0 }, BDT: { type: Number, min: 0 } },
+  { _id: false }
+);
+
 const resourceSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -19,6 +24,7 @@ const resourceSchema = new Schema(
     releaseDate: { type: Date, default: Date.now, index: true },
     access: { type: String, enum: ["public", "members"], default: "public", index: true },
     price: { type: Number, min: 0, default: 0 },
+    prices: { type: pricesSchema },
     featured: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

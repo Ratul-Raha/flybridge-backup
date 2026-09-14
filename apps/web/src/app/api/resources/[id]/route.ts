@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { isResourceCategory } from "@/lib/resource-categories";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { deleteMediaRef } from "@/lib/storage";
 
 function isManager(session: { role: string } | null) {
@@ -35,6 +36,7 @@ export async function GET(
         releaseDate: resource.releaseDate,
         access: resource.access,
         price: resource.price ?? 0,
+        prices: cleanPrices(resource.prices),
         featured: resource.featured ?? false,
       },
     });
@@ -102,7 +104,14 @@ export async function PATCH(
       if (body.access === "members" && typeof body.price === "number") {
         resource.price = Math.max(0, body.price);
       }
-      if (body.access === "public") resource.price = 0;
+      if (body.access === "members") {
+        const prices = sanitizePrices(body.prices);
+        if (prices) resource.prices = prices;
+      }
+      if (body.access === "public") {
+        resource.price = 0;
+        resource.prices = undefined;
+      }
     }
     if (typeof body.featured === "boolean") {
       resource.featured = body.featured;

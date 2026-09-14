@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 function toDto(c: CourseDoc, enrollmentCount?: number, includeContent = false) {
@@ -18,6 +19,7 @@ function toDto(c: CourseDoc, enrollmentCount?: number, includeContent = false) {
     pace: c.pace ?? "",
     price: c.price ?? 0,
     currency: c.currency ?? "USD",
+    prices: cleanPrices(c.prices),
     image: c.image ?? null,
     published: c.published ?? false,
     featured: c.featured ?? false,
@@ -146,6 +148,7 @@ export async function POST(request: NextRequest) {
       price: Math.max(0, Number(body.price) || 0),
       currency:
         typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
+      prices: sanitizePrices(body.prices),
       image: typeof body.image === "string" ? body.image.trim() || undefined : undefined,
       published: body.published === true,
       featured: body.featured === true,

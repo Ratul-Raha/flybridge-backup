@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { isResourceCategory } from "@/lib/resource-categories";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 type ResourceDto = {
@@ -19,6 +20,7 @@ type ResourceDto = {
   releaseDate: Date;
   access: "public" | "members";
   price: number;
+  prices: { USD?: number; BDT?: number };
   featured: boolean;
   downloadCount: number;
 };
@@ -37,6 +39,7 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
     releaseDate: r.releaseDate,
     access: r.access,
     price: r.price ?? 0,
+    prices: cleanPrices(r.prices),
     featured: r.featured ?? false,
     downloadCount: 0,
   };
@@ -142,6 +145,7 @@ export async function POST(request: NextRequest) {
       releaseDate,
       access,
       price: access === "members" ? Math.max(0, Number(body.price) || 0) : 0,
+      prices: access === "members" ? sanitizePrices(body.prices) : undefined,
       featured: body.featured === true,
       createdBy: session!.userId,
     });

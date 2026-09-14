@@ -41,6 +41,7 @@ type ResourceItem = {
   releaseDate: string;
   access: "public" | "members";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
   downloadCount: number;
 };
@@ -60,6 +61,7 @@ type FormState = {
   releaseDate: string;
   access: "public" | "members";
   price: string;
+  bdtPrice: string;
   featured: boolean;
   mode: "file" | "link";
   linkUrl: string;
@@ -74,6 +76,7 @@ const emptyForm: FormState = {
   releaseDate: new Date().toISOString().slice(0, 10),
   access: "public",
   price: "",
+  bdtPrice: "",
   featured: false,
   mode: "file",
   linkUrl: "",
@@ -279,6 +282,7 @@ export function ResourceManage() {
       releaseDate: r.releaseDate.slice(0, 10),
       access: r.access,
       price: r.price ? String(r.price) : "",
+      bdtPrice: r.prices?.BDT ? String(r.prices.BDT) : "",
       featured: r.featured,
       mode: isLink ? "link" : "file",
       linkUrl: isLink ? r.fileUrl : "",
@@ -346,6 +350,10 @@ export function ResourceManage() {
           releaseDate: form.releaseDate,
           access: form.access,
           price: form.price,
+          prices: {
+            USD: form.access === "members" ? Math.max(0, Number(form.price) || 0) : 0,
+            BDT: form.access === "members" ? Math.max(0, Number(form.bdtPrice) || 0) : 0,
+          },
           featured: form.featured,
           fileUrl: form.mode === "link" ? form.linkUrl.trim() : form.file?.url,
           publicId: form.mode === "link" ? "" : form.file?.publicId,
@@ -616,21 +624,37 @@ export function ResourceManage() {
             </div>
 
             {form.access === "members" && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                  Price (USD)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="9.99"
-                  className={inputClass}
-                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                />
-              </div>
+              <>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Price (USD)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    placeholder="9.99"
+                    className={inputClass}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Price (BDT)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.bdtPrice}
+                    onChange={(e) => setForm({ ...form, bdtPrice: e.target.value })}
+                    placeholder="optional, e.g. 1200"
+                    className={inputClass}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                </div>
+              </>
             )}
 
             {form.mode === "link" && (

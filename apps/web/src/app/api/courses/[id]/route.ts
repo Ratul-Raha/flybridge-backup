@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { sanitizePrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 type EditSession = { role: string; userId?: string; name?: string; email?: string } | null;
@@ -22,6 +23,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   pace: "Pace",
   price: "Price",
   currency: "Currency",
+  prices: "Prices",
   image: "Image",
   published: "Published",
   featured: "Featured",
@@ -84,6 +86,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.currency === "string" && body.currency.trim()) {
       course.currency = body.currency.trim();
     }
+    const prices = sanitizePrices(body.prices);
+    if (prices) course.prices = prices;
     if (typeof body.image === "string") course.image = body.image.trim() || undefined;
     if (typeof body.published === "boolean") course.published = body.published;
     if (typeof body.featured === "boolean") course.featured = body.featured;

@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { MockTestBundle, type MockTestBundleDoc } from "@/lib/models/mock-test-bundle";
 import { MockTest, type MockTestDoc } from "@/lib/models/mock-test";
 import { Course } from "@/lib/models/course";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import {
   resolveMockTestOwnership,
   testIsOwned,
@@ -42,6 +43,7 @@ function toDto(b: MockTestBundleDoc, skills?: { reading: number; listening: numb
     image: b.image ?? null,
     price: b.price ?? 0,
     currency: b.currency ?? "USD",
+    prices: cleanPrices(b.prices),
     featured: b.featured ?? false,
     published: b.published ?? false,
     testCount: counts.reading + counts.listening + counts.writing + counts.speaking,
@@ -150,6 +152,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.currency === "string" && body.currency.trim()) {
       bundle.currency = body.currency.trim();
     }
+    const prices = sanitizePrices(body.prices);
+    if (prices) bundle.prices = prices;
     if (typeof body.featured === "boolean") bundle.featured = body.featured;
     if (typeof body.published === "boolean") bundle.published = body.published;
 

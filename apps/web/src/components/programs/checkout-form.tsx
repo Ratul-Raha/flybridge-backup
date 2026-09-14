@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import { priceTextFor } from "@/lib/pricing";
+import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 
 type Props = {
@@ -15,6 +17,7 @@ type Props = {
   badge: string;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
   level: string;
   language: string;
   pace: string;
@@ -30,6 +33,9 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [currency, setCurrency] = useState<PickableCurrency>(
+    course.prices?.USD ? "USD" : "BDT"
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +70,7 @@ export function CheckoutForm({ course }: { course: Props }) {
         body: JSON.stringify({
           itemType: "course",
           itemId: course.courseId,
+          currency,
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
@@ -135,16 +142,12 @@ export function CheckoutForm({ course }: { course: Props }) {
       {/* Payment */}
       {!isFree && !isUpcoming && (
         <div>
-          <p className={sectionTitle} style={{ color: "var(--body)" }}>Payment</p>
-          <div
-            className="rounded-xl border p-4 flex items-center gap-3"
-            style={{ borderColor: "var(--line)" }}
-          >
-            <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: "var(--brand)" }} />
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--body)" }}>
-              You'll be redirected to a secure Stripe checkout to complete your payment. Cards, Apple&nbsp;Pay and Google&nbsp;Pay are accepted.
-            </p>
-          </div>
+          <p className={sectionTitle} style={{ color: "var(--body)" }}>Payment method</p>
+          <PaymentMethodPicker
+            prices={course.prices}
+            value={currency}
+            onChange={setCurrency}
+          />
         </div>
       )}
 
@@ -171,7 +174,7 @@ export function CheckoutForm({ course }: { course: Props }) {
             ? "Processing…"
             : isFree
               ? "Get it for free"
-              : `Pay ${course.currency} ${course.price.toLocaleString()}`}
+              : `Pay ${priceTextFor(course, currency)}`}
         </button>
       )}
 

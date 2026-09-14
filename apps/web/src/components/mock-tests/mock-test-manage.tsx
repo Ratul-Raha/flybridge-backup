@@ -8,11 +8,11 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { uploadToStorage } from "@/lib/upload-client";
 import {
   SKILL_META,
-  formatPrice,
   type BundleDto,
   type MockTestSkill,
   type TestListItem,
 } from "@/lib/mock-test-ui";
+import { formatPriceText } from "@/lib/pricing";
 
 const inputClass =
   "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30";
@@ -24,6 +24,7 @@ const emptyBundleForm = {
   badge: "",
   image: "",
   price: "",
+  bdtPrice: "",
   currency: "USD",
   featured: false,
   published: false,
@@ -164,6 +165,7 @@ export function MockTestManage() {
       badge: b.badge ?? "",
       image: b.image ?? "",
       price: b.price ? String(b.price) : "",
+      bdtPrice: b.prices?.BDT ? String(b.prices.BDT) : "",
       currency: b.currency ?? "USD",
       featured: b.featured ?? false,
       published: b.published ?? false,
@@ -186,6 +188,10 @@ export function MockTestManage() {
         body: JSON.stringify({
           ...bundleForm,
           price: Math.max(0, Number(bundleForm.price) || 0),
+          prices: {
+            USD: Math.max(0, Number(bundleForm.price) || 0),
+            BDT: Math.max(0, Number(bundleForm.bdtPrice) || 0),
+          },
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -669,6 +675,21 @@ export function MockTestManage() {
 
             <div className="flex flex-col gap-2">
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Price (BDT)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={bundleForm.bdtPrice}
+                onChange={(e) => setBundleForm({ ...bundleForm, bdtPrice: e.target.value })}
+                placeholder="optional, e.g. 3480"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                 Image URL
               </label>
               <input
@@ -757,7 +778,7 @@ export function MockTestManage() {
                   {b.testCount} {b.testCount === 1 ? "test" : "tests"}
                 </span>
                 <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: "rgba(224,138,23,0.12)", color: "#E08A17" }}>
-                  {formatPrice(b.price, b.currency)}
+                  {formatPriceText({ price: b.price, currency: b.currency, prices: b.prices })}
                 </span>
                 {b.featured && (
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>

@@ -9,10 +9,22 @@ import {
   isStripeConfigured,
   createCheckoutSession,
 } from "@/lib/payments/stripe";
+import {
+  isEPSConfigured,
+  createEPSPayment,
+} from "@/lib/payments/eps";
 import { ORDER_ITEM_TYPES } from "@/lib/models/order";
 
 function isOrderItemType(value: unknown): value is OrderItemType {
   return typeof value === "string" && (ORDER_ITEM_TYPES as readonly string[]).includes(value);
+}
+
+function clientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip")?.trim() ??
+    ""
+  );
 }
 
 export async function GET() {
@@ -45,6 +57,8 @@ export async function GET() {
         currency: o.currency,
         status: o.status,
         gateway: o.gateway ?? null,
+        gatewayRef: o.gatewayRef ?? null,
+        merchantTransactionId: o.merchantTransactionId ?? null,
         createdAt: o.createdAt,
       })),
     });
@@ -95,17 +109,11 @@ export async function POST(request: NextRequest) {
       },
       itemType: body.itemType,
       itemId: body.itemId,
+      currency: typeof body.currency === "string" ? body.currency : undefined,
     });
 
     let paymentUrl: string | null = null;
     if (requiresPayment && order) {
-      if (!isStripeConfigured()) {
-        return NextResponse.json(
-          { error: "Payments are not configured yet. Please try again later." },
-          { status: 503 }
-        );
-      }
-
       let cancelPath = "/dashboard";
       const item = order.items[0];
       if (item?.itemType === "course") {
@@ -121,17 +129,47 @@ export async function POST(request: NextRequest) {
         cancelPath = `/mock-tests/${item.itemId}`;
       }
 
-      const checkout = await createCheckoutSession(order as OrderDoc, {
-        origin: request.nextUrl.origin,
-        email: user.email,
-        cancelPath,
-      });
-
       const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
-      orderDoc.gateway = "stripe";
-      orderDoc.gatewayRef = checkout.sessionId;
-      await orderDoc.save();
-      paymentUrl = checkout.url;
+      const currency = (order.currency ?? "USD").toUpperCase();
+
+      if (currency === "BDT") {
+        if (!isEPSConfigured()) {
+          return NextResponse.json(
+            { error: "BDT payments are not set up yet. Please choose another method or try again later." },
+            { status: 503 }
+          );
+        }
+
+        const payment = await createEPSPayment({
+          order: order as OrderDoc,
+          origin: request.nextUrl.origin,
+          customer: { name: user.name, email: user.email, phone: user.phone },
+          cancelPath,
+          ipAddress: clientIp(request),
+        });
+        orderDoc.gateway = "eps";
+        orderDoc.gatewayRef = payment.transactionId;
+        orderDoc.merchantTransactionId = payment.merchantTransactionId;
+        await orderDoc.save();
+        paymentUrl = payment.url;
+      } else {
+        if (!isStripeConfigured()) {
+          return NextResponse.json(
+            { error: "Payments are not configured yet. Please try again later." },
+            { status: 503 }
+          );
+        }
+
+        const checkout = await createCheckoutSession(order as OrderDoc, {
+          origin: request.nextUrl.origin,
+          email: user.email,
+          cancelPath,
+        });
+        orderDoc.gateway = "stripe";
+        orderDoc.gatewayRef = checkout.sessionId;
+        await orderDoc.save();
+        paymentUrl = checkout.url;
+      }
     }
 
     return NextResponse.json(

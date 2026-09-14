@@ -3,11 +3,15 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 
 export type SeminarLike = {
   id: string;
   title: string;
   dateTime: string;
+  type?: "free" | "paid";
+  price?: number;
+  prices?: { USD?: number; BDT?: number } | null;
 };
 
 export function formatDateTime(iso: string) {
@@ -38,6 +42,10 @@ export function SeminarRegisterModal({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<PickableCurrency>(
+    seminar.prices?.USD ? "USD" : "BDT"
+  );
+  const isPaid = seminar.type === "paid";
 
   const register = useCallback(
     async (email: string): Promise<"registered" | "paying" | false> => {
@@ -52,7 +60,7 @@ export function SeminarRegisterModal({
         const res = await fetch(`/api/seminars/${seminar.id}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, phone: value }),
+          body: JSON.stringify({ email, phone: value, currency }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Registration failed");
@@ -74,7 +82,7 @@ export function SeminarRegisterModal({
         setSubmitting(false);
       }
     },
-    [seminar, phone, onRegistered]
+    [seminar, phone, onRegistered, currency]
   );
 
   const registerWithGoogle = async () => {
@@ -164,6 +172,14 @@ export function SeminarRegisterModal({
                 ? `Registered as ${user.email} — your FlyBridge account is linked automatically.`
                 : "Sign in with Gmail to register. Your FlyBridge account is created automatically."}
             </div>
+
+            {isPaid && (
+              <PaymentMethodPicker
+                prices={seminar.prices}
+                value={currency}
+                onChange={setCurrency}
+              />
+            )}
 
             <button
               type="button"

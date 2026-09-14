@@ -7,6 +7,7 @@ import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-car
 import { getProgram, programs } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
+import { formatPriceText, cleanPrices } from "@/lib/pricing";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
@@ -448,6 +449,7 @@ function DbCoursePage({
     badge: course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
+    prices: cleanPrices(course.prices),
     level: course.level ?? "",
     language: course.language ?? "",
     pace: course.pace ?? "",
@@ -660,7 +662,7 @@ function DbCoursePage({
                       <span className="font-medium" style={{ color: "var(--ink)" }}>
                         {isFree
                           ? "Free"
-                          : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                          : formatPriceText(checkoutCourse)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[13.5px]">
@@ -682,7 +684,7 @@ function DbCoursePage({
                     >
                       {isFree
                         ? "Free"
-                        : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                        : formatPriceText(checkoutCourse)}
                     </span>
                   </div>
 

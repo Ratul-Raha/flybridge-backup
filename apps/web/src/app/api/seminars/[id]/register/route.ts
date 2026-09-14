@@ -10,6 +10,10 @@ import {
   isStripeConfigured,
   createCheckoutSession,
 } from "@/lib/payments/stripe";
+import {
+  isEPSConfigured,
+  createEPSPayment,
+} from "@/lib/payments/eps";
 import type { OrderDoc } from "@/lib/models/order";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import type { SubscriptionType } from "@/lib/roles";
@@ -19,6 +23,7 @@ type RegistrationBody = {
   phone?: string;
   email?: string;
   idToken?: string;
+  currency?: string;
 };
 
 export async function POST(
@@ -140,28 +145,52 @@ export async function POST(
       },
       itemType: "seminar",
       itemId: seminar._id.toString(),
+      currency: typeof body.currency === "string" ? body.currency : undefined,
     });
 
     let paymentUrl: string | null = null;
     if (order && order.total > 0) {
-      if (!isStripeConfigured()) {
-        return NextResponse.json(
-          { error: "Payments are not configured yet. Please try again later." },
-          { status: 503 }
-        );
-      }
-
-      const checkout = await createCheckoutSession(order as OrderDoc, {
-        origin: request.nextUrl.origin,
-        email: user.email ?? email,
-        cancelPath: `/seminars/${seminar._id.toString()}`,
-      });
-
       const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
-      orderDoc.gateway = "stripe";
-      orderDoc.gatewayRef = checkout.sessionId;
-      await orderDoc.save();
-      paymentUrl = checkout.url;
+      const currency = (order.currency ?? "USD").toUpperCase();
+
+      if (currency === "BDT") {
+        if (!isEPSConfigured()) {
+          return NextResponse.json(
+            { error: "BDT payments are not set up yet. Please choose another method or try again later." },
+            { status: 503 }
+          );
+        }
+
+        const payment = await createEPSPayment({
+          order: order as OrderDoc,
+          origin: request.nextUrl.origin,
+          customer: { name: user.name, email: user.email ?? email, phone: user.phone ?? phone },
+          cancelPath: `/seminars/${seminar._id.toString()}`,
+          ipAddress: clientIp(request),
+        });
+        orderDoc.gateway = "eps";
+        orderDoc.gatewayRef = payment.transactionId;
+        orderDoc.merchantTransactionId = payment.merchantTransactionId;
+        await orderDoc.save();
+        paymentUrl = payment.url;
+      } else {
+        if (!isStripeConfigured()) {
+          return NextResponse.json(
+            { error: "Payments are not configured yet. Please try again later." },
+            { status: 503 }
+          );
+        }
+
+        const checkout = await createCheckoutSession(order as OrderDoc, {
+          origin: request.nextUrl.origin,
+          email: user.email ?? email,
+          cancelPath: `/seminars/${seminar._id.toString()}`,
+        });
+        orderDoc.gateway = "stripe";
+        orderDoc.gatewayRef = checkout.sessionId;
+        await orderDoc.save();
+        paymentUrl = checkout.url;
+      }
     }
 
     const registration = await SeminarRegistration.findOne({

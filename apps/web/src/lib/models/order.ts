@@ -31,6 +31,7 @@ const orderSchema = new Schema(
     },
     gateway: { type: String, trim: true },
     gatewayRef: { type: String, trim: true },
+    merchantTransactionId: { type: String, trim: true },
   },
   { timestamps: true }
 );

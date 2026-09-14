@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestBundle, type MockTestBundleDoc } from "@/lib/models/mock-test-bundle";
 import { MockTest } from "@/lib/models/mock-test";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 function isManager(session: { role: string } | null): boolean {
@@ -52,6 +53,7 @@ function toDto(b: MockTestBundleDoc, skills: BundleSkills | undefined) {
     image: b.image ?? null,
     price: b.price ?? 0,
     currency: b.currency ?? "USD",
+    prices: cleanPrices(b.prices),
     featured: b.featured ?? false,
     published: b.published ?? false,
     testCount: counts.reading + counts.listening + counts.writing + counts.speaking,
@@ -121,6 +123,7 @@ export async function POST(request: NextRequest) {
       price: Math.max(0, Number(body.price) || 0),
       currency:
         typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
+      prices: sanitizePrices(body.prices),
       featured: body.featured === true,
       published: body.published === true,
       createdBy: session!.userId,

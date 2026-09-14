@@ -8,6 +8,7 @@ import {
   formatDateTime,
   type SeminarLike,
 } from "@/components/seminars/seminar-register-modal";
+import { formatPriceText } from "@/lib/pricing";
 
 export type SeminarData = {
   id: string;
@@ -17,6 +18,7 @@ export type SeminarData = {
   image: string | null;
   type: "free" | "paid";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   url: string | null;
   duration: string | null;
   registrations: number;
@@ -94,7 +96,7 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
                 : { background: "var(--brand-soft)", color: "var(--brand)" }
             }
           >
-            {paid ? `Paid${seminar.price ? ` · $${seminar.price}` : ""}` : "Free"}
+            {paid ? `Paid · ${formatPriceText(seminar)}` : "Free"}
           </span>
           <span
             className="absolute right-5 top-5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] rounded-full px-[12px] py-[6px]"
@@ -154,7 +156,7 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
                   className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
                   style={{ background: "var(--brand)" }}
                 >
-                  Buy now{seminar.price ? ` · $${seminar.price}` : ""}
+                  Buy now · {formatPriceText(seminar)}
                 </button>
               ) : (
                 <button

@@ -1,5 +1,10 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
+const pricesSchema = new Schema(
+  { USD: { type: Number, min: 0 }, BDT: { type: Number, min: 0 } },
+  { _id: false }
+);
+
 const seminarSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -8,6 +13,7 @@ const seminarSchema = new Schema(
     image: { type: String },
     type: { type: String, enum: ["free", "paid"], default: "free" },
     price: { type: Number, min: 0, default: 0 },
+    prices: { type: pricesSchema },
     url: { type: String, trim: true },
     duration: { type: String, trim: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

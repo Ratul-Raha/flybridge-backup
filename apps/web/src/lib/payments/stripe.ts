@@ -3,7 +3,8 @@ import "server-only";
 import Stripe from "stripe";
 import { connectDb } from "@/lib/db";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
-import { fulfillOrder, type OrderUser, type HydratedOrder } from "@/lib/orders";
+import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
+import type { ReconcileResult } from "@/lib/payments/types";
 
 let client: Stripe | null = null;
 
@@ -71,44 +72,22 @@ export async function createCheckoutSession(
   return { url: session.url, sessionId: session.id };
 }
 
-export type ReconcileResult = {
-  status: OrderDoc["status"] | "unknown";
-  orderId: string;
-  itemType?: OrderItemType;
-  itemId?: string;
-};
-
-export async function reconcileOrder(
-  orderId: string,
-  viewer: OrderUser & { isAdmin?: boolean }
+export async function reconcileStripeOrder(
+  existing: HydratedOrder,
+  viewer: { id: string; isAdmin?: boolean }
 ): Promise<ReconcileResult> {
   await connectDb();
 
-  const existing = await Order.findById(orderId);
-  if (!existing) throw new Error("Order not found");
-  if (existing.user.toString() !== viewer.id && !viewer.isAdmin) {
-    throw new Error("Forbidden");
-  }
-
-  if (existing.status !== "pending") {
-    const it = existing.items[0];
-    return {
-      status: existing.status,
-      orderId,
-      itemType: it?.itemType,
-      itemId: it?.itemId,
-    };
-  }
+  const item = existing.items[0];
+  const base = {
+    orderId: existing._id.toString(),
+    itemType: item?.itemType,
+    itemId: item?.itemId,
+  } satisfies Omit<ReconcileResult, "status">;
 
   const stripe = getStripe();
   if (!stripe || existing.gateway !== "stripe" || !existing.gatewayRef) {
-    const it = existing.items[0];
-    return {
-      status: existing.status,
-      orderId,
-      itemType: it?.itemType,
-      itemId: it?.itemId,
-    };
+    return { status: existing.status, ...base };
   }
 
   let paid = false;
@@ -118,33 +97,30 @@ export async function reconcileOrder(
       session.payment_status === "paid" ||
       (session.status === "complete" && session.payment_status !== "unpaid");
     if (session.status === "expired" && !paid) {
-      existing.status = "failed";
-      await existing.save();
-      return { status: "failed", orderId };
+      if (existing.status === "pending") {
+        existing.status = "failed";
+        await existing.save();
+      }
+      return { status: "failed", ...base };
     }
   } catch (error) {
     console.error("stripe reconcile retrieve error", error);
   }
 
   if (paid) {
-    const fresh = (await Order.findById(orderId)) as HydratedOrder | null;
+    const fresh = (await Order.findById(existing._id)) as HydratedOrder | null;
     if (fresh && fresh.status === "pending") {
       await fulfillOrder(fresh);
       const it = fresh.items[0];
       return {
         status: "completed",
-        orderId,
+        orderId: fresh._id.toString(),
         itemType: it?.itemType,
         itemId: it?.itemId,
       };
     }
+    return { status: fresh?.status ?? "unknown", ...base };
   }
 
-  const it = existing.items[0];
-  return {
-    status: existing.status,
-    orderId,
-    itemType: it?.itemType,
-    itemId: it?.itemId,
-  };
+  return { status: existing.status, ...base };
 }

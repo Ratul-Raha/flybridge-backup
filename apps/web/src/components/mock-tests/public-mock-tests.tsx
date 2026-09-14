@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, Loader2, Sparkles } from "lucide-react";
-import { SKILL_META, formatPrice, type BundleDto } from "@/lib/mock-test-ui";
+import { SKILL_META, type BundleDto } from "@/lib/mock-test-ui";
+import { formatPriceText } from "@/lib/pricing";
 
 function SkillsRow({ skills }: { skills: BundleDto["skills"] }) {
   const entries = (Object.keys(skills) as (keyof typeof SKILL_META)[])
@@ -173,12 +174,12 @@ export function PublicMockTests() {
                     >
                       {b.badge || "IELTS"}
                     </span>
-                    {b.price > 0 && (
+                    {formatPriceText(b) !== "Free" && (
                       <span
                         className="absolute right-4 top-4 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-[11px] py-[5px]"
                         style={{ background: "rgba(255,255,255,0.92)", color: "var(--ink)" }}
                       >
-                        {formatPrice(b.price, b.currency)}
+                        {formatPriceText(b)}
                       </span>
                     )}
                   </div>

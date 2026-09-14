@@ -9,6 +9,7 @@ export type BundleDto = {
   image: string | null;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
   published: boolean;
   testCount: number;
@@ -123,5 +124,6 @@ export function skillLabel(skill: string): string {
 export function formatPrice(price: number, currency = "USD"): string {
   if (price <= 0) return "Free";
   if (currency === "USD") return `$${price.toLocaleString()}`;
+  if (currency === "BDT") return `৳${price.toLocaleString()}`;
   return `${price.toLocaleString()} ${currency}`;
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSession } from "@/lib/auth/session";
-import { reconcileOrder, isStripeConfigured } from "@/lib/payments/stripe";
+import { reconcileOrder } from "@/lib/payments/reconcile";
 
 export async function GET(request: Request) {
   const session = await readSession();
@@ -14,13 +14,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    if (!isStripeConfigured()) {
-      return NextResponse.json(
-        { error: "Payments are not configured" },
-        { status: 503 }
-      );
-    }
-
     const result = await reconcileOrder(orderId, {
       id: session.userId,
       name: session.name,

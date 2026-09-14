@@ -24,6 +24,7 @@ export type ResourceCardData = {
   releaseDate: string;
   access: "public" | "members";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
   downloadCount?: number;
 };

@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { ResourceDetail } from "@/components/resources/resource-detail";
 
@@ -82,6 +83,7 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
                 releaseDate: resource.releaseDate.toISOString(),
                 access: resource.access,
                 price: resource.price ?? 0,
+                prices: cleanPrices(resource.prices),
                 featured: resource.featured ?? false,
               }}
             />

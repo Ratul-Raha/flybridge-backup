@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { sanitizePrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 function isManager(
@@ -17,6 +18,7 @@ const SEMINAR_FIELD_LABELS: Record<string, string> = {
   image: "Image",
   type: "Type",
   price: "Price",
+  prices: "Prices",
   url: "Meeting link",
   duration: "Duration",
 };
@@ -64,8 +66,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         if (!isNaN(price) && price >= 0) {
           seminar.price = price;
         }
+        const prices = sanitizePrices(body.prices);
+        if (prices) seminar.prices = prices;
       }
-      if (body.type === "free") seminar.price = 0;
+      if (body.type === "free") {
+        seminar.price = 0;
+        seminar.prices = undefined;
+      }
     }
     if (typeof body.url === "string") {
       seminar.url = body.url.trim() || undefined;

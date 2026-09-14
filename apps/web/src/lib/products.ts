@@ -5,6 +5,7 @@ import { Course } from "@/lib/models/course";
 import { Seminar } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
+import { cleanPrices, type CurrencyPrices } from "@/lib/pricing";
 import type { OrderItemType } from "@/lib/models/order";
 
 export type Product = {
@@ -13,6 +14,7 @@ export type Product = {
   title: string;
   price: number;
   currency: string;
+  prices?: CurrencyPrices | null;
   image?: string | null;
   url?: string | null;
 };
@@ -32,6 +34,7 @@ export async function resolveProduct(
       title: c.title,
       price: c.price,
       currency: c.currency,
+      prices: cleanPrices(c.prices),
       image: c.image ?? null,
       url: `/programs/${c.slug}/learn`,
     };
@@ -46,6 +49,7 @@ export async function resolveProduct(
       title: s.title,
       price: s.price,
       currency: "USD",
+      prices: cleanPrices(s.prices),
       image: s.image ?? null,
       url: s.url ?? null,
     };
@@ -60,6 +64,7 @@ export async function resolveProduct(
       title: r.title,
       price: r.price,
       currency: "USD",
+      prices: cleanPrices(r.prices),
       image: r.thumbnail ?? null,
       url: null,
     };
@@ -74,6 +79,7 @@ export async function resolveProduct(
       title: b.title,
       price: b.price,
       currency: b.currency,
+      prices: cleanPrices(b.prices),
       image: b.image ?? null,
       url: `/mock-tests/${b._id.toString()}`,
     };

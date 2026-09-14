@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { readSession } from "@/lib/auth/session";
-import {
-  reconcileOrder,
-  isStripeConfigured,
-} from "@/lib/payments/stripe";
+import { reconcileOrder } from "@/lib/payments/reconcile";
 import { PaymentStatusClient, type PaymentStatusKind } from "@/components/payment/payment-status-client";
 
 export const metadata: Metadata = {
@@ -19,7 +16,7 @@ type ReconcileOutcome = {
 async function resolveOutcome(
   orderId?: string
 ): Promise<ReconcileOutcome> {
-  if (!orderId || !isStripeConfigured()) return { kind: "unknown" };
+  if (!orderId) return { kind: "unknown" };
   const session = await readSession();
   if (!session?.userId) return { kind: "unknown" };
   try {

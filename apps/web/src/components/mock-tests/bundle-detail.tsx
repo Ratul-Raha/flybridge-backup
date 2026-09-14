@@ -15,9 +15,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { priceTextFor } from "@/lib/pricing";
+import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   SKILL_META,
-  formatPrice,
   skillLabel,
   type TestListItem,
 } from "@/lib/mock-test-ui";
@@ -30,6 +31,7 @@ export type PublicBundle = {
   image: string | null;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
   testCount: number;
 };
@@ -42,6 +44,9 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currency, setCurrency] = useState<PickableCurrency>(
+    bundle.prices?.USD ? "USD" : "BDT"
+  );
 
   const anyOwned = tests.some((t) => t.owned);
   const isFree = bundle.price <= 0;
@@ -78,7 +83,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemType: "mock-bundle", itemId: bundle.id }),
+        body: JSON.stringify({ itemType: "mock-bundle", itemId: bundle.id, currency }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to get this pack");
@@ -114,7 +119,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
           : "Sign in to get it"
       : submitting
         ? "Redirecting to payment…"
-        : `Buy pack${bundle.price > 0 ? ` · ${formatPrice(bundle.price, bundle.currency)}` : ""}`;
+        : `Buy pack · ${priceTextFor(bundle, currency)}`;
 
   return (
     <div>
@@ -224,6 +229,16 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
               {copied ? "Link copied!" : "Share"}
             </button>
           </div>
+
+          {!anyOwned && !isFree && (
+            <div className="mt-4">
+              <PaymentMethodPicker
+                prices={bundle.prices}
+                value={currency}
+                onChange={setCurrency}
+              />
+            </div>
+          )}
 
           {error && (
             <p className="mt-4 text-[12.5px]" style={{ color: "#C0392B" }}>

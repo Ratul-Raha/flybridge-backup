@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { priceTextFor } from "@/lib/pricing";
+import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   fileTypeMeta,
   formatFileSize,
@@ -35,6 +37,9 @@ export function ResourceDetail({
   const [payNote, setPayNote] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<PickableCurrency>(
+    r.prices?.USD ? "USD" : "BDT"
+  );
   const { user, loading } = useAuth();
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
@@ -89,6 +94,33 @@ export function ResourceDetail({
     }
   };
 
+  const handleBuy = async () => {
+    if (!user) {
+      router.push(loginNext);
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemType: "resource", itemId: r.id, currency }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to buy resource");
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+      triggerDownload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to buy resource");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     if (!wantsGet || loading) return;
     if (!user) {
@@ -124,7 +156,7 @@ export function ResourceDetail({
   };
 
   const primaryLabel = needsPayment
-    ? `Buy now${r.price > 0 ? ` · $${r.price}` : ""}`
+    ? `Buy now · ${priceTextFor(r, currency)}`
     : needsLogin
       ? "Sign in to download"
       : isFree
@@ -294,9 +326,25 @@ export function ResourceDetail({
               </p>
             )}
             {payNote && (
-              <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
-                Payment for this resource is coming soon — you can download it for free once it launches.
-              </p>
+              <div className="mt-3 flex flex-col gap-3">
+                <PaymentMethodPicker
+                  prices={r.prices}
+                  value={currency}
+                  onChange={setCurrency}
+                />
+                <button
+                  type="button"
+                  onClick={handleBuy}
+                  disabled={submitting}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: "var(--brand)" }}
+                >
+                  {submitting && <Loader2 size={15} className="animate-spin" />}
+                  {submitting
+                    ? "Redirecting to payment…"
+                    : `Pay ${priceTextFor(r, currency)}`}
+                </button>
+              </div>
             )}
           </div>
 

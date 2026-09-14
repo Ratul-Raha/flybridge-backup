@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
 async function withCounts(seminars: SeminarDocLike[], includeUrl = false) {
@@ -17,6 +18,7 @@ async function withCounts(seminars: SeminarDocLike[], includeUrl = false) {
     image: s.image ?? null,
     type: s.type,
     price: s.price,
+    prices: cleanPrices(s.prices),
     url: includeUrl ? (s.url ?? null) : null,
     duration: s.duration ?? null,
     registrations: map.get(s._id.toString()) ?? 0,
@@ -31,6 +33,7 @@ type SeminarDocLike = {
   image?: string | null;
   type: string;
   price?: number;
+  prices?: Record<string, number> | null;
   url?: string | null;
   duration?: string | null;
 };
@@ -87,6 +90,7 @@ export async function POST(request: NextRequest) {
       image: typeof body.image === "string" ? body.image.trim() || undefined : undefined,
       type,
       price: type === "paid" ? Number(body.price) || 0 : 0,
+      prices: type === "paid" ? sanitizePrices(body.prices) : undefined,
       url: typeof body.url === "string" ? body.url.trim() || undefined : undefined,
       duration: typeof body.duration === "string" ? body.duration.trim() || undefined : undefined,
       createdBy: session.userId,

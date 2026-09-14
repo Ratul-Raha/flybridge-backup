@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
+import { formatPriceText, cleanPrices } from "@/lib/pricing";
 import { Course } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
 import { courseDetails } from "../course-data";
@@ -59,6 +60,7 @@ export default async function CheckoutPage({ params }: Props) {
     badge: details?.badge ?? course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
+    prices: cleanPrices(course.prices),
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",
@@ -237,7 +239,7 @@ export default async function CheckoutPage({ params }: Props) {
                     <span className="font-medium" style={{ color: "var(--ink)" }}>
                       {isFree
                         ? "Free"
-                        : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                        : formatPriceText(checkoutCourse)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[13.5px]">
@@ -262,7 +264,7 @@ export default async function CheckoutPage({ params }: Props) {
                   >
                     {isFree
                       ? "Free"
-                      : `${checkoutCourse.currency} ${checkoutCourse.price.toLocaleString()}`}
+                      : formatPriceText(checkoutCourse)}
                   </span>
                 </div>
 

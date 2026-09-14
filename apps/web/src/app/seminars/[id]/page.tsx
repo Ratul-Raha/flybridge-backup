@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { SeminarDetail } from "@/components/seminars/seminar-detail";
 
@@ -73,6 +74,7 @@ export default async function SeminarDetailPage({ params }: Params) {
                 image: seminar.image ?? null,
                 type: seminar.type,
                 price: seminar.price ?? 0,
+                prices: cleanPrices(seminar.prices),
                 url: hasAccessToUrl ? (seminar.url ?? null) : null,
                 duration: seminar.duration ?? null,
                 registrations,

@@ -8,6 +8,7 @@ import {
   formatDateTime,
   type SeminarLike,
 } from "@/components/seminars/seminar-register-modal";
+import { formatPriceText } from "@/lib/pricing";
 
 type Seminar = {
   id: string;
@@ -17,6 +18,7 @@ type Seminar = {
   image: string | null;
   type: "free" | "paid";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   url: string | null;
   duration: string | null;
   registrations: number;
@@ -187,7 +189,7 @@ export function SeminarList() {
             color: s.type === "paid" ? "#6B4CE0" : "var(--brand-2)",
           }}
         >
-          {s.type === "paid" ? `Paid${s.price ? ` · $${s.price}` : ""}` : "Free"}
+          {s.type === "paid" ? `Paid · ${formatPriceText(s)}` : "Free"}
         </span>
         <span
           className="absolute right-3.5 top-3.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-[9px] py-[5px]"

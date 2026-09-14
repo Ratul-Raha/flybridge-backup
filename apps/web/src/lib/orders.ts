@@ -184,13 +184,27 @@ export async function createOrder(input: {
   user: OrderUser;
   itemType: OrderItemType;
   itemId: string;
+  currency?: string;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
   const product = await resolveProduct(input.itemType, input.itemId);
   if (!product) throw new Error("Product not found");
 
-  if (product.price === 0) {
+  let amount = product.price;
+  let currency = product.currency ?? "USD";
+  const target = String(input.currency ?? "").toUpperCase() || "USD";
+  if (target === "BDT") {
+    const bdt = product.prices?.BDT;
+    if (typeof bdt === "number" && Number.isFinite(bdt) && bdt >= 0) {
+      amount = bdt;
+      currency = "BDT";
+    } else {
+      throw new Error("No BDT price is set for this item yet.");
+    }
+  }
+
+  if (amount === 0) {
     if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
       return { order: null, requiresPayment: false, duplicate: true };
     }
@@ -208,12 +222,13 @@ export async function createOrder(input: {
     if (
       existing.status === "pending" &&
       existing.items[0] &&
-      (existing.total !== product.price || existing.items[0].price !== product.price)
+      (existing.total !== amount || existing.items[0].price !== amount)
     ) {
       const doc = existing as OrderDoc & { save(): Promise<unknown> };
       doc.items[0].title = product.title;
-      doc.items[0].price = product.price;
-      doc.total = product.price;
+      doc.items[0].price = amount;
+      doc.total = amount;
+      doc.currency = currency;
       await doc.save();
     }
     return {
@@ -231,11 +246,11 @@ export async function createOrder(input: {
         itemType: product.itemType,
         itemId: product.itemId,
         title: product.title,
-        price: product.price,
+        price: amount,
       },
     ],
-    total: product.price,
-    currency: product.currency,
+    total: amount,
+    currency,
     status: "pending",
   });
 
