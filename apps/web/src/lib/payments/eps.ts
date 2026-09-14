@@ -43,14 +43,30 @@ type EPSConfig = {
   environment: EPSEnvironment;
 };
 
+/**
+ * Public EPS sandbox credentials supplied for development. They are only
+ * used when EPS_ENV is not `production`, and any real credentials provided
+ * via environment variables always take precedence.
+ */
+const SANDBOX_CREDENTIALS = {
+  username: "Epsdemo@gmail.com",
+  password: "Epsdemo258@",
+  hashKey: "FHZxyzeps56789gfhg678ygu876o=",
+  merchantId: "29e86e70-0ac6-45eb-ba04-9fcb0aaed12a",
+  storeId: "d44e705f-9e3a-41de-98b1-1674631637da",
+} as const;
+
 function config(): EPSConfig {
+  const environment: EPSEnvironment =
+    process.env.EPS_ENV === "production" ? "production" : "sandbox";
+  const creds = environment === "production" ? undefined : SANDBOX_CREDENTIALS;
   return {
-    username: process.env.EPS_USERNAME ?? "",
-    password: process.env.EPS_PASSWORD ?? "",
-    hashKey: process.env.EPS_HASH_KEY ?? "",
-    merchantId: process.env.EPS_MERCHANT_ID ?? "",
-    storeId: process.env.EPS_STORE_ID ?? "",
-    environment: process.env.EPS_ENV === "production" ? "production" : "sandbox",
+    username: process.env.EPS_USERNAME || creds?.username || "",
+    password: process.env.EPS_PASSWORD || creds?.password || "",
+    hashKey: process.env.EPS_HASH_KEY || creds?.hashKey || "",
+    merchantId: process.env.EPS_MERCHANT_ID || creds?.merchantId || "",
+    storeId: process.env.EPS_STORE_ID || creds?.storeId || "",
+    environment,
   };
 }
 
