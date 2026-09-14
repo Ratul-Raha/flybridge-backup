@@ -21,6 +21,7 @@ import {
   skillLabel,
   type TestListItem,
 } from "@/lib/mock-test-ui";
+import { formatMoney } from "@/lib/pricing";
 
 export type PublicBundle = {
   id: string;
@@ -43,12 +44,18 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [payNote, setPayNote] = useState(false);
   const [currency, setCurrency] = useState<PickableCurrency>(
     bundle.prices?.USD ? "USD" : "BDT"
   );
 
   const anyOwned = tests.some((t) => t.owned);
   const isFree = bundle.price <= 0;
+  const usdPrice = typeof bundle.prices?.USD === "number" && bundle.prices.USD > 0 ? bundle.prices.USD : null;
+  const bdtPrice = typeof bundle.prices?.BDT === "number" && bundle.prices.BDT > 0 ? bundle.prices.BDT : null;
+  const pairPrice = [usdPrice !== null ? formatMoney(usdPrice, "USD") : null, bdtPrice !== null ? formatMoney(bdtPrice, "BDT") : null]
+    .filter(Boolean)
+    .join(" / ");
 
   const load = useCallback(async () => {
     try {
@@ -118,7 +125,13 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
           : "Sign in to get it"
       : submitting
         ? "Redirecting to payment…"
-        : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`;
+        : "Buy Now";
+
+  const primaryAction = anyOwned
+    ? () => router.push("/dashboard/mock-tests")
+    : isFree
+      ? purchase
+      : () => setPayNote((v) => !v);
 
   return (
     <div>
@@ -200,45 +213,78 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
             </p>
           )}
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
-            <button
-              type="button"
-              onClick={purchase}
-              disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-              style={{ background: "var(--brand)" }}
+          {!anyOwned && (
+            <div
+              className="mt-8 flex flex-col gap-3 rounded-2xl border bg-white p-5"
+              style={{ borderColor: "var(--line)" }}
             >
-              {submitting || loading ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : anyOwned ? (
-                <Check size={15} />
-              ) : isFree ? null : (
-                <Lock size={15} />
+              {!isFree && (
+                <div
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border bg-white px-4 py-3"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    Price
+                  </span>
+                  <span className="text-[15px] font-bold" style={{ color: "var(--brand-2)" }}>
+                    {pairPrice || "Free"}
+                  </span>
+                </div>
               )}
-              {primaryLabel}
-            </button>
 
-            <button
-              type="button"
-              onClick={copyLink}
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-white px-7 py-3.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
-              style={{ borderColor: "var(--line)", color: copied ? "#0FA968" : "var(--ink)" }}
-            >
-              {copied ? <Check size={15} /> : <Share2 size={15} />}
-              {copied ? "Link copied!" : "Share"}
-            </button>
-          </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <button
+                  type="button"
+                  onClick={primaryAction}
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: "var(--brand)" }}
+                >
+                  {submitting || loading ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : anyOwned ? (
+                    <Check size={15} />
+                  ) : isFree ? null : (
+                    <Lock size={15} />
+                  )}
+                  {primaryLabel}
+                </button>
 
-          {!anyOwned && !isFree && (
-            <div className="mt-4">
-              <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                Payment method
-              </p>
-              <PaymentMethodPicker
-                prices={bundle.prices}
-                value={currency}
-                onChange={setCurrency}
-              />
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border bg-white px-7 py-3.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"
+                  style={{ borderColor: "var(--line)", color: copied ? "#0FA968" : "var(--ink)" }}
+                >
+                  {copied ? <Check size={15} /> : <Share2 size={15} />}
+                  {copied ? "Link copied!" : "Share"}
+                </button>
+              </div>
+
+              {payNote && !isFree && (
+                <div className="mt-1 flex flex-col gap-3">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    Payment method
+                  </p>
+                  <PaymentMethodPicker
+                    prices={bundle.prices}
+                    value={currency}
+                    onChange={setCurrency}
+                  />
+                  <button
+                    type="button"
+                    onClick={purchase}
+                    disabled={submitting}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                    style={{ background: "var(--brand)" }}
+                  >
+                    {submitting && <Loader2 size={15} className="animate-spin" />}
+                    {submitting
+                      ? "Redirecting to payment…"
+                      : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

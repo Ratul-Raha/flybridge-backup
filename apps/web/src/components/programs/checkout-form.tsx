@@ -173,7 +173,7 @@ export function CheckoutForm({ course }: { course: Props }) {
             ? "Redirecting to payment…"
             : isFree
               ? "Get it for free"
-              : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`}
+              : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
         </button>
       )}
 

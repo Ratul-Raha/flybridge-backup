@@ -13,6 +13,7 @@ import {
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
 import { getCategoryColor } from "@/lib/resource-colors";
+import { formatMoney } from "@/lib/pricing";
 
 function downloadHref(r: ResourceCardData) {
   if (r.fileType === "link") {
@@ -154,8 +155,14 @@ export function ResourceDetail({
     }
   };
 
+  const usdPrice = typeof r.prices?.USD === "number" && r.prices.USD > 0 ? r.prices.USD : null;
+  const bdtPrice = typeof r.prices?.BDT === "number" && r.prices.BDT > 0 ? r.prices.BDT : null;
+  const pairPrice = [usdPrice !== null ? formatMoney(usdPrice, "USD") : null, bdtPrice !== null ? formatMoney(bdtPrice, "BDT") : null]
+    .filter(Boolean)
+    .join(" / ");
+
   const primaryLabel = needsPayment
-    ? `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`
+    ? "Buy Now"
     : needsLogin
       ? "Sign in to download"
       : isFree
@@ -293,6 +300,20 @@ export function ResourceDetail({
               </div>
             </div>
 
+            {needsPayment && (
+              <div
+                className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border px-4 py-3"
+                style={{ borderColor: "var(--line)" }}
+              >
+                <span className="text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                  Price
+                </span>
+                <span className="text-[15px] font-bold" style={{ color: "var(--brand-2)" }}>
+                  {pairPrice || "Free"}
+                </span>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={primaryAction}
@@ -341,7 +362,7 @@ export function ResourceDetail({
                   {submitting && <Loader2 size={15} className="animate-spin" />}
                   {submitting
                     ? "Redirecting to payment…"
-                    : `Pay with ${currency === "BDT" ? "bKash" : "Stripe"}`}
+                    : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
                 </button>
               </div>
             )}
