@@ -12,19 +12,15 @@ import {
 import {
   MULTI_CURRENCY_CODES,
   CURRENCY_SYMBOLS,
-  convertAmount,
   formatMoney,
-  fromBaseUsd,
   type SupportedCurrency,
 } from "@/lib/pricing";
 
 type CurrencyContextValue = {
   currency: SupportedCurrency;
   setCurrency: (c: SupportedCurrency) => void;
-  /** Format a USD-normalized amount in the selected display currency. */
-  moneyUsd: (amountUsd: number) => string;
-  /** Convert an amount from its source currency into the selected display currency. */
-  money: (amount: number, from?: string) => string;
+  /** Format a raw amount already denominated in the selected currency. */
+  fmt: (amount: number) => string;
 };
 
 const STORAGE_KEY = "flybridge.currency";
@@ -54,8 +50,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     () => ({
       currency,
       setCurrency,
-      moneyUsd: (amountUsd) => formatMoney(fromBaseUsd(amountUsd, currency), currency),
-      money: (amount, from) => formatMoney(convertAmount(amount, from ?? "USD", currency), currency),
+      fmt: (amount) => formatMoney(amount, currency),
     }),
     [currency, setCurrency]
   );

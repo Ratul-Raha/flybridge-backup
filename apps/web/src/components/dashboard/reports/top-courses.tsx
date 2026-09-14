@@ -20,14 +20,21 @@ const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
 
 export function TopCourses() {
   const [items, setItems] = useState<TopItem[]>([]);
-  const { moneyUsd } = useCurrency();
+  const { currency, fmt } = useCurrency();
 
   useEffect(() => {
-    fetch("/api/admin/orders-stats", { cache: "no-store" })
+    let cancelled = false;
+    setItems([]);
+    fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((res) => setItems(res?.topItems ?? []))
+      .then((res) => {
+        if (!cancelled) setItems(res?.topItems ?? []);
+      })
       .catch(() => {});
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [currency]);
 
   return (
     <Card title="Top selling items" subtitle="Most purchased items by order count">
@@ -65,7 +72,7 @@ export function TopCourses() {
                       {item.orders}
                     </td>
 <td className="py-3 text-right font-medium" style={{ color: "var(--ink)" }}>
-  {moneyUsd(item.revenue)}
+  {fmt(item.revenue)}
 </td>
                   </tr>
                 );

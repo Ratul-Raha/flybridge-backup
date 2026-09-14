@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Card } from "./card";
 import { useCurrency } from "@/components/dashboard/currency-context";
+import { formatMoney } from "@/lib/pricing";
 
 type OrderStats = {
   totalOrders: number;
@@ -91,16 +92,21 @@ function Metric({
 
 export function OrderOverview() {
   const [data, setData] = useState<OrderStats | null>(null);
-  const { moneyUsd, money } = useCurrency();
+  const { currency, fmt } = useCurrency();
 
   useEffect(() => {
-    fetch("/api/admin/orders-stats", { cache: "no-store" })
+    let cancelled = false;
+    setData(null);
+    fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((res) => {
-        if (res) setData(res);
+        if (!cancelled && res) setData(res);
       })
       .catch(() => {});
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [currency]);
 
   return (
     <div className="grid lg:grid-cols-5 gap-4">
@@ -125,7 +131,7 @@ export function OrderOverview() {
           <Metric
             icon={DollarSign}
             label="Revenue"
-            value={data ? moneyUsd(data.totalRevenue) : "\u2014"}
+            value={data ? fmt(data.totalRevenue) : "\u2014"}
             color="#10B981"
           />
           <Metric
@@ -150,7 +156,7 @@ export function OrderOverview() {
           <Metric
             icon={TrendingUp}
             label="Avg. order value"
-            value={data ? moneyUsd(data.avgOrderValue) : "\u2014"}
+            value={data ? fmt(data.avgOrderValue) : "\u2014"}
             color="#0EA5E9"
           />
           <Metric
@@ -216,7 +222,7 @@ export function OrderOverview() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[11.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                    {o.total === 0 ? "Free" : money(o.total, o.currency)}
+                    {o.total === 0 ? "Free" : formatMoney(o.total, o.currency)}
                   </p>
                   <p className="text-[9.5px]" style={{ color: "var(--body)" }}>{ago}</p>
                 </div>

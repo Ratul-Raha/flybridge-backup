@@ -1,29 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order } from "@/lib/models/order";
-import { USD_TO_BDT } from "@/lib/pricing";
+import { MULTI_CURRENCY_CODES, type SupportedCurrency } from "@/lib/pricing";
 
-/** Converts an order field into its USD equivalent based on the order currency. */
-function usdStage(field: string) {
-  return {
-    $addFields: {
-      usd: {
-        $cond: [
-          { $eq: [{ $toUpper: { $ifNull: ["$currency", "USD"] } }, "BDT"] },
-          { $divide: [`$${field}`, USD_TO_BDT] },
-          `$${field}`,
-        ],
-      },
-    },
-  };
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await readSession();
   if (!session || session.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const raw = request.nextUrl.searchParams.get("currency") ?? "USD";
+  const currency = (MULTI_CURRENCY_CODES as readonly string[]).includes(raw.toUpperCase())
+    ? (raw.toUpperCase() as SupportedCurrency)
+    : "USD";
+  const match = { currency: { $regex: `^${currency}$`, $options: "i" } };
 
   try {
     await connectDb();
@@ -44,49 +35,48 @@ export async function GET() {
       thisMonthOrders,
       lastMonthOrders,
     ] = await Promise.all([
-      Order.countDocuments(),
-      Order.countDocuments({ status: "completed" }),
-      Order.countDocuments({ status: "pending" }),
-      Order.countDocuments({ status: "failed" }),
-      Order.countDocuments({ status: "cancelled" }),
-      Order.countDocuments({ status: "refunded" }),
-      Order.countDocuments({ total: 0, status: "completed" }),
+      Order.countDocuments(match),
+      Order.countDocuments({ ...match, status: "completed" }),
+      Order.countDocuments({ ...match, status: "pending" }),
+      Order.countDocuments({ ...match, status: "failed" }),
+      Order.countDocuments({ ...match, status: "cancelled" }),
+      Order.countDocuments({ ...match, status: "refunded" }),
+      Order.countDocuments({ ...match, total: 0, status: "completed" }),
       Order.aggregate([
-        { $match: { status: "completed" } },
-        usdStage("total"),
-        { $group: { _id: null, total: { $sum: "$usd" }, avg: { $avg: "$usd" } } },
+        { $match: { ...match, status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$total" }, avg: { $avg: "$total" } } },
       ]),
       Order.aggregate([
-        usdStage("total"),
+        { $match: match },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
             count: { $sum: 1 },
-            revenue: { $sum: "$usd" },
+            revenue: { $sum: "$total" },
           },
         },
         { $sort: { _id: 1 } },
       ]),
       Order.aggregate([
         { $unwind: "$items" },
-        { $match: { status: "completed" } },
-        usdStage("items.price"),
+        { $match: { ...match, status: "completed" } },
         {
           $group: {
             _id: { title: "$items.title", itemType: "$items.itemType" },
             orders: { $sum: 1 },
-            revenue: { $sum: "$usd" },
-            avgPrice: { $avg: "$usd" },
+            revenue: { $sum: "$items.price" },
+            avgPrice: { $avg: "$items.price" },
           },
         },
         { $sort: { orders: -1 } },
         { $limit: 6 },
       ]),
       Order.aggregate([
+        { $match: match },
         { $group: { _id: "$status", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      Order.find()
+      Order.find(match)
         .sort({ createdAt: -1 })
         .limit(5)
         .populate("user", "name email")
@@ -94,13 +84,13 @@ export async function GET() {
       (async () => {
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        return Order.countDocuments({ createdAt: { $gte: start } });
+        return Order.countDocuments({ ...match, createdAt: { $gte: start } });
       })(),
       (async () => {
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const end = new Date(now.getFullYear(), now.getMonth(), 1);
-        return Order.countDocuments({ createdAt: { $gte: start, $lt: end } });
+        return Order.countDocuments({ ...match, createdAt: { $gte: start, $lt: end } });
       })(),
     ]);
 
@@ -132,6 +122,7 @@ export async function GET() {
         : 0;
 
     return NextResponse.json({
+      currency,
       totalOrders,
       completedOrders,
       pendingOrders,

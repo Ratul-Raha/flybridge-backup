@@ -21,7 +21,6 @@ import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
 import { CertificateFace, type CertificateGrade } from "@/components/dashboard/certificate-face";
 import { qrCodeDataUrl } from "@/lib/qr-code";
-import { useCurrency } from "@/components/dashboard/currency-context";
 import {
   CERT_CAPTURE_WIDTH,
   downloadCertificatePdf,
@@ -353,7 +352,6 @@ function MemberDetailPanel({
 }
 
 export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
-  const { money } = useCurrency();
   const [course, setCourse] = useState<CourseInfo | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -568,7 +566,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
             {course && (
               <p className="text-[13px] mt-1 font-mono" style={{ color: "var(--body)" }}>
                 /{course.slug}
-                {course.price > 0 ? ` · ${money(course.price, course.currency)}` : " · Free"}
+                {course.price > 0 ? ` · ${course.currency} ${course.price}` : " · Free"}
               </p>
             )}
           </div>

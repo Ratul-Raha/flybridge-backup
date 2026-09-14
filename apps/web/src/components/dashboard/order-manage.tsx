@@ -25,7 +25,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
 import { BRAND, AMBER, SKY, EMERALD, ROSE, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "@/components/dashboard/reports/lib";
 import { useCurrency } from "@/components/dashboard/currency-context";
-import { formatMoney, fromBaseUsd, type SupportedCurrency } from "@/lib/pricing";
+import { formatMoney, type SupportedCurrency } from "@/lib/pricing";
 
 type OrderItem = { itemType: string; itemId: string; title: string; price: number };
 
@@ -153,7 +153,7 @@ function MetricSkeleton() {
 
 function RevenueChart({ data, currency }: { data: OrderStats["chart"]; currency: SupportedCurrency }) {
   const option = useMemo<EChartsOption>(() => {
-    const revenues = (data?.revenues ?? []).map((v) => fromBaseUsd(v, currency));
+    const revenues = data?.revenues ?? [];
     return {
       grid: { left: 4, right: 4, top: 18, bottom: 0, containLabel: true },
       tooltip: {
@@ -360,7 +360,6 @@ function TopItems({ items }: { items: OrderStats["topItems"] }) {
 }
 
 function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
-  const { money } = useCurrency();
   if (!orders || orders.length === 0) return null;
   return (
     <div
@@ -408,7 +407,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                  {o.total === 0 ? "Free" : money(o.total, o.currency)}
+                  {o.total === 0 ? "Free" : formatMoney(o.total, o.currency)}
                 </p>
                 <p className="text-[10px]" style={{ color: "var(--body)" }}>{ago}</p>
               </div>
@@ -426,7 +425,7 @@ export function OrderManage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { currency, moneyUsd, money } = useCurrency();
+  const { currency, fmt } = useCurrency();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -438,10 +437,11 @@ export function OrderManage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setStats(null);
     try {
       const [ordersRes, statsRes] = await Promise.all([
         fetch("/api/orders", { cache: "no-store" }),
-        fetch("/api/admin/orders-stats", { cache: "no-store" }),
+        fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" }),
       ]);
       const ordersData = await ordersRes.json();
       if (!ordersRes.ok) throw new Error(ordersData.error ?? "Failed to load");
@@ -455,7 +455,7 @@ export function OrderManage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currency]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -554,7 +554,7 @@ export function OrderManage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               label="Total revenue"
-              value={moneyUsd(stats?.totalRevenue ?? 0)}
+              value={fmt(stats?.totalRevenue ?? 0)}
               sub={`${stats?.completedOrders ?? 0} completed orders`}
               icon={DollarSign}
               iconBg="var(--mint-bg)"
@@ -569,7 +569,7 @@ export function OrderManage() {
             />
             <MetricCard
               label="Avg. order value"
-              value={moneyUsd(stats?.avgOrderValue ?? 0)}
+              value={fmt(stats?.avgOrderValue ?? 0)}
               sub="Across all paid orders"
               icon={TrendingUp}
               iconBg="var(--lav-bg)"
@@ -728,7 +728,7 @@ export function OrderManage() {
                               {o.total === 0 ? (
                                 <span className="font-medium" style={{ color: EMERALD }}>Free</span>
                               ) : (
-                                money(o.total, o.currency)
+                                formatMoney(o.total, o.currency)
                               )}
                             </span>
                           </td>
