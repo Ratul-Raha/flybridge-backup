@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
@@ -30,6 +31,10 @@ export async function GET(request: NextRequest) {
     const accountType = searchParams.get("accountType") ?? "";
     const subscription = searchParams.get("subscription") ?? "";
     const certDownloaded = searchParams.get("certificateDownloaded") ?? "";
+    const course = searchParams.get("course") ?? "";
+    const seminar = searchParams.get("seminar") ?? "";
+    const resource = searchParams.get("resource") ?? "";
+    const scoreMin = Number(searchParams.get("scoreMin"));
     const sort = searchParams.get("sort") ?? "newest";
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const perPage = Math.min(100, Math.max(1, Number(searchParams.get("perPage")) || 15));
@@ -45,21 +50,67 @@ export async function GET(request: NextRequest) {
     if (accountType && (ACCOUNT_TYPES as string[]).includes(accountType)) filter.accountType = accountType;
     if (subscription && (SUBSCRIPTION_TYPES as string[]).includes(subscription)) filter.subscription = subscription;
 
-    // Pre-compute the set of users who downloaded a certificate so we can
-    // filter on it without leaking the CourseProgress layout into the User query.
-    let downloadedUserIds: string[] | null = null;
+    // Engagement filters are computed as user-id sets, then intersected
+    // ($in) / subtracted ($nin) against the rest of the User query.
+    const include = new Set<string>();
+    const exclude = new Set<string>();
+    let haveInclude = false;
+    const addInclude = (ids: string[]) => {
+      if (ids.length === 0) {
+        include.clear();
+        haveInclude = true;
+        return;
+      }
+      const set = new Set(ids);
+      if (!haveInclude) {
+        ids.forEach((id) => include.add(id));
+        haveInclude = true;
+      } else {
+        for (const id of [...include]) {
+          if (!set.has(id)) include.delete(id);
+        }
+      }
+    };
+    const addExclude = (ids: string[]) => ids.forEach((id) => exclude.add(id));
+
+    if (course === "any" || course === "none") {
+      const enrolled = (await CourseEnrollment.distinct("user").lean()).map(String);
+      (course === "any" ? addInclude : addExclude)(enrolled);
+    } else if (course) {
+      const enrolled = (await CourseEnrollment.distinct("user", { course }).lean()).map(String);
+      addInclude(enrolled);
+    }
+
+    if (seminar === "any" || seminar === "none") {
+      const regs = (await SeminarRegistration.distinct("user").lean()).map(String);
+      (seminar === "any" ? addInclude : addExclude)(regs);
+    }
+
+    if (resource === "any" || resource === "none") {
+      const dls = (await ResourceDownload.distinct("user").lean()).map(String);
+      (resource === "any" ? addInclude : addExclude)(dls);
+    }
+
+    if (Number.isFinite(scoreMin) && scoreMin > 0) {
+      const scored = await ReadinessRun.aggregate<{ _id: unknown; score: number }>([
+        { $sort: { createdAt: -1 } },
+        { $group: { _id: "$user", score: { $first: "$score" } } },
+        { $match: { score: { $gte: scoreMin } } },
+      ]);
+      addInclude(scored.map((r) => (r._id as { toString(): string }).toString()));
+    }
+
     if (certDownloaded === "yes" || certDownloaded === "only") {
       const downloaded = await CourseProgress.find(
         { certificateDownloadCount: { $gt: 0 } },
         { user: 1 }
       ).lean();
-      downloadedUserIds = downloaded.map((p) => p.user.toString());
+      addInclude(downloaded.map((p) => p.user.toString()));
     }
 
-    if (certDownloaded === "yes") {
-      filter._id = { $in: downloadedUserIds };
-    } else if (certDownloaded === "only") {
-      filter._id = { $in: downloadedUserIds };
+    if (haveInclude) filter._id = { $in: [...include] };
+    if (exclude.size > 0) {
+      filter._id = { ...(filter._id ?? {}), $nin: [...exclude] };
     }
 
     const sortKey = SORT_MAP[sort] ?? SORT_MAP.newest;
@@ -117,6 +168,10 @@ export async function GET(request: NextRequest) {
     }
 
     const weekAgo = new Date(Date.now() - 7 * 86_400_000);
+    const availableCourses = await Course.find({}, { title: 1 })
+      .sort({ title: 1 })
+      .limit(300)
+      .lean();
     const [
       totalUsers,
       paidUsers,
@@ -172,6 +227,7 @@ export async function GET(request: NextRequest) {
         };
       }),
       pagination: { page, perPage, total },
+      courses: availableCourses.map((c) => ({ id: c._id.toString(), title: c.title })),
     });
   } catch (error) {
     console.error("admin/users error", error);

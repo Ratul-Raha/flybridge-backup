@@ -5,16 +5,19 @@ import {
   Award,
   BookOpen,
   CalendarDays,
+  Check,
   ChevronLeft,
   ChevronRight,
   Crown,
   Download,
   Eye,
+  FileDown,
   Gauge,
   Loader2,
   Mail,
   Phone,
   Search,
+  Send,
   Shield,
   Trash2,
   UserPlus,
@@ -23,6 +26,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { BulkEmailModal } from "@/components/dashboard/user/bulk-email-modal";
 import { useAuth } from "@/lib/auth/auth-context";
 
 type UserRow = {
@@ -120,9 +124,9 @@ const scoreColor = (score: number): string => {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_44px]";
+const GRID_COLS = "lg:grid-cols-[44px_minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_88px]";
 
-const ROW_COLS = "grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_44px]";
+const ROW_COLS = "grid-cols-[28px_minmax(0,1fr)_auto] lg:grid-cols-[44px_minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_88px]";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -229,12 +233,21 @@ export function UserManage() {
     const v = initParams?.get("certificateDownloaded") ?? "";
     return v === "yes" || v === "only" ? v : "";
   });
+  const [course, setCourse] = useState(() => initParams?.get("course") ?? "");
+  const [seminar, setSeminar] = useState(() => initParams?.get("seminar") ?? "");
+  const [resource, setResource] = useState(() => initParams?.get("resource") ?? "");
+  const [scoreMin, setScoreMin] = useState(() => initParams?.get("scoreMin") ?? "");
+  const [availableCourses, setAvailableCourses] = useState<{ id: string; title: string }[]>([]);
   const [sort, setSort] = useState(() => {
     const v = initParams?.get("sort");
     return v ? v : "newest";
   });
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
+
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [emailRecipients, setEmailRecipients] = useState<{ id: string; name: string; email: string }[] | null>(null);
+  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
 
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detail, setDetail] = useState<DetailData | null>(null);
@@ -254,6 +267,10 @@ export function UserManage() {
       if (accountType) params.set("accountType", accountType);
       if (subscription) params.set("subscription", subscription);
       if (certificateDownloaded) params.set("certificateDownloaded", certificateDownloaded);
+      if (course) params.set("course", course);
+      if (seminar) params.set("seminar", seminar);
+      if (resource) params.set("resource", resource);
+      if (scoreMin) params.set("scoreMin", scoreMin);
       if (sort && sort !== "newest") params.set("sort", sort);
       params.set("page", String(page));
       params.set("perPage", String(perPage));
@@ -262,6 +279,7 @@ export function UserManage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load users");
       setUsers(data.users ?? []);
       setStats(data.stats ?? null);
+      if (Array.isArray(data.courses)) setAvailableCourses(data.courses);
       setPagination(data.pagination ?? { page: 1, perPage, total: 0 });
       if (data.pagination && data.pagination.total < (page - 1) * perPage + 1 && data.pagination.total > 0) {
         setPage(1);
@@ -271,11 +289,133 @@ export function UserManage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, accountType, subscription, certificateDownloaded, sort, page, perPage]);
+  }, [debouncedQuery, accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin, sort, page, perPage]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Any change to the visible list drops the current selection.
+  useEffect(() => {
+    setSelected(new Set());
+  }, [debouncedQuery, accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin, sort, page, perPage]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allOnPage = users.length > 0 && users.every((u) => selected.has(u.id));
+
+  const toggleSelectPage = useCallback(() => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (users.every((u) => next.has(u.id))) users.forEach((u) => next.delete(u.id));
+      else users.forEach((u) => next.add(u.id));
+      return next;
+    });
+  }, [users]);
+
+  const openEmailFor = useCallback(
+    (ids: string[]) => {
+      const recips = users
+        .filter((u) => ids.includes(u.id))
+        .map((u) => ({ id: u.id, name: u.name, email: u.email }));
+      if (recips.length === 0) {
+        alert("Select one or more users from the list before sending an email.");
+        return;
+      }
+      setEmailRecipients(recips);
+    },
+    [users]
+  );
+
+  const runBulk = useCallback(
+    async (action: "subscription" | "accountType", value: string, label: string) => {
+      if (!isAdmin) return;
+      const count = selected.size;
+      if (!window.confirm(`${label} for ${count} selected user${count === 1 ? "" : "s"}?`)) return;
+      setBulkBusy(label);
+      try {
+        const res = await fetch("/api/admin/users/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds: [...selected], action, value }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error ?? "Bulk update failed");
+        setSelected(new Set());
+        await load();
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Bulk update failed");
+      } finally {
+        setBulkBusy(null);
+      }
+    },
+    [isAdmin, selected, load]
+  );
+
+  const bulkDelete = useCallback(async () => {
+    if (!isAdmin) return;
+    const count = selected.size;
+    const confirmed = window.confirm(
+      `Permanently delete ${count} selected user${count === 1 ? "" : "s"}?\n\nThis removes their accounts, enrollments, registrations, downloads, assessments and notifications. This cannot be undone.`
+    );
+    if (!confirmed) return;
+    setBulkBusy("Deleting");
+    try {
+      const res = await fetch("/api/admin/users/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: [...selected], action: "delete" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
+      setSelected(new Set());
+      if (page > 1 && users.length === count) setPage(page - 1);
+      else await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Bulk delete failed");
+    } finally {
+      setBulkBusy(null);
+    }
+  }, [isAdmin, selected, page, users.length, load]);
+
+  const exportCsv = useCallback(() => {
+    const rows = users.filter((u) => selected.has(u.id));
+    if (rows.length === 0) return;
+    const esc = (v: string | null | undefined) => `"${(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [
+      ["Name", "Email", "Phone", "Role", "Plan", "Source", "Joined", "Seminars", "Courses", "Files", "Certificates", "Readiness"],
+      ...rows.map((u) => [
+        esc(u.name),
+        esc(u.email),
+        esc(u.phone),
+        u.accountType,
+        u.subscription,
+        u.signupSource ?? "direct",
+        u.createdAt.slice(0, 10),
+        String(u.seminars),
+        String(u.courses),
+        String(u.downloads),
+        String(u.certificates),
+        u.readiness != null ? String(u.readiness) : "",
+      ]),
+    ]
+      .map((r) => r.join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flybridge-users-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [users, selected]);
 
   const openDetail = useCallback(async (id: string) => {
     setDetailId(id);
@@ -422,6 +562,10 @@ export function UserManage() {
                     setAccountType("accountType" in f && f.accountType ? f.accountType : "");
                     setSubscription("subscription" in f && f.subscription ? f.subscription : "");
                     setCertificateDownloaded("certificateDownloaded" in f && f.certificateDownloaded ? f.certificateDownloaded : "");
+                    setCourse("");
+                    setSeminar("");
+                    setResource("");
+                    setScoreMin("");
                     setSort("newest");
                     setPage(1);
                   }}
@@ -524,6 +668,72 @@ export function UserManage() {
             <option value="only">Only downloaded certificates</option>
           </select>
           <select
+            value={course}
+            onChange={(e) => {
+              setCourse(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Filter by course purchase"
+          >
+            <option value="">Any course</option>
+            <option value="none">No course</option>
+            <option value="any">Purchased any course</option>
+            {availableCourses.length > 0 && (
+              <optgroup label="Purchased a specific course">
+                {availableCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+          <select
+            value={seminar}
+            onChange={(e) => {
+              setSeminar(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Filter by seminar registration"
+          >
+            <option value="">Any seminar</option>
+            <option value="none">Never registered</option>
+            <option value="any">Registered for a seminar</option>
+          </select>
+          <select
+            value={resource}
+            onChange={(e) => {
+              setResource(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Filter by resource download"
+          >
+            <option value="">Any resource</option>
+            <option value="none">No downloads</option>
+            <option value="any">Downloaded a resource</option>
+          </select>
+          <select
+            value={scoreMin}
+            onChange={(e) => {
+              setScoreMin(e.target.value);
+              setPage(1);
+            }}
+            className={selectClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            aria-label="Filter by readiness score"
+          >
+            <option value="">Any readiness</option>
+            <option value="80">Readiness ≥ 80</option>
+            <option value="60">Readiness ≥ 60</option>
+            <option value="40">Readiness ≥ 40</option>
+          </select>
+          <select
             value={sort}
             onChange={(e) => {
               setSort(e.target.value);
@@ -541,6 +751,95 @@ export function UserManage() {
         </div>
       </div>
 
+      {/* Bulk actions */}
+      {selected.size > 0 && (
+        <div
+          className="rounded-lg border px-4 py-3 flex flex-col sm:flex-row flex-wrap items-center gap-2.5"
+          style={{ borderColor: "rgba(47,95,224,0.35)", background: "rgba(47,95,224,0.05)" }}
+        >
+          <div className="inline-flex items-center gap-2 shrink-0">
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+              style={{ background: "var(--brand)" }}
+            >
+              <Check size={15} />
+            </span>
+            <span className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+              {selected.size} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelected(new Set())}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold transition-colors duration-150 hover:bg-[rgba(47,95,224,0.1)]"
+              style={{ color: "var(--body)" }}
+            >
+              <X size={12} />
+              Clear
+            </button>
+          </div>
+
+          <span className="hidden sm:block flex-1" />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => openEmailFor([...selected])}
+              className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-[9px] text-[12.5px] font-semibold text-white transition-all duration-200 hover:opacity-90"
+              style={{ background: "var(--brand)" }}
+            >
+              {bulkBusy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              Send email
+            </button>
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => runBulk("subscription", "paid", "Mark as Paid")}
+                  disabled={bulkBusy !== null}
+                  className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                >
+                  <Crown size={14} />
+                  Mark paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runBulk("subscription", "free", "Mark as Free")}
+                  disabled={bulkBusy !== null}
+                  className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                >
+                  <UserPlus size={14} />
+                  Mark free
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={bulkBusy !== null}
+              className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            >
+              <FileDown size={14} />
+              Export CSV
+            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={bulkDelete}
+                disabled={bulkBusy !== null}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-[9px] text-[12.5px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
+                style={{ background: "#C0392B" }}
+              >
+                {bulkBusy === "Deleting" ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <ScreenLoading label="Loading users…" />
       ) : (
@@ -551,7 +850,17 @@ export function UserManage() {
               className={`hidden lg:grid gap-3 px-5 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`}
               style={{ borderColor: "var(--line)" }}
             >
-              {["User", "Phone", "Role", "Plan", "Source", "Joined", "Seminars", "Courses", "Certs", "Files", "Readiness", "View"].map((c) => (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={allOnPage}
+                  onChange={toggleSelectPage}
+                  aria-label="Select all users on this page"
+                  className="w-4 h-4 cursor-pointer"
+                  style={{ accentColor: "var(--brand)" }}
+                />
+              </div>
+              {["User", "Phone", "Role", "Plan", "Source", "Joined", "Seminars", "Courses", "Certs", "Files", "Readiness", "Actions"].map((c) => (
                 <span key={c} className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                   {c}
                 </span>
@@ -568,12 +877,30 @@ export function UserManage() {
             ) : (
               <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>
                 {users.map((u) => (
-                  <button
+                  <div
                     key={u.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => openDetail(u.id)}
-                    className={`group grid gap-1.5 lg:gap-3 lg:items-center px-5 py-3 text-left transition-colors duration-150 hover:bg-[var(--bg-soft)] ${ROW_COLS}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openDetail(u.id);
+                      }
+                    }}
+                    className={`group grid gap-1.5 lg:gap-3 lg:items-center px-5 py-3 text-left cursor-pointer transition-colors duration-150 hover:bg-[var(--bg-soft)] focus:outline-none focus-visible:bg-[var(--bg-soft)] ${ROW_COLS}`}
                   >
+                    {/* Select */}
+                    <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(u.id)}
+                        onChange={() => toggleSelect(u.id)}
+                        aria-label={`Select ${u.name}`}
+                        className="w-4 h-4 cursor-pointer"
+                        style={{ accentColor: "var(--brand)" }}
+                      />
+                    </div>
                     {/* User */}
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar name={u.name} src={u.avatar} size={34} />
@@ -659,12 +986,31 @@ export function UserManage() {
                       )}
                     </span>
                     <span
-                      className="hidden lg:flex items-center justify-end transition-colors duration-150 group-hover:text-[var(--brand)]"
-                      style={{ color: "var(--body)" }}
+                      className="hidden lg:flex items-center justify-end gap-1 pl-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Eye size={15} />
+                      <button
+                        type="button"
+                        onClick={() => openDetail(u.id)}
+                        aria-label={`View ${u.name}`}
+                        title="View"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors duration-150 hover:text-[var(--brand)]"
+                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEmailFor([u.id])}
+                        aria-label={`Email ${u.name}`}
+                        title="Send email"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors duration-150 hover:text-[var(--brand)]"
+                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                      >
+                        <Mail size={14} />
+                      </button>
                     </span>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -1151,6 +1497,15 @@ export function UserManage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk email composer */}
+      {emailRecipients && (
+        <BulkEmailModal
+          recipients={emailRecipients}
+          onClose={() => setEmailRecipients(null)}
+          onSent={() => setEmailRecipients(null)}
+        />
       )}
     </div>
   );
