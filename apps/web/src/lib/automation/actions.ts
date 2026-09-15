@@ -5,8 +5,9 @@ import { User } from "@/lib/models/user";
 import { Notification } from "@/lib/models/notification";
 import { connectDb } from "@/lib/db";
 import { resolvePath } from "./conditions";
+import { renderEmailTemplate, renderEmailSubject } from "./render";
 import { renderTemplate } from "./template";
-import { emailTemplateById } from "./email-templates";
+import { resolveEmailTemplate } from "./email-template-store";
 import { pushToUsers } from "@/lib/push";
 import { assertSafeFetchUrl } from "@/lib/url-safety";
 import { MAX_DELAY_MS, SYNC_DELAY_MAX_MS, type AutomationNode, type RecipientSetting } from "./types";
@@ -62,14 +63,14 @@ async function actionSendEmail(node: AutomationNode, payload: EventPayload): Pro
           : "No recipients resolved for email action",
     };
   }
-  const template = data.templateId ? emailTemplateById(data.templateId) : undefined;
-  const subject = renderTemplate(
+  const template = data.templateId ? await resolveEmailTemplate(data.templateId) : undefined;
+  const subject = renderEmailSubject(
     template?.subject ?? data.subject ?? "FlyBridge notification",
     payload,
   );
   const html = template
-    ? template.html(payload)
-    : `<div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0FA968;border-radius:16px 16px 0 0;padding:18px 24px;color:#fff;font-weight:700;letter-spacing:0.5px;">FlyBridge</div><div style="border:1px solid #E7EAF2;border-top:none;border-radius:0 0 16px 16px;padding:24px;color:#122043;font-size:14px;line-height:1.7;white-space:pre-wrap;">${renderTemplate(
+    ? renderEmailTemplate(template.body, payload)
+    : `<div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;"><div style="background:#0FA968;border-radius:16px 16px 0 0;padding:18px 24px;color:#fff;font-weight:700;letter-spacing:0.5px;">FlyBridge</div><div style="border:1px solid #E7EAF2;border-top:none;border-radius:0 0 16px 16px;padding:24px;color:#122043;font-size:14px;line-height:1.7;white-space:pre-wrap;">${renderEmailTemplate(
         data.body ?? "",
         payload,
       )
