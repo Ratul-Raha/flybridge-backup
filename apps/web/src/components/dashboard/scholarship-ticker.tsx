@@ -18,7 +18,7 @@ type TickerScholarship = {
 export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?: string }) {
   const [items, setItems] = useState<TickerScholarship[]>([]);
   const [ready, setReady] = useState(false);
-  const { trackRef, duration } = useMarqueeSpeed();
+  const { trackRef, duration } = useMarqueeSpeed(22);
 
   const load = useCallback(async () => {
     try {

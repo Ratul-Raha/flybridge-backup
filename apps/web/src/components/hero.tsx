@@ -72,7 +72,7 @@ export function Hero({ userCount = 10000 }: { userCount?: number }) {
         className="hero-section pt-[52px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
         style={{
           background:
-            "radial-gradient(860px 540px at 82% 2%, rgba(15,169,104,0.16), transparent 62%), radial-gradient(720px 480px at 6% 92%, rgba(47,95,224,0.13), transparent 60%), radial-gradient(680px 460px at 96% 88%, rgba(107,76,224,0.12), transparent 62%), radial-gradient(520px 380px at 0% 6%, rgba(219,138,46,0.13), transparent 60%), linear-gradient(180deg, #F2F7EE -6%, #FFFFFF 46%)",
+            "radial-gradient(860px 540px at 82% 2%, rgba(15,169,104,0.07), transparent 62%), radial-gradient(720px 480px at 6% 92%, rgba(47,95,224,0.06), transparent 60%), radial-gradient(680px 460px at 96% 88%, rgba(107,76,224,0.06), transparent 62%), radial-gradient(520px 380px at 0% 6%, rgba(219,138,46,0.06), transparent 60%), linear-gradient(180deg, #F2F7EE -6%, #FFFFFF 46%)",
         }}
       >
         <div className="hero-grid-bg" aria-hidden="true" />
@@ -266,13 +266,13 @@ export function Hero({ userCount = 10000 }: { userCount?: number }) {
           position: absolute;
           border-radius: 9999px;
           filter: blur(72px);
-          opacity: 0.55;
+          opacity: 0.32;
           pointer-events: none;
           animation: hero-blob-drift 14s ease-in-out infinite alternate;
         }
-        .hero-blob-a { width: 380px; height: 380px; top: -6%; right: 6%; background: rgba(15,169,104,0.30); }
-        .hero-blob-b { width: 480px; height: 480px; bottom: -14%; left: -8%; background: rgba(47,95,224,0.22); animation-delay: -5s; }
-        .hero-blob-c { width: 360px; height: 360px; bottom: 2%; right: -6%; background: rgba(107,76,224,0.20); animation-delay: -9s; }
+        .hero-blob-a { width: 380px; height: 380px; top: -6%; right: 6%; background: rgba(15,169,104,0.22); }
+        .hero-blob-b { width: 480px; height: 480px; bottom: -14%; left: -8%; background: rgba(47,95,224,0.16); animation-delay: -5s; }
+        .hero-blob-c { width: 360px; height: 360px; bottom: 2%; right: -6%; background: rgba(107,76,224,0.15); animation-delay: -9s; }
         @keyframes hero-blob-drift {
           0% { transform: translate(0, 0) scale(1); }
           100% { transform: translate(26px, -18px) scale(1.07); }
