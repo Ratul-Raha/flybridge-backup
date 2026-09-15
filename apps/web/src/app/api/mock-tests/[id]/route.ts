@@ -48,6 +48,7 @@ function sanitizeContent(
     audioUrl: content.audioUrl,
     audioPublicId: content.audioPublicId,
     videoUrl: content.videoUrl,
+    hasAudio: !!(content.audioUrl || content.audioPublicId || content.videoUrl),
     sections,
     writingTask1: content.writingTask1,
     writingTask2: content.writingTask2,
@@ -55,9 +56,6 @@ function sanitizeContent(
     writingTask1ImagePlacement: content.writingTask1ImagePlacement,
     writingTask2Image: content.writingTask2Image,
     writingTask2ImagePlacement: content.writingTask2ImagePlacement,
-    ...(includeAnswers
-      ? {}
-      : { sections, hasAudio: !!(content.audioUrl || content.audioPublicId || content.videoUrl) }),
   };
 }
 

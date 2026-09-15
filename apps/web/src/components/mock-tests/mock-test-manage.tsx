@@ -13,6 +13,7 @@ import {
   type TestListItem,
 } from "@/lib/mock-test-ui";
 import { formatPriceText } from "@/lib/pricing";
+import { ListeningMediaPlayer } from "@/components/mock-tests/listening-media-player";
 
 const inputClass =
   "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30";
@@ -1078,10 +1079,10 @@ export function MockTestManage() {
                         <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
-                              Listening media (audio or video URL)
+                              Listening media (audio / video / YouTube URL)
                             </p>
                             <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                              Paste the audio or video URL for this listening test. Video takes priority when both are set.
+                              Paste a direct audio/video URL or a YouTube link. Video takes priority when both are set.
                             </p>
                           </div>
                           <div className="flex flex-col gap-2.5">
@@ -1089,7 +1090,7 @@ export function MockTestManage() {
                               type="text"
                               value={parsedContent?.audioUrl ?? ""}
                               onChange={(e) => updateContentField("audioUrl", e.target.value)}
-                              placeholder="Audio URL (e.g. https://…/listening-part-1.mp3)"
+                              placeholder="Audio URL — YouTube link or file, e.g. https://youtu.be/abc123 or https://…/listening-part-1.mp3"
                               className={inputClass + " font-mono text-[12px]"}
                               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                             />
@@ -1097,11 +1098,24 @@ export function MockTestManage() {
                               type="text"
                               value={parsedContent?.videoUrl ?? ""}
                               onChange={(e) => updateContentField("videoUrl", e.target.value)}
-                              placeholder="Video URL (e.g. https://…/listening-part-1.mp4 or /video/listening.mp4)"
+                              placeholder="Video URL — YouTube link or file, e.g. https://www.youtube.com/watch?v=abc123 or https://…/listening-part-1.mp4"
                               className={inputClass + " font-mono text-[12px]"}
                               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                             />
                           </div>
+                          {(parsedContent?.audioUrl || parsedContent?.videoUrl) && (
+                            <div className="flex flex-col gap-2">
+                              <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+                                Playback preview
+                              </p>
+                              <div className="max-w-[520px]">
+                                <ListeningMediaPlayer
+                                  audioUrl={parsedContent?.audioUrl}
+                                  videoUrl={parsedContent?.videoUrl}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
