@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Award, ChevronRight } from "lucide-react";
+import { useMarqueeSpeed } from "@/hooks/use-marquee-speed";
 
 type TickerScholarship = {
   id: string;
@@ -17,6 +18,7 @@ type TickerScholarship = {
 export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?: string }) {
   const [items, setItems] = useState<TickerScholarship[]>([]);
   const [ready, setReady] = useState(false);
+  const { trackRef, duration } = useMarqueeSpeed();
 
   const load = useCallback(async () => {
     try {
@@ -53,7 +55,7 @@ export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?:
         maskImage: "linear-gradient(90deg, transparent, black 3%, black 97%, transparent)",
       }}
     >
-      <div className="fb-marquee-track flex items-center gap-8 pr-8 shrink-0" style={{ animationDuration: "60s" }}>
+      <div ref={trackRef} className="fb-marquee-track flex items-center gap-8 pr-8 shrink-0" style={duration ? { animationDuration: `${duration}s` } : undefined}>
         {[...entries, ...entries].map((e, i) => (
           <Link
             key={`${e.id}-${i}`}

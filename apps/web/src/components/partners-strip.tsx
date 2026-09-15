@@ -1,3 +1,7 @@
+"use client";
+
+import { useMarqueeSpeed } from "@/hooks/use-marquee-speed";
+
 const partners = [
   "IDP Education",
   "British Council",
@@ -38,6 +42,8 @@ const partners = [
 ];
 
 export function PartnersStrip() {
+  const { trackRef, duration } = useMarqueeSpeed();
+
   return (
     <section className="relative overflow-hidden pt-[10px] pb-[12px] md:py-[18px]" style={{ background: "var(--ink)" }}>
       <div className="max-w-[1320px] mx-auto flex flex-col md:flex-row md:items-center gap-3.5 md:gap-8 px-[clamp(20px,4.5vw,56px)]">
@@ -56,7 +62,7 @@ export function PartnersStrip() {
         <span className="hidden md:block w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.14)" }} />
 
         <div className="fb-marquee flex items-center w-full overflow-hidden min-w-0" style={{ maskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)" }}>
-          <div className="fb-marquee-track flex items-center gap-[12px] pr-[12px] shrink-0">
+          <div ref={trackRef} className="fb-marquee-track flex items-center gap-[12px] pr-[12px] shrink-0" style={duration ? { animationDuration: `${duration}s` } : undefined}>
             {[...partners, ...partners].map((name, i) => (
               <div
                 key={`${name}-${i}`}
