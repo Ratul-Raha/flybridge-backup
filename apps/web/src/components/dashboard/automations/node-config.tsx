@@ -1,10 +1,12 @@
 "use client";
 
 import { EVENT_LIST } from "@/lib/events/catalog";
+import Link from "next/link";
+import { Eye } from "lucide-react";
 import { triggerEventOf } from "@/lib/automation/graph";
 import { EMAIL_TEMPLATES, emailTemplateById, emailTemplatesForEvent } from "@/lib/automation/email-templates";
 import type { AutomationNode, AutomationGraph, ActionType, ConditionOperator, DelayUnit, RecipientSetting } from "@/lib/automation/types";
-import { Label, fieldClass } from "./ui";
+import { Label, fieldClass, ACCENT } from "./ui";
 
 const OPERATORS: { value: ConditionOperator; label: string }[] = [
   { value: "equals", label: "is equal to" },
@@ -194,6 +196,16 @@ export function NodeConfig({
                     </span>
                     <span className="mt-1 block whitespace-pre-wrap">{selectedTemplate.previewBody}</span>
                   </div>
+                )}
+                {selectedTemplate && (
+                  <Link
+                    href={`/dashboard/admin/email-templates?template=${selectedTemplate.id}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition hover:bg-black/5"
+                    style={{ borderColor: "var(--line)", color: ACCENT }}
+                  >
+                    <Eye size={13} /> Preview template
+                  </Link>
                 )}
               </div>
             </div>

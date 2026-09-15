@@ -363,6 +363,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 active: pathname.startsWith("/dashboard/admin/automations"),
               },
               {
+                label: "Email Templates",
+                href: "/dashboard/admin/email-templates",
+                active: pathname.startsWith("/dashboard/admin/email-templates"),
+              },
+              {
                 label: "Event Log",
                 href: "/dashboard/admin/events",
                 active: pathname.startsWith("/dashboard/admin/events"),
