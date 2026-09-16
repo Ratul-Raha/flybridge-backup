@@ -26,7 +26,6 @@ import {
   Award,
   Bot,
   SlidersHorizontal,
-  CreditCard,
   Newspaper,
   type LucideIcon,
 } from "lucide-react";
@@ -97,6 +96,28 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const nav = useMemo<NavSegment[]>(() => {
     if (!user) return [];
+
+    const settingsChildren: { label: string; href: string; active: boolean }[] = [
+      {
+        label: "Profile Settings",
+        href: "/dashboard/settings",
+        active: pathname === "/dashboard/settings",
+      },
+    ];
+    if (user.accountType === "admin") {
+      settingsChildren.push({
+        label: "Payment Settings",
+        href: "/dashboard/settings/payments",
+        active: pathname.startsWith("/dashboard/settings/payments"),
+      });
+    }
+    const settingsGroup: NavGroup = {
+      kind: "group",
+      label: "Settings",
+      icon: SettingsIcon,
+      children: settingsChildren,
+    };
+
     if (user.accountType === "user") {
       return [
         {
@@ -208,13 +229,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               icon: Bell,
               active: pathname.startsWith("/dashboard/notifications"),
             },
-            {
-              kind: "link",
-              label: "Settings",
-              href: "/dashboard/settings",
-              icon: SettingsIcon,
-              active: pathname === "/dashboard/settings",
-            },
+            settingsGroup,
           ],
         },
       ] satisfies NavSegment[];
@@ -313,13 +328,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             icon: Bell,
             active: pathname.startsWith("/dashboard/notifications"),
           },
-          {
-            kind: "link",
-            label: "Settings",
-            href: "/dashboard/settings",
-            icon: SettingsIcon,
-            active: pathname === "/dashboard/settings",
-          },
+          settingsGroup,
         ],
       });
     }
@@ -388,13 +397,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/bot-config",
             icon: SlidersHorizontal,
             active: pathname.startsWith("/dashboard/admin/bot-config"),
-          },
-          {
-            kind: "link",
-            label: "Payment Settings",
-            href: "/dashboard/admin/settings",
-            icon: CreditCard,
-            active: pathname.startsWith("/dashboard/admin/settings"),
           },
         ],
       });
@@ -665,7 +667,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                             style={{ color: "var(--ink)" }}
                           >
                             <SettingsIcon size={15} style={{ color: "var(--body)" }} />
-                            Settings
+                            Profile Settings
                           </Link>
                           <button
                             type="button"

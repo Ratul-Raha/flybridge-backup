@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsForm } from "@/components/dashboard/user/settings-form";
 
 export const metadata: Metadata = {
-  title: "Settings | FlyBridge",
+  title: "Profile Settings | FlyBridge",
 };
 
 export default async function SettingsPage() {
@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Settings"
+        title="Profile Settings"
         subtitle="Manage your personal information and account details."
       />
       <SettingsForm />
