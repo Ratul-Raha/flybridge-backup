@@ -6,9 +6,18 @@ import { Order, type OrderItemType } from "@/lib/models/order";
 import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
 
 export async function POST(request: Request) {
-  const stripe = getStripe();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripe || !webhookSecret) {
+  const candidates = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_WEBHOOK_SECRET_TEST,
+  ].filter((secret): secret is string => !!secret && !secret.includes("placeholder"));
+
+  if (candidates.length === 0) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
+  const stripe =
+    (await getStripe()) ?? (await getStripe("live")) ?? (await getStripe("test"));
+  if (!stripe) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
 
@@ -18,15 +27,17 @@ export async function POST(request: Request) {
   }
 
   const payload = await request.text();
-  let event: Stripe.Event;
-  try {
-    event = await stripe.webhooks.constructEventAsync(
-      payload,
-      signature,
-      webhookSecret
-    );
-  } catch (error) {
-    console.error("stripe webhook signature verification failed", error);
+  let event: Stripe.Event | null = null;
+  for (const secret of candidates) {
+    try {
+      event = await stripe.webhooks.constructEventAsync(payload, signature, secret);
+      break;
+    } catch {
+      // try the next configured secret (test vs live)
+    }
+  }
+  if (!event) {
+    console.error("stripe webhook signature verification failed");
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 

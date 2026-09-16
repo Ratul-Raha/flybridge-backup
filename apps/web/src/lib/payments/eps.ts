@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { connectDb } from "@/lib/db";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
+import { loadPaymentSettings } from "@/lib/payments/settings";
 import type { ReconcileResult } from "@/lib/payments/types";
 
 /**
@@ -56,9 +57,8 @@ const SANDBOX_CREDENTIALS = {
   storeId: "d44e705f-9e3a-41de-98b1-1674631637da",
 } as const;
 
-function config(): EPSConfig {
-  const environment: EPSEnvironment =
-    process.env.EPS_ENV === "production" ? "production" : "sandbox";
+async function config(mode?: EPSEnvironment): Promise<EPSConfig> {
+  const environment = mode ?? (await currentEPSMode());
   const creds = environment === "production" ? undefined : SANDBOX_CREDENTIALS;
   return {
     username: process.env.EPS_USERNAME || creds?.username || "",
@@ -70,8 +70,17 @@ function config(): EPSConfig {
   };
 }
 
-export function isEPSConfigured(): boolean {
-  const c = config();
+export async function currentEPSMode(): Promise<EPSEnvironment> {
+  const { epsMode } = await loadPaymentSettings();
+  return epsMode;
+}
+
+export function asEPSMode(value: string | null | undefined): EPSEnvironment | null {
+  return value === "production" || value === "sandbox" ? value : null;
+}
+
+export async function isEPSConfigured(mode?: EPSEnvironment): Promise<boolean> {
+  const c = await config(mode);
   return Boolean(
     c.username &&
       c.password &&
@@ -105,14 +114,22 @@ export function generateMerchantTransactionId(): string {
     .padStart(6, "0")}`;
 }
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+let cachedToken: {
+  token: string;
+  expiresAt: number;
+  environment: EPSEnvironment;
+} | null = null;
 
-async function getToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt - 30_000) {
+async function getToken(environment: EPSEnvironment): Promise<string> {
+  const c = await config(environment);
+  if (
+    cachedToken &&
+    cachedToken.environment === environment &&
+    Date.now() < cachedToken.expiresAt - 30_000
+  ) {
     return cachedToken.token;
   }
 
-  const c = config();
   const res = await fetch(ENDPOINTS[c.environment].token, {
     method: "POST",
     headers: {
@@ -138,7 +155,7 @@ async function getToken(): Promise<string> {
   const expiresAt =
     (data.expireDate && Date.parse(data.expireDate)) ||
     Date.now() + 12 * 60 * 60 * 1000;
-  cachedToken = { token: data.token, expiresAt };
+  cachedToken = { token: data.token, expiresAt, environment: c.environment };
   return data.token;
 }
 
@@ -154,6 +171,7 @@ export type EPSPaymentResult = {
   url: string;
   transactionId: string;
   merchantTransactionId: string;
+  mode: EPSEnvironment;
 };
 
 export async function createEPSPayment(opts: {
@@ -162,9 +180,10 @@ export async function createEPSPayment(opts: {
   customer: { name: string; email: string; phone?: string | null };
   cancelPath?: string;
   ipAddress?: string;
+  mode?: EPSEnvironment;
 }): Promise<EPSPaymentResult> {
-  const c = config();
-  if (!isEPSConfigured()) throw new Error("Payment provider is not configured");
+  const c = await config(opts.mode);
+  if (!(await isEPSConfigured(c.environment))) throw new Error("Payment provider is not configured");
   const order = opts.order;
   const item = order.items[0];
   if (!item) throw new Error("Order has no items");
@@ -172,7 +191,7 @@ export async function createEPSPayment(opts: {
   const merchantTransactionId = generateMerchantTransactionId();
   const orderId = order._id.toString();
   const origin = opts.origin;
-  const token = await getToken();
+  const token = await getToken(c.environment);
 
   const body: Record<string, unknown> = {
     merchantId: c.merchantId,
@@ -243,12 +262,14 @@ export async function createEPSPayment(opts: {
     url: data.RedirectURL,
     transactionId: data.TransactionId,
     merchantTransactionId,
+    mode: c.environment,
   };
 }
 
 export type EPSVerifyParams = {
   merchantTransactionId?: string;
   epsTransactionId?: string;
+  mode?: EPSEnvironment;
 };
 
 export type EPSVerifyResult = {
@@ -261,13 +282,13 @@ export type EPSVerifyResult = {
 export async function verifyEPSTransaction(
   params: EPSVerifyParams
 ): Promise<EPSVerifyResult> {
-  const c = config();
-  if (!isEPSConfigured()) throw new Error("Payment provider is not configured");
+  const c = await config(params.mode);
+  if (!(await isEPSConfigured(c.environment))) throw new Error("Payment provider is not configured");
   if (!params.merchantTransactionId && !params.epsTransactionId) {
     throw new Error("A transaction id is required");
   }
 
-  const token = await getToken();
+  const token = await getToken(c.environment);
   const hashValue = params.merchantTransactionId || params.epsTransactionId!;
   const query = new URLSearchParams();
   if (params.merchantTransactionId) {
@@ -333,9 +354,11 @@ export async function reconcileEPSOrder(
 
   let result: EPSVerifyResult | null = null;
   try {
+    const mode = asEPSMode(existing.gatewayMode) ?? (await currentEPSMode());
     result = await verifyEPSTransaction({
       merchantTransactionId: existing.merchantTransactionId || undefined,
       epsTransactionId: existing.gatewayRef || undefined,
+      mode,
     });
   } catch (error) {
     console.error("eps reconcile verify error", error);

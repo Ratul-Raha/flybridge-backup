@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       const currency = (order.currency ?? "USD").toUpperCase();
 
       if (currency === "BDT") {
-        if (!isEPSConfigured()) {
+        if (!(await isEPSConfigured())) {
           return NextResponse.json(
             { error: "BDT payments are not set up yet. Please choose another method or try again later." },
             { status: 503 }
@@ -150,10 +150,11 @@ export async function POST(request: NextRequest) {
         orderDoc.gateway = "eps";
         orderDoc.gatewayRef = payment.transactionId;
         orderDoc.merchantTransactionId = payment.merchantTransactionId;
+        orderDoc.gatewayMode = payment.mode;
         await orderDoc.save();
         paymentUrl = payment.url;
       } else {
-        if (!isStripeConfigured()) {
+        if (!(await isStripeConfigured())) {
           return NextResponse.json(
             { error: "Payments are not configured yet. Please try again later." },
             { status: 503 }
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest) {
         });
         orderDoc.gateway = "stripe";
         orderDoc.gatewayRef = checkout.sessionId;
+        orderDoc.gatewayMode = checkout.mode;
         await orderDoc.save();
         paymentUrl = checkout.url;
       }

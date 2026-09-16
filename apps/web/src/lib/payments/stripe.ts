@@ -4,21 +4,47 @@ import Stripe from "stripe";
 import { connectDb } from "@/lib/db";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
+import { loadPaymentSettings, type StripeMode } from "@/lib/payments/settings";
 import type { ReconcileResult } from "@/lib/payments/types";
 
-let client: Stripe | null = null;
-
-export function isStripeConfigured(): boolean {
-  const key = process.env.STRIPE_SECRET_KEY ?? "";
-  return key.startsWith("sk_") && !key.includes("placeholder");
+function keyForMode(mode: StripeMode): string {
+  if (mode === "live") return process.env.STRIPE_SECRET_KEY ?? "";
+  return process.env.STRIPE_TEST_SECRET_KEY ?? process.env.STRIPE_SECRET_KEY ?? "";
 }
 
-export function getStripe(): Stripe | null {
-  if (!isStripeConfigured()) return null;
-  if (!client) {
-    client = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-  }
+function keyMatchesMode(mode: StripeMode, key: string): boolean {
+  if (!key || key.includes("placeholder")) return false;
+  return mode === "live" ? key.startsWith("sk_live_") : key.startsWith("sk_test_");
+}
+
+const clients: Partial<Record<StripeMode, { client: Stripe; key: string }>> = {};
+
+function clientForMode(mode: StripeMode): Stripe | null {
+  const key = keyForMode(mode);
+  if (!keyMatchesMode(mode, key)) return null;
+  const cached = clients[mode];
+  if (cached && cached.key === key) return cached.client;
+  const client = new Stripe(key);
+  clients[mode] = { client, key };
   return client;
+}
+
+export async function currentStripeMode(): Promise<StripeMode> {
+  const { stripeMode } = await loadPaymentSettings();
+  return stripeMode;
+}
+
+export function asStripeMode(value: string | null | undefined): StripeMode | null {
+  return value === "live" || value === "test" ? value : null;
+}
+
+export async function isStripeConfigured(mode?: StripeMode): Promise<boolean> {
+  const m = mode ?? (await currentStripeMode());
+  return keyMatchesMode(m, keyForMode(m));
+}
+
+export async function getStripe(mode?: StripeMode): Promise<Stripe | null> {
+  return clientForMode(mode ?? (await currentStripeMode()));
 }
 
 export function cancelPathFor(itemType: OrderItemType, itemId: string): string {
@@ -32,8 +58,9 @@ export function cancelPathFor(itemType: OrderItemType, itemId: string): string {
 export async function createCheckoutSession(
   order: OrderDoc,
   opts: { origin: string; email?: string | null; cancelPath?: string }
-): Promise<{ url: string; sessionId: string }> {
-  const stripe = getStripe();
+): Promise<{ url: string; sessionId: string; mode: StripeMode }> {
+  const mode = await currentStripeMode();
+  const stripe = await getStripe(mode);
   if (!stripe) throw new Error("Payment provider is not configured");
   if (!order.items[0]) throw new Error("Order has no items");
 
@@ -69,7 +96,7 @@ export async function createCheckoutSession(
   }
 
   if (!session.url) throw new Error("Stripe did not return a checkout URL");
-  return { url: session.url, sessionId: session.id };
+  return { url: session.url, sessionId: session.id, mode };
 }
 
 export async function reconcileStripeOrder(
@@ -85,7 +112,8 @@ export async function reconcileStripeOrder(
     itemId: item?.itemId,
   } satisfies Omit<ReconcileResult, "status">;
 
-  const stripe = getStripe();
+  const mode = asStripeMode(existing.gatewayMode) ?? (await currentStripeMode());
+  const stripe = await getStripe(mode);
   if (!stripe || existing.gateway !== "stripe" || !existing.gatewayRef) {
     return { status: existing.status, ...base };
   }

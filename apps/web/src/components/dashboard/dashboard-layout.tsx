@@ -26,6 +26,7 @@ import {
   Award,
   Bot,
   SlidersHorizontal,
+  CreditCard,
   Newspaper,
   type LucideIcon,
 } from "lucide-react";
@@ -387,6 +388,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/bot-config",
             icon: SlidersHorizontal,
             active: pathname.startsWith("/dashboard/admin/bot-config"),
+          },
+          {
+            kind: "link",
+            label: "Payment Settings",
+            href: "/dashboard/admin/settings",
+            icon: CreditCard,
+            active: pathname.startsWith("/dashboard/admin/settings"),
           },
         ],
       });
