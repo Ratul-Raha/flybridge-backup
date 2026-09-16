@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { loadPaymentSettings, savePaymentSettings } from "@/lib/payments/settings";
+import { isEPSConfigured } from "@/lib/payments/eps";
 
 function isStripeMode(value: unknown): value is "test" | "live" {
   return value === "test" || value === "live";
@@ -18,14 +19,8 @@ function secretAppearsTest(key: string | undefined): boolean {
   return !!key && key.startsWith("sk_test_") && !key.includes("placeholder");
 }
 
-function epsEnvCompleteness(): boolean {
-  return Boolean(
-    process.env.EPS_USERNAME &&
-      process.env.EPS_PASSWORD &&
-      process.env.EPS_HASH_KEY &&
-      process.env.EPS_MERCHANT_ID &&
-      process.env.EPS_STORE_ID
-  );
+function epsEnvCompleteness(): Promise<boolean> {
+  return isEPSConfigured("production");
 }
 
 export async function GET() {
@@ -55,7 +50,7 @@ export async function GET() {
       },
       eps: {
         mode: state.epsMode,
-        envCreds: epsEnvCompleteness(),
+        envCreds: await epsEnvCompleteness(),
       },
     });
   } catch (error) {

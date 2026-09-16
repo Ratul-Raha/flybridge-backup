@@ -46,8 +46,7 @@ type EPSConfig = {
 
 /**
  * Public EPS sandbox credentials supplied for development. They are only
- * used when EPS_ENV is not `production`, and any real credentials provided
- * via environment variables always take precedence.
+ * used for the sandbox environment; production never falls back to them.
  */
 const SANDBOX_CREDENTIALS = {
   username: "Epsdemo@gmail.com",
@@ -57,15 +56,31 @@ const SANDBOX_CREDENTIALS = {
   storeId: "d44e705f-9e3a-41de-98b1-1674631637da",
 } as const;
 
+/**
+ * Resolve a single credential for the requested environment. Scoped vars
+ * (`EPS_PRODUCTION_*` / `EPS_SANDBOX_*`) win, then the generic `EPS_*` pair is
+ * treated as the live merchant credentials. Sandbox never reads the generic
+ * `EPS_*` vars, so production credentials can never be sent to sandbox
+ * endpoints.
+ */
+function credential(environment: EPSEnvironment, key: string): string {
+  if (environment === "production") {
+    return (
+      process.env[`EPS_PRODUCTION_${key}`] ?? process.env[`EPS_${key}`] ?? ""
+    );
+  }
+  return process.env[`EPS_SANDBOX_${key}`] ?? "";
+}
+
 async function config(mode?: EPSEnvironment): Promise<EPSConfig> {
   const environment = mode ?? (await currentEPSMode());
-  const creds = environment === "production" ? undefined : SANDBOX_CREDENTIALS;
+  const demo = environment === "sandbox" ? SANDBOX_CREDENTIALS : undefined;
   return {
-    username: process.env.EPS_USERNAME || creds?.username || "",
-    password: process.env.EPS_PASSWORD || creds?.password || "",
-    hashKey: process.env.EPS_HASH_KEY || creds?.hashKey || "",
-    merchantId: process.env.EPS_MERCHANT_ID || creds?.merchantId || "",
-    storeId: process.env.EPS_STORE_ID || creds?.storeId || "",
+    username: credential(environment, "USERNAME") || demo?.username || "",
+    password: credential(environment, "PASSWORD") || demo?.password || "",
+    hashKey: credential(environment, "HASH_KEY") || demo?.hashKey || "",
+    merchantId: credential(environment, "MERCHANT_ID") || demo?.merchantId || "",
+    storeId: credential(environment, "STORE_ID") || demo?.storeId || "",
     environment,
   };
 }
