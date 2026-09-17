@@ -6,7 +6,6 @@ import { Seminar } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { cleanPrices, type CurrencyPrices } from "@/lib/pricing";
-import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 import type { OrderItemType } from "@/lib/models/order";
 
 export type Product = {
@@ -58,7 +57,9 @@ export async function resolveProduct(
       prices: cleanPrices(c.prices),
       image: c.image ?? null,
       url: `/programs/${c.slug}/learn`,
-      wishlistDiscountPercent: c.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT,
+      wishlistDiscountPercent: c.waitlistEnabled
+        ? c.wishlistDiscountPercent ?? 0
+        : 0,
     };
   }
 

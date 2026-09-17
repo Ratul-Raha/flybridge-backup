@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
+import { WaitlistForm } from "@/components/programs/waitlist-form";
 import {
   courseDetails,
   type ComparisonSection,
@@ -957,6 +958,8 @@ function DbCoursePage({
     language: course.language ?? "",
     pace: course.pace ?? "",
     upcoming: course.upcoming === true,
+    waitlistEnabled: course.waitlistEnabled === true,
+    wishlistDiscountPercent: course.wishlistDiscountPercent ?? 0,
   };
 
   return (
@@ -1192,12 +1195,22 @@ function DbCoursePage({
                   </div>
 
                   {checkoutCourse.upcoming && (
-                    <div
-                      className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
-                      style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
-                    >
-                      This course is coming soon — join the waitlist to be notified.
-                    </div>
+                    checkoutCourse.waitlistEnabled ? (
+                      <div className="mt-5" id="waitlist">
+                        <WaitlistForm
+                          slug={checkoutCourse.slug}
+                          title={checkoutCourse.title}
+                          discountPercent={checkoutCourse.wishlistDiscountPercent}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
+                        style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
+                      >
+                        This course is coming soon — join the waitlist to be notified.
+                      </div>
+                    )
                   )}
                 </div>
 

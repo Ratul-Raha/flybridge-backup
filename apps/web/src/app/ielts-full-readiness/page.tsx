@@ -46,7 +46,6 @@ import {
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
-import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 const SLUG = "ielts-full-readiness";
 
@@ -356,6 +355,7 @@ function CourseHero({
   heroStats,
   waitlistTarget,
   wishlistDiscountPercent,
+  waitlistEnabled,
 }: {
   slug: string;
   badge: string;
@@ -380,6 +380,7 @@ function CourseHero({
   heroStats?: { value: string; label: string }[];
   waitlistTarget: string;
   wishlistDiscountPercent: number;
+  waitlistEnabled: boolean;
 }) {
   const linkHref =
     cta?.enrolled
@@ -535,7 +536,7 @@ function CourseHero({
               )}
             </div>
 
-            {!cta?.enrolled && !cta?.hasDb && (
+            {!cta?.enrolled && !cta?.hasDb && waitlistEnabled && wishlistDiscountPercent > 0 && (
               <div
                 className="mt-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2.5"
                 style={{ background: "rgba(124,240,189,0.12)", border: "1px solid rgba(124,240,189,0.35)" }}
@@ -1191,12 +1192,14 @@ function FinalCta({
   slug,
   title,
   wishlistDiscountPercent,
+  waitlistEnabled,
 }: {
   cta: { title: string; desc: string };
   pricing?: PricingSection;
   slug: string;
   title: string;
   wishlistDiscountPercent: number;
+  waitlistEnabled: boolean;
 }) {
   return (
     <section
@@ -1223,6 +1226,9 @@ function FinalCta({
           <BengaliText>{cta.desc}</BengaliText>
         </p>
 
+        {waitlistEnabled ? (
+          <>
+        {wishlistDiscountPercent > 0 && (
         <div className="mt-10 mx-auto max-w-[460px]">
           <div
             className="flex items-center gap-3.5 rounded-[14px] px-5 py-4 text-left"
@@ -1249,6 +1255,7 @@ function FinalCta({
             </div>
           </div>
         </div>
+        )}
 
         <div className="mt-8">
           <WaitlistForm
@@ -1257,6 +1264,16 @@ function FinalCta({
             discountPercent={wishlistDiscountPercent}
           />
         </div>
+          </>
+        ) : (
+          <a
+            href={pricing?.ctaHref ?? "/programs"}
+            className="browse-btn mt-10 inline-flex items-center gap-2.5 font-semibold text-[16px] rounded-full px-11 py-[18px]"
+            style={{ background: "var(--brand)", color: "#fff" }}
+          >
+            <BengaliText>{pricing?.ctaLabel ?? "Browse programs"}</BengaliText>
+          </a>
+        )}
 
         {pricing?.includedLine && (
           <div className="mt-8 text-[13px]" style={{ color: "#64748B" }}>
@@ -1812,8 +1829,10 @@ export default async function IeltsFullReadinessLandingPage() {
   const lessonCount = details ? details.modules.reduce((n, m) => n + m.lessons.length, 0) : 30;
   const moduleCount = details ? details.modules.length : 6;
 
-  const wishlistDiscountPercent =
-    course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT;
+  const waitlistEnabled = course?.waitlistEnabled === true;
+  const wishlistDiscountPercent = waitlistEnabled
+    ? course?.wishlistDiscountPercent ?? 0
+    : 0;
 
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {
@@ -1957,6 +1976,7 @@ export default async function IeltsFullReadinessLandingPage() {
         heroStats={details?.heroStats}
         waitlistTarget={details?.pricing?.ctaHref ?? "#waitlist"}
         wishlistDiscountPercent={wishlistDiscountPercent}
+        waitlistEnabled={waitlistEnabled}
       />
 
       {details ? (
@@ -2033,6 +2053,7 @@ export default async function IeltsFullReadinessLandingPage() {
               slug={SLUG}
               title={details.title}
               wishlistDiscountPercent={wishlistDiscountPercent}
+              waitlistEnabled={waitlistEnabled}
             />
           )}
         </>

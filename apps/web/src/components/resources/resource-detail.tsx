@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/user/resource-card";
 import { getCategoryColor } from "@/lib/resource-colors";
 import { formatMoney } from "@/lib/pricing";
+import { PromoSummary } from "@/components/checkout/promo-summary";
 
 function downloadHref(r: ResourceCardData) {
   if (r.fileType === "link") {
@@ -37,6 +38,7 @@ export function ResourceDetail({
   const [payNote, setPayNote] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
     r.prices?.USD ? "USD" : "BDT"
   );
@@ -105,7 +107,12 @@ export function ResourceDetail({
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemType: "resource", itemId: r.id, currency }),
+        body: JSON.stringify({
+          itemType: "resource",
+          itemId: r.id,
+          currency,
+          code: appliedCode ?? undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to buy resource");
@@ -351,6 +358,15 @@ export function ResourceDetail({
                   prices={r.prices}
                   value={currency}
                   onChange={setCurrency}
+                />
+                <PromoSummary
+                  itemType="resource"
+                  itemId={r.id}
+                  currency={currency}
+                  baseAmount={
+                    currency === "BDT" ? r.prices?.BDT ?? r.price ?? 0 : r.price ?? 0
+                  }
+                  onCodeChange={setAppliedCode}
                 />
                 <button
                   type="button"

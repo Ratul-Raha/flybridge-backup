@@ -22,6 +22,7 @@ import {
   type TestListItem,
 } from "@/lib/mock-test-ui";
 import { formatMoney } from "@/lib/pricing";
+import { PromoSummary } from "@/components/checkout/promo-summary";
 
 export type PublicBundle = {
   id: string;
@@ -45,6 +46,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
     bundle.prices?.USD ? "USD" : "BDT"
   );
@@ -89,7 +91,12 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemType: "mock-bundle", itemId: bundle.id, currency }),
+        body: JSON.stringify({
+          itemType: "mock-bundle",
+          itemId: bundle.id,
+          currency,
+          code: appliedCode ?? undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to get this pack");
@@ -270,6 +277,17 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
                     prices={bundle.prices}
                     value={currency}
                     onChange={setCurrency}
+                  />
+                  <PromoSummary
+                    itemType="mock-bundle"
+                    itemId={bundle.id}
+                    currency={currency}
+                    baseAmount={
+                      currency === "BDT"
+                        ? bundle.prices?.BDT ?? bundle.price
+                        : bundle.price
+                    }
+                    onCodeChange={setAppliedCode}
                   />
                   <button
                     type="button"

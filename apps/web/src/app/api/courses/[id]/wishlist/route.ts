@@ -4,7 +4,6 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
-import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 export async function GET(
   _request: Request,
@@ -44,8 +43,7 @@ export async function GET(
       email: e.email ?? "",
       phone: e.phone ?? "",
       source: e.source ?? "waitlist",
-      discountPercent:
-        e.discountPercent ?? course.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT,
+      discountPercent: e.discountPercent ?? course.wishlistDiscountPercent ?? 0,
       joinedAt: e.createdAt,
     }));
 
@@ -54,8 +52,8 @@ export async function GET(
         id: course._id.toString(),
         title: course.title,
         slug: course.slug,
-        wishlistDiscountPercent:
-          course.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT,
+        waitlistEnabled: course.waitlistEnabled ?? false,
+        wishlistDiscountPercent: course.wishlistDiscountPercent ?? 0,
       },
       stats: {
         total: rows.length,

@@ -26,6 +26,7 @@ function toDto(
     price: c.price ?? 0,
     currency: c.currency ?? "USD",
     prices: cleanPrices(c.prices),
+    waitlistEnabled: c.waitlistEnabled ?? false,
     wishlistDiscountPercent: c.wishlistDiscountPercent ?? 0,
     image: c.image ?? null,
     published: c.published ?? false,
@@ -169,6 +170,7 @@ export async function POST(request: NextRequest) {
       currency:
         typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
       prices: sanitizePrices(body.prices),
+      waitlistEnabled: body.waitlistEnabled === true,
       wishlistDiscountPercent: Math.max(
         0,
         Math.min(100, Number(body.wishlistDiscountPercent) || 0)

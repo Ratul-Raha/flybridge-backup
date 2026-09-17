@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
-import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 type WishlistEntry = {
   id: string;
@@ -33,6 +32,7 @@ type CourseInfo = {
   id: string;
   title: string;
   slug: string;
+  waitlistEnabled?: boolean;
   wishlistDiscountPercent?: number;
 };
 
@@ -277,10 +277,14 @@ export function CourseWishlist({ courseSlug }: { courseSlug: string }) {
           />
           <StatCard
             label="Wishlist discount"
-            value={`${course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT}%`}
+            value={
+              course?.waitlistEnabled
+                ? `${course?.wishlistDiscountPercent ?? 0}%`
+                : "Off"
+            }
             icon={Gift}
             gradient="linear-gradient(135deg,#2E9E6B,#7CF0BD)"
-            caption="Per joiner on launch"
+            caption={course?.waitlistEnabled ? "Per joiner on launch" : "Waitlist disabled"}
           />
         </div>
       )}

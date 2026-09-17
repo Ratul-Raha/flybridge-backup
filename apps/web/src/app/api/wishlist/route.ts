@@ -5,7 +5,6 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { User } from "@/lib/models/user";
-import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
 
   const slug =
     typeof body.slug === "string" ? body.slug.toLowerCase().trim() : "";
-  const title = typeof body.title === "string" ? body.title.trim() : "";
   const source = typeof body.source === "string" ? body.source.trim() : "waitlist";
 
   if (!slug) return NextResponse.json({ error: "Course is required" }, { status: 400 });
@@ -34,24 +32,18 @@ export async function POST(request: NextRequest) {
     await connectDb();
 
     const course = await Course.findOne({ slug });
-    let courseId = course?._id;
-
-    if (!course && title) {
-      const created = await Course.create({
-        slug,
-        title,
-        badge: "UPCOMING",
-        upcoming: true,
-        published: false,
-      });
-      courseId = created._id;
-    }
-
-    if (!courseId) {
+    if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
+    if (!course.waitlistEnabled) {
+      return NextResponse.json(
+        { error: "The waitlist isn't open for this course." },
+        { status: 400 }
+      );
+    }
 
-    const discountPercent = course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT;
+    const courseId = course._id;
+    const discountPercent = course.wishlistDiscountPercent ?? 0;
 
     const user = await User.findById(session.userId).select("name email phone");
     const name = user?.name?.trim() || session.name?.trim() || "Student";

@@ -24,6 +24,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   price: "Price",
   currency: "Currency",
   prices: "Prices",
+  waitlistEnabled: "Waitlist enabled",
   wishlistDiscountPercent: "Wishlist discount",
   image: "Image",
   published: "Published",
@@ -89,6 +90,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
     const prices = sanitizePrices(body.prices);
     if (prices) course.prices = prices;
+    if (typeof body.waitlistEnabled === "boolean") course.waitlistEnabled = body.waitlistEnabled;
     if (typeof body.wishlistDiscountPercent === "number") {
       course.wishlistDiscountPercent = Math.max(
         0,
