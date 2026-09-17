@@ -8,7 +8,7 @@ const wishlistSchema = new Schema(
     email: { type: String, lowercase: true, trim: true },
     phone: { type: String, trim: true },
     source: { type: String, default: "waitlist", trim: true },
-    scholarshipUsd: { type: Number, default: 10 },
+    discountPercent: { type: Number, default: 10 },
   },
   { timestamps: true }
 );

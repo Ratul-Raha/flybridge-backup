@@ -34,8 +34,8 @@
     --peach-bg: #FFF2E4; --peach-ink: #DB8A2E;
     --blue-bg: #EAF1FF;  --blue-ink: #2F5FE0;
 
-    --font-display: 'Inter Variable', 'Bornomala', sans-serif;
-    --font-body: 'Inter Variable', 'Bornomala', sans-serif;
+    --font-display: 'Inter Variable', sans-serif;
+    --font-body: 'Inter Variable', sans-serif;
     --font-mono: 'Space Grotesk Variable', sans-serif;
     --font-hand: 'Caveat Variable', cursive;
   }
@@ -215,6 +215,12 @@
   .fb-pulse { animation: none; }
   .fb-flow { animation: none; }
   .fb-map-ring { animation: none; }
+}
+
+/* IELTS Full Readiness landing page — Bengali font fallback */
+.ielts-landing {
+  --font-display: 'Inter Variable', 'Bornomala', sans-serif;
+  --font-body: 'Inter Variable', 'Bornomala', sans-serif;
 }
 
 /* Scroll-reveal for cards (scroll-driven) with safe fallback.

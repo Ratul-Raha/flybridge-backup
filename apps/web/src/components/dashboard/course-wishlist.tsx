@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 type WishlistEntry = {
   id: string;
@@ -24,7 +25,7 @@ type WishlistEntry = {
   email: string;
   phone: string;
   source: string;
-  scholarshipUsd: number;
+  discountPercent: number;
   joinedAt: string;
 };
 
@@ -40,7 +41,6 @@ type Stats = {
   today: number;
   withEmail: number;
   withPhone: number;
-  scholarshipValue: number;
 };
 
 const selectClass =
@@ -275,11 +275,11 @@ export function CourseWishlist({ courseSlug }: { courseSlug: string }) {
             caption="Reachable by phone"
           />
           <StatCard
-            label="Scholarship value"
-            value={`$${stats.scholarshipValue}`}
+            label="Wishlist discount"
+            value={`${WISHLIST_DISCOUNT_PERCENT}%`}
             icon={Gift}
             gradient="linear-gradient(135deg,#2E9E6B,#7CF0BD)"
-            caption="Committed on launch"
+            caption="Per joiner on launch"
           />
         </div>
       )}
@@ -384,12 +384,12 @@ export function CourseWishlist({ courseSlug }: { courseSlug: string }) {
                           Registered user
                         </span>
                       )}
-                      {e.scholarshipUsd > 0 && (
+                      {e.discountPercent > 0 && (
                         <span
                           className="inline-flex items-center gap-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.08em] mt-0.5"
                           style={{ color: "#0E8A54" }}
                         >
-                          <Gift size={9} /> ${e.scholarshipUsd} scholarship
+                          <Gift size={9} /> {e.discountPercent}% discount
                         </span>
                       )}
                     </div>

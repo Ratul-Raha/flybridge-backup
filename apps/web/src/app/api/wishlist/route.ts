@@ -5,7 +5,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { User } from "@/lib/models/user";
-import { WISHLIST_SCHOLARSHIP_USD } from "@/lib/wishlist";
+import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       if (name && entry.name !== name) update.name = name;
       if (email && entry.email !== email) update.email = email;
       if (phone && entry.phone !== phone) update.phone = phone;
-      if (!entry.scholarshipUsd) update.scholarshipUsd = WISHLIST_SCHOLARSHIP_USD;
+      if (!entry.discountPercent) update.discountPercent = WISHLIST_DISCOUNT_PERCENT;
       if (Object.keys(update).length) {
         await CourseWishlist.updateOne({ _id: entry._id }, { $set: update });
       }
@@ -82,14 +82,14 @@ export async function POST(request: NextRequest) {
         email: email || undefined,
         phone: phone || undefined,
         source,
-        scholarshipUsd: WISHLIST_SCHOLARSHIP_USD,
+        discountPercent: WISHLIST_DISCOUNT_PERCENT,
       });
     }
 
     return NextResponse.json(
       {
         alreadyJoined,
-        scholarshipUsd: entry.scholarshipUsd ?? WISHLIST_SCHOLARSHIP_USD,
+        discountPercent: entry.discountPercent ?? WISHLIST_DISCOUNT_PERCENT,
         entry: {
           id: entry._id.toString(),
           name: entry.name,

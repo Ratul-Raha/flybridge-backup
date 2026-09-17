@@ -141,7 +141,7 @@ export function ProgramCard({ p }: { p: Program }) {
   if (p.upcoming) {
     return (
       <Link
-        href={`/programs/${p.slug}`}
+        href={p.href ?? `/programs/${p.slug}`}
         className="flex flex-col overflow-hidden rounded-lg border bg-white transition-shadow duration-300 hover:shadow-[0_18px_40px_-20px_rgba(18,32,67,0.2)]"
         style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -12px rgba(18,32,67,0.12)" }}
       >

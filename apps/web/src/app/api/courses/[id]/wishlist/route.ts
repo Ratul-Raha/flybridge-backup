@@ -4,7 +4,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
-import { WISHLIST_SCHOLARSHIP_USD } from "@/lib/wishlist";
+import { WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 export async function GET(
   _request: Request,
@@ -44,7 +44,7 @@ export async function GET(
       email: e.email ?? "",
       phone: e.phone ?? "",
       source: e.source ?? "waitlist",
-      scholarshipUsd: e.scholarshipUsd ?? WISHLIST_SCHOLARSHIP_USD,
+      discountPercent: e.discountPercent ?? WISHLIST_DISCOUNT_PERCENT,
       joinedAt: e.createdAt,
     }));
 
@@ -60,7 +60,6 @@ export async function GET(
         today: rows.filter((r) => new Date(r.joinedAt) >= startOfToday).length,
         withEmail: rows.filter((r) => r.email).length,
         withPhone: rows.filter((r) => r.phone).length,
-        scholarshipValue: rows.reduce((sum, r) => sum + (r.scholarshipUsd ?? 0), 0),
       },
       entries: rows,
     });

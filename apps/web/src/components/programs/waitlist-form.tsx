@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { CheckCircle2, Gift, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { BengaliText } from "@/components/bengali-text";
-import { WISHLIST_PENDING_KEY, WISHLIST_SCHOLARSHIP_USD } from "@/lib/wishlist";
+import { WISHLIST_PENDING_KEY, WISHLIST_DISCOUNT_PERCENT } from "@/lib/wishlist";
 
 export function WaitlistForm({ slug, title }: { slug: string; title: string }) {
   const { user, loading } = useAuth();
@@ -78,7 +78,7 @@ export function WaitlistForm({ slug, title }: { slug: string; title: string }) {
         >
           <Gift className="h-4 w-4" style={{ color: "#7CF0BD" }} />
           <span className="text-[13px] font-semibold" style={{ color: "#7CF0BD" }}>
-            <BengaliText>${WISHLIST_SCHOLARSHIP_USD} Scholarship তোমার জন্য সংরক্ষিত</BengaliText>
+            <BengaliText>{WISHLIST_DISCOUNT_PERCENT}% Discount তোমার জন্য সংরক্ষিত</BengaliText>
           </span>
         </div>
       </div>
@@ -113,11 +113,11 @@ export function WaitlistForm({ slug, title }: { slug: string; title: string }) {
           <div>
             <div className="flex items-center gap-1.5 font-display text-[15px] font-semibold text-white">
               <Sparkles className="h-[14px] w-[14px]" style={{ color: "#7CF0BD" }} />
-              ${WISHLIST_SCHOLARSHIP_USD} Scholarship
+              {WISHLIST_DISCOUNT_PERCENT}% Discount
             </div>
             <div className="mt-0.5 text-[12.5px] leading-snug" style={{ color: "#B7C4D6" }}>
               <BengaliText>
-                ওয়েটলিস্টে জয়েন করলেই কোর্সে ${WISHLIST_SCHOLARSHIP_USD} স্কলারশিপ।
+                ওয়েটলিস্টে জয়েন করলেই কোর্সে {WISHLIST_DISCOUNT_PERCENT}% ছাড়।
               </BengaliText>
             </div>
           </div>
@@ -145,7 +145,7 @@ export function WaitlistForm({ slug, title }: { slug: string; title: string }) {
         <p className="text-center text-[11.5px] leading-[1.6]" style={{ color: "#64748B" }}>
           <BengaliText>
             {user
-              ? "জয়েন করলেই তোমার স্কলারশিপ স্বয়ংক্রিয়ভাবে যোগ হবে।"
+              ? `জয়েন করলেই তোমার ${WISHLIST_DISCOUNT_PERCENT}% ছাড় স্বয়ংক্রিয়ভাবে যোগ হবে।`
               : "Google দিয়ে সাইন ইন করলেই অটোমেটিক ওয়েটলিস্টে যুক্ত হয়ে যাবে।"}
           </BengaliText>
         </p>
