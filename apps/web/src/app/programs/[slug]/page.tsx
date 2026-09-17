@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
-import { ProgramCard } from "@/components/program-card";
-import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
+import { type DbCourse } from "@/components/programs/db-course-card";
+import { RelatedProgramCard, type RelatedProgram } from "@/components/programs/related-program-card";
 import { getProgram, programs } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
@@ -1506,6 +1506,33 @@ export default async function ProgramPage({ params }: Props) {
     };
   }) as DbCourse[];
 
+  const relatedPrograms: RelatedProgram[] = [
+    ...programs
+      .filter((p) => p.slug !== params.slug && !p.hasDb)
+      .map((p) => ({
+        slug: p.slug,
+        title: p.title,
+        badge: p.badge,
+        badgeColor: p.badgeColor,
+        bg: p.bg,
+        image: p.image ?? null,
+        sub: p.upcoming ? "Coming soon" : p.price ?? "Explore course",
+      })),
+    ...otherDbCourses.map((c) => ({
+      slug: c.slug,
+      title: c.title,
+      badge: c.badge || "COURSE",
+      badgeColor: "var(--brand)",
+      bg: "var(--brand-soft)",
+      image: c.image,
+      sub: c.upcoming
+        ? "Coming soon"
+        : c.price > 0
+          ? `${c.currency} ${c.price.toLocaleString()}`
+          : c.subtitle || c.description || "Explore course",
+    })),
+  ].slice(0, 6);
+
   return (
     <div className="course-page">
       <Nav />
@@ -1534,59 +1561,12 @@ export default async function ProgramPage({ params }: Props) {
 
       {details?.heroStats?.length ? <HeroStatStrip stats={details.heroStats} /> : null}
 
-      {/* Other programs */}
-      <section className="px-[clamp(20px,4.5vw,56px)] pt-[20px] pb-[70px] max-w-[1320px] mx-auto">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-9">
-          <div>
-            <h2
-              className="font-display font-semibold tracking-[-0.01em]"
-              style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
-            >
-              Other programs you may like
-            </h2>
-            <p className="text-[15px] mt-2" style={{ color: "var(--body)" }}>
-              More ways to build your international future.
-            </p>
-          </div>
-          <Link
-            href="/programs"
-            className="view-all font-medium text-[14px] inline-flex items-center gap-[6px] group"
-            style={{ color: "var(--brand-2)" }}
-          >
-            View all programs
-            <svg
-              className="w-[14px] h-[14px] transition-transform duration-250 group-hover:translate-x-[3px]"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M5 12H19M19 12L13 6M19 12L13 18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {programs
-            .filter((p) => p.slug !== params.slug && !p.hasDb)
-            .map((p) => (
-              <ProgramCard key={p.slug} p={p} />
-            ))}
-          {otherDbCourses.map((c) => (
-            <DbCourseCard key={c.id} course={c} />
-          ))}
-        </div>
-      </section>
-
       {details ? (
         <>
-          {/* Product section */}
+          {/* Product + sidebar rail */}
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
-            <div className="space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10 lg:gap-12 items-start">
+              <div className="space-y-12 min-w-0">
               {/* Facilities */}
               {!details.heroStats?.length && (
                 <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
@@ -1788,6 +1768,53 @@ export default async function ProgramPage({ params }: Props) {
                   </div>
                 </div>
               )}
+            </div>
+
+              {/* Sidebar — other programs */}
+              <aside className="lg:sticky lg:top-[100px] flex flex-col gap-5">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div
+                      className="font-mono text-[10.5px] font-semibold tracking-[0.3em] mb-2"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      EXPLORE
+                    </div>
+                    <h3
+                      className="font-display font-semibold leading-[1.2]"
+                      style={{ fontSize: "20px", color: "var(--ink)" }}
+                    >
+                      Other programs you may like
+                    </h3>
+                  </div>
+                  <Link
+                    href="/programs"
+                    className="view-all font-semibold text-[13px] inline-flex items-center gap-[5px] shrink-0 mb-[2px]"
+                    style={{ color: "var(--brand-2)" }}
+                  >
+                    View all
+                    <svg
+                      className="w-[13px] h-[13px] transition-transform duration-250 group-hover:translate-x-[3px]"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M5 12H19M19 12L13 6M19 12L13 18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Link>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {relatedPrograms.map((p) => (
+                    <RelatedProgramCard key={p.slug} p={p} />
+                  ))}
+                </div>
+              </aside>
             </div>
           </section>
 
