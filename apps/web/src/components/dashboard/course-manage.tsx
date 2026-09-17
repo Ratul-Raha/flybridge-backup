@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Loader2, Plus, Trash2, Upload, Users } from "lucide-react";
+import { BookOpen, Heart, Loader2, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -29,6 +29,7 @@ type Course = {
   featured: boolean;
   upcoming: boolean;
   enrollmentCount?: number;
+  wishlistCount?: number;
   modules: Module[];
   books: Book[];
 };
@@ -965,9 +966,19 @@ export function CourseManage() {
                     href={`/dashboard/courses/${c.slug}/enrollments`}
                     className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[5px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
                     style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                    title="See registered members"
                   >
                     <Users size={12} />
                     {c.enrollmentCount ?? 0}
+                  </Link>
+                  <Link
+                    href={`/dashboard/courses/${c.slug}/wishlist`}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[5px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                    title="See waitlist / wishlist members"
+                  >
+                    <Heart size={12} />
+                    {c.wishlistCount ?? 0}
                   </Link>
                   <button
                     type="button"

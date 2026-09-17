@@ -3,10 +3,16 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { CourseWishlist } from "@/lib/models/wishlist";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
-function toDto(c: CourseDoc, enrollmentCount?: number, includeContent = false) {
+function toDto(
+  c: CourseDoc,
+  enrollmentCount?: number,
+  includeContent = false,
+  wishlistCount?: number
+) {
   return {
     id: c._id.toString(),
     slug: c.slug,
@@ -27,6 +33,7 @@ function toDto(c: CourseDoc, enrollmentCount?: number, includeContent = false) {
     averageRating: c.averageRating ?? 0,
     reviewCount: c.reviewCount ?? 0,
     ...(enrollmentCount !== undefined ? { enrollmentCount } : {}),
+    ...(wishlistCount !== undefined ? { wishlistCount } : {}),
     modules: (c.modules ?? []).map((m) => ({
       title: m.title,
       lessons: (m.lessons ?? []).map((l) => ({
@@ -75,11 +82,23 @@ export async function GET(request: NextRequest) {
         { $group: { _id: "$course", count: { $sum: 1 } } },
       ]);
       const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+      const wishlistCounts = await CourseWishlist.aggregate([
+        { $group: { _id: "$course", count: { $sum: 1 } } },
+      ]);
+      const wishlistMap = new Map(
+        wishlistCounts.map((r) => [r._id.toString(), r.count as number])
+      );
       const sorted = courses
-        .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
+        .map((c) => ({
+          doc: c,
+          count: enrollMap.get(c._id.toString()) ?? 0,
+          wishCount: wishlistMap.get(c._id.toString()) ?? 0,
+        }))
         .sort((a, b) => b.count - a.count);
       return NextResponse.json({
-        courses: sorted.map(({ doc, count }) => toDto(doc, count, true)),
+        courses: sorted.map(({ doc, count, wishCount }) =>
+          toDto(doc, count, true, wishCount)
+        ),
       });
     }
 

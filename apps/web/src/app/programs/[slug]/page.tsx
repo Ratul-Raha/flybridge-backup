@@ -18,13 +18,15 @@ import {
   ChevronDown,
   Clock,
   Eye,
+  FileText,
+  Gift,
+  GraduationCap,
   Lock,
-  Maximize2,
-  Pause,
+  Mic,
   ShieldCheck,
   Star,
   Target,
-  Volume2,
+  Users,
   Zap,
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
@@ -32,6 +34,9 @@ import { CheckoutForm } from "@/components/programs/checkout-form";
 import {
   courseDetails,
   type ComparisonSection,
+  type CourseBook,
+  type CourseDetails,
+  type CourseFeature,
   type CurriculumSection,
   type Faq,
   type PricingSection,
@@ -40,6 +45,8 @@ import {
 } from "./course-data";
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
+import { WaitlistForm } from "@/components/programs/waitlist-form";
+import { WISHLIST_SCHOLARSHIP_USD } from "@/lib/wishlist";
 
 type Props = { params: { slug: string } };
 
@@ -115,6 +122,18 @@ const arrow = (
   </svg>
 );
 
+const check = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M20 6L9 17l-5-5"
+      stroke="#2E9E6B"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 function Stars({ value, size = 14 }: { value: number; size?: number }) {
   const filled = Math.round(value);
   return (
@@ -125,8 +144,8 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
           style={{
             width: size,
             height: size,
-            color: i < filled ? "#F59E0B" : "#DCE1EA",
-            fill: i < filled ? "#F59E0B" : "transparent",
+            color: i < filled ? "#7CF0BD" : "#27354D",
+            fill: i < filled ? "#7CF0BD" : "transparent",
           }}
           strokeWidth={1.5}
         />
@@ -167,389 +186,528 @@ function SectionHeading({
   );
 }
 
+function Pill({
+  children,
+  tone = "green",
+}: {
+  children: React.ReactNode;
+  tone?: "green" | "darkgreen";
+}) {
+  const styles =
+    tone === "green"
+      ? {
+          background: "rgba(46,158,107,0.1)",
+          border: "1px solid rgba(46,158,107,0.35)",
+          color: "#0A3D2E",
+        }
+      : {
+          background: "rgba(124,240,189,0.1)",
+          border: "1px solid rgba(124,240,189,0.35)",
+          color: "var(--brand-2)",
+        };
+  return (
+    <span
+      className="font-bengali inline-flex items-center gap-2 rounded-full px-[16px] py-[8px] font-semibold text-[13px] tracking-[0.02em]"
+      style={styles}
+    >
+      {children}
+    </span>
+  );
+}
+
+function TargetBadge({ targetBand }: { targetBand: TargetBand }) {
+  return (
+    <div
+      className="relative w-[196px] h-[196px] rounded-full flex items-center justify-center shrink-0 mx-auto"
+      style={{
+        background:
+          "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
+        border: "1.5px solid rgba(124,240,189,0.45)",
+        boxShadow: "0 30px 60px -28px rgba(8,11,16,0.85)",
+      }}
+    >
+      <div
+        className="absolute inset-[10px] rounded-full"
+        style={{ border: "1px solid rgba(124,240,189,0.22)" }}
+      />
+      <div className="absolute inset-[-14px] rounded-full" style={{ border: "1px solid rgba(124,240,189,0.1)" }} />
+      <div className="text-center">
+        <div
+          className="font-mono text-[10px] font-bold tracking-[0.24em]"
+          style={{ color: "#8CA0B8" }}
+        >
+          <BengaliText>{targetBand.label}</BengaliText>
+        </div>
+        <div className="font-display text-[40px] font-semibold text-white leading-tight mt-[4px]">
+          {targetBand.value}
+        </div>
+        <div
+          className="mx-auto my-[9px] h-px w-9"
+          style={{ background: "rgba(255,255,255,0.22)" }}
+        />
+        <div
+          className="font-mono text-[10px] tracking-[0.2em]"
+          style={{ color: "#8CA0B8" }}
+        >
+          <BengaliText>{targetBand.sub}</BengaliText>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const FACILITY_ICONS: Record<string, typeof GraduationCap> = {
+  lvl: GraduationCap,
+  lang: BookOpen,
+  pace: Clock,
+  access: Users,
+};
+
+function SnapshotCard({
+  level,
+  language,
+  pace,
+  access,
+  lessonCount,
+  moduleCount,
+}: {
+  level: string;
+  language: string;
+  pace: string;
+  access?: string;
+  lessonCount: number;
+  moduleCount: number;
+}) {
+  const rows: { icon: typeof GraduationCap; label: string; value: string }[] = [
+    { icon: FACILITY_ICONS.lvl, label: "LEVEL", value: level },
+    { icon: FACILITY_ICONS.lang, label: "LANGUAGE", value: language },
+    { icon: FACILITY_ICONS.pace, label: "PACE", value: pace },
+    ...(access ? [{ icon: FACILITY_ICONS.access, label: "ACCESS", value: access }] : []),
+    {
+      icon: FileText,
+      label: "CONTENT",
+      value: `${moduleCount} modules · ${lessonCount} lessons`,
+    },
+  ].filter((r) => Boolean(r.value));
+
+  return (
+    <div
+      className="w-full max-w-[400px] mx-auto rounded-[14px] p-5"
+      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
+    >
+      <div className="flex items-center justify-between px-1 mb-3">
+        <span className="font-mono text-[10px] font-semibold tracking-[0.28em]" style={{ color: "#8CA0B8" }}>
+          COURSE SNAPSHOT
+        </span>
+        <span className="font-display text-[9.5px] text-white/90 border border-white/15 rounded-full px-2.5 py-[3px]">
+          {lessonCount} LESSONS
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className="flex items-center gap-3 rounded-xl px-3.5 py-[10px]"
+            style={{ background: "rgba(255,255,255,0.03)" }}
+          >
+            <span
+              className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center shrink-0"
+              style={{ background: "rgba(124,240,189,0.12)" }}
+            >
+              <r.icon className="w-[15px] h-[15px]" style={{ color: "var(--brand-2)" }} strokeWidth={1.9} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-mono text-[8.5px] font-semibold tracking-[0.24em]" style={{ color: "#64748B" }}>
+                {r.label}
+              </span>
+              <span className="block text-[13px] font-medium truncate" style={{ color: "#E6EDF5" }}>
+                <BengaliText>{r.value}</BengaliText>
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CourseHero({
+  slug,
   badge,
   title,
   subtitle,
   desc,
+  level,
+  language,
+  pace,
   price,
   originalPrice,
   savings,
   access,
   rating,
   lessonCount,
+  moduleCount,
   cta,
   heroPill,
   titleAccent,
   targetBand,
   heroCta,
+  heroStats,
+  waitlistTarget,
 }: {
+  slug: string;
   badge: string;
   title: string;
   subtitle?: string;
   desc: string;
+  level?: string;
+  language?: string;
+  pace?: string;
   price?: string;
   originalPrice?: string;
   savings?: string;
   access?: string;
   rating?: { average: number; count: number };
   lessonCount: number;
+  moduleCount: number;
   cta?: CourseCta;
   heroPill?: string;
   titleAccent?: string;
   targetBand?: TargetBand;
   heroCta?: { label: string; href: string };
+  heroStats?: { value: string; label: string }[];
+  waitlistTarget: string;
 }) {
+  const linkHref =
+    cta?.enrolled
+      ? `/dashboard/courses/${cta.slug}/learn`
+      : cta?.hasDb
+        ? `/programs/${slug}/checkout`
+        : waitlistTarget;
+
   return (
-    <section
-      className="course-page-hero pt-[150px] px-[clamp(20px,4.5vw,56px)] pb-[70px] relative"
-      style={{ background: "#fff" }}
-    >
-      <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_0.72fr] gap-[50px] items-center">
-        <div>
-          <div className="flex items-center gap-2 text-[12.5px] font-medium mb-6">
-            <Link
-              href="/"
-              style={{ color: "var(--body)" }}
-              className="hover:text-brand-2 transition-colors"
-            >
-              Home
-            </Link>
-            <span style={{ color: "var(--body)" }}>/</span>
-            <Link
-              href="/programs"
-              style={{ color: "var(--body)" }}
-              className="hover:text-brand-2 transition-colors"
-            >
-              Programs
-            </Link>
-            <span style={{ color: "var(--body)" }}>/</span>
-            <span style={{ color: "var(--brand-2)" }}>{badge}</span>
-          </div>
+    <section className="course-page-hero relative overflow-hidden" style={{ background: "#fff" }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 900px 600px at 82% -12%, rgba(46,158,107,0.20), transparent), radial-gradient(ellipse 720px 520px at -6% 100%, rgba(31,92,138,0.30), transparent), linear-gradient(160deg, #0B2545 0%, #080B10 72%)",
+        }}
+      />
+      <div
+        className="absolute top-0 left-0 right-0 h-[5px]"
+        style={{ background: "linear-gradient(90deg, #2E9E6B, #1F5C8A)" }}
+      />
 
-          {heroPill && (
-            <div
-              className="inline-flex items-center gap-2 rounded-full border px-[15px] py-[8px] mb-5"
-              style={{
-                background: "var(--brand-soft)",
-                borderColor: "rgba(20,181,126,0.35)",
-              }}
-            >
-              <span
-                className="w-[7px] h-[7px] rounded-full"
-                style={{ background: "var(--brand-2)" }}
-              />
-              <BengaliText>
-                <span className="text-[12.5px] font-semibold" style={{ color: "var(--brand-2)" }}>
-                  {heroPill}
-                </span>
-              </BengaliText>
-            </div>
-          )}
+      <div className="relative max-w-[1320px] mx-auto px-[clamp(20px,4.5vw,56px)] pt-[150px] pb-[56px]">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-[12.5px] font-medium mb-9">
+          <Link href="/" style={{ color: "#8CA0B8" }} className="hover:text-white transition-colors">
+            Home
+          </Link>
+          <span style={{ color: "#5B6B7F" }}>/</span>
+          <Link href="/programs" style={{ color: "#8CA0B8" }} className="hover:text-white transition-colors">
+            Programs
+          </Link>
+          <span style={{ color: "#5B6B7F" }}>/</span>
+          <span style={{ color: "var(--brand-2)" }}>{badge}</span>
+        </div>
 
-          <p
-            className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]"
-            style={{ color: "var(--brand-2)" }}
-          >
-            {badge.toUpperCase()} · COURSE
-          </p>
-
-          <h1
-            className="font-display font-semibold leading-[1.1] tracking-[-0.02em] max-w-[560px]"
-            style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}
-          >
-            <BengaliText>{title}</BengaliText>
-            {titleAccent && (
-              <BengaliText>
-                {" "}
-                <span
-                  style={{
-                    background:
-                      "linear-gradient(92deg, var(--brand) 8%, var(--brand-2) 60%, rgba(47,95,224,0.95) 112%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                  }}
-                >
-                  {titleAccent}
-                </span>
-              </BengaliText>
-            )}
-            {subtitle && (
-              <>
-                {" "}
-                <BengaliText>{subtitle}</BengaliText>
-              </>
-            )}
-          </h1>
-
-          {rating && (
-            <a href="#reviews" className="mt-3 inline-flex items-center gap-2 text-[13.5px]">
-              <Stars value={rating.average} />
-              <span className="font-semibold" style={{ color: "var(--ink)" }}>
-                {rating.average}
-              </span>
-              <span
-                className="font-medium underline underline-offset-2"
-                style={{ color: "var(--body)" }}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-[48px] items-start">
+          {/* Left */}
+          <div>
+            {heroPill && (
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-[15px] py-[8px] mb-6"
+                style={{
+                  background: "rgba(124,240,189,0.12)",
+                  border: "1px solid rgba(124,240,189,0.35)",
+                }}
               >
-                ({rating.count} reviews)
-              </span>
-            </a>
-          )}
+                <span className="w-[7px] h-[7px] rounded-full" style={{ background: "#7CF0BD" }} />
+                <BengaliText>
+                  <span className="text-[12.5px] font-semibold" style={{ color: "#7CF0BD" }}>
+                    {heroPill}
+                  </span>
+                </BengaliText>
+              </div>
+            )}
 
-          {price && (
-            <div className="mt-[22px] pt-[20px] border-t border-line">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span
-                  className="text-[32px] font-bold leading-none"
-                  style={{ color: "var(--ink)" }}
-                >
+            <p className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]" style={{ color: "#7CF0BD" }}>
+              {badge.toUpperCase()} · COURSE
+            </p>
+
+            <h1
+              className="font-display font-semibold leading-[1.14] tracking-[-0.02em] max-w-[620px]"
+              style={{ color: "#fff", fontSize: "clamp(30px,3.6vw,48px)" }}
+            >
+              <BengaliText>{title}</BengaliText>
+              {titleAccent && (
+                <BengaliText>
+                  {" "}
+                  <span style={{ color: "#7CF0BD" }}>{titleAccent}</span>
+                </BengaliText>
+              )}
+              {subtitle && (
+                <>
+                  {" "}
+                  <BengaliText>
+                    <span style={{ color: "#8CA0B8", fontSize: "0.72em" }}>— {subtitle}</span>
+                  </BengaliText>
+                </>
+              )}
+            </h1>
+
+            {rating && (
+              <a href="#reviews" className="mt-4 inline-flex items-center gap-2 text-[13.5px]">
+                <Stars value={rating.average} />
+                <span className="font-semibold" style={{ color: "#fff" }}>
+                  {rating.average}
+                </span>
+                <span className="font-medium underline underline-offset-2" style={{ color: "#8CA0B8" }}>
+                  ({rating.count} reviews)
+                </span>
+              </a>
+            )}
+
+            {price && (
+              <div className="mt-6 flex items-center gap-3 flex-wrap">
+                <span className="text-[30px] font-bold leading-none" style={{ color: "#fff" }}>
                   {price}
                 </span>
                 {originalPrice && (
-                  <span
-                    className="text-[16px] font-medium line-through"
-                    style={{ color: "var(--body)", opacity: 0.65 }}
-                  >
+                  <span className="text-[16px] font-medium line-through" style={{ color: "#64748B" }}>
                     {originalPrice}
                   </span>
                 )}
                 {savings && (
-                  <span
-                    className="text-[12px] font-bold text-white rounded-md px-2.5 py-1"
-                    style={{ background: "#0F9D58" }}
-                  >
+                  <span className="text-[12px] font-bold rounded-md px-2.5 py-1" style={{ background: "#2E9E6B", color: "#052117" }}>
                     {savings} OFF
                   </span>
                 )}
               </div>
-              {access && (
-                <div
-                  className="mt-[10px] flex items-center gap-1.5 text-[13px] font-medium"
-                  style={{ color: "var(--brand-2)" }}
+            )}
+
+            <p className="mt-[20px] max-w-[560px] text-[15.5px] leading-[1.8]" style={{ color: "#B7C4D6" }}>
+              <BengaliText>{desc}</BengaliText>
+            </p>
+
+            <div className="flex items-center gap-4 mt-8 flex-wrap">
+              {cta?.enrolled ? (
+                <Link
+                  href={`/dashboard/courses/${cta.slug}/learn`}
+                  className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
+                  style={{ background: "var(--brand)", color: "#052117" }}
                 >
-                  <Clock className="w-4 h-4" />
-                  {access} · One-time payment
-                </div>
+                  Open Player
+                  {play}
+                </Link>
+              ) : cta?.hasDb ? (
+                <Link
+                  href={`/programs/${slug}/checkout`}
+                  className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
+                  style={{ background: "var(--brand)", color: "#052117" }}
+                >
+                  Enroll now
+                  {arrow}
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href={linkHref}
+                    className="browse-btn inline-flex items-center justify-center gap-2.5 font-bold text-[15.5px] rounded-full px-[30px] py-[15px]"
+                    style={{ background: "var(--brand)", color: "#052117", boxShadow: "0 14px 30px -12px rgba(46,158,107,0.7)" }}
+                  >
+                    <BengaliText>{heroCta?.label ?? "Join the waitlist"}</BengaliText>
+                    {arrow}
+                  </Link>
+                  <a
+                    href="#curriculum"
+                    className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[14px] transition-colors duration-200 hover:bg-white/10"
+                    style={{ border: "1.5px solid rgba(255,255,255,0.35)", color: "#fff" }}
+                  >
+                    <BengaliText>কোর্সে কী কী আছে দেখো</BengaliText>
+                  </a>
+                </>
               )}
             </div>
-          )}
 
-          <p
-            className="mt-[18px] max-w-[460px] text-[15px] leading-[1.7]"
-            style={{ color: "var(--body)" }}
-          >
-            {desc}
-          </p>
-
-          <div className="flex items-center gap-3 mt-6 flex-wrap">
-            {cta?.enrolled ? (
-              <Link
-                href={`/dashboard/courses/${cta.slug}/learn`}
-                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-                style={{ background: "var(--brand)" }}
+            {!cta?.enrolled && !cta?.hasDb && (
+              <div
+                className="mt-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2.5"
+                style={{ background: "rgba(124,240,189,0.12)", border: "1px solid rgba(124,240,189,0.35)" }}
               >
-                Open Player
-                {play}
-              </Link>
-            ) : cta?.hasDb ? (
-              <Link
-                href={`/programs/${cta.slug}/checkout`}
-                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-                style={{ background: "var(--brand)" }}
-              >
-                Enroll now
-                {arrow}
-              </Link>
-            ) : heroCta ? (
-              <a
-                href={heroCta.href}
-                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-                style={{ background: "var(--brand)" }}
-              >
-                <BengaliText>{heroCta.label}</BengaliText>
-                {arrow}
-              </a>
-            ) : (
-              <span
-                className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
-                style={{ background: "var(--brand)", opacity: 0.5 }}
-              >
-                Enroll now
-                {arrow}
-              </span>
+                <Gift className="w-[15px] h-[15px]" style={{ color: "#7CF0BD" }} />
+                <span className="text-[13px] font-semibold" style={{ color: "#7CF0BD" }}>
+                  <BengaliText>
+                    ওয়েটলিস্টে জয়েন করলেই ${WISHLIST_SCHOLARSHIP_USD} Scholarship
+                  </BengaliText>
+                </span>
+              </div>
             )}
+
+            <div className="flex items-center gap-4 mt-6 flex-wrap text-[13px] font-medium" style={{ color: "#8CA0B8" }}>
+              {["Instant access", "Live support", "Verified certificate"].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5">
+                  <span className="w-[16px] h-[16px] rounded-full flex items-center justify-center" style={{ background: "rgba(124,240,189,0.14)" }}>
+                    <Check className="w-[9px] h-[9px]" strokeWidth={3.5} style={{ color: "#7CF0BD" }} />
+                  </span>
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div
-            className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium"
-            style={{ color: "var(--body)" }}
-          >
-            {["Instant access", "Live support", "Verified certificate"].map((t) => (
-              <span key={t} className="inline-flex items-center gap-1.5">
-                <Check
-                  className="w-3.5 h-3.5"
-                  strokeWidth={3}
-                  style={{ color: "var(--brand-2)" }}
-                />
-                {t}
-              </span>
-            ))}
+          {/* Right — target band + snapshot */}
+          <div className="flex flex-col gap-7 lg:pt-2">
+            {targetBand && <TargetBadge targetBand={targetBand} />}
+            <SnapshotCard
+              level={level ?? (cta?.hasDb ? "—" : "")}
+              language={language ?? ""}
+              pace={pace ?? ""}
+              access={access}
+              lessonCount={lessonCount}
+              moduleCount={moduleCount}
+            />
           </div>
         </div>
 
-        <div className="relative flex flex-col items-center gap-7">
-          {targetBand && (
-            <div
-              className="relative w-[168px] h-[168px] rounded-full flex items-center justify-center shrink-0"
-              style={{
-                background:
-                  "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
-                border: "1.5px solid rgba(20,181,126,0.55)",
-                boxShadow: "0 28px 54px -26px rgba(8,11,16,0.75)",
-              }}
-            >
+        {/* Stats cards */}
+        {heroStats?.length ? (
+          <div className="mt-[56px] grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {heroStats.map((stat, i) => (
               <div
-                className="absolute inset-[9px] rounded-full"
-                style={{ border: "1px solid rgba(20,181,126,0.28)" }}
-              />
-              <div className="text-center">
-                <div
-                  className="font-mono text-[10px] font-bold tracking-[0.24em]"
-                  style={{ color: "#8CA0B8" }}
-                >
-                  {targetBand.label}
-                </div>
-                <div className="font-display text-[34px] font-semibold text-white leading-tight mt-[2px]">
-                  {targetBand.value}
-                </div>
-                <div
-                  className="mx-auto my-[7px] h-px w-8"
-                  style={{ background: "rgba(255,255,255,0.25)" }}
+                key={stat.label}
+                className="fb-reveal relative rounded-[14px] px-6 py-[24px] overflow-hidden transition-transform duration-300 hover:-translate-y-1.5"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                <span
+                  className="absolute top-0 left-0 right-0 h-[3px]"
+                  style={{ background: "linear-gradient(90deg, #2E9E6B, #7CF0BD)" }}
                 />
                 <div
-                  className="font-mono text-[10px] tracking-[0.2em]"
-                  style={{ color: "#8CA0B8" }}
+                  className="font-mono text-[9px] font-bold tracking-[0.26em] mb-3"
+                  style={{ color: "#5B6B7F" }}
                 >
-                  {targetBand.sub}
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div className="font-display text-[34px] font-semibold leading-none" style={{ color: "#7CF0BD" }}>
+                  {stat.value}
+                </div>
+                <div className="text-[13.5px] mt-[9px] leading-snug" style={{ color: "#B7C4D6" }}>
+                  <BengaliText>{stat.label}</BengaliText>
                 </div>
               </div>
-            </div>
-          )}
-          <div
-            className="w-full max-w-[430px] rounded-lg bg-[#101B31] overflow-hidden"
-            style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
-          >
-            {/* Player screen */}
-            <div
-              className="relative h-[200px]"
-              style={{
-                background: "linear-gradient(160deg, #0E2A4E 0%, #14524C 55%, #0B5E46 120%)",
-              }}
-            >
-              {/* subtle glow */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(circle at 72% 24%, rgba(255,255,255,0.16), transparent 42%)",
-                }}
-              />
-              {/* top row */}
-              <div className="absolute top-0 inset-x-0 flex items-center justify-between px-[18px] pt-[16px]">
-                <span className="flex items-center gap-[7px] font-mono text-[10px] font-semibold tracking-[0.28em] text-white/80">
-                  <span className="w-[7px] h-[7px] rounded-full bg-[#FF6B5E] inline-block" />
-                  PREVIEW
-                </span>
-                <span className="font-mono text-[10px] font-semibold tracking-[0.18em] text-white/85 bg-white/10 border border-white/15 rounded-full px-[10px] py-[4px]">
-                  {lessonCount} LESSONS
-                </span>
-              </div>
-
-              {/* center play */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="relative flex items-center justify-center group cursor-pointer">
-                  <span className="absolute w-[92px] h-[92px] rounded-full bg-white/10" />
-                  <span className="absolute w-[68px] h-[68px] rounded-full bg-white/15 group-hover:bg-white/25 transition-colors duration-300" />
-                  <span className="relative w-[48px] h-[48px] rounded-full bg-white text-[#0B5E46] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
-                    {play}
-                  </span>
-                </span>
-              </div>
-
-              {/* center label */}
-              <div className="absolute bottom-[34px] inset-x-0 text-center">
-                <span className="text-[11.5px] font-medium text-white/75">Intro video · 01:24</span>
-              </div>
-            </div>
-
-            {/* Controls bar */}
-            <div className="px-5 py-4">
-              <div className="flex items-center gap-3">
-                <span className="w-[30px] h-[30px] rounded-[8px] bg-white/10 flex items-center justify-center text-white shrink-0">
-                  <Pause className="w-[13px] h-[13px]" />
-                </span>
-                <div className="flex-1">
-                  <div className="relative h-[5px] rounded-full bg-white/12 overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{
-                        width: "22%",
-                        background: "linear-gradient(90deg, #2EE6A8, #0F9D58)",
-                      }}
-                    />
-                    <span
-                      className="absolute top-1/2 -translate-y-1/2 w-[11px] h-[11px] rounded-full bg-white shadow-md"
-                      style={{ left: "22%", transform: "translate(-50%, -50%)" }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-[7px] font-mono text-[10px] text-white/60">
-                    <span>01:24</span>
-                    <span>08:12</span>
-                  </div>
-                </div>
-                <span className="text-white/70 flex items-center gap-[10px] shrink-0">
-                  <Volume2 className="w-[15px] h-[15px]" />
-                  <Maximize2 className="w-[14px] h-[14px]" />
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+const STEP_ICONS = [Eye, Check, Zap];
+
+function StepsSection({ steps }: { steps: StepsSection }) {
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]">
+      <div className="max-w-[1320px] mx-auto">
+        <div className="text-center max-w-[720px] mx-auto mb-14">
+          <Pill tone="green">কেমন কাজ করে</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.35] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>{steps.title}</BengaliText>
+          </h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {steps.cards.map((card, i) => {
+            const Icon = STEP_ICONS[i % STEP_ICONS.length];
+            return (
+              <div
+                key={card.title}
+                className="fb-card fb-reveal rounded-[14px] p-8"
+                style={{
+                  border: "1px solid var(--line)",
+                  background: "#fff",
+                  boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 18px 44px -26px rgba(11,37,69,0.35)",
+                }}
+              >
+                <span
+                  className="inline-flex items-center justify-center rounded-lg px-3 py-2 font-mono text-[11px] font-bold tracking-[0.2em] mb-6"
+                  style={{ background: "rgba(46,158,107,0.1)", color: "#0A3D2E" }}
+                >
+                  STEP 0{i + 1}
+                </span>
+                <span
+                  className="w-[50px] h-[50px] rounded-xl flex items-center justify-center mb-6"
+                  style={{ background: "rgba(46,158,107,0.1)" }}
+                >
+                  <Icon className="w-[24px] h-[24px]" strokeWidth={1.8} style={{ color: "#0A3D2E" }} />
+                </span>
+                <h3 className="font-display text-[18px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                  <BengaliText>{card.title}</BengaliText>
+                </h3>
+                <p className="mt-3 text-[14px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                  <BengaliText>{card.desc}</BengaliText>
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-const STEP_ICONS = [Eye, Target, Zap];
-
-const PAYMENT_COLORS: Record<string, string> = {
-  bKash: "#E2136E",
-  Nagad: "#F5821F",
-  Rocket: "#8C3494",
-  Stripe: "#635BFF",
-};
-
-function HeroStatStrip({ stats }: { stats: { value: string; label: string }[] }) {
+function FeaturesSection({
+  features,
+  desc,
+}: {
+  features: CourseFeature[];
+  desc?: string;
+}) {
   return (
-    <section className="px-[clamp(20px,4.5vw,56px)] pt-[6px] pb-[6px]">
+    <section className="px-[clamp(20px,4.5vw,56px)] pb-[76px]">
       <div className="max-w-[1320px] mx-auto">
-        <div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden"
-          style={{ background: "#22304F" }}
-        >
-          {stats.map((stat) => (
-            <div key={stat.label} className="px-6 py-6" style={{ background: "var(--ink)" }}>
-              <div
-                className="font-display text-[30px] font-semibold leading-none"
-                style={{ color: "var(--brand-2)" }}
+        <div className="text-center max-w-[720px] mx-auto mb-14">
+          <Pill tone="green">সাথে কী কী পাবে</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.3] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>একটাই প্যাকেজে সবকিছু</BengaliText>
+          </h2>
+          {desc && (
+            <p className="mt-4 text-[15px] leading-[1.8]" style={{ color: "var(--body)" }}>
+              <BengaliText>{desc}</BengaliText>
+            </p>
+          )}
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map(({ icon: Icon, title, desc: fdesc }) => (
+            <div
+              key={title}
+              className="fb-card fb-reveal rounded-[14px] p-7"
+              style={{ border: "1px solid var(--line)", background: "#fff" }}
+            >
+              <span
+                className="w-[46px] h-[46px] rounded-xl flex items-center justify-center mb-5"
+                style={{ background: "var(--brand-soft)" }}
               >
-                {stat.value}
-              </div>
-              <div className="text-[13px] mt-[7px] leading-snug" style={{ color: "#B7C4D6" }}>
-                <BengaliText>{stat.label}</BengaliText>
-              </div>
+                <Icon className="w-[22px] h-[22px]" strokeWidth={1.9} style={{ color: "var(--brand-2)" }} />
+              </span>
+              <h3 className="font-display text-[16.5px] font-semibold leading-[1.35]" style={{ color: "var(--ink)" }}>
+                <BengaliText>{title}</BengaliText>
+              </h3>
+              <p className="mt-2.5 text-[13.5px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                <BengaliText>{fdesc}</BengaliText>
+              </p>
             </div>
           ))}
         </div>
@@ -560,90 +718,277 @@ function HeroStatStrip({ stats }: { stats: { value: string; label: string }[] })
 
 function ProblemSection({ problem }: { problem: { title: string; desc: string } }) {
   return (
-    <div className="border-y py-12 text-center" style={{ borderColor: "var(--line)" }}>
-      <h2
-        className="font-display font-semibold leading-[1.35] mx-auto max-w-[780px]"
-        style={{ fontSize: "clamp(23px,2.8vw,31px)", color: "var(--ink)" }}
-      >
-        <BengaliText>{problem.title}</BengaliText>
-      </h2>
-      <p
-        className="mt-5 mx-auto max-w-[780px] text-[15px] leading-[1.85]"
-        style={{ color: "var(--body)" }}
-      >
-        <BengaliText>{problem.desc}</BengaliText>
-      </p>
-    </div>
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
+      <div className="max-w-[840px] mx-auto text-center">
+        <Pill tone="green">সমস্যাটা আসলে কী</Pill>
+        <h2
+          className="font-display font-semibold leading-[1.4] mt-8"
+          style={{ fontSize: "clamp(24px,2.9vw,34px)", color: "var(--ink)" }}
+        >
+          <BengaliText>{problem.title}</BengaliText>
+        </h2>
+        <p className="mt-6 text-[16.5px] leading-[1.9]" style={{ color: "var(--body)" }}>
+          <BengaliText>{problem.desc}</BengaliText>
+        </p>
+      </div>
+    </section>
   );
 }
 
-function StepsSection({ steps }: { steps: StepsSection }) {
+const OUTCOME_CHECK = (
+  <span
+    className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 mt-[2px]"
+    style={{ background: "rgba(46,158,107,0.12)" }}
+  >
+    <Check className="w-[13px] h-[13px]" strokeWidth={3} style={{ color: "#0A3D2E" }} />
+  </span>
+);
+
+function OutcomesSection({ details }: { details: CourseDetails }) {
   return (
-    <div>
-      <SectionHeading eyebrow="HOW IT WORKS" title={steps.title} desc={steps.subtitle} />
-      <div className="grid sm:grid-cols-3 gap-5">
-        {steps.cards.map((card, i) => {
-          const Icon = STEP_ICONS[i % STEP_ICONS.length];
-          return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]" style={{ background: "#fff" }}>
+      <div className="max-w-[1320px] mx-auto">
+        <div className="text-center max-w-[720px] mx-auto mb-14">
+          <Pill tone="green">কোর্স শেষে যা পারবে</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.3] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>পরীক্ষার দিন তুমি প্রস্তুত</BengaliText>
+          </h2>
+          <p className="mt-4 text-[15px]" style={{ color: "var(--body)" }}>
+            <BengaliText>Course outcomes — কোর্স শেষে তুমি যা যা করতে পারবে</BengaliText>
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {details.outcomes.map((o) => (
             <div
-              key={card.title}
-              className="rounded-xl border bg-white p-6"
-              style={{ borderColor: "var(--line)" }}
+              key={o.title}
+              className="fb-card fb-reveal flex items-start gap-4 rounded-xl px-6 py-5"
+              style={{ border: "1px solid var(--line)", background: "#fff" }}
+            >
+              {OUTCOME_CHECK}
+              <div>
+                <div className="text-[14.5px] font-medium leading-[1.6]" style={{ color: "var(--ink)" }}>
+                  <BengaliText>{o.title}</BengaliText>
+                </div>
+                {o.desc && (
+                  <div className="text-[13px] mt-[4px] leading-[1.65]" style={{ color: "var(--body)" }}>
+                    <BengaliText>{o.desc}</BengaliText>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BookSection({ book }: { book: CourseBook }) {
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
+      <div className="max-w-[1120px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-14 items-center">
+        <div>
+          <Pill tone="green">নতুন সংযোজন</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.35] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>প্রতিটা লেসন, কাগজেও পাবে</BengaliText>
+          </h2>
+          <p className="mt-5 text-[15.5px] leading-[1.85]" style={{ color: "var(--body)" }}>
+            <BengaliText>{book.desc}</BengaliText>
+          </p>
+          <div className="mt-7 flex flex-col gap-3">
+            {[
+              "প্রতিটা ভিডিও লেসনের সাথে মিলিয়ে বানানো",
+              "সম্পূর্ণ মডেল আনসার আর ফুল প্র্যাকটিস টেস্ট",
+              "মোবাইলে পড়ার জন্য পারফেক্ট ডিজাইন",
+              "একবার কিনলেই চিরকালের জন্য তোমার",
+            ].map((t) => (
+              <div key={t} className="flex items-center gap-3 text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
+                {check}
+                <BengaliText>{t}</BengaliText>
+              </div>
+            ))}
+          </div>
+          {book.includedNote && (
+            <span
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 mt-7 text-[12.5px] font-semibold"
+              style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+            >
+              <Check className="w-[13px] h-[13px]" strokeWidth={3} />
+              <BengaliText>{book.includedNote}</BengaliText>
+            </span>
+          )}
+        </div>
+
+        {/* Book cover art */}
+        <div className="fb-float relative w-full max-w-[360px] mx-auto h-[440px]">
+          {/* ambient glow */}
+          <div
+            className="absolute -inset-6 rounded-[28px]"
+            style={{ background: "radial-gradient(ellipse at 55% 35%, rgba(46,158,107,0.26), transparent 70%)" }}
+          />
+          {/* ground shadow */}
+          <div
+            className="absolute left-[46px] right-[-6px] bottom-[-20px] h-10 rounded-full"
+            style={{ background: "rgba(11,37,69,0.3)", filter: "blur(20px)" }}
+          />
+          {/* page edges */}
+          <div
+            className="absolute top-[16px] bottom-[16px] right-[20px] w-[20px] rounded-r-[6px]"
+            style={{ background: "linear-gradient(90deg,#E9E3D7,#FDFAF1)", boxShadow: "-8px 0 16px rgba(11,37,69,0.16)" }}
+          />
+          <div
+            className="absolute top-[10px] bottom-[10px] right-[32px] w-[8px] rounded-r-[3px]"
+            style={{ background: "linear-gradient(90deg,#D8D0C0,#EFE9DC)" }}
+          />
+          {/* back cover */}
+          <div
+            className="absolute inset-0 rounded-[10px]"
+            style={{
+              background: "linear-gradient(160deg,#0F2F52,#080B10)",
+              border: "1px solid rgba(124,240,189,0.15)",
+              transform: "translate(10px,12px)",
+            }}
+          />
+          {/* front cover */}
+          <div
+            className="absolute inset-0 flex flex-col overflow-hidden rounded-[10px]"
+            style={{
+              background: "linear-gradient(155deg,#143458 0%,#0B2545 55%,#080B10 100%)",
+              border: "1px solid rgba(124,240,189,0.32)",
+              boxShadow: "0 36px 80px -26px rgba(11,37,69,0.6)",
+            }}
+          >
+            {/* spine */}
+            <div
+              className="absolute top-0 bottom-0 left-0 w-[26px] flex items-center justify-center"
+              style={{ background: "linear-gradient(180deg,#081527,#05080D)", borderRight: "1px solid rgba(124,240,189,0.16)" }}
             >
               <span
-                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                className="font-mono text-[8px] font-bold tracking-[0.3em]"
+                style={{ color: "#7CF0BD", writingMode: "vertical-rl" }}
               >
-                <Icon className="w-[22px] h-[22px]" strokeWidth={1.8} />
+                FLYBRIDGE EDUCATION GROUP
               </span>
-              <h3
-                className="font-display text-[16px] font-semibold leading-[1.35]"
-                style={{ color: "var(--ink)" }}
-              >
-                <BengaliText>{card.title}</BengaliText>
-              </h3>
-              <p className="mt-2 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                <BengaliText>{card.desc}</BengaliText>
-              </p>
             </div>
-          );
-        })}
+
+            {/* cover content */}
+            <div className="flex-1 flex flex-col pl-[40px] pr-6 pt-6 pb-6">
+              <div className="flex items-center gap-2">
+                <span className="w-[26px] h-[5px] rounded-full" style={{ background: "linear-gradient(90deg,#2E9E6B,#7CF0BD)" }} />
+                <span className="font-mono text-[9px] font-bold tracking-[0.24em]" style={{ color: "#7CF0BD" }}>
+                  FLYBRIDGE
+                </span>
+              </div>
+              <div className="font-display font-semibold text-white leading-[1.22] mt-5" style={{ fontSize: "27px" }}>
+                <BengaliText>{book.title}</BengaliText>
+              </div>
+              <div className="text-[12.5px] mt-2" style={{ color: "#8CA0B8" }}>
+                <BengaliText>সম্পূর্ণ Companion বই</BengaliText>
+              </div>
+
+              <div className="mt-auto">
+                <div
+                  className="rounded-lg px-3.5 py-2 inline-flex items-center gap-2"
+                  style={{ background: "rgba(46,158,107,0.12)", border: "1px solid rgba(46,158,107,0.3)" }}
+                >
+                  <span className="w-[6px] h-[6px] rounded-full" style={{ background: "#7CF0BD" }} />
+                  <span className="font-mono text-[8.5px] font-bold tracking-[0.22em]" style={{ color: "#7CF0BD" }}>
+                    INCLUDED WITH EVERY PLAN
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* bottom band */}
+            <div className="h-[5px] w-full shrink-0" style={{ background: "linear-gradient(90deg,#2E9E6B,#7CF0BD)" }} />
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
+function HighlightsGrid({ details }: { details: CourseDetails }) {
+  const highlights = details.highlights ?? [
+    { title: "10 Videos", sub: "Step-by-step video lessons, at your own pace" },
+    { title: "Frequent Live Q&A session", sub: "Ask questions directly and get expert answers" },
+    { title: "Resources", sub: "Templates, checklists & practical tools included" },
+  ];
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]" style={{ background: "var(--bg-soft)" }}>
+      <div className="max-w-[1320px] mx-auto">
+        <div className="text-center max-w-[720px] mx-auto mb-14">
+          <Pill tone="green">কারিকুলাম</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.3] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>What is inside</BengaliText>
+          </h2>
+          {(details.highlightsDesc ?? details.highlights) && (
+            <p className="mt-4 text-[15px]" style={{ color: "var(--body)" }}>
+              <BengaliText>{details.highlightsDesc ?? "Everything you need to prepare with confidence, in one place."}</BengaliText>
+            </p>
+          )}
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {highlights.map((item) => (
+            <div key={item.title} className="fb-card fb-reveal rounded-[14px] p-7" style={{ border: "1px solid var(--line)", background: "#fff" }}>
+              <span
+                className="w-[42px] h-[42px] rounded-xl flex items-center justify-center mb-5"
+                style={{ background: "var(--brand-soft)" }}
+              >
+                <Check className="w-[20px] h-[20px]" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
+              </span>
+              <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+                {item.title}
+              </h3>
+              <p className="mt-2 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                {item.sub}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CurriculumSection({ curriculum }: { curriculum: CurriculumSection }) {
   return (
     <section
       id="curriculum"
-      className="px-[clamp(20px,4.5vw,56px)] py-[80px]"
-      style={{ background: "var(--ink)" }}
+      className="px-[clamp(20px,4.5vw,56px)] py-[96px] relative overflow-hidden"
+      style={{ background: "#080B10" }}
     >
-      <div className="max-w-[1100px] mx-auto">
-        <div className="text-center mb-12">
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 760px 420px at 12% 0%, rgba(46,158,107,0.12), transparent), radial-gradient(ellipse 640px 420px at 95% 100%, rgba(31,92,138,0.2), transparent)",
+        }}
+      />
+      <div className="relative max-w-[1120px] mx-auto">
+        <div className="text-center mb-16">
           {curriculum.label && (
-            <span
-              className="inline-flex items-center gap-2 rounded-full border px-[16px] py-[7px] mb-5"
-              style={{
-                background: "rgba(20,181,126,0.12)",
-                borderColor: "rgba(20,181,126,0.32)",
-                color: "var(--brand-2)",
-              }}
-            >
+            <Pill tone="darkgreen">
               <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
-              <span className="font-mono text-[10.5px] font-semibold tracking-[0.28em] uppercase">
-                <BengaliText>{curriculum.label}</BengaliText>
-              </span>
-            </span>
+              <BengaliText>{curriculum.label}</BengaliText>
+            </Pill>
           )}
           <h2
-            className="font-display font-semibold text-white leading-[1.2]"
-            style={{ fontSize: "clamp(25px,3vw,36px)" }}
+            className="font-display font-semibold text-white leading-[1.25] mt-6"
+            style={{ fontSize: "clamp(26px,3vw,38px)" }}
           >
             <BengaliText>{curriculum.title}</BengaliText>
           </h2>
-          <p className="mt-3 text-[15px]" style={{ color: "#8CA0B8" }}>
+          <p className="mt-4 text-[16px]" style={{ color: "#8CA0B8" }}>
             <BengaliText>{curriculum.subtitle}</BengaliText>
           </p>
         </div>
@@ -652,42 +997,41 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
           {curriculum.modules.map((m, i) => (
             <div
               key={m.title}
-              className="rounded-2xl p-6 md:p-8"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+              className="fb-card fb-reveal rounded-[14px] p-7 md:p-9"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}
             >
-              <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center gap-4 mb-7">
                 <span
-                  className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-bold text-[15px] shrink-0"
-                  style={{ background: "var(--brand)", color: "#052117" }}
+                  className="w-[38px] h-[38px] rounded-[12px] flex items-center justify-center font-bold text-[16px] shrink-0"
+                  style={{ background: "#2E9E6B", color: "#052117" }}
                 >
                   {i + 1}
                 </span>
-                <span className="font-display font-semibold text-[17px] text-white">
-                  <BengaliText>{m.title}</BengaliText>
-                  <span className="font-medium text-[13px] ml-2" style={{ color: "#8CA0B8" }}>
-                    · <BengaliText>{m.lessonCount}</BengaliText>
-                  </span>
-                </span>
+                <div className="min-w-0">
+                  <div className="font-display font-semibold text-[17.5px] text-white leading-snug">
+                    <BengaliText>{m.title}</BengaliText>
+                  </div>
+                  <div className="font-medium text-[12.5px] mt-0.5" style={{ color: "#8CA0B8" }}>
+                    <BengaliText>{m.lessonCount}</BengaliText>
+                  </div>
+                </div>
               </div>
               <ul className="flex flex-col gap-[13px]">
                 {m.items.map((item) => (
                   <li
                     key={item}
-                    className="flex items-start gap-2.5 text-[14px] leading-[1.6]"
+                    className="flex items-start gap-3 text-[14px] leading-[1.65]"
                     style={{ color: "#C4D0DE" }}
                   >
-                    <span
-                      className="mt-[8px] w-[5px] h-[5px] rounded-full shrink-0"
-                      style={{ background: "var(--brand-2)" }}
-                    />
+                    <span className="mt-[9px] w-[5px] h-[5px] rounded-full shrink-0" style={{ background: "#7CF0BD" }} />
                     <BengaliText>{item}</BengaliText>
                   </li>
                 ))}
                 <li
-                  className="flex items-start gap-2.5 text-[14px] font-semibold leading-[1.6]"
-                  style={{ color: "var(--brand-2)" }}
+                  className="flex items-start gap-3 text-[14px] font-semibold leading-[1.65]"
+                  style={{ color: "#7CF0BD" }}
                 >
-                  <Check className="w-4 h-4 mt-[2px] shrink-0" strokeWidth={3} />
+                  <Check className="w-[16px] h-[16px] mt-[2px] shrink-0" strokeWidth={3} />
                   <BengaliText>ক্যাপস্টোন: {m.capstone}</BengaliText>
                 </li>
               </ul>
@@ -697,10 +1041,11 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
 
         {curriculum.note && (
           <div
-            className="mt-9 rounded-2xl px-6 md:px-8 py-6"
-            style={{ background: "rgba(20,181,126,0.06)", border: "1px solid rgba(20,181,126,0.25)" }}
+            className="mt-8 rounded-xl px-7 md:px-9 py-6 flex gap-4 items-start"
+            style={{ background: "rgba(46,158,107,0.08)", border: "1px solid rgba(46,158,107,0.3)" }}
           >
-            <p className="text-[14.5px] leading-[1.7]" style={{ color: "#C4D0DE" }}>
+            <span className="w-[6px] h-[6px] rounded-full mt-[9px] shrink-0" style={{ background: "#7CF0BD" }} />
+            <p className="text-[14.5px] leading-[1.8]" style={{ color: "#C4D0DE" }}>
               <BengaliText>{curriculum.note}</BengaliText>
             </p>
           </div>
@@ -712,48 +1057,41 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
 
 function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
   return (
-    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]">
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1000px] mx-auto">
-        <h2
-          className="text-center font-display font-semibold mb-10"
-          style={{ fontSize: "clamp(23px,2.8vw,32px)", color: "var(--ink)" }}
-        >
-          <BengaliText>{comparison.title}</BengaliText>
-        </h2>
-        <div
-          className="rounded-2xl border overflow-hidden bg-white"
-          style={{ borderColor: "var(--line)" }}
-        >
+        <div className="text-center max-w-[720px] mx-auto mb-12">
+          <Pill tone="green">তুলনা দেখো</Pill>
+          <h2
+            className="font-display font-semibold leading-[1.35] mt-6"
+            style={{ fontSize: "clamp(24px,2.8vw,32px)", color: "var(--ink)" }}
+          >
+            <BengaliText>{comparison.title}</BengaliText>
+          </h2>
+        </div>
+        <div className="fb-reveal rounded-[14px] overflow-hidden" style={{ background: "#fff", border: "1px solid var(--line)", boxShadow: "0 24px 60px -32px rgba(11,37,69,0.35)" }}>
           <div className="grid grid-cols-2">
-            <div
-              className="px-5 md:px-8 py-6"
-              style={{ background: "var(--bg-soft)", borderRight: "1px solid var(--line)" }}
-            >
-              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--body)" }}>
+            <div className="px-6 md:px-8 py-6" style={{ background: "#F8FAFC", borderRight: "1px solid var(--line)" }}>
+              <span className="text-[12.5px] font-bold tracking-[0.02em]" style={{ color: "#64748B" }}>
                 <BengaliText>{comparison.leftLabel}</BengaliText>
               </span>
             </div>
-            <div className="px-5 md:px-8 py-6" style={{ background: "rgba(20,181,126,0.10)" }}>
-              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--brand-2)" }}>
+            <div className="px-6 md:px-8 py-6" style={{ background: "rgba(46,158,107,0.08)" }}>
+              <span className="text-[12.5px] font-bold tracking-[0.02em]" style={{ color: "#0A3D2E" }}>
                 <BengaliText>{comparison.rightLabel}</BengaliText>
               </span>
             </div>
           </div>
           {comparison.rows.map((row, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-2"
-              style={{ borderTop: "1px solid var(--line)" }}
-            >
+            <div key={i} className="grid grid-cols-2" style={{ borderTop: "1px solid var(--line)" }}>
               <div
-                className="px-5 md:px-8 py-5 text-[14px] leading-[1.6]"
-                style={{ borderRight: "1px solid var(--line)", color: "var(--body)" }}
+                className="px-6 md:px-8 py-5 text-[14px] leading-[1.65]"
+                style={{ borderRight: "1px solid var(--line)", color: "#64748B", background: i % 2 ? "#FAFBFC" : "#fff" }}
               >
                 <BengaliText>{row.left}</BengaliText>
               </div>
               <div
-                className="px-5 md:px-8 py-5 text-[14px] font-medium leading-[1.6]"
-                style={{ color: "var(--ink)", background: "rgba(20,181,126,0.04)" }}
+                className="px-6 md:px-8 py-5 text-[14px] font-semibold leading-[1.65]"
+                style={{ color: "#0F172A", background: i % 2 ? "rgba(46,158,107,0.05)" : "rgba(46,158,107,0.02)" }}
               >
                 <BengaliText>{row.right}</BengaliText>
               </div>
@@ -769,48 +1107,60 @@ function PricingSection({ pricing }: { pricing: PricingSection }) {
   return (
     <section
       id="pricing"
-      className="px-[clamp(20px,4.5vw,56px)] py-[90px] text-center"
-      style={{ background: "linear-gradient(160deg, #122043 0%, #080B10 100%)" }}
+      className="px-[clamp(20px,4.5vw,56px)] py-[96px] text-center relative overflow-hidden"
+      style={{ background: "linear-gradient(160deg, #0B2545 0%, #080B10 100%)" }}
     >
-      <div className="max-w-[640px] mx-auto">
+      <div
+        className="absolute inset-0"
+        style={{ background: "radial-gradient(ellipse 700px 420px at 50% -8%, rgba(46,158,107,0.16), transparent)" }}
+      />
+      <div className="relative max-w-[640px] mx-auto">
+        <Pill tone="darkgreen">
+          <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+          <BengaliText>আর্লি-বার্ড</BengaliText>
+        </Pill>
         <h2
-          className="font-display font-semibold text-white leading-[1.25]"
-          style={{ fontSize: "clamp(25px,3vw,34px)" }}
+          className="font-display font-semibold text-white leading-[1.25] mt-6"
+          style={{ fontSize: "clamp(26px,3vw,36px)" }}
         >
           <BengaliText>{pricing.title}</BengaliText>
         </h2>
         {pricing.subtitle && (
-          <p className="mt-3 text-[15px]" style={{ color: "#8CA0B8" }}>
+          <p className="mt-4 text-[15.5px]" style={{ color: "#8CA0B8" }}>
             <BengaliText>{pricing.subtitle}</BengaliText>
           </p>
         )}
 
         <div
-          className="mt-10 mx-auto max-w-[420px] rounded-3xl px-8 py-11"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(20,181,126,0.32)" }}
+          className="fb-reveal mt-12 mx-auto max-w-[420px] rounded-[18px] px-8 py-12"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(124,240,189,0.35)",
+            boxShadow: "0 36px 80px -40px rgba(46,158,107,0.5)",
+          }}
         >
           <div
             className="font-display font-semibold text-white"
-            style={{ fontSize: "clamp(28px,4vw,40px)" }}
+            style={{ fontSize: "clamp(30px,4vw,42px)" }}
           >
             <BengaliText>{pricing.price}</BengaliText>
           </div>
           {pricing.note && (
-            <div className="mt-2 mb-8 text-[14px]" style={{ color: "#8CA0B8" }}>
+            <div className="mt-3 mb-9 text-[14px]" style={{ color: "#8CA0B8" }}>
               <BengaliText>{pricing.note}</BengaliText>
             </div>
           )}
           <a
             href={pricing.ctaHref}
-            className="browse-btn w-full inline-flex items-center justify-center gap-2.5 font-semibold text-[15px] rounded-full px-8 py-[17px]"
-            style={{ background: "var(--brand)", color: "#fff" }}
+            className="browse-btn w-full inline-flex items-center justify-center gap-2.5 font-bold text-[15.5px] rounded-full px-8 py-[16px]"
+            style={{ background: "#2E9E6B", color: "#052117", boxShadow: "0 14px 30px -12px rgba(46,158,107,0.7)" }}
           >
             <BengaliText>{pricing.ctaLabel}</BengaliText>
             {arrow}
           </a>
           {pricing.includedLine && (
             <>
-              <div className="my-6 h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
+              <div className="my-7 h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
               <div className="text-[13px]" style={{ color: "#8CA0B8" }}>
                 <BengaliText>{pricing.includedLine}</BengaliText>
               </div>
@@ -819,9 +1169,9 @@ function PricingSection({ pricing }: { pricing: PricingSection }) {
         </div>
 
         {pricing.paymentMethods?.length ? (
-          <div className="mt-11">
+          <div className="mt-12">
             {pricing.paymentLabel && (
-              <div className="text-[13px] mb-4 tracking-[0.3px]" style={{ color: "#8CA0B8" }}>
+              <div className="text-[13px] mb-5 tracking-[0.3px]" style={{ color: "#8CA0B8" }}>
                 <BengaliText>{pricing.paymentLabel}</BengaliText>
               </div>
             )}
@@ -843,36 +1193,51 @@ function PricingSection({ pricing }: { pricing: PricingSection }) {
   );
 }
 
+const PAYMENT_COLORS: Record<string, string> = {
+  bKash: "#E2136E",
+  Nagad: "#F5821F",
+  Rocket: "#8C3494",
+  Stripe: "#635BFF",
+};
+
 function FaqSection({ faqs }: { faqs: Faq[] }) {
   return (
-    <section id="faq" className="px-[clamp(20px,4.5vw,56px)] py-[80px]">
+    <section id="faq" className="px-[clamp(20px,4.5vw,56px)] py-[84px]" style={{ background: "#fff" }}>
       <div className="max-w-[800px] mx-auto">
-        <h2
-          className="text-center font-display font-semibold mb-10"
-          style={{ fontSize: "clamp(23px,2.8vw,32px)", color: "var(--ink)" }}
-        >
-          <BengaliText>সচরাচর জিজ্ঞাসা</BengaliText>
-        </h2>
-        <div className="flex flex-col gap-3.5">
+        <div className="text-center mb-12">
+          <Pill tone="green">যেকোনো প্রশ্ন</Pill>
+          <h2
+            className="font-display font-semibold mt-6"
+            style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
+          >
+            <BengaliText>সচরাচর জিজ্ঞাসা</BengaliText>
+          </h2>
+        </div>
+        <div className="flex flex-col gap-4">
           {faqs.map((faq) => (
             <details
               key={faq.q}
-              className="faq-item rounded-2xl border bg-white px-6 md:px-7 py-5"
-              style={{ borderColor: "var(--line)" }}
+              className="faq-item rounded-xl px-7 py-6 transition-colors duration-200"
+              style={{ border: "1px solid var(--line)", background: "#fff" }}
             >
               <summary className="flex items-center justify-between gap-4 cursor-pointer">
                 <span
-                  className="font-display font-semibold text-[16px] leading-[1.4]"
+                  className="font-display font-semibold text-[16px] leading-[1.45]"
                   style={{ color: "var(--ink)" }}
                 >
                   <BengaliText>{faq.q}</BengaliText>
                 </span>
-                <ChevronDown
-                  className="faq-chev w-5 h-5 shrink-0 transition-transform duration-200"
-                  style={{ color: "var(--brand-2)" }}
-                />
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "var(--brand-soft)" }}
+                >
+                  <ChevronDown
+                    className="faq-chev w-[17px] h-[17px] transition-transform duration-200"
+                    style={{ color: "var(--brand-2)" }}
+                  />
+                </span>
               </summary>
-              <p className="mt-3 text-[14.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+              <p className="mt-4 text-[14.5px] leading-[1.8]" style={{ color: "var(--body)" }}>
                 <BengaliText>{faq.a}</BengaliText>
               </p>
             </details>
@@ -886,39 +1251,122 @@ function FaqSection({ faqs }: { faqs: Faq[] }) {
 function FinalCta({
   cta,
   pricing,
+  slug,
+  title,
 }: {
   cta: { title: string; desc: string };
   pricing?: PricingSection;
+  slug: string;
+  title: string;
 }) {
   return (
     <section
       id="waitlist"
-      className="px-[clamp(20px,4.5vw,56px)] py-[90px] text-center"
-      style={{ background: "var(--ink)" }}
+      className="px-[clamp(20px,4.5vw,56px)] py-[96px] text-center relative overflow-hidden"
+      style={{ background: "#080B10" }}
     >
-      <div className="max-w-[720px] mx-auto">
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 720px 460px at 50% -6%, rgba(46,158,107,0.18), transparent), radial-gradient(ellipse 560px 340px at 92% 110%, rgba(31,92,138,0.22), transparent)",
+        }}
+      />
+      <div className="relative max-w-[720px] mx-auto">
+        <span className="w-[10px] h-[10px] rounded-full mx-auto mb-7 inline-flex" style={{ background: "#7CF0BD", boxShadow: "0 0 0 6px rgba(124,240,189,0.12)" }} />
         <h2
           className="font-display font-semibold text-white leading-[1.3]"
-          style={{ fontSize: "clamp(25px,3.4vw,38px)" }}
+          style={{ fontSize: "clamp(27px,3.4vw,40px)" }}
         >
           <BengaliText>{cta.title}</BengaliText>
         </h2>
-        <p className="mt-4 text-[16px]" style={{ color: "var(--brand-2)" }}>
+        <p className="mt-5 text-[16px] leading-[1.8]" style={{ color: "#B7C4D6" }}>
           <BengaliText>{cta.desc}</BengaliText>
         </p>
-        <a
-          href={pricing?.ctaHref ?? "/programs"}
-          className="browse-btn mt-10 inline-flex items-center gap-2.5 font-semibold text-[16px] rounded-full px-11 py-[18px]"
-          style={{ background: "var(--brand)", color: "#fff" }}
-        >
-          <BengaliText>{pricing?.ctaLabel ?? "Browse programs"}</BengaliText>
-          {arrow}
-        </a>
+
+        <div className="mt-10 mx-auto max-w-[460px]">
+          <div
+            className="flex items-center gap-3.5 rounded-[14px] px-5 py-4 text-left"
+            style={{ background: "rgba(124,240,189,0.1)", border: "1.5px solid rgba(124,240,189,0.4)" }}
+          >
+            <span
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "rgba(124,240,189,0.16)" }}
+            >
+              <Gift className="w-5 h-5" style={{ color: "#7CF0BD" }} />
+            </span>
+            <div>
+              <div className="font-mono text-[10px] font-bold tracking-[0.24em]" style={{ color: "#7CF0BD" }}>
+                WISHLIST BONUS
+              </div>
+              <div className="font-display text-[16px] font-semibold text-white mt-0.5">
+                <BengaliText>জয়েন করলেই ${WISHLIST_SCHOLARSHIP_USD} Scholarship</BengaliText>
+              </div>
+              <div className="text-[12.5px] leading-snug mt-0.5" style={{ color: "#B7C4D6" }}>
+                <BengaliText>
+                  কোর্সে ভর্তি হলে ${WISHLIST_SCHOLARSHIP_USD} ছাড় — শুধু ওয়েটলিস্ট মেম্বারদের জন্য।
+                </BengaliText>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <WaitlistForm slug={slug} title={title} />
+        </div>
+
         {pricing?.includedLine && (
-          <div className="mt-7 text-[13px]" style={{ color: "#64748B" }}>
+          <div className="mt-8 text-[13px]" style={{ color: "#64748B" }}>
             <BengaliText>{pricing.includedLine}</BengaliText>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+function RelatedProgramsSection({ programs }: { programs: RelatedProgram[] }) {
+  if (!programs.length) return null;
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[84px]" style={{ background: "var(--bg-soft)" }}>
+      <div className="max-w-[1320px] mx-auto">
+        <div className="flex items-end justify-between gap-4 flex-wrap mb-11">
+          <div>
+            <div
+              className="font-mono text-[11px] font-semibold tracking-[0.32em] mb-2"
+              style={{ color: "var(--brand-2)" }}
+            >
+              EXPLORE MORE
+            </div>
+            <h2
+              className="font-display font-semibold leading-[1.2]"
+              style={{ fontSize: "clamp(22px,2.6vw,30px)", color: "var(--ink)" }}
+            >
+              <BengaliText>অন্যান্য প্রোগ্রাম</BengaliText>
+            </h2>
+          </div>
+          <Link
+            href="/programs"
+            className="view-all font-semibold text-[13.5px] inline-flex items-center gap-[6px] shrink-0 mb-[3px]"
+            style={{ color: "var(--brand-2)" }}
+          >
+            View all
+            <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 12H19M19 12L13 6M19 12L13 18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {programs.map((p) => (
+            <RelatedProgramCard key={p.slug} p={p} />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -1422,6 +1870,7 @@ export default async function ProgramPage({ params }: Props) {
 
   const details = courseDetails[params.slug];
   const lessonCount = details ? details.modules.reduce((n, m) => n + m.lessons.length, 0) : 30;
+  const moduleCount = details ? details.modules.length : 6;
 
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {
@@ -1538,10 +1987,14 @@ export default async function ProgramPage({ params }: Props) {
       <Nav />
 
       <CourseHero
+        slug={params.slug}
         badge={program.badge}
         title={details?.title ?? program.title}
         subtitle={details?.subtitle}
         desc={details?.desc ?? program.desc}
+        level={details?.level}
+        language={details?.language}
+        pace={details?.pace}
         price={details?.price}
         originalPrice={details?.originalPrice}
         savings={details?.savings}
@@ -1552,274 +2005,44 @@ export default async function ProgramPage({ params }: Props) {
             : undefined
         }
         lessonCount={lessonCount}
+        moduleCount={moduleCount}
         cta={cta}
         heroPill={details?.heroPill}
         titleAccent={details?.titleAccent}
         targetBand={details?.targetBand}
         heroCta={details?.heroCta}
+        heroStats={details?.heroStats}
+        waitlistTarget={details?.pricing?.ctaHref ?? "#waitlist"}
       />
-
-      {details?.heroStats?.length ? <HeroStatStrip stats={details.heroStats} /> : null}
 
       {details ? (
         <>
-          {/* Product + sidebar rail */}
-          <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10 lg:gap-12 items-start">
-              <div className="space-y-12 min-w-0">
-              {/* Facilities */}
-              {!details.heroStats?.length && (
-                <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                  {details.stats.map((stat) => (
-                    <div key={stat.label} className="flex items-baseline gap-2.5">
-                      <span
-                        className="font-mono text-[22px] font-medium leading-none"
-                        style={{ color: "var(--ink)" }}
-                      >
-                        {stat.value}
-                      </span>
-                      <span className="text-[13px]" style={{ color: "var(--body)" }}>
-                        {stat.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Problem */}
+          {details.problem && <ProblemSection problem={details.problem} />}
 
-              {/* Problem */}
-              {details.problem && <ProblemSection problem={details.problem} />}
-
-              {/* What's included */}
-              <div>
-                <SectionHeading
-                  eyebrow="WHAT'S INCLUDED"
-                  title="Everything in this program"
-                  desc={
-                    details.featuresDesc ??
-                    "From the first video to your approval — every resource is part of the same package."
-                  }
-                />
-                <div className="rounded-lg border border-line bg-white overflow-hidden">
-                  {(details.features ?? BLUEPRINT_FEATURES).map(
-                    ({ icon: Icon, title, desc }, i) => (
-                      <div
-                        key={title}
-                        className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                      >
-                        <span
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                        >
-                          <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
-                        </span>
-                        <div>
-                          <h3
-                            className="text-[14.5px] font-semibold leading-[1.3]"
-                            style={{ color: "var(--ink)" }}
-                          >
-                            {title}
-                          </h3>
-                          <p
-                            className="text-[13px] mt-[5px] leading-[1.55]"
-                            style={{ color: "var(--body)" }}
-                          >
-                            {desc}
-                          </p>
-                        </div>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Steps */}
-              {details.steps && <StepsSection steps={details.steps} />}
-
-              {/* Course book */}
-              {details.book && (
-                <div>
-                  <SectionHeading
-                    eyebrow="COURSE BOOK"
-                    title="The book is included in this program"
-                    desc={details.book.desc}
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={details.book.image}
-                        alt={details.book.title}
-                        className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
-                        style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
-                      />
-                      <div className="flex flex-col gap-3">
-                        <span
-                          className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                        >
-                          INCLUDED WITH COURSE
-                        </span>
-                        <h3
-                          className="font-display text-[17px] font-semibold leading-snug"
-                          style={{ color: "var(--ink)" }}
-                        >
-                          {details.book.title}
-                        </h3>
-                        <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                          {details.book.includedNote}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Outcomes */}
-              <div>
-                <SectionHeading
-                  eyebrow="WHAT YOU WILL LEARN"
-                  title="Course outcomes"
-                  desc="By the end of this course you will be able to:"
-                />
-                <div className="rounded-lg border border-line bg-white overflow-hidden">
-                  {details.outcomes.map((o, i) => (
-                    <div
-                      key={o.title}
-                      className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                    >
-                      <span
-                        className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                      </span>
-                      <div>
-                        <div
-                          className="text-[14px] font-medium leading-[1.5]"
-                          style={{ color: "var(--ink)" }}
-                        >
-                          {o.title}
-                        </div>
-                        {o.desc && (
-                          <div
-                            className="text-[13px] mt-[3px] leading-[1.6]"
-                            style={{ color: "var(--body)" }}
-                          >
-                            {o.desc}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Curriculum (simple highlights) */}
-              {!details.curriculum && (
-                <div id="curriculum">
-                  <SectionHeading
-                    eyebrow="CURRICULUM"
-                    title="What is inside"
-                    desc={
-                      details.highlightsDesc ??
-                      "Everything you need to prepare with confidence, in one place."
-                    }
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    {(
-                      details.highlights ?? [
-                        {
-                          title: "10 Videos",
-                          sub: "Step-by-step video lessons, at your own pace",
-                        },
-                        {
-                          title: "Frequent Live Q&A session",
-                          sub: "Ask questions directly and get expert answers",
-                        },
-                        {
-                          title: "Resources",
-                          sub: "Templates, checklists & practical tools included",
-                        },
-                      ]
-                    ).map((item, i) => (
-                      <div
-                        key={item.title}
-                        className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                      >
-                        <span
-                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                        >
-                          <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                        </span>
-                        <div>
-                          <div
-                            className="text-[14.5px] font-medium leading-[1.3]"
-                            style={{ color: "var(--ink)" }}
-                          >
-                            {item.title}
-                          </div>
-                          <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
-                            {item.sub}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-              {/* Sidebar — other programs */}
-              <aside className="lg:sticky lg:top-[100px] flex flex-col gap-5">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <div
-                      className="font-mono text-[10.5px] font-semibold tracking-[0.3em] mb-2"
-                      style={{ color: "var(--brand-2)" }}
-                    >
-                      EXPLORE
-                    </div>
-                    <h3
-                      className="font-display font-semibold leading-[1.2]"
-                      style={{ fontSize: "20px", color: "var(--ink)" }}
-                    >
-                      Other programs you may like
-                    </h3>
-                  </div>
-                  <Link
-                    href="/programs"
-                    className="view-all font-semibold text-[13px] inline-flex items-center gap-[5px] shrink-0 mb-[2px]"
-                    style={{ color: "var(--brand-2)" }}
-                  >
-                    View all
-                    <svg
-                      className="w-[13px] h-[13px] transition-transform duration-250 group-hover:translate-x-[3px]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <path
-                        d="M5 12H19M19 12L13 6M19 12L13 18"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {relatedPrograms.map((p) => (
-                    <RelatedProgramCard key={p.slug} p={p} />
-                  ))}
-                </div>
-              </aside>
-            </div>
+          {/* Steps + Features */}
+          <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px] max-w-[1320px] mx-auto">
+            {details.steps && <StepsSection steps={details.steps} />}
+            <FeaturesSection
+              features={details.features ?? BLUEPRINT_FEATURES}
+              desc={details.featuresDesc}
+            />
           </section>
 
-          {details.curriculum && <DarkCurriculum curriculum={details.curriculum} />}
+          {/* Book */}
+          {details.book && <BookSection book={details.book} />}
 
+          {/* Outcomes */}
+          {details.outcomes.length > 0 && <OutcomesSection details={details} />}
+
+          {/* Curriculum (dark) or highlights */}
+          {details.curriculum ? (
+            <CurriculumSection curriculum={details.curriculum} />
+          ) : (
+            <HighlightsGrid details={details} />
+          )}
+
+          {/* Comparison */}
           {details.comparison && <ComparisonSection comparison={details.comparison} />}
 
           {/* Reviews */}
@@ -1860,7 +2083,7 @@ export default async function ProgramPage({ params }: Props) {
           {details.faqs?.length ? <FaqSection faqs={details.faqs} /> : null}
 
           {details.cta && details.pricing && (
-            <FinalCta cta={details.cta} pricing={details.pricing} />
+            <FinalCta cta={details.cta} pricing={details.pricing} slug={params.slug} title={details.title} />
           )}
         </>
       ) : (
@@ -1881,6 +2104,8 @@ export default async function ProgramPage({ params }: Props) {
         </section>
       )}
 
+      <RelatedProgramsSection programs={relatedPrograms} />
+
       <style>{`
         .course-page {
           --body: #39445A;
@@ -1895,7 +2120,7 @@ export default async function ProgramPage({ params }: Props) {
         .browse-btn:hover {
           background: var(--brand-2) !important;
           transform: translateY(-2px);
-          box-shadow: 0 18px 30px -12px rgba(15,169,104,0.5);
+          box-shadow: 0 18px 30px -12px rgba(46,158,107,0.55);
         }
         .browse-btn svg {
           transition: transform 0.25s ease;
