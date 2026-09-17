@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none" role="img" aria-label="IELTS Full Readiness">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#122043" />
+      <stop offset="0.65" stop-color="#080B10" />
+    </linearGradient>
+    <radialGradient id="glowGreen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(980 60) scale(560 420)">
+      <stop offset="0" stop-color="#14B57E" stop-opacity="0.35" />
+      <stop offset="1" stop-color="#14B57E" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(60 600) scale(520 380)">
+      <stop offset="0" stop-color="#2F5FE0" stop-opacity="0.30" />
+      <stop offset="1" stop-color="#2F5FE0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#glowGreen)" />
+  <rect width="1200" height="630" fill="url(#glowBlue)" />
+  <rect x="0" y="0" width="1200" height="6" fill="#0FA968" />
+
+  <g transform="translate(80 84)">
+    <path d="M0 40L22 4L40 14L18 50Z" stroke="#14B57E" stroke-width="1.5" stroke-linejoin="round" />
+    <text x="54" y="38" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="30" font-weight="600">FlyBridge</text>
+  </g>
+
+  <text x="80" y="300" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">IELTS Full</text>
+  <text x="80" y="396" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">Readiness</text>
+  <text x="80" y="468" fill="#A9BCD3" font-family="'Inter Variable', Arial, sans-serif" font-size="28" font-weight="500">Speaking · Writing · Listening · Reading</text>
+
+  <g transform="translate(80 512)">
+    <rect x="0" y="0" width="250" height="52" rx="26" fill="#0FA968" />
+    <text x="125" y="34" fill="#052117" font-family="'Inter Variable', Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle">Target Band 7+</text>
+  </g>
+
+  <g transform="translate(970 175)">
+    <circle cx="0" cy="0" r="140" fill="rgba(20,181,126,0.06)" stroke="#14B57E" stroke-opacity="0.45" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="126" fill="none" stroke="#14B57E" stroke-opacity="0.18" stroke-width="1.5" />
+    <text x="0" y="-30" fill="#8CA0B8" font-family="'Inter Variable', Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4" text-anchor="middle">TARGET</text>
+    <text x="0" y="34" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="60" font-weight="600" text-anchor="middle">Band 7</text>
+    <line x1="-24" y1="60" x2="24" y2="60" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" />
+    <text x="0" y="96" fill="#8CA0B8" font-family="'Inter Variable', Arial, sans-serif" font-size="18" font-weight="500" letter-spacing="3" text-anchor="middle">IELTS 2026</text>
+  </g>
+</svg>

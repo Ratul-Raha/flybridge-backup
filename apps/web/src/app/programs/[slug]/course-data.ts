@@ -56,6 +56,62 @@ export type CourseBook = {
   image: string;
 };
 
+export type TargetBand = {
+  label: string;
+  value: string;
+  sub: string;
+};
+
+export type Step = {
+  title: string;
+  desc: string;
+};
+
+export type StepsSection = {
+  title: string;
+  subtitle?: string;
+  cards: Step[];
+};
+
+export type CurriculumModule = {
+  title: string;
+  lessonCount: string;
+  items: string[];
+  capstone: string;
+};
+
+export type CurriculumSection = {
+  label?: string;
+  title: string;
+  subtitle: string;
+  modules: CurriculumModule[];
+  note?: string;
+};
+
+export type ComparisonSection = {
+  title: string;
+  leftLabel: string;
+  rightLabel: string;
+  rows: { left: string; right: string }[];
+};
+
+export type Faq = {
+  q: string;
+  a: string;
+};
+
+export type PricingSection = {
+  title: string;
+  subtitle?: string;
+  price: string;
+  note?: string;
+  ctaLabel: string;
+  ctaHref: string;
+  includedLine?: string;
+  paymentLabel?: string;
+  paymentMethods?: string[];
+};
+
 export type CourseDetails = {
   slug: string;
   badge: string;
@@ -82,6 +138,17 @@ export type CourseDetails = {
   pdfs: PdfResource[];
   certificate: { title: string; desc: string };
   cta?: { title: string; desc: string };
+  heroPill?: string;
+  titleAccent?: string;
+  targetBand?: TargetBand;
+  heroCta?: { label: string; href: string };
+  heroStats?: { value: string; label: string }[];
+  problem?: { title: string; desc: string };
+  steps?: StepsSection;
+  curriculum?: CurriculumSection;
+  comparison?: ComparisonSection;
+  pricing?: PricingSection;
+  faqs?: Faq[];
 };
 
 export const courseDetails: Record<string, CourseDetails> = {
@@ -635,6 +702,282 @@ export const courseDetails: Record<string, CourseDetails> = {
     certificate: {
       title: "Completion Certificate",
       desc: "Earn a verified FlyBridge certificate when you complete all 24 lessons and the final speaking challenge.",
+    },
+  },
+  "ielts-full-readiness": {
+    slug: "ielts-full-readiness",
+    badge: "IELTS",
+    title: "IELTS প্রস্তুতি",
+    titleAccent: "— শুরু থেকে শেষ, একটাই জায়গায়",
+    subtitle: "Target Band 7 · 2026",
+    heroPill: "লঞ্চ হচ্ছে ১লা অক্টোবর, ২০২৬",
+    targetBand: { label: "TARGET", value: "Band 7", sub: "IELTS 2026" },
+    desc: "Speaking, Writing, Listening, Reading — সবকিছুর জন্য একটা সম্পূর্ণ, গোছানো সিস্টেম। যেখানে তুমি থামো, ঠিক সেখান থেকেই শুরু।",
+    level: "Beginner to advanced",
+    language: "বাংলা + English",
+    pace: "Self-paced · 25 animated masterclasses",
+    access: "Lifetime access",
+    heroCta: { label: "এখনই ওয়েটলিস্টে জয়েন করো", href: "#pricing" },
+    heroStats: [
+      { value: "২৫", label: "সেলফ-পেসড অ্যানিমেটেড মাস্টারক্লাস" },
+      { value: "Live", label: "নিয়মিত লাইভ সেমিনার" },
+      { value: "০৫", label: "বোনাস ক্লাস" },
+      { value: "Online", label: "ওয়েবসাইটেই মক এক্সাম" },
+    ],
+    stats: [
+      { value: "২৫", label: "ভিডিও মাস্টারক্লাস" },
+      { value: "৪", label: "মডিউল" },
+      { value: "৪০+", label: "প্র্যাকটিস টেস্ট" },
+    ],
+    problem: {
+      title: "বেশিরভাগ IELTS কোর্স শুধু টিপস শেখায়, পরীক্ষাটা শেখায় না",
+      desc: '"বেশি প্র্যাকটিস করো", "ভালো ভোকাবুলারি ইউজ করো" — এইসব জেনারেল কথা তো সবাই বলে। কিন্তু আসল প্রশ্ন হলো — Band 6 আর Band 8-এর উত্তরের মধ্যে আসলে পার্থক্যটা কোথায়? পরীক্ষার পুরো ৪০টা প্রশ্ন একসাথে কেমন দেখতে হয়, সেটা কখনো দেখেছো? বেশিরভাগ কোর্স এই জায়গাতেই আটকে যায়।',
+    },
+    steps: {
+      title: "একটা সিস্টেম। চারটা স্কিল। পরীক্ষা যেভাবে হয়, ঠিক সেভাবেই তৈরি।",
+      cards: [
+        {
+          title: "১. আসল জিনিসটা দেখো",
+          desc: "রিয়েল টেস্ট ফরম্যাট, রিয়েল মডেল আনসার, এক্সাম-লেভেলের প্র্যাকটিস মেটেরিয়াল — সহজ করে বানানো ফেইক এক্সাম্পল না।",
+        },
+        {
+          title: "২. পার্থক্যটা বুঝো",
+          desc: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 8+ তুলনা আছে, তাই জানবে ঠিক কী ফিক্স করতে হবে।",
+        },
+        {
+          title: "৩. প্র্যাকটিস করো",
+          desc: "প্রতিটা লেসনে ওয়ার্কশিট, ড্রিল, আর সেলফ-চেক লিস্ট — শুধু পড়া না, সাথে সাথে প্র্যাকটিস।",
+        },
+      ],
+    },
+    featuresDesc:
+      "Speaking থেকে Writing, Listening থেকে Reading — প্রতিটা স্কিলের সম্পূর্ণ সিস্টেম একই প্যাকেজের অন্তর্ভুক্ত।",
+    features: [
+      {
+        icon: Brain,
+        title: "Band 6 বনাম Band 8+ তুলনা",
+        desc: "প্রতিটা লেসনে সরাসরি দেখানো হয় কোন উত্তরটা কেন কম স্কোর পায় আর কোনটা Band 8+ — তাই জানবে ঠিক কী ফিক্স করতে হবে।",
+      },
+      {
+        icon: Mic,
+        title: "IELTS Speaking Masterclass",
+        desc: "Part 1, 2 আর 3-এর সম্পূর্ণ কৌশল, Cue Card প্রস্তুতি, PREP Method আর ৩০টা মডেল আনসার।",
+      },
+      {
+        icon: FileText,
+        title: "IELTS Writing Mastery",
+        desc: "Academic ও General Training Task 1, Task 2-এর প্যারাগ্রাফিং, Band 8+ ভোকাবুলারি আর ৫ ধরনের Essay Structure Formula।",
+      },
+      {
+        icon: MessageCircle,
+        title: "IELTS Listening Mastery",
+        desc: "চার সেকশনের Question Type, রিয়েল টেস্ট, Distractor ধরার কৌশল আর ফাইনাল চেকিং সিস্টেম।",
+      },
+      {
+        icon: Users,
+        title: "IELTS Reading Mastery",
+        desc: "Skimming, Scanning, True/False/Not Given, Matching Headings সহ সব প্রশ্ন টাইপে সময়-ভাগ করা কৌশল।",
+      },
+      {
+        icon: Bot,
+        title: "লাইভ সেমিনার ও সাপোর্ট",
+        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই মক এক্সামের সুবিধা — একটাই জায়গায়।",
+      },
+    ],
+    book: {
+      title: "IELTS Full Readiness — Companion Book",
+      desc: "২৫টা ভিডিও মাস্টারক্লাসের পাশাপাশি একটা সম্পূর্ণ companion PDF বই — প্রতিটা লেসনের মূল শিক্ষা, প্রতিটা মডেল আনসার, Band 6 বনাম Band 8+ তুলনা, আর প্রতিটা প্র্যাকটিস টেস্ট, সব একসাথে।",
+      includedNote: "The complete companion book is included free with every enrollment.",
+      image: "/programs/ielts-full-readiness-book.svg",
+    },
+    outcomes: [
+      { title: "Speaking-এর Part 1, 2, 3-এ আত্মবিশ্বাসের সাথে উত্তর দিতে পারবেন" },
+      { title: "Writing Task 1 ও Task 2-এর Band 8+ স্ট্রাকচার নিজে লিখতে পারবেন" },
+      { title: "Listening-এর প্রতিটা সেকশনে ফাঁদ চিনে সঠিক উত্তর ধরতে পারবেন" },
+      { title: "Reading-এ সময় ভাগ করে True/False/Not Given সহ সব প্রশ্নে দক্ষ হবেন" },
+      { title: "একাধিক ফুল-লেংথ মক টেস্টে নিজের স্কোর যাচাই করতে পারবেন" },
+      { title: "পরীক্ষার দিনের জন্য একটা প্রমাণিত, গোছানো সিস্টেম পাবেন" },
+    ],
+    curriculum: {
+      label: "কারিকুলাম",
+      title: "২৫টা লেসন, ৪টা মডিউল",
+      subtitle: "কোনো কনফিউশন নেই — প্রতিটা মডিউল একটা জিনিসের দিকেই এগোয়",
+      modules: [
+        {
+          title: "IELTS Speaking",
+          lessonCount: "৬টা লেসন",
+          items: [
+            "Speaking Test আর Band Descriptors-এর সম্পূর্ণ ওভারভিউ",
+            "Part 1: দ্রুত উত্তর দেওয়া আর উত্তর বাড়ানোর কৌশল",
+            "Part 2 Cue Card: ১ মিনিট প্রস্তুতি, ২ মিনিট বলা",
+            "Part 3: Abstract Reasoning আর PREP Method",
+            "দ্বিধা ও ভুল সংশোধন এড়ানোর উপায়",
+          ],
+          capstone: "৩০টা সম্পূর্ণ মডেল আনসার",
+        },
+        {
+          title: "IELTS Writing Mastery",
+          lessonCount: "৬টা লেসন",
+          items: [
+            "Task 1: Band Descriptors, Tone আর Overview লেখা",
+            "Academic Task 1: Line Graph, Bar Chart, Table, Process",
+            "GT Task 1: Formal, Semi-Formal, Informal লেটার",
+            "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং",
+            "Task 2-এর Band 8+ ভোকাবুলারি ও Cohesive Devices",
+          ],
+          capstone: "৫ ধরনের Essay Structure Formula",
+        },
+        {
+          title: "IELTS Listening Mastery",
+          lessonCount: "৫টা লেসন",
+          items: [
+            "Listening Test-এর সম্পূর্ণ গঠন ও Question Type",
+            "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ",
+            "Section 3 ও 4: Multiple Choice, Matching, লেকচার",
+            "যেসব ফাঁদে সবাই পড়ে: Self-Correction, Distractor",
+          ],
+          capstone: "Word Limit ও ফাইনাল চেকিং সিস্টেম",
+        },
+        {
+          title: "IELTS Reading Mastery",
+          lessonCount: "৮টা লেসন",
+          items: [
+            "Reading-এর ভিত্তি: সময় ভাগ, Skimming ও Scanning",
+            "True/False/Not Given — কনফিউশন দূর করা",
+            "Matching Headings ও Paragraph Features",
+            "Gapped Text ও Exact Word Rule",
+            "Multiple Choice ও Paraphrased ফাঁদ ধরা",
+          ],
+          capstone: "সম্পূর্ণ Reading Masterclass",
+        },
+      ],
+      note: "Listening আর Speaking-এর প্রতিটা লেসনে একটা সম্পূর্ণ, বাস্তব প্র্যাকটিস টেস্ট আছে — শুধু একটা এক্সাম্পল না। কোর্স শেষ হওয়ার আগেই তুমি পরীক্ষার প্রতিটা অংশের জন্য একাধিক ফুল-লেংথ মক টেস্ট প্র্যাকটিস করে ফেলবে।",
+    },
+    comparison: {
+      title: 'এটা আরেকটা "টিপস অ্যান্ড ট্রিকস" কোর্স না',
+      leftLabel: "সাধারণ IELTS কোর্স",
+      rightLabel: "IELTS FULL READINESS",
+      rows: [
+        {
+          left: 'ভাসা ভাসা পরামর্শ ("আরও প্র্যাকটিস করো")',
+          right: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 8+ তুলনা",
+        },
+        { left: "দুই-একটা উদাহরণ বাক্য", right: "সম্পূর্ণ মডেল আনসার, শব্দসংখ্যা যাচাই করা" },
+        {
+          left: "একটা মক টেস্ট, থাকলেও থাকতে পারে",
+          right: "একাধিক ফুল-লেংথ প্র্যাকটিস টেস্ট, প্রতিটা স্কিলে",
+        },
+        { left: "শুধু ভিডিও", right: "ভিডিও মাস্টারক্লাস + সম্পূর্ণ PDF বই" },
+        { left: "গ্রামার-টিপস নির্ভর", right: "স্কিল-ভিত্তিক, পরীক্ষার ফরম্যাটে সাজানো প্র্যাকটিস" },
+      ],
+    },
+    modules: [
+      {
+        title: "IELTS Speaking",
+        lessons: [
+          { title: "Speaking Test আর Band Descriptors-এর সম্পূর্ণ ওভারভিউ", duration: "09:20" },
+          { title: "Part 1: দ্রুত উত্তর দেওয়া আর উত্তর বাড়ানোর কৌশল", duration: "10:45" },
+          { title: "Part 2 Cue Card: ১ মিনিট প্রস্তুতি, ২ মিনিট বলা", duration: "12:30" },
+          { title: "Part 3: Abstract Reasoning আর PREP Method", duration: "13:15" },
+          { title: "দ্বিধা ও ভুল সংশোধন এড়ানোর উপায়", duration: "08:50" },
+          { title: "Capstone: ৩০টা সম্পূর্ণ মডেল আনসার", duration: "18:00" },
+        ],
+      },
+      {
+        title: "IELTS Writing Mastery",
+        lessons: [
+          { title: "Task 1: Band Descriptors, Tone আর Overview লেখা", duration: "11:20" },
+          { title: "Academic Task 1: Line Graph, Bar Chart, Table, Process", duration: "14:05" },
+          { title: "GT Task 1: Formal, Semi-Formal, Informal লেটার", duration: "12:40" },
+          { title: "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং", duration: "13:50" },
+          { title: "Task 2-এর Band 8+ ভোকাবুলারি ও Cohesive Devices", duration: "11:35" },
+          { title: "Capstone: ৫ ধরনের Essay Structure Formula", duration: "16:20" },
+        ],
+      },
+      {
+        title: "IELTS Listening Mastery",
+        lessons: [
+          { title: "Listening Test-এর সম্পূর্ণ গঠন ও Question Type", duration: "09:40" },
+          { title: "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ", duration: "15:10" },
+          { title: "Section 3 ও 4: Multiple Choice, Matching, লেকচার", duration: "14:25" },
+          { title: "যেসব ফাঁদে সবাই পড়ে: Self-Correction, Distractor", duration: "10:55" },
+          { title: "Capstone: Word Limit ও ফাইনাল চেকিং সিস্টেম", duration: "12:30" },
+        ],
+      },
+      {
+        title: "IELTS Reading Mastery",
+        lessons: [
+          { title: "Reading-এর ভিত্তি: সময় ভাগ, Skimming ও Scanning", duration: "10:15" },
+          { title: "True/False/Not Given — কনফিউশন দূর করা", duration: "13:05" },
+          { title: "Matching Headings ও Paragraph Features", duration: "12:50" },
+          { title: "Gapped Text ও Exact Word Rule", duration: "11:30" },
+          { title: "Multiple Choice ও Paraphrased ফাঁদ ধরা", duration: "12:10" },
+          { title: "Passage 1: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "18:40" },
+          { title: "Passage 2: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "17:25" },
+          { title: "Capstone: সম্পূর্ণ Reading Masterclass", duration: "20:00" },
+        ],
+      },
+    ],
+    pdfs: [
+      {
+        title: "IELTS Full Readiness Companion Book",
+        desc: "Every lesson, model answer and Band 6 vs Band 8+ comparison — designed for mobile reading.",
+        pages: 180,
+        size: "12.4 MB",
+      },
+      {
+        title: "Speaking Model Answers Pack",
+        desc: "30 complete, exam-ready model answers across Part 1, 2 and 3.",
+        pages: 46,
+        size: "4.2 MB",
+      },
+      {
+        title: "Full-Length Practice Test Pack",
+        desc: "Multiple full-length mock tests for Listening, Reading and Writing with answer keys.",
+        pages: 96,
+        size: "8.6 MB",
+      },
+    ],
+    certificate: {
+      title: "Completion Certificate",
+      desc: "Earn a verified FlyBridge certificate when you complete all 25 masterclasses and the full-length practice tests.",
+    },
+    pricing: {
+      title: "১লা অক্টোবরের আগেই সিট বুক করো",
+      subtitle: "আর্লি-বার্ড ডিসকাউন্ট শীঘ্রই ঘোষণা করা হবে",
+      price: "শীঘ্রই ঘোষণা",
+      note: "এককালীন পেমেন্ট · Lifetime Access",
+      ctaLabel: "এখনই ওয়েটলিস্টে জয়েন করো",
+      ctaHref: "#waitlist",
+      includedLine: "২৫টা মাস্টারক্লাস · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
+      paymentLabel: "নিরাপদ পেমেন্ট, যেভাবে তোমার সুবিধা",
+      paymentMethods: ["bKash", "Nagad", "Rocket", "Stripe"],
+    },
+    faqs: [
+      {
+        q: "এটা Academic নাকি General Training-এর জন্য?",
+        a: "দুটোই কভার করা হয়েছে। Writing মডিউলে Academic Task 1 আর General Training Task 1 — দুটোরই আলাদা লেসন আছে।",
+      },
+      {
+        q: "এটা কি সেলফ-পেসড, নাকি নির্দিষ্ট সময়ে ক্লাস হয়?",
+        a: "২৫টা মূল মাস্টারক্লাস সেলফ-পেসড। লাইভ সেমিনার নির্দিষ্ট সময়ে হবে, কিন্তু রেকর্ড করা থাকবে।",
+      },
+      {
+        q: "PDF বইটা কি সব প্ল্যানের সাথেই পাওয়া যাবে?",
+        a: "হ্যাঁ — যারাই এনরোল করবে, তারা সবাই companion বইও পাবে।",
+      },
+      {
+        q: "পেমেন্ট কীভাবে করব?",
+        a: "bKash, Nagad, Rocket, অথবা Card (Stripe-এর মাধ্যমে) — যেটা তোমার জন্য সহজ।",
+      },
+      {
+        q: "আমার Band Score যদি এখন অনেক কম হয়?",
+        a: "প্রতিটা মডিউলের প্রথম লেসন একদম শুরু থেকে শুরু হয় — আগে থেকে কিছু জানা থাকতে হবে না।",
+      },
+    ],
+    cta: {
+      title: "তোমার Target Band। একটাই সম্পূর্ণ সিস্টেম।",
+      desc: "লঞ্চ হচ্ছে ১লা অক্টোবর, ২০২৬ — ২৫টা মাস্টারক্লাস, লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর সম্পূর্ণ PDF বই।",
     },
   },
 };

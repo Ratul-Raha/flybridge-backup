@@ -61,6 +61,16 @@ export const programs: Program[] = [
     image: "/programs/easy-smart-spoken-english.jpg",
     hasDb: true,
   },
+  {
+    slug: "ielts-full-readiness",
+    badge: "IELTS",
+    title: "IELTS Full Readiness",
+    desc: "Speaking, Writing, Listening, Reading — one complete, exam-shaped system built to reach your target band.",
+    bg: "var(--mint-bg)",
+    badgeColor: "var(--mint-ink)",
+    upcoming: true,
+    image: "/programs/ielts-full-readiness.svg",
+  },
 ];
 
 export function getProgram(slug: string) {

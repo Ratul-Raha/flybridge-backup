@@ -15,18 +15,29 @@ import { readSession } from "@/lib/auth/session";
 import {
   BookOpen,
   Check,
+  ChevronDown,
   Clock,
+  Eye,
   Lock,
   Maximize2,
   Pause,
   ShieldCheck,
   Star,
+  Target,
   Volume2,
   Zap,
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
-import { courseDetails } from "./course-data";
+import {
+  courseDetails,
+  type ComparisonSection,
+  type CurriculumSection,
+  type Faq,
+  type PricingSection,
+  type StepsSection,
+  type TargetBand,
+} from "./course-data";
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 
@@ -145,11 +156,11 @@ function SectionHeading({
         className="font-semibold tracking-[-0.01em]"
         style={{ fontSize: "clamp(24px,2.6vw,30px)", color: "var(--ink)" }}
       >
-        {title}
+        <BengaliText>{title}</BengaliText>
       </h2>
       {desc && (
         <p className="text-[15px] mt-2 max-w-[560px]" style={{ color: "var(--body)" }}>
-          {desc}
+          <BengaliText>{desc}</BengaliText>
         </p>
       )}
     </div>
@@ -168,6 +179,10 @@ function CourseHero({
   rating,
   lessonCount,
   cta,
+  heroPill,
+  titleAccent,
+  targetBand,
+  heroCta,
 }: {
   badge: string;
   title: string;
@@ -180,6 +195,10 @@ function CourseHero({
   rating?: { average: number; count: number };
   lessonCount: number;
   cta?: CourseCta;
+  heroPill?: string;
+  titleAccent?: string;
+  targetBand?: TargetBand;
+  heroCta?: { label: string; href: string };
 }) {
   return (
     <section
@@ -208,6 +227,26 @@ function CourseHero({
             <span style={{ color: "var(--brand-2)" }}>{badge}</span>
           </div>
 
+          {heroPill && (
+            <div
+              className="inline-flex items-center gap-2 rounded-full border px-[15px] py-[8px] mb-5"
+              style={{
+                background: "var(--brand-soft)",
+                borderColor: "rgba(20,181,126,0.35)",
+              }}
+            >
+              <span
+                className="w-[7px] h-[7px] rounded-full"
+                style={{ background: "var(--brand-2)" }}
+              />
+              <BengaliText>
+                <span className="text-[12.5px] font-semibold" style={{ color: "var(--brand-2)" }}>
+                  {heroPill}
+                </span>
+              </BengaliText>
+            </div>
+          )}
+
           <p
             className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]"
             style={{ color: "var(--brand-2)" }}
@@ -220,6 +259,22 @@ function CourseHero({
             style={{ color: "var(--ink)", fontSize: "clamp(28px,3.4vw,40px)" }}
           >
             <BengaliText>{title}</BengaliText>
+            {titleAccent && (
+              <BengaliText>
+                {" "}
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(92deg, var(--brand) 8%, var(--brand-2) 60%, rgba(47,95,224,0.95) 112%)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  {titleAccent}
+                </span>
+              </BengaliText>
+            )}
             {subtitle && (
               <>
                 {" "}
@@ -307,6 +362,15 @@ function CourseHero({
                 Enroll now
                 {arrow}
               </Link>
+            ) : heroCta ? (
+              <a
+                href={heroCta.href}
+                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
+                style={{ background: "var(--brand)" }}
+              >
+                <BengaliText>{heroCta.label}</BengaliText>
+                {arrow}
+              </a>
             ) : (
               <span
                 className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white/50 rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px] cursor-not-allowed"
@@ -335,7 +399,44 @@ function CourseHero({
           </div>
         </div>
 
-        <div className="relative flex justify-center items-center">
+        <div className="relative flex flex-col items-center gap-7">
+          {targetBand && (
+            <div
+              className="relative w-[168px] h-[168px] rounded-full flex items-center justify-center shrink-0"
+              style={{
+                background:
+                  "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
+                border: "1.5px solid rgba(20,181,126,0.55)",
+                boxShadow: "0 28px 54px -26px rgba(8,11,16,0.75)",
+              }}
+            >
+              <div
+                className="absolute inset-[9px] rounded-full"
+                style={{ border: "1px solid rgba(20,181,126,0.28)" }}
+              />
+              <div className="text-center">
+                <div
+                  className="font-mono text-[10px] font-bold tracking-[0.24em]"
+                  style={{ color: "#8CA0B8" }}
+                >
+                  {targetBand.label}
+                </div>
+                <div className="font-display text-[34px] font-semibold text-white leading-tight mt-[2px]">
+                  {targetBand.value}
+                </div>
+                <div
+                  className="mx-auto my-[7px] h-px w-8"
+                  style={{ background: "rgba(255,255,255,0.25)" }}
+                />
+                <div
+                  className="font-mono text-[10px] tracking-[0.2em]"
+                  style={{ color: "#8CA0B8" }}
+                >
+                  {targetBand.sub}
+                </div>
+              </div>
+            </div>
+          )}
           <div
             className="w-full max-w-[430px] rounded-lg bg-[#101B31] overflow-hidden"
             style={{ boxShadow: "0 36px 70px -30px rgba(7,14,31,0.65)" }}
@@ -416,6 +517,408 @@ function CourseHero({
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+const STEP_ICONS = [Eye, Target, Zap];
+
+const PAYMENT_COLORS: Record<string, string> = {
+  bKash: "#E2136E",
+  Nagad: "#F5821F",
+  Rocket: "#8C3494",
+  Stripe: "#635BFF",
+};
+
+function HeroStatStrip({ stats }: { stats: { value: string; label: string }[] }) {
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] pt-[6px] pb-[6px]">
+      <div className="max-w-[1320px] mx-auto">
+        <div
+          className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden"
+          style={{ background: "#22304F" }}
+        >
+          {stats.map((stat) => (
+            <div key={stat.label} className="px-6 py-6" style={{ background: "var(--ink)" }}>
+              <div
+                className="font-display text-[30px] font-semibold leading-none"
+                style={{ color: "var(--brand-2)" }}
+              >
+                {stat.value}
+              </div>
+              <div className="text-[13px] mt-[7px] leading-snug" style={{ color: "#B7C4D6" }}>
+                <BengaliText>{stat.label}</BengaliText>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProblemSection({ problem }: { problem: { title: string; desc: string } }) {
+  return (
+    <div className="border-y py-12 text-center" style={{ borderColor: "var(--line)" }}>
+      <h2
+        className="font-display font-semibold leading-[1.35] mx-auto max-w-[780px]"
+        style={{ fontSize: "clamp(23px,2.8vw,31px)", color: "var(--ink)" }}
+      >
+        <BengaliText>{problem.title}</BengaliText>
+      </h2>
+      <p
+        className="mt-5 mx-auto max-w-[780px] text-[15px] leading-[1.85]"
+        style={{ color: "var(--body)" }}
+      >
+        <BengaliText>{problem.desc}</BengaliText>
+      </p>
+    </div>
+  );
+}
+
+function StepsSection({ steps }: { steps: StepsSection }) {
+  return (
+    <div>
+      <SectionHeading eyebrow="HOW IT WORKS" title={steps.title} desc={steps.subtitle} />
+      <div className="grid sm:grid-cols-3 gap-5">
+        {steps.cards.map((card, i) => {
+          const Icon = STEP_ICONS[i % STEP_ICONS.length];
+          return (
+            <div
+              key={card.title}
+              className="rounded-xl border bg-white p-6"
+              style={{ borderColor: "var(--line)" }}
+            >
+              <span
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+              >
+                <Icon className="w-[22px] h-[22px]" strokeWidth={1.8} />
+              </span>
+              <h3
+                className="font-display text-[16px] font-semibold leading-[1.35]"
+                style={{ color: "var(--ink)" }}
+              >
+                <BengaliText>{card.title}</BengaliText>
+              </h3>
+              <p className="mt-2 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                <BengaliText>{card.desc}</BengaliText>
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
+  return (
+    <section
+      id="curriculum"
+      className="px-[clamp(20px,4.5vw,56px)] py-[80px]"
+      style={{ background: "var(--ink)" }}
+    >
+      <div className="max-w-[1100px] mx-auto">
+        <div className="text-center mb-12">
+          {curriculum.label && (
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-[16px] py-[7px] mb-5"
+              style={{
+                background: "rgba(20,181,126,0.12)",
+                borderColor: "rgba(20,181,126,0.32)",
+                color: "var(--brand-2)",
+              }}
+            >
+              <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+              <span className="font-mono text-[10.5px] font-semibold tracking-[0.28em] uppercase">
+                <BengaliText>{curriculum.label}</BengaliText>
+              </span>
+            </span>
+          )}
+          <h2
+            className="font-display font-semibold text-white leading-[1.2]"
+            style={{ fontSize: "clamp(25px,3vw,36px)" }}
+          >
+            <BengaliText>{curriculum.title}</BengaliText>
+          </h2>
+          <p className="mt-3 text-[15px]" style={{ color: "#8CA0B8" }}>
+            <BengaliText>{curriculum.subtitle}</BengaliText>
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {curriculum.modules.map((m, i) => (
+            <div
+              key={m.title}
+              className="rounded-2xl p-6 md:p-8"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <span
+                  className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center font-bold text-[15px] shrink-0"
+                  style={{ background: "var(--brand)", color: "#052117" }}
+                >
+                  {i + 1}
+                </span>
+                <span className="font-display font-semibold text-[17px] text-white">
+                  <BengaliText>{m.title}</BengaliText>
+                  <span className="font-medium text-[13px] ml-2" style={{ color: "#8CA0B8" }}>
+                    · <BengaliText>{m.lessonCount}</BengaliText>
+                  </span>
+                </span>
+              </div>
+              <ul className="flex flex-col gap-[13px]">
+                {m.items.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2.5 text-[14px] leading-[1.6]"
+                    style={{ color: "#C4D0DE" }}
+                  >
+                    <span
+                      className="mt-[8px] w-[5px] h-[5px] rounded-full shrink-0"
+                      style={{ background: "var(--brand-2)" }}
+                    />
+                    <BengaliText>{item}</BengaliText>
+                  </li>
+                ))}
+                <li
+                  className="flex items-start gap-2.5 text-[14px] font-semibold leading-[1.6]"
+                  style={{ color: "var(--brand-2)" }}
+                >
+                  <Check className="w-4 h-4 mt-[2px] shrink-0" strokeWidth={3} />
+                  <BengaliText>ক্যাপস্টোন: {m.capstone}</BengaliText>
+                </li>
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {curriculum.note && (
+          <div
+            className="mt-9 rounded-2xl px-6 md:px-8 py-6"
+            style={{ background: "rgba(20,181,126,0.06)", border: "1px solid rgba(20,181,126,0.25)" }}
+          >
+            <p className="text-[14.5px] leading-[1.7]" style={{ color: "#C4D0DE" }}>
+              <BengaliText>{curriculum.note}</BengaliText>
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
+  return (
+    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]">
+      <div className="max-w-[1000px] mx-auto">
+        <h2
+          className="text-center font-display font-semibold mb-10"
+          style={{ fontSize: "clamp(23px,2.8vw,32px)", color: "var(--ink)" }}
+        >
+          <BengaliText>{comparison.title}</BengaliText>
+        </h2>
+        <div
+          className="rounded-2xl border overflow-hidden bg-white"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="grid grid-cols-2">
+            <div
+              className="px-5 md:px-8 py-6"
+              style={{ background: "var(--bg-soft)", borderRight: "1px solid var(--line)" }}
+            >
+              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--body)" }}>
+                <BengaliText>{comparison.leftLabel}</BengaliText>
+              </span>
+            </div>
+            <div className="px-5 md:px-8 py-6" style={{ background: "rgba(20,181,126,0.10)" }}>
+              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--brand-2)" }}>
+                <BengaliText>{comparison.rightLabel}</BengaliText>
+              </span>
+            </div>
+          </div>
+          {comparison.rows.map((row, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-2"
+              style={{ borderTop: "1px solid var(--line)" }}
+            >
+              <div
+                className="px-5 md:px-8 py-5 text-[14px] leading-[1.6]"
+                style={{ borderRight: "1px solid var(--line)", color: "var(--body)" }}
+              >
+                <BengaliText>{row.left}</BengaliText>
+              </div>
+              <div
+                className="px-5 md:px-8 py-5 text-[14px] font-medium leading-[1.6]"
+                style={{ color: "var(--ink)", background: "rgba(20,181,126,0.04)" }}
+              >
+                <BengaliText>{row.right}</BengaliText>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingSection({ pricing }: { pricing: PricingSection }) {
+  return (
+    <section
+      id="pricing"
+      className="px-[clamp(20px,4.5vw,56px)] py-[90px] text-center"
+      style={{ background: "linear-gradient(160deg, #122043 0%, #080B10 100%)" }}
+    >
+      <div className="max-w-[640px] mx-auto">
+        <h2
+          className="font-display font-semibold text-white leading-[1.25]"
+          style={{ fontSize: "clamp(25px,3vw,34px)" }}
+        >
+          <BengaliText>{pricing.title}</BengaliText>
+        </h2>
+        {pricing.subtitle && (
+          <p className="mt-3 text-[15px]" style={{ color: "#8CA0B8" }}>
+            <BengaliText>{pricing.subtitle}</BengaliText>
+          </p>
+        )}
+
+        <div
+          className="mt-10 mx-auto max-w-[420px] rounded-3xl px-8 py-11"
+          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(20,181,126,0.32)" }}
+        >
+          <div
+            className="font-display font-semibold text-white"
+            style={{ fontSize: "clamp(28px,4vw,40px)" }}
+          >
+            <BengaliText>{pricing.price}</BengaliText>
+          </div>
+          {pricing.note && (
+            <div className="mt-2 mb-8 text-[14px]" style={{ color: "#8CA0B8" }}>
+              <BengaliText>{pricing.note}</BengaliText>
+            </div>
+          )}
+          <a
+            href={pricing.ctaHref}
+            className="browse-btn w-full inline-flex items-center justify-center gap-2.5 font-semibold text-[15px] rounded-full px-8 py-[17px]"
+            style={{ background: "var(--brand)", color: "#fff" }}
+          >
+            <BengaliText>{pricing.ctaLabel}</BengaliText>
+            {arrow}
+          </a>
+          {pricing.includedLine && (
+            <>
+              <div className="my-6 h-px" style={{ background: "rgba(255,255,255,0.1)" }} />
+              <div className="text-[13px]" style={{ color: "#8CA0B8" }}>
+                <BengaliText>{pricing.includedLine}</BengaliText>
+              </div>
+            </>
+          )}
+        </div>
+
+        {pricing.paymentMethods?.length ? (
+          <div className="mt-11">
+            {pricing.paymentLabel && (
+              <div className="text-[13px] mb-4 tracking-[0.3px]" style={{ color: "#8CA0B8" }}>
+                <BengaliText>{pricing.paymentLabel}</BengaliText>
+              </div>
+            )}
+            <div className="flex justify-center gap-4 flex-wrap">
+              {pricing.paymentMethods.map((name) => (
+                <span
+                  key={name}
+                  className="rounded-xl px-6 py-3 text-[15px] font-extrabold"
+                  style={{ background: "#fff", color: PAYMENT_COLORS[name] ?? "#334155" }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function FaqSection({ faqs }: { faqs: Faq[] }) {
+  return (
+    <section id="faq" className="px-[clamp(20px,4.5vw,56px)] py-[80px]">
+      <div className="max-w-[800px] mx-auto">
+        <h2
+          className="text-center font-display font-semibold mb-10"
+          style={{ fontSize: "clamp(23px,2.8vw,32px)", color: "var(--ink)" }}
+        >
+          <BengaliText>সচরাচর জিজ্ঞাসা</BengaliText>
+        </h2>
+        <div className="flex flex-col gap-3.5">
+          {faqs.map((faq) => (
+            <details
+              key={faq.q}
+              className="faq-item rounded-2xl border bg-white px-6 md:px-7 py-5"
+              style={{ borderColor: "var(--line)" }}
+            >
+              <summary className="flex items-center justify-between gap-4 cursor-pointer">
+                <span
+                  className="font-display font-semibold text-[16px] leading-[1.4]"
+                  style={{ color: "var(--ink)" }}
+                >
+                  <BengaliText>{faq.q}</BengaliText>
+                </span>
+                <ChevronDown
+                  className="faq-chev w-5 h-5 shrink-0 transition-transform duration-200"
+                  style={{ color: "var(--brand-2)" }}
+                />
+              </summary>
+              <p className="mt-3 text-[14.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                <BengaliText>{faq.a}</BengaliText>
+              </p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCta({
+  cta,
+  pricing,
+}: {
+  cta: { title: string; desc: string };
+  pricing?: PricingSection;
+}) {
+  return (
+    <section
+      id="waitlist"
+      className="px-[clamp(20px,4.5vw,56px)] py-[90px] text-center"
+      style={{ background: "var(--ink)" }}
+    >
+      <div className="max-w-[720px] mx-auto">
+        <h2
+          className="font-display font-semibold text-white leading-[1.3]"
+          style={{ fontSize: "clamp(25px,3.4vw,38px)" }}
+        >
+          <BengaliText>{cta.title}</BengaliText>
+        </h2>
+        <p className="mt-4 text-[16px]" style={{ color: "var(--brand-2)" }}>
+          <BengaliText>{cta.desc}</BengaliText>
+        </p>
+        <a
+          href={pricing?.ctaHref ?? "/programs"}
+          className="browse-btn mt-10 inline-flex items-center gap-2.5 font-semibold text-[16px] rounded-full px-11 py-[18px]"
+          style={{ background: "var(--brand)", color: "#fff" }}
+        >
+          <BengaliText>{pricing?.ctaLabel ?? "Browse programs"}</BengaliText>
+          {arrow}
+        </a>
+        {pricing?.includedLine && (
+          <div className="mt-7 text-[13px]" style={{ color: "#64748B" }}>
+            <BengaliText>{pricing.includedLine}</BengaliText>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1023,7 +1526,13 @@ export default async function ProgramPage({ params }: Props) {
         }
         lessonCount={lessonCount}
         cta={cta}
+        heroPill={details?.heroPill}
+        titleAccent={details?.titleAccent}
+        targetBand={details?.targetBand}
+        heroCta={details?.heroCta}
       />
+
+      {details?.heroStats?.length ? <HeroStatStrip stats={details.heroStats} /> : null}
 
       {/* Other programs */}
       <section className="px-[clamp(20px,4.5vw,56px)] pt-[20px] pb-[70px] max-w-[1320px] mx-auto">
@@ -1079,21 +1588,26 @@ export default async function ProgramPage({ params }: Props) {
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
             <div className="space-y-12">
               {/* Facilities */}
-              <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                {details.stats.map((stat) => (
-                  <div key={stat.label} className="flex items-baseline gap-2.5">
-                    <span
-                      className="font-mono text-[22px] font-medium leading-none"
-                      style={{ color: "var(--ink)" }}
-                    >
-                      {stat.value}
-                    </span>
-                    <span className="text-[13px]" style={{ color: "var(--body)" }}>
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {!details.heroStats?.length && (
+                <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                  {details.stats.map((stat) => (
+                    <div key={stat.label} className="flex items-baseline gap-2.5">
+                      <span
+                        className="font-mono text-[22px] font-medium leading-none"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {stat.value}
+                      </span>
+                      <span className="text-[13px]" style={{ color: "var(--body)" }}>
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Problem */}
+              {details.problem && <ProblemSection problem={details.problem} />}
 
               {/* What's included */}
               <div>
@@ -1137,6 +1651,9 @@ export default async function ProgramPage({ params }: Props) {
                   )}
                 </div>
               </div>
+
+              {/* Steps */}
+              {details.steps && <StepsSection steps={details.steps} />}
 
               {/* Course book */}
               {details.book && (
@@ -1217,60 +1734,66 @@ export default async function ProgramPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Curriculum */}
-              <div id="curriculum">
-                <SectionHeading
-                  eyebrow="CURRICULUM"
-                  title="What is inside"
-                  desc={
-                    details.highlightsDesc ??
-                    "Everything you need to prepare with confidence, in one place."
-                  }
-                />
-                <div className="rounded-lg border border-line bg-white overflow-hidden">
-                  {(
-                    details.highlights ?? [
-                      {
-                        title: "10 Videos",
-                        sub: "Step-by-step video lessons, at your own pace",
-                      },
-                      {
-                        title: "Frequent Live Q&A session",
-                        sub: "Ask questions directly and get expert answers",
-                      },
-                      {
-                        title: "Resources",
-                        sub: "Templates, checklists & practical tools included",
-                      },
-                    ]
-                  ).map((item, i) => (
-                    <div
-                      key={item.title}
-                      className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                    >
-                      <span
-                        className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+              {/* Curriculum (simple highlights) */}
+              {!details.curriculum && (
+                <div id="curriculum">
+                  <SectionHeading
+                    eyebrow="CURRICULUM"
+                    title="What is inside"
+                    desc={
+                      details.highlightsDesc ??
+                      "Everything you need to prepare with confidence, in one place."
+                    }
+                  />
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
+                    {(
+                      details.highlights ?? [
+                        {
+                          title: "10 Videos",
+                          sub: "Step-by-step video lessons, at your own pace",
+                        },
+                        {
+                          title: "Frequent Live Q&A session",
+                          sub: "Ask questions directly and get expert answers",
+                        },
+                        {
+                          title: "Resources",
+                          sub: "Templates, checklists & practical tools included",
+                        },
+                      ]
+                    ).map((item, i) => (
+                      <div
+                        key={item.title}
+                        className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
                       >
-                        <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                      </span>
-                      <div>
-                        <div
-                          className="text-[14.5px] font-medium leading-[1.3]"
-                          style={{ color: "var(--ink)" }}
+                        <span
+                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
                         >
-                          {item.title}
-                        </div>
-                        <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
-                          {item.sub}
+                          <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+                        </span>
+                        <div>
+                          <div
+                            className="text-[14.5px] font-medium leading-[1.3]"
+                            style={{ color: "var(--ink)" }}
+                          >
+                            {item.title}
+                          </div>
+                          <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
+                            {item.sub}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
+
+          {details.curriculum && <DarkCurriculum curriculum={details.curriculum} />}
+
+          {details.comparison && <ComparisonSection comparison={details.comparison} />}
 
           {/* Reviews */}
           {program.hasDb && course ? (
@@ -1304,6 +1827,14 @@ export default async function ProgramPage({ params }: Props) {
               averageRating={details.rating?.average ?? 0}
             />
           ) : null}
+
+          {details.pricing && <PricingSection pricing={details.pricing} />}
+
+          {details.faqs?.length ? <FaqSection faqs={details.faqs} /> : null}
+
+          {details.cta && details.pricing && (
+            <FinalCta cta={details.cta} pricing={details.pricing} />
+          )}
         </>
       ) : (
         <section className="px-[clamp(20px,4.5vw,56px)] py-[90px] max-w-[1320px] mx-auto text-center">
@@ -1329,6 +1860,8 @@ export default async function ProgramPage({ params }: Props) {
           --line: #DDE2EC;
         }
         summary::-webkit-details-marker { display: none; }
+        details.faq-item summary { list-style: none; }
+        details.faq-item[open] .faq-chev { transform: rotate(180deg); }
         .browse-btn {
           transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
         }
