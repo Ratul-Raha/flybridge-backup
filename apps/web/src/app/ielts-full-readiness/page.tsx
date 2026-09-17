@@ -1813,9 +1813,7 @@ export default async function IeltsFullReadinessLandingPage() {
   const moduleCount = details ? details.modules.length : 6;
 
   const wishlistDiscountPercent =
-    course?.wishlistDiscountPercent && course.wishlistDiscountPercent > 0
-      ? course.wishlistDiscountPercent
-      : WISHLIST_DISCOUNT_PERCENT;
+    course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT;
 
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {

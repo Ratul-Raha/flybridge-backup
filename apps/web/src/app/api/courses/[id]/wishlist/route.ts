@@ -54,7 +54,8 @@ export async function GET(
         id: course._id.toString(),
         title: course.title,
         slug: course.slug,
-        wishlistDiscountPercent: course.wishlistDiscountPercent ?? 0,
+        wishlistDiscountPercent:
+          course.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT,
       },
       stats: {
         total: rows.length,
