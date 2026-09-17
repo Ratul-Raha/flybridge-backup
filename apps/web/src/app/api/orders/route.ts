@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { createOrder } from "@/lib/orders";
+import { DiscountError } from "@/lib/discounts";
 import { Course } from "@/lib/models/course";
 import {
   isStripeConfigured,
@@ -55,6 +56,10 @@ export async function GET() {
         })),
         total: o.total,
         currency: o.currency,
+        subtotal: o.subtotal ?? 0,
+        discountAmount: o.discountAmount ?? 0,
+        discountCode: o.discountCode ?? null,
+        discountLabel: o.discountLabel ?? null,
         status: o.status,
         gateway: o.gateway ?? null,
         gatewayRef: o.gatewayRef ?? null,
@@ -110,6 +115,7 @@ export async function POST(request: NextRequest) {
       itemType: body.itemType,
       itemId: body.itemId,
       currency: typeof body.currency === "string" ? body.currency : undefined,
+      code: typeof body.code === "string" ? body.code : undefined,
     });
 
     let paymentUrl: string | null = null;
@@ -181,6 +187,10 @@ export async function POST(request: NextRequest) {
           ? {
               id: order._id.toString(),
               status: order.status,
+              subtotal: order.subtotal ?? 0,
+              discountAmount: order.discountAmount ?? 0,
+              discountCode: order.discountCode ?? null,
+              discountLabel: order.discountLabel ?? null,
               total: order.total,
               currency: order.currency,
             }
@@ -193,6 +203,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("orders POST error", error);
+    if (error instanceof DiscountError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     const message = error instanceof Error ? error.message : "Something went wrong";
     return NextResponse.json(
       { error: message },

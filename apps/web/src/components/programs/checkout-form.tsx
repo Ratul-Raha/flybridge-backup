@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { formatMoney } from "@/lib/pricing";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 
 type Props = {
@@ -23,6 +24,15 @@ type Props = {
   upcoming: boolean;
 };
 
+type Pricing = {
+  subtotal: number;
+  discount: number;
+  total: number;
+  label: string | null;
+  code: string | null;
+  currency: string;
+};
+
 export function CheckoutForm({ course }: { course: Props }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -38,6 +48,12 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [pricing, setPricing] = useState<Pricing | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       setName((prev) => prev || user.name || "");
@@ -45,6 +61,60 @@ export function CheckoutForm({ course }: { course: Props }) {
       setPhone((prev) => prev || user.phone || "");
     }
   }, [user]);
+
+  const baseAmount =
+    currency === "BDT" ? course.prices?.BDT ?? course.price : course.price;
+
+  const fetchPricing = useCallback(
+    async (code?: string) => {
+      if (!user) return null;
+      const res = await fetch("/api/discounts/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemType: "course",
+          itemId: course.courseId,
+          currency,
+          code: code?.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
+      return data as Pricing;
+    },
+    [user, currency, course.courseId]
+  );
+
+  useEffect(() => {
+    if (isFree || isUpcoming || !user) return;
+    let active = true;
+    fetchPricing(appliedCode ?? undefined)
+      .then((data) => {
+        if (active && data) setPricing(data);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isFree, isUpcoming, user, fetchPricing, appliedCode]);
+
+  const applyCode = async () => {
+    const value = promoCode.trim();
+    if (!value) return;
+    setApplying(true);
+    setPromoError(null);
+    try {
+      const data = await fetchPricing(value);
+      if (data) {
+        setPricing(data);
+        setAppliedCode(value);
+      }
+    } catch (err) {
+      setPromoError(err instanceof Error ? err.message : "Could not apply promo code");
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +143,7 @@ export function CheckoutForm({ course }: { course: Props }) {
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
+          code: appliedCode ?? undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -93,6 +164,9 @@ export function CheckoutForm({ course }: { course: Props }) {
     "w-full rounded-xl border border-line bg-white px-4 py-3 text-[14px] outline-none transition-colors placeholder:text-body/50 focus:border-brand-2 focus:ring-2 focus:ring-brand-2/15";
   const labelClass = "block text-[13px] font-medium mb-1.5";
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
+
+  const displayCurrency = pricing?.currency ?? currency;
+  const hasDiscount = !!pricing && pricing.discount > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -147,6 +221,57 @@ export function CheckoutForm({ course }: { course: Props }) {
             value={currency}
             onChange={setCurrency}
           />
+        </div>
+      )}
+
+      {/* Order summary + promo */}
+      {!isFree && !isUpcoming && (
+        <div>
+          <p className={sectionTitle} style={{ color: "var(--body)" }}>Order summary</p>
+          <div className="space-y-3 rounded-xl border border-line bg-white p-4">
+            <div className="flex items-center justify-between text-[14px]">
+              <span style={{ color: "var(--body)" }}>Subtotal</span>
+              <span style={{ color: "var(--ink)" }}>
+                {formatMoney(pricing?.subtotal ?? baseAmount, displayCurrency)}
+              </span>
+            </div>
+            {hasDiscount && (
+              <div className="flex items-center justify-between text-[14px]" style={{ color: "#1E8E5A" }}>
+                <span>{pricing!.label ?? "Discount"}</span>
+                <span>-{formatMoney(pricing!.discount, displayCurrency)}</span>
+              </div>
+            )}
+            <div
+              className="flex items-center justify-between border-t pt-3 text-[16px] font-bold"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            >
+              <span>Total</span>
+              <span>{formatMoney(pricing?.total ?? baseAmount, displayCurrency)}</span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="Promo code"
+                className="w-full rounded-xl border border-line bg-white px-4 py-2.5 text-[13.5px] uppercase outline-none transition-colors placeholder:text-body/50 focus:border-brand-2 focus:ring-2 focus:ring-brand-2/15"
+                style={{ color: "var(--ink)" }}
+              />
+              <button
+                type="button"
+                onClick={applyCode}
+                disabled={applying || !promoCode.trim()}
+                className="shrink-0 rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-colors disabled:opacity-50"
+                style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+              >
+                {applying ? "Applying…" : "Apply"}
+              </button>
+            </div>
+            {promoError && (
+              <p className="text-[12.5px] font-medium" style={{ color: "#C0392B" }}>{promoError}</p>
+            )}
+          </div>
         </div>
       )}
 

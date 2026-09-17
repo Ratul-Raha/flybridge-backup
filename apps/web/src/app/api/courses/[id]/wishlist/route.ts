@@ -44,7 +44,8 @@ export async function GET(
       email: e.email ?? "",
       phone: e.phone ?? "",
       source: e.source ?? "waitlist",
-      discountPercent: e.discountPercent ?? WISHLIST_DISCOUNT_PERCENT,
+      discountPercent:
+        e.discountPercent ?? course.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT,
       joinedAt: e.createdAt,
     }));
 
@@ -53,6 +54,7 @@ export async function GET(
         id: course._id.toString(),
         title: course.title,
         slug: course.slug,
+        wishlistDiscountPercent: course.wishlistDiscountPercent ?? 0,
       },
       stats: {
         total: rows.length,

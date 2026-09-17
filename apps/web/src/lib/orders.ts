@@ -9,7 +9,8 @@ import { Resource } from "@/lib/models/resource";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
-import { resolveProduct, type Product } from "@/lib/products";
+import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
+import { resolvePrice } from "@/lib/discounts";
 import type { EventPayload } from "@/lib/events/types";
 
 export type OrderUser = {
@@ -33,6 +34,10 @@ function userPayload(u: OrderUser) {
 function serializeOrder(order: OrderDoc) {
   return {
     id: order._id.toString(),
+    subtotal: order.subtotal ?? 0,
+    discountAmount: order.discountAmount ?? 0,
+    discountCode: order.discountCode ?? null,
+    discountLabel: order.discountLabel ?? null,
     total: order.total,
     currency: order.currency,
     status: order.status,
@@ -185,24 +190,14 @@ export async function createOrder(input: {
   itemType: OrderItemType;
   itemId: string;
   currency?: string;
+  code?: string;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
   const product = await resolveProduct(input.itemType, input.itemId);
   if (!product) throw new Error("Product not found");
 
-  let amount = product.price;
-  let currency = product.currency ?? "USD";
-  const target = String(input.currency ?? "").toUpperCase() || "USD";
-  if (target === "BDT") {
-    const bdt = product.prices?.BDT;
-    if (typeof bdt === "number" && Number.isFinite(bdt) && bdt >= 0) {
-      amount = bdt;
-      currency = "BDT";
-    } else {
-      throw new Error("No BDT price is set for this item yet.");
-    }
-  }
+  const { amount, currency } = priceInCurrency(product, input.currency);
 
   if (amount === 0) {
     if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
@@ -218,18 +213,46 @@ export async function createOrder(input: {
     "items.itemId": product.itemId,
     status: { $in: ["completed", "pending"] },
   });
+
+  const resolved = await resolvePrice({
+    user: { id: input.user.id, email: input.user.email },
+    product,
+    amount,
+    currency,
+    code: input.code,
+    excludeOrderId: existing?._id?.toString(),
+  });
+
+  if (resolved.total === 0) {
+    if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
+      return { order: null, requiresPayment: false, duplicate: true };
+    }
+    await fulfillFreeItem(product, input.user);
+    return { order: null, requiresPayment: false, duplicate: false };
+  }
+
   if (existing) {
-    if (
-      existing.status === "pending" &&
-      existing.items[0] &&
-      (existing.total !== amount || existing.items[0].price !== amount)
-    ) {
+    if (existing.status === "pending") {
       const doc = existing as OrderDoc & { save(): Promise<unknown> };
-      doc.items[0].title = product.title;
-      doc.items[0].price = amount;
-      doc.total = amount;
-      doc.currency = currency;
-      await doc.save();
+      const item = doc.items[0];
+      if (
+        item &&
+        (doc.total !== resolved.total ||
+          item.price !== resolved.total ||
+          (doc.subtotal ?? 0) !== resolved.subtotal ||
+          (doc.discountAmount ?? 0) !== resolved.discount)
+      ) {
+        item.title = product.title;
+        item.price = resolved.total;
+        doc.subtotal = resolved.subtotal;
+        doc.discountAmount = resolved.discount;
+        doc.discountId = (resolved.discountId ?? null) as OrderDoc["discountId"];
+        doc.discountCode = resolved.code;
+        doc.discountLabel = resolved.label;
+        doc.total = resolved.total;
+        doc.currency = currency;
+        await doc.save();
+      }
     }
     return {
       order: existing as OrderDoc & { save(): Promise<unknown> },
@@ -246,10 +269,15 @@ export async function createOrder(input: {
         itemType: product.itemType,
         itemId: product.itemId,
         title: product.title,
-        price: amount,
+        price: resolved.total,
       },
     ],
-    total: amount,
+    subtotal: resolved.subtotal,
+    discountAmount: resolved.discount,
+    discountId: resolved.discountId ?? undefined,
+    discountCode: resolved.code ?? undefined,
+    discountLabel: resolved.label ?? undefined,
+    total: resolved.total,
     currency,
     status: "pending",
   });

@@ -36,6 +36,10 @@ type Order = {
   items: OrderItem[];
   total: number;
   currency: string;
+  subtotal: number;
+  discountAmount: number;
+  discountCode: string | null;
+  discountLabel: string | null;
   status: string;
   gateway: string | null;
   createdAt: string;
@@ -731,6 +735,13 @@ export function OrderManage() {
                                 formatMoney(o.total, o.currency)
                               )}
                             </span>
+                            {o.discountAmount > 0 && (
+                              <div className="text-[10.5px] font-medium" style={{ color: EMERALD }}>
+                                {formatMoney(o.subtotal, o.currency)} −{" "}
+                                {formatMoney(o.discountAmount, o.currency)}
+                                {o.discountCode ? ` (${o.discountCode})` : ""}
+                              </div>
+                            )}
                           </td>
                           <td className="px-5 py-3.5">
                             <span

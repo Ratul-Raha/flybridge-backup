@@ -355,6 +355,7 @@ function CourseHero({
   heroCta,
   heroStats,
   waitlistTarget,
+  wishlistDiscountPercent,
 }: {
   slug: string;
   badge: string;
@@ -378,6 +379,7 @@ function CourseHero({
   heroCta?: { label: string; href: string };
   heroStats?: { value: string; label: string }[];
   waitlistTarget: string;
+  wishlistDiscountPercent: number;
 }) {
   const linkHref =
     cta?.enrolled
@@ -541,7 +543,7 @@ function CourseHero({
                 <Gift className="w-[15px] h-[15px]" style={{ color: "#7CF0BD" }} />
                 <span className="text-[13px] font-semibold" style={{ color: "#7CF0BD" }}>
                   <BengaliText>
-                    এখন ওয়েটলিস্টে থাকলে ভর্তির সময় {WISHLIST_DISCOUNT_PERCENT}% ছাড় পাবেন
+                    এখন ওয়েটলিস্টে থাকলে ভর্তির সময় {wishlistDiscountPercent}% ছাড় পাবেন
                   </BengaliText>
                 </span>
               </div>
@@ -1188,11 +1190,13 @@ function FinalCta({
   pricing,
   slug,
   title,
+  wishlistDiscountPercent,
 }: {
   cta: { title: string; desc: string };
   pricing?: PricingSection;
   slug: string;
   title: string;
+  wishlistDiscountPercent: number;
 }) {
   return (
     <section
@@ -1235,7 +1239,7 @@ function FinalCta({
                 <BengaliText>ওয়েটলিস্ট বোনাস</BengaliText>
               </div>
               <div className="font-display text-[16px] font-semibold text-white mt-0.5">
-                <BengaliText>ভর্তি হলে {WISHLIST_DISCOUNT_PERCENT}% ছাড়</BengaliText>
+                <BengaliText>ভর্তি হলে {wishlistDiscountPercent}% ছাড়</BengaliText>
               </div>
               <div className="text-[12.5px] leading-snug mt-0.5" style={{ color: "#B7C4D6" }}>
                 <BengaliText>
@@ -1247,7 +1251,11 @@ function FinalCta({
         </div>
 
         <div className="mt-8">
-          <WaitlistForm slug={slug} title={title} />
+          <WaitlistForm
+            slug={slug}
+            title={title}
+            discountPercent={wishlistDiscountPercent}
+          />
         </div>
 
         {pricing?.includedLine && (
@@ -1804,6 +1812,11 @@ export default async function IeltsFullReadinessLandingPage() {
   const lessonCount = details ? details.modules.reduce((n, m) => n + m.lessons.length, 0) : 30;
   const moduleCount = details ? details.modules.length : 6;
 
+  const wishlistDiscountPercent =
+    course?.wishlistDiscountPercent && course.wishlistDiscountPercent > 0
+      ? course.wishlistDiscountPercent
+      : WISHLIST_DISCOUNT_PERCENT;
+
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {
     const session = await readSession();
@@ -1945,6 +1958,7 @@ export default async function IeltsFullReadinessLandingPage() {
         heroCta={details?.heroCta}
         heroStats={details?.heroStats}
         waitlistTarget={details?.pricing?.ctaHref ?? "#waitlist"}
+        wishlistDiscountPercent={wishlistDiscountPercent}
       />
 
       {details ? (
@@ -2015,7 +2029,13 @@ export default async function IeltsFullReadinessLandingPage() {
           {details.faqs?.length ? <FaqSection faqs={details.faqs} /> : null}
 
           {details.cta && details.pricing && (
-            <FinalCta cta={details.cta} pricing={details.pricing} slug={SLUG} title={details.title} />
+            <FinalCta
+              cta={details.cta}
+              pricing={details.pricing}
+              slug={SLUG}
+              title={details.title}
+              wishlistDiscountPercent={wishlistDiscountPercent}
+            />
           )}
         </>
       ) : (

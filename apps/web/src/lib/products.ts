@@ -17,7 +17,27 @@ export type Product = {
   prices?: CurrencyPrices | null;
   image?: string | null;
   url?: string | null;
+  wishlistDiscountPercent?: number | null;
 };
+
+export function priceInCurrency(
+  product: Product,
+  currency?: string
+): { amount: number; currency: string } {
+  let amount = product.price;
+  let code = product.currency ?? "USD";
+  const target = String(currency ?? "").toUpperCase() || "USD";
+  if (target === "BDT") {
+    const bdt = product.prices?.BDT;
+    if (typeof bdt === "number" && Number.isFinite(bdt) && bdt >= 0) {
+      amount = bdt;
+      code = "BDT";
+    } else {
+      throw new Error("No BDT price is set for this item yet.");
+    }
+  }
+  return { amount, currency: code };
+}
 
 export async function resolveProduct(
   itemType: OrderItemType,
@@ -37,6 +57,7 @@ export async function resolveProduct(
       prices: cleanPrices(c.prices),
       image: c.image ?? null,
       url: `/programs/${c.slug}/learn`,
+      wishlistDiscountPercent: c.wishlistDiscountPercent ?? 0,
     };
   }
 

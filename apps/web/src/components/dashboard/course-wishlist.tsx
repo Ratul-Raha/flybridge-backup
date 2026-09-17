@@ -33,6 +33,7 @@ type CourseInfo = {
   id: string;
   title: string;
   slug: string;
+  wishlistDiscountPercent?: number;
 };
 
 type Stats = {
@@ -276,7 +277,7 @@ export function CourseWishlist({ courseSlug }: { courseSlug: string }) {
           />
           <StatCard
             label="Wishlist discount"
-            value={`${WISHLIST_DISCOUNT_PERCENT}%`}
+            value={`${course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT}%`}
             icon={Gift}
             gradient="linear-gradient(135deg,#2E9E6B,#7CF0BD)"
             caption="Per joiner on launch"

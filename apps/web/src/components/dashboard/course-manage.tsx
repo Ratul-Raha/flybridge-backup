@@ -24,6 +24,7 @@ type Course = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
+  wishlistDiscountPercent?: number;
   image: string | null;
   published: boolean;
   featured: boolean;
@@ -46,6 +47,7 @@ type FormState = {
   price: string;
   bdtPrice: string;
   currency: string;
+  wishlistDiscountPercent: string;
   image: string;
   published: boolean;
   featured: boolean;
@@ -69,6 +71,7 @@ const emptyForm: FormState = {
   price: "",
   bdtPrice: "",
   currency: "USD",
+  wishlistDiscountPercent: "10",
   image: "",
   published: false,
   featured: false,
@@ -133,6 +136,8 @@ export function CourseManage() {
       price: c.price ? String(c.price) : "",
       bdtPrice: c.prices?.BDT ? String(c.prices.BDT) : "",
       currency: c.currency ?? "USD",
+      wishlistDiscountPercent:
+        c.wishlistDiscountPercent != null ? String(c.wishlistDiscountPercent) : "10",
       image: c.image ?? "",
       published: c.published ?? false,
       featured: c.featured ?? false,
@@ -174,6 +179,10 @@ export function CourseManage() {
             USD: Number(form.price) || 0,
             BDT: Number(form.bdtPrice) || 0,
           },
+          wishlistDiscountPercent: Math.max(
+            0,
+            Math.min(100, Number(form.wishlistDiscountPercent) || 0)
+          ),
           modules: form.modules.filter((m) => m.title.trim() || m.lessons.length > 0),
           books: form.books.filter((b) => b.title.trim() && b.pdfUrl),
         }),
@@ -402,6 +411,27 @@ export function CourseManage() {
                 className={inputClass}
                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Waitlist discount (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={form.wishlistDiscountPercent}
+                onChange={(e) =>
+                  setForm({ ...form, wishlistDiscountPercent: e.target.value })
+                }
+                placeholder="e.g. 10"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                Discount for people who join this course&apos;s waitlist.
+              </span>
             </div>
 
             <div className="flex flex-col gap-2 md:col-span-2">

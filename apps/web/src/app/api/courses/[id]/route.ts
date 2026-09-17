@@ -24,6 +24,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   price: "Price",
   currency: "Currency",
   prices: "Prices",
+  wishlistDiscountPercent: "Wishlist discount",
   image: "Image",
   published: "Published",
   featured: "Featured",
@@ -88,6 +89,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
     const prices = sanitizePrices(body.prices);
     if (prices) course.prices = prices;
+    if (typeof body.wishlistDiscountPercent === "number") {
+      course.wishlistDiscountPercent = Math.max(
+        0,
+        Math.min(100, body.wishlistDiscountPercent)
+      );
+    }
     if (typeof body.image === "string") course.image = body.image.trim() || undefined;
     if (typeof body.published === "boolean") course.published = body.published;
     if (typeof body.featured === "boolean") course.featured = body.featured;

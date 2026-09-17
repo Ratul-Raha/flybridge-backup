@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
+    const discountPercent = course?.wishlistDiscountPercent ?? WISHLIST_DISCOUNT_PERCENT;
+
     const user = await User.findById(session.userId).select("name email phone");
     const name = user?.name?.trim() || session.name?.trim() || "Student";
     const email = user?.email?.toLowerCase() || session.email?.toLowerCase() || "";
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       if (name && entry.name !== name) update.name = name;
       if (email && entry.email !== email) update.email = email;
       if (phone && entry.phone !== phone) update.phone = phone;
-      if (!entry.discountPercent) update.discountPercent = WISHLIST_DISCOUNT_PERCENT;
+      if (entry.discountPercent !== discountPercent) update.discountPercent = discountPercent;
       if (Object.keys(update).length) {
         await CourseWishlist.updateOne({ _id: entry._id }, { $set: update });
       }
@@ -82,14 +84,14 @@ export async function POST(request: NextRequest) {
         email: email || undefined,
         phone: phone || undefined,
         source,
-        discountPercent: WISHLIST_DISCOUNT_PERCENT,
+        discountPercent,
       });
     }
 
     return NextResponse.json(
       {
         alreadyJoined,
-        discountPercent: entry.discountPercent ?? WISHLIST_DISCOUNT_PERCENT,
+        discountPercent: entry.discountPercent ?? discountPercent,
         entry: {
           id: entry._id.toString(),
           name: entry.name,

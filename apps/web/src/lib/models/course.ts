@@ -52,6 +52,7 @@ const courseSchema = new Schema(
     price: { type: Number, min: 0, default: 0 },
     currency: { type: String, default: "USD", trim: true },
     prices: { type: pricesSchema },
+    wishlistDiscountPercent: { type: Number, min: 0, max: 100, default: 10 },
     image: { type: String, trim: true },
     published: { type: Boolean, default: false, index: true },
     featured: { type: Boolean, default: false },

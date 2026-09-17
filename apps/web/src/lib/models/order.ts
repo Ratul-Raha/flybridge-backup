@@ -21,6 +21,11 @@ const orderSchema = new Schema(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     email: { type: String, lowercase: true, trim: true, index: true },
     items: { type: [orderItemSchema], default: [] },
+    subtotal: { type: Number, min: 0, default: 0 },
+    discountAmount: { type: Number, min: 0, default: 0 },
+    discountId: { type: Schema.Types.ObjectId, ref: "Discount", default: null, index: true },
+    discountCode: { type: String, trim: true, uppercase: true },
+    discountLabel: { type: String, trim: true },
     total: { type: Number, min: 0, default: 0 },
     currency: { type: String, default: "USD", trim: true },
     status: {
