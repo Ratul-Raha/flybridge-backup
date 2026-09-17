@@ -14,6 +14,7 @@ import { CourseReview } from "@/lib/models/course-review";
 import { readSession } from "@/lib/auth/session";
 import {
   BookOpen,
+  CalendarDays,
   Check,
   ChevronDown,
   Clock,
@@ -22,7 +23,6 @@ import {
   Gift,
   GraduationCap,
   Lock,
-  Mic,
   ShieldCheck,
   Star,
   Target,
@@ -541,7 +541,7 @@ function CourseHero({
                 <Gift className="w-[15px] h-[15px]" style={{ color: "#7CF0BD" }} />
                 <span className="text-[13px] font-semibold" style={{ color: "#7CF0BD" }}>
                   <BengaliText>
-                    এখন ওয়েটলিস্টে থাকলে ভর্তির সময় {WISHLIST_DISCOUNT_PERCENT}% ছাড় পাবে
+                    এখন ওয়েটলিস্টে থাকলে ভর্তির সময় {WISHLIST_DISCOUNT_PERCENT}% ছাড় পাবেন
                   </BengaliText>
                 </span>
               </div>
@@ -549,9 +549,9 @@ function CourseHero({
 
             <div className="flex items-center gap-5 mt-6 flex-wrap text-[13px] font-medium" style={{ color: "#8CA0B8" }}>
               {[
-                { icon: Zap, label: "ভর্তির পরই অ্যাক্সেস" },
-                { icon: Mic, label: "লাইভে প্রশ্ন করা যাবে" },
-                { icon: ShieldCheck, label: "সার্টিফিকেট থাকছে" },
+                { icon: Zap, label: "ইনস্ট্যান্ট ফুল অ্যাক্সেস" },
+                { icon: FileText, label: "ওয়েবসাইটেই মক এক্সাম" },
+                { icon: CalendarDays, label: "১ বছরের সম্পূর্ণ অ্যাক্সেস" },
               ].map((t) => (
                 <span key={t.label} className="inline-flex items-center gap-1.5">
                   <t.icon className="w-[14px] h-[14px]" style={{ color: "#7CF0BD" }} strokeWidth={2} />
@@ -609,7 +609,7 @@ function StepsSection({ steps }: { steps: StepsSection }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]">
       <div className="max-w-[1320px] mx-auto">
-        <SectionIntro kicker="কোর্সটা যেভাবে চলবে" title={steps.title} align="center" />
+        <SectionIntro kicker="যেভাবে কাজ করে Band Score Machine" title={steps.title} align="center" />
         <div className="grid md:grid-cols-3 gap-6 mt-10">
           {steps.cards.map((card, i) => {
             const Icon = STEP_ICONS[i % STEP_ICONS.length];
@@ -718,8 +718,8 @@ function OutcomesSection({ details }: { details: CourseDetails }) {
       <div className="max-w-[1320px] mx-auto">
         <SectionIntro
           kicker="কোর্স শেষে"
-          title="পরীক্ষার দিন তুমি প্রস্তুত থাকবে"
-          desc="কোর্স শেষে এই জিনিসগুলো আত্মবিশ্বাসের সাথে করতে পারবে।"
+          title="পরীক্ষার দিন আপনি প্রস্তুত থাকবেন"
+          desc="কোর্স শেষে এই জিনিসগুলো আত্মবিশ্বাসের সাথে করতে পারবেন:"
           align="center"
         />
         <div className="grid sm:grid-cols-2 gap-4 mt-10">
@@ -765,7 +765,7 @@ function BookSection({ book }: { book: CourseBook }) {
             className="font-display font-semibold leading-[1.35]"
             style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
           >
-            <BengaliText>প্রতিটা লেসন সাথে বইয়েও পাবে</BengaliText>
+            <BengaliText>প্রতিটা লেসন সাথে বইয়েও পাবেন</BengaliText>
           </h2>
           <p className="mt-5 text-[15.5px] leading-[1.85]" style={{ color: "var(--body)" }}>
             <BengaliText>{book.desc}</BengaliText>
@@ -774,8 +774,8 @@ function BookSection({ book }: { book: CourseBook }) {
             {[
               "প্রতিটা ভিডিও লেসনের সাথে মিলিয়ে লেখা",
               "মডেল আনসার আর প্র্যাকটিস টেস্ট সহ",
-              "মোবাইলে পড়ার জন্য বানানো",
-              "একবার কিনলে সারাজীবনের জন্য তোমার",
+              "মোবাইলে পড়ার জন্য বিশেষ উপযোগী",
+              "১ বছরের জন্য আপনার অ্যাকাউন্টে থাকবে",
             ].map((t) => (
               <div key={t} className="flex items-center gap-3 text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
                 {check}
@@ -1011,7 +1011,7 @@ function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1000px] mx-auto">
-        <SectionIntro kicker="তুলনা করে দেখো" title={comparison.title} align="center" />
+        <SectionIntro kicker="তুলনা করে দেখুন" title={comparison.title} align="center" />
         <div className="fb-reveal rounded-[16px] overflow-hidden mt-4" style={{ background: "#fff", border: "1px solid var(--line)", boxShadow: "0 24px 60px -32px rgba(11,37,69,0.35)" }}>
           <div className="grid grid-cols-2">
             <div className="px-6 md:px-8 py-6" style={{ background: "#F8FAFC", borderRight: "1px solid var(--line)" }}>
@@ -1239,7 +1239,7 @@ function FinalCta({
               </div>
               <div className="text-[12.5px] leading-snug mt-0.5" style={{ color: "#B7C4D6" }}>
                 <BengaliText>
-                  শুধু যারা এখন ওয়েটলিস্টে আছে, তারাই এই ছাড় পাবে।
+                  শুধু যারা এখন ওয়েটলিস্টে আছেন, তারাই এই ছাড় পাবেন।
                 </BengaliText>
               </div>
             </div>
@@ -1268,7 +1268,7 @@ function RelatedProgramsSection({ programs }: { programs: RelatedProgramLanding[
         <div className="flex items-end justify-between gap-4 flex-wrap mb-11">
           <div>
             <div className="text-[13px] font-semibold mb-2" style={{ color: "var(--brand-2)" }}>
-              <BengaliText>আরও দেখতে পারো</BengaliText>
+              <BengaliText>আরও দেখতে পারবেন</BengaliText>
             </div>
             <h2
               className="font-display font-semibold leading-[1.2]"
@@ -1282,7 +1282,7 @@ function RelatedProgramsSection({ programs }: { programs: RelatedProgramLanding[
             className="view-all font-semibold text-[13.5px] inline-flex items-center gap-[6px] shrink-0 mb-[3px]"
             style={{ color: "var(--brand-2)" }}
           >
-            সব দেখো
+            সব দেখুন
             <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none">
               <path
                 d="M5 12H19M19 12L13 6M19 12L13 18"
