@@ -42,7 +42,7 @@ import {
   type PricingSection,
   type StepsSection,
   type TargetBand,
-} from "../../[slug]/course-data";
+} from "../programs/[slug]/course-data";
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
@@ -88,7 +88,7 @@ export async function generateMetadata(): Promise<Metadata> {
         type: "article",
         title,
         description,
-        url: `/programs/${SLUG}/landing`,
+        url: `/${SLUG}`,
         images: image ? [{ url: image }] : undefined,
       },
       twitter: {
@@ -103,12 +103,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Course | FlyBridge",
   };
 }
-
-const play = (
-  <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
-    <path d="M6 4L20 12L6 20V4Z" fill="currentColor" />
-  </svg>
-);
 
 const arrow = (
   <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none">
@@ -154,31 +148,37 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
   );
 }
 
-function SectionHeading({
-  eyebrow,
+/**
+ * Section intro — a short, specific line rather than a tracked ALL-CAPS
+ * eyebrow over every heading. Varies its own visual weight so the page
+ * doesn't read as one repeated template block per section.
+ */
+function SectionIntro({
+  kicker,
   title,
   desc,
+  align = "left",
 }: {
-  eyebrow: string;
+  kicker?: string;
   title: string;
   desc?: string;
+  align?: "left" | "center";
 }) {
   return (
-    <div className="mb-7">
-      <div
-        className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[10px]"
-        style={{ color: "var(--brand-2)" }}
-      >
-        {eyebrow}
-      </div>
+    <div className={`mb-8 ${align === "center" ? "text-center mx-auto" : ""}`} style={align === "center" ? { maxWidth: 620 } : undefined}>
+      {kicker && (
+        <div className="text-[13.5px] font-semibold mb-3" style={{ color: "var(--brand-2)" }}>
+          <BengaliText>{kicker}</BengaliText>
+        </div>
+      )}
       <h2
         className="font-semibold tracking-[-0.01em]"
-        style={{ fontSize: "clamp(24px,2.6vw,30px)", color: "var(--ink)" }}
+        style={{ fontSize: "clamp(24px,2.6vw,32px)", color: "var(--ink)" }}
       >
         <BengaliText>{title}</BengaliText>
       </h2>
       {desc && (
-        <p className="text-[15px] mt-2 max-w-[560px]" style={{ color: "var(--body)" }}>
+        <p className="text-[15px] mt-3 leading-[1.75]" style={{ color: "var(--body)", maxWidth: 560, marginInline: align === "center" ? "auto" : undefined }}>
           <BengaliText>{desc}</BengaliText>
         </p>
       )}
@@ -218,38 +218,39 @@ function Pill({
 function TargetBadge({ targetBand }: { targetBand: TargetBand }) {
   return (
     <div
-      className="relative w-[196px] h-[196px] rounded-full flex items-center justify-center shrink-0 mx-auto"
+      className="relative w-[200px] h-[200px] rounded-full flex items-center justify-center shrink-0 mx-auto"
       style={{
         background:
-          "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
-        border: "1.5px solid rgba(124,240,189,0.45)",
-        boxShadow: "0 30px 60px -28px rgba(8,11,16,0.85)",
+          "conic-gradient(from 220deg, #2E9E6B, #1F5C8A 45%, #0B2545 75%, #2E9E6B)",
+        padding: 3,
       }}
     >
       <div
-        className="absolute inset-[10px] rounded-full"
-        style={{ border: "1px solid rgba(124,240,189,0.22)" }}
-      />
-      <div className="absolute inset-[-14px] rounded-full" style={{ border: "1px solid rgba(124,240,189,0.1)" }} />
-      <div className="text-center">
-        <div
-          className="font-mono text-[10px] font-bold tracking-[0.24em]"
-          style={{ color: "#8CA0B8" }}
-        >
-          <BengaliText>{targetBand.label}</BengaliText>
-        </div>
-        <div className="font-display text-[40px] font-semibold text-white leading-tight mt-[4px]">
-          {targetBand.value}
-        </div>
-        <div
-          className="mx-auto my-[9px] h-px w-9"
-          style={{ background: "rgba(255,255,255,0.22)" }}
-        />
-        <div
-          className="font-mono text-[10px] tracking-[0.2em]"
-          style={{ color: "#8CA0B8" }}
-        >
-          <BengaliText>{targetBand.sub}</BengaliText>
+        className="w-full h-full rounded-full flex items-center justify-center"
+        style={{
+          background: "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
+        }}
+      >
+        <div className="text-center">
+          <div
+            className="text-[10px] font-semibold tracking-[0.12em]"
+            style={{ color: "#8CA0B8" }}
+          >
+            <BengaliText>{targetBand.label}</BengaliText>
+          </div>
+          <div className="font-display text-[42px] font-semibold text-white leading-tight mt-[2px]">
+            {targetBand.value}
+          </div>
+          <div
+            className="mx-auto my-[10px] h-px w-9"
+            style={{ background: "rgba(255,255,255,0.22)" }}
+          />
+          <div
+            className="text-[10.5px] tracking-[0.05em]"
+            style={{ color: "#8CA0B8" }}
+          >
+            <BengaliText>{targetBand.sub}</BengaliText>
+          </div>
         </div>
       </div>
     </div>
@@ -279,28 +280,28 @@ function SnapshotCard({
   moduleCount: number;
 }) {
   const rows: { icon: typeof GraduationCap; label: string; value: string }[] = [
-    { icon: FACILITY_ICONS.lvl, label: "LEVEL", value: level },
-    { icon: FACILITY_ICONS.lang, label: "LANGUAGE", value: language },
-    { icon: FACILITY_ICONS.pace, label: "PACE", value: pace },
-    ...(access ? [{ icon: FACILITY_ICONS.access, label: "ACCESS", value: access }] : []),
+    { icon: FACILITY_ICONS.lvl, label: "লেভেল", value: level },
+    { icon: FACILITY_ICONS.lang, label: "মাধ্যম", value: language },
+    { icon: FACILITY_ICONS.pace, label: "গতি", value: pace },
+    ...(access ? [{ icon: FACILITY_ICONS.access, label: "অ্যাক্সেস", value: access }] : []),
     {
       icon: FileText,
-      label: "CONTENT",
-      value: `${moduleCount} modules · ${lessonCount} lessons`,
+      label: "মোট কনটেন্ট",
+      value: `${moduleCount} মডিউল · ${lessonCount} লেসন`,
     },
   ].filter((r) => Boolean(r.value));
 
   return (
     <div
-      className="w-full max-w-[400px] mx-auto rounded-[14px] p-5"
+      className="w-full max-w-[400px] mx-auto rounded-[16px] p-5"
       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
     >
-      <div className="flex items-center justify-between px-1 mb-3">
-        <span className="font-mono text-[10px] font-semibold tracking-[0.28em]" style={{ color: "#8CA0B8" }}>
-          COURSE SNAPSHOT
+      <div className="flex items-center justify-between px-1 mb-3.5">
+        <span className="text-[12px] font-semibold" style={{ color: "#8CA0B8" }}>
+          <BengaliText>কোর্সের ভেতরে</BengaliText>
         </span>
-        <span className="font-display text-[9.5px] text-white/90 border border-white/15 rounded-full px-2.5 py-[3px]">
-          {lessonCount} LESSONS
+        <span className="text-[11px] text-white/90 border border-white/15 rounded-full px-2.5 py-[3px]">
+          <BengaliText>{lessonCount} লেসন</BengaliText>
         </span>
       </div>
       <div className="flex flex-col gap-2.5">
@@ -317,8 +318,8 @@ function SnapshotCard({
               <r.icon className="w-[15px] h-[15px]" style={{ color: "var(--brand-2)" }} strokeWidth={1.9} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-mono text-[8.5px] font-semibold tracking-[0.24em]" style={{ color: "#64748B" }}>
-                {r.label}
+              <span className="block text-[10.5px]" style={{ color: "#64748B" }}>
+                <BengaliText>{r.label}</BengaliText>
               </span>
               <span className="block text-[13px] font-medium truncate" style={{ color: "#E6EDF5" }}>
                 <BengaliText>{r.value}</BengaliText>
@@ -433,8 +434,8 @@ function CourseHero({
               </div>
             )}
 
-            <p className="font-mono text-[11.5px] font-medium tracking-[0.35em] mb-[14px]" style={{ color: "#7CF0BD" }}>
-              {badge.toUpperCase()} · COURSE
+            <p className="text-[13px] font-medium mb-[14px]" style={{ color: "#7CF0BD" }}>
+              {badge}
             </p>
 
             <h1
@@ -465,7 +466,7 @@ function CourseHero({
                   {rating.average}
                 </span>
                 <span className="font-medium underline underline-offset-2" style={{ color: "#8CA0B8" }}>
-                  ({rating.count} reviews)
+                  <BengaliText>({rating.count} জন লিখেছে)</BengaliText>
                 </span>
               </a>
             )}
@@ -482,7 +483,7 @@ function CourseHero({
                 )}
                 {savings && (
                   <span className="text-[12px] font-bold rounded-md px-2.5 py-1" style={{ background: "#2E9E6B", color: "#052117" }}>
-                    {savings} OFF
+                    <BengaliText>{savings} সাশ্রয়</BengaliText>
                   </span>
                 )}
               </div>
@@ -499,8 +500,8 @@ function CourseHero({
                   className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
                   style={{ background: "var(--brand)", color: "#052117" }}
                 >
-                  Open Player
-                  {play}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4L20 12L6 20V4Z" /></svg>
+                  ক্লাসে ফিরে যাও
                 </Link>
               ) : cta?.hasDb ? (
                 <Link
@@ -508,7 +509,7 @@ function CourseHero({
                   className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[30px] py-[15px]"
                   style={{ background: "var(--brand)", color: "#052117" }}
                 >
-                  Enroll now
+                  <BengaliText>এখনই ভর্তি হও</BengaliText>
                   {arrow}
                 </Link>
               ) : (
@@ -518,7 +519,7 @@ function CourseHero({
                     className="browse-btn inline-flex items-center justify-center gap-2.5 font-bold text-[15.5px] rounded-full px-[30px] py-[15px]"
                     style={{ background: "var(--brand)", color: "#052117", boxShadow: "0 14px 30px -12px rgba(46,158,107,0.7)" }}
                   >
-                    <BengaliText>{heroCta?.label ?? "Join the waitlist"}</BengaliText>
+                    <BengaliText>{heroCta?.label ?? "ওয়েটলিস্টে নাম লেখাও"}</BengaliText>
                     {arrow}
                   </Link>
                   <a
@@ -526,7 +527,7 @@ function CourseHero({
                     className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[14px] transition-colors duration-200 hover:bg-white/10"
                     style={{ border: "1.5px solid rgba(255,255,255,0.35)", color: "#fff" }}
                   >
-                    <BengaliText>কোর্সে কী কী আছে দেখো</BengaliText>
+                    <BengaliText>কোর্সে কী পড়ানো হবে</BengaliText>
                   </a>
                 </>
               )}
@@ -540,19 +541,21 @@ function CourseHero({
                 <Gift className="w-[15px] h-[15px]" style={{ color: "#7CF0BD" }} />
                 <span className="text-[13px] font-semibold" style={{ color: "#7CF0BD" }}>
                   <BengaliText>
-                    ওয়েটলিস্টে জয়েন করলেই {WISHLIST_DISCOUNT_PERCENT}% ছাড়
+                    এখন ওয়েটলিস্টে থাকলে ভর্তির সময় {WISHLIST_DISCOUNT_PERCENT}% ছাড় পাবে
                   </BengaliText>
                 </span>
               </div>
             )}
 
-            <div className="flex items-center gap-4 mt-6 flex-wrap text-[13px] font-medium" style={{ color: "#8CA0B8" }}>
-              {["Instant access", "Live support", "Verified certificate"].map((t) => (
-                <span key={t} className="inline-flex items-center gap-1.5">
-                  <span className="w-[16px] h-[16px] rounded-full flex items-center justify-center" style={{ background: "rgba(124,240,189,0.14)" }}>
-                    <Check className="w-[9px] h-[9px]" strokeWidth={3.5} style={{ color: "#7CF0BD" }} />
-                  </span>
-                  {t}
+            <div className="flex items-center gap-5 mt-6 flex-wrap text-[13px] font-medium" style={{ color: "#8CA0B8" }}>
+              {[
+                { icon: Zap, label: "ভর্তির পরই অ্যাক্সেস" },
+                { icon: Mic, label: "লাইভে প্রশ্ন করা যাবে" },
+                { icon: ShieldCheck, label: "সার্টিফিকেট থাকছে" },
+              ].map((t) => (
+                <span key={t.label} className="inline-flex items-center gap-1.5">
+                  <t.icon className="w-[14px] h-[14px]" style={{ color: "#7CF0BD" }} strokeWidth={2} />
+                  <BengaliText>{t.label}</BengaliText>
                 </span>
               ))}
             </div>
@@ -575,7 +578,7 @@ function CourseHero({
         {/* Stats cards */}
         {heroStats?.length ? (
           <div className="mt-[56px] grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {heroStats.map((stat, i) => (
+            {heroStats.map((stat) => (
               <div
                 key={stat.label}
                 className="fb-reveal relative rounded-[14px] px-6 py-[24px] overflow-hidden transition-transform duration-300 hover:-translate-y-1.5"
@@ -585,16 +588,6 @@ function CourseHero({
                   backdropFilter: "blur(4px)",
                 }}
               >
-                <span
-                  className="absolute top-0 left-0 right-0 h-[3px]"
-                  style={{ background: "linear-gradient(90deg, #2E9E6B, #7CF0BD)" }}
-                />
-                <div
-                  className="font-mono text-[9px] font-bold tracking-[0.26em] mb-3"
-                  style={{ color: "#5B6B7F" }}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </div>
                 <div className="font-display text-[34px] font-semibold leading-none" style={{ color: "#7CF0BD" }}>
                   {stat.value}
                 </div>
@@ -616,46 +609,39 @@ function StepsSection({ steps }: { steps: StepsSection }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]">
       <div className="max-w-[1320px] mx-auto">
-        <div className="text-center max-w-[720px] mx-auto mb-14">
-          <Pill tone="green">কেমন কাজ করে</Pill>
-          <h2
-            className="font-display font-semibold leading-[1.35] mt-6"
-            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
-          >
-            <BengaliText>{steps.title}</BengaliText>
-          </h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <SectionIntro kicker="কোর্সটা যেভাবে চলবে" title={steps.title} align="center" />
+        <div className="grid md:grid-cols-3 gap-6 mt-10">
           {steps.cards.map((card, i) => {
             const Icon = STEP_ICONS[i % STEP_ICONS.length];
+            const isLast = i === steps.cards.length - 1;
             return (
-              <div
-                key={card.title}
-                className="fb-card fb-reveal rounded-[14px] p-8"
-                style={{
-                  border: "1px solid var(--line)",
-                  background: "#fff",
-                  boxShadow: "0 1px 2px rgba(16,24,40,0.04), 0 18px 44px -26px rgba(11,37,69,0.35)",
-                }}
-              >
-                <span
-                  className="inline-flex items-center justify-center rounded-lg px-3 py-2 font-mono text-[11px] font-bold tracking-[0.2em] mb-6"
-                  style={{ background: "rgba(46,158,107,0.1)", color: "#0A3D2E" }}
+              <div key={card.title} className="relative">
+                <div
+                  className="fb-card fb-reveal rounded-[16px] p-8 h-full"
+                  style={{
+                    border: "1px solid var(--line)",
+                    background: "#fff",
+                  }}
                 >
-                  STEP 0{i + 1}
-                </span>
-                <span
-                  className="w-[50px] h-[50px] rounded-xl flex items-center justify-center mb-6"
-                  style={{ background: "rgba(46,158,107,0.1)" }}
-                >
-                  <Icon className="w-[24px] h-[24px]" strokeWidth={1.8} style={{ color: "#0A3D2E" }} />
-                </span>
-                <h3 className="font-display text-[18px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                  <BengaliText>{card.title}</BengaliText>
-                </h3>
-                <p className="mt-3 text-[14px] leading-[1.75]" style={{ color: "var(--body)" }}>
-                  <BengaliText>{card.desc}</BengaliText>
-                </p>
+                  <div className="flex items-center gap-4 mb-6">
+                    <span
+                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 font-display font-semibold text-[16px]"
+                      style={{ background: "rgba(46,158,107,0.1)", color: "#0A3D2E" }}
+                    >
+                      {i + 1}
+                    </span>
+                    <Icon className="w-[20px] h-[20px]" strokeWidth={1.8} style={{ color: "var(--brand-2)" }} />
+                  </div>
+                  <h3 className="font-display text-[18px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
+                    <BengaliText>{card.title}</BengaliText>
+                  </h3>
+                  <p className="mt-3 text-[14px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                    <BengaliText>{card.desc}</BengaliText>
+                  </p>
+                </div>
+                {!isLast && (
+                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px" style={{ background: "var(--line)" }} />
+                )}
               </div>
             );
           })}
@@ -675,25 +661,17 @@ function FeaturesSection({
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] pb-[76px]">
       <div className="max-w-[1320px] mx-auto">
-        <div className="text-center max-w-[720px] mx-auto mb-14">
-          <Pill tone="green">সাথে কী কী পাবে</Pill>
-          <h2
-            className="font-display font-semibold leading-[1.3] mt-6"
-            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
-          >
-            <BengaliText>একটাই প্যাকেজে সবকিছু</BengaliText>
-          </h2>
-          {desc && (
-            <p className="mt-4 text-[15px] leading-[1.8]" style={{ color: "var(--body)" }}>
-              <BengaliText>{desc}</BengaliText>
-            </p>
-          )}
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <SectionIntro
+          kicker="কোর্সের ভেতরে যা যা থাকছে"
+          title="একবার এনরোল করলেই সবকিছু একসাথে"
+          desc={desc}
+          align="center"
+        />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
           {features.map(({ icon: Icon, title, desc: fdesc }) => (
             <div
               key={title}
-              className="fb-card fb-reveal rounded-[14px] p-7"
+              className="fb-card fb-reveal rounded-[16px] p-7"
               style={{ border: "1px solid var(--line)", background: "#fff" }}
             >
               <span
@@ -719,10 +697,9 @@ function FeaturesSection({
 function ProblemSection({ problem }: { problem: { title: string; desc: string } }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
-      <div className="max-w-[840px] mx-auto text-center">
-        <Pill tone="green">সমস্যাটা আসলে কী</Pill>
+      <div className="max-w-[760px] mx-auto text-center">
         <h2
-          className="font-display font-semibold leading-[1.4] mt-8"
+          className="font-display font-semibold leading-[1.4]"
           style={{ fontSize: "clamp(24px,2.9vw,34px)", color: "var(--ink)" }}
         >
           <BengaliText>{problem.title}</BengaliText>
@@ -735,39 +712,29 @@ function ProblemSection({ problem }: { problem: { title: string; desc: string } 
   );
 }
 
-const OUTCOME_CHECK = (
-  <span
-    className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 mt-[2px]"
-    style={{ background: "rgba(46,158,107,0.12)" }}
-  >
-    <Check className="w-[13px] h-[13px]" strokeWidth={3} style={{ color: "#0A3D2E" }} />
-  </span>
-);
-
 function OutcomesSection({ details }: { details: CourseDetails }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]" style={{ background: "#fff" }}>
       <div className="max-w-[1320px] mx-auto">
-        <div className="text-center max-w-[720px] mx-auto mb-14">
-          <Pill tone="green">কোর্স শেষে যা পারবে</Pill>
-          <h2
-            className="font-display font-semibold leading-[1.3] mt-6"
-            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
-          >
-            <BengaliText>পরীক্ষার দিন তুমি প্রস্তুত</BengaliText>
-          </h2>
-          <p className="mt-4 text-[15px]" style={{ color: "var(--body)" }}>
-            <BengaliText>Course outcomes — কোর্স শেষে তুমি যা যা করতে পারবে</BengaliText>
-          </p>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <SectionIntro
+          kicker="কোর্স শেষে"
+          title="পরীক্ষার দিন তুমি প্রস্তুত থাকবে"
+          desc="কোর্স শেষে এই জিনিসগুলো আত্মবিশ্বাসের সাথে করতে পারবে।"
+          align="center"
+        />
+        <div className="grid sm:grid-cols-2 gap-4 mt-10">
           {details.outcomes.map((o) => (
             <div
               key={o.title}
               className="fb-card fb-reveal flex items-start gap-4 rounded-xl px-6 py-5"
               style={{ border: "1px solid var(--line)", background: "#fff" }}
             >
-              {OUTCOME_CHECK}
+              <span
+                className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 mt-[2px]"
+                style={{ background: "rgba(46,158,107,0.12)" }}
+              >
+                <Check className="w-[13px] h-[13px]" strokeWidth={3} style={{ color: "#0A3D2E" }} />
+              </span>
               <div>
                 <div className="text-[14.5px] font-medium leading-[1.6]" style={{ color: "var(--ink)" }}>
                   <BengaliText>{o.title}</BengaliText>
@@ -791,22 +758,24 @@ function BookSection({ book }: { book: CourseBook }) {
     <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1120px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-14 items-center">
         <div>
-          <Pill tone="green">নতুন সংযোজন</Pill>
+          <div className="text-[13.5px] font-semibold mb-3" style={{ color: "var(--brand-2)" }}>
+            <BengaliText>বোনাস</BengaliText>
+          </div>
           <h2
-            className="font-display font-semibold leading-[1.35] mt-6"
+            className="font-display font-semibold leading-[1.35]"
             style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
           >
-            <BengaliText>প্রতিটা লেসন, কাগজেও পাবে</BengaliText>
+            <BengaliText>প্রতিটা লেসন সাথে বইয়েও পাবে</BengaliText>
           </h2>
           <p className="mt-5 text-[15.5px] leading-[1.85]" style={{ color: "var(--body)" }}>
             <BengaliText>{book.desc}</BengaliText>
           </p>
           <div className="mt-7 flex flex-col gap-3">
             {[
-              "প্রতিটা ভিডিও লেসনের সাথে মিলিয়ে বানানো",
-              "সম্পূর্ণ মডেল আনসার আর ফুল প্র্যাকটিস টেস্ট",
-              "মোবাইলে পড়ার জন্য পারফেক্ট ডিজাইন",
-              "একবার কিনলেই চিরকালের জন্য তোমার",
+              "প্রতিটা ভিডিও লেসনের সাথে মিলিয়ে লেখা",
+              "মডেল আনসার আর প্র্যাকটিস টেস্ট সহ",
+              "মোবাইলে পড়ার জন্য বানানো",
+              "একবার কিনলে সারাজীবনের জন্য তোমার",
             ].map((t) => (
               <div key={t} className="flex items-center gap-3 text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
                 {check}
@@ -827,17 +796,14 @@ function BookSection({ book }: { book: CourseBook }) {
 
         {/* Book cover art */}
         <div className="fb-float relative w-full max-w-[360px] mx-auto h-[440px]">
-          {/* ambient glow */}
           <div
             className="absolute -inset-6 rounded-[28px]"
             style={{ background: "radial-gradient(ellipse at 55% 35%, rgba(46,158,107,0.26), transparent 70%)" }}
           />
-          {/* ground shadow */}
           <div
             className="absolute left-[46px] right-[-6px] bottom-[-20px] h-10 rounded-full"
             style={{ background: "rgba(11,37,69,0.3)", filter: "blur(20px)" }}
           />
-          {/* page edges */}
           <div
             className="absolute top-[16px] bottom-[16px] right-[20px] w-[20px] rounded-r-[6px]"
             style={{ background: "linear-gradient(90deg,#E9E3D7,#FDFAF1)", boxShadow: "-8px 0 16px rgba(11,37,69,0.16)" }}
@@ -846,7 +812,6 @@ function BookSection({ book }: { book: CourseBook }) {
             className="absolute top-[10px] bottom-[10px] right-[32px] w-[8px] rounded-r-[3px]"
             style={{ background: "linear-gradient(90deg,#D8D0C0,#EFE9DC)" }}
           />
-          {/* back cover */}
           <div
             className="absolute inset-0 rounded-[10px]"
             style={{
@@ -855,7 +820,6 @@ function BookSection({ book }: { book: CourseBook }) {
               transform: "translate(10px,12px)",
             }}
           />
-          {/* front cover */}
           <div
             className="absolute inset-0 flex flex-col overflow-hidden rounded-[10px]"
             style={{
@@ -864,24 +828,22 @@ function BookSection({ book }: { book: CourseBook }) {
               boxShadow: "0 36px 80px -26px rgba(11,37,69,0.6)",
             }}
           >
-            {/* spine */}
             <div
               className="absolute top-0 bottom-0 left-0 w-[26px] flex items-center justify-center"
               style={{ background: "linear-gradient(180deg,#081527,#05080D)", borderRight: "1px solid rgba(124,240,189,0.16)" }}
             >
               <span
-                className="font-mono text-[8px] font-bold tracking-[0.3em]"
+                className="text-[8px] font-bold tracking-[0.2em]"
                 style={{ color: "#7CF0BD", writingMode: "vertical-rl" }}
               >
                 FLYBRIDGE EDUCATION GROUP
               </span>
             </div>
 
-            {/* cover content */}
             <div className="flex-1 flex flex-col pl-[40px] pr-6 pt-6 pb-6">
               <div className="flex items-center gap-2">
                 <span className="w-[26px] h-[5px] rounded-full" style={{ background: "linear-gradient(90deg,#2E9E6B,#7CF0BD)" }} />
-                <span className="font-mono text-[9px] font-bold tracking-[0.24em]" style={{ color: "#7CF0BD" }}>
+                <span className="text-[10px] font-bold tracking-[0.14em]" style={{ color: "#7CF0BD" }}>
                   FLYBRIDGE
                 </span>
               </div>
@@ -889,7 +851,7 @@ function BookSection({ book }: { book: CourseBook }) {
                 <BengaliText>{book.title}</BengaliText>
               </div>
               <div className="text-[12.5px] mt-2" style={{ color: "#8CA0B8" }}>
-                <BengaliText>সম্পূর্ণ Companion বই</BengaliText>
+                <BengaliText>সম্পূর্ণ প্র্যাকটিস বই</BengaliText>
               </div>
 
               <div className="mt-auto">
@@ -898,14 +860,13 @@ function BookSection({ book }: { book: CourseBook }) {
                   style={{ background: "rgba(46,158,107,0.12)", border: "1px solid rgba(46,158,107,0.3)" }}
                 >
                   <span className="w-[6px] h-[6px] rounded-full" style={{ background: "#7CF0BD" }} />
-                  <span className="font-mono text-[8.5px] font-bold tracking-[0.22em]" style={{ color: "#7CF0BD" }}>
-                    INCLUDED WITH EVERY PLAN
+                  <span className="text-[10.5px] font-semibold" style={{ color: "#7CF0BD" }}>
+                    <BengaliText>প্রতিটা প্ল্যানের সাথে ফ্রি</BengaliText>
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* bottom band */}
             <div className="h-[5px] w-full shrink-0" style={{ background: "linear-gradient(90deg,#2E9E6B,#7CF0BD)" }} />
           </div>
         </div>
@@ -916,30 +877,22 @@ function BookSection({ book }: { book: CourseBook }) {
 
 function HighlightsGrid({ details }: { details: CourseDetails }) {
   const highlights = details.highlights ?? [
-    { title: "10 Videos", sub: "Step-by-step video lessons, at your own pace" },
-    { title: "Frequent Live Q&A session", sub: "Ask questions directly and get expert answers" },
-    { title: "Resources", sub: "Templates, checklists & practical tools included" },
+    { title: "১০টি ভিডিও লেসন", sub: "নিজের সময়মতো, নিজের গতিতে দেখতে পারবে" },
+    { title: "নিয়মিত লাইভ Q&A", sub: "সরাসরি প্রশ্ন করে উত্তর পাবে" },
+    { title: "রিসোর্স ও টেমপ্লেট", sub: "প্র্যাকটিসের জন্য দরকারি সব ফাইল" },
   ];
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1320px] mx-auto">
-        <div className="text-center max-w-[720px] mx-auto mb-14">
-          <Pill tone="green">কারিকুলাম</Pill>
-          <h2
-            className="font-display font-semibold leading-[1.3] mt-6"
-            style={{ fontSize: "clamp(24px,2.8vw,34px)", color: "var(--ink)" }}
-          >
-            <BengaliText>What is inside</BengaliText>
-          </h2>
-          {(details.highlightsDesc ?? details.highlights) && (
-            <p className="mt-4 text-[15px]" style={{ color: "var(--body)" }}>
-              <BengaliText>{details.highlightsDesc ?? "Everything you need to prepare with confidence, in one place."}</BengaliText>
-            </p>
-          )}
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <SectionIntro
+          kicker="যা যা পড়ানো হবে"
+          title="কোর্সের ভেতরে কী আছে"
+          desc={details.highlightsDesc ?? "যা যা লাগবে, সব একজায়গায় গোছানো আছে।"}
+          align="center"
+        />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
           {highlights.map((item) => (
-            <div key={item.title} className="fb-card fb-reveal rounded-[14px] p-7" style={{ border: "1px solid var(--line)", background: "#fff" }}>
+            <div key={item.title} className="fb-card fb-reveal rounded-[16px] p-7" style={{ border: "1px solid var(--line)", background: "#fff" }}>
               <span
                 className="w-[42px] h-[42px] rounded-xl flex items-center justify-center mb-5"
                 style={{ background: "var(--brand-soft)" }}
@@ -947,10 +900,10 @@ function HighlightsGrid({ details }: { details: CourseDetails }) {
                 <Check className="w-[20px] h-[20px]" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
               </span>
               <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
-                {item.title}
+                <BengaliText>{item.title}</BengaliText>
               </h3>
               <p className="mt-2 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                {item.sub}
+                <BengaliText>{item.sub}</BengaliText>
               </p>
             </div>
           ))}
@@ -977,13 +930,12 @@ function CurriculumSection({ curriculum }: { curriculum: CurriculumSection }) {
       <div className="relative max-w-[1120px] mx-auto">
         <div className="text-center mb-16">
           {curriculum.label && (
-            <Pill tone="darkgreen">
-              <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+            <div className="text-[13.5px] font-semibold mb-3" style={{ color: "var(--brand-2)" }}>
               <BengaliText>{curriculum.label}</BengaliText>
-            </Pill>
+            </div>
           )}
           <h2
-            className="font-display font-semibold text-white leading-[1.25] mt-6"
+            className="font-display font-semibold text-white leading-[1.25]"
             style={{ fontSize: "clamp(26px,3vw,38px)" }}
           >
             <BengaliText>{curriculum.title}</BengaliText>
@@ -997,7 +949,7 @@ function CurriculumSection({ curriculum }: { curriculum: CurriculumSection }) {
           {curriculum.modules.map((m, i) => (
             <div
               key={m.title}
-              className="fb-card fb-reveal rounded-[14px] p-7 md:p-9"
+              className="fb-card fb-reveal rounded-[16px] p-7 md:p-9"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}
             >
               <div className="flex items-center gap-4 mb-7">
@@ -1059,16 +1011,8 @@ function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
   return (
     <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
       <div className="max-w-[1000px] mx-auto">
-        <div className="text-center max-w-[720px] mx-auto mb-12">
-          <Pill tone="green">তুলনা দেখো</Pill>
-          <h2
-            className="font-display font-semibold leading-[1.35] mt-6"
-            style={{ fontSize: "clamp(24px,2.8vw,32px)", color: "var(--ink)" }}
-          >
-            <BengaliText>{comparison.title}</BengaliText>
-          </h2>
-        </div>
-        <div className="fb-reveal rounded-[14px] overflow-hidden" style={{ background: "#fff", border: "1px solid var(--line)", boxShadow: "0 24px 60px -32px rgba(11,37,69,0.35)" }}>
+        <SectionIntro kicker="তুলনা করে দেখো" title={comparison.title} align="center" />
+        <div className="fb-reveal rounded-[16px] overflow-hidden mt-4" style={{ background: "#fff", border: "1px solid var(--line)", boxShadow: "0 24px 60px -32px rgba(11,37,69,0.35)" }}>
           <div className="grid grid-cols-2">
             <div className="px-6 md:px-8 py-6" style={{ background: "#F8FAFC", borderRight: "1px solid var(--line)" }}>
               <span className="text-[12.5px] font-bold tracking-[0.02em]" style={{ color: "#64748B" }}>
@@ -1115,12 +1059,11 @@ function PricingSection({ pricing }: { pricing: PricingSection }) {
         style={{ background: "radial-gradient(ellipse 700px 420px at 50% -8%, rgba(46,158,107,0.16), transparent)" }}
       />
       <div className="relative max-w-[640px] mx-auto">
-        <Pill tone="darkgreen">
-          <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
-          <BengaliText>আর্লি-বার্ড</BengaliText>
-        </Pill>
+        <div className="text-[13.5px] font-semibold mb-3" style={{ color: "var(--brand-2)" }}>
+          <BengaliText>আর্লি-বার্ড প্রাইসিং</BengaliText>
+        </div>
         <h2
-          className="font-display font-semibold text-white leading-[1.25] mt-6"
+          className="font-display font-semibold text-white leading-[1.25]"
           style={{ fontSize: "clamp(26px,3vw,36px)" }}
         >
           <BengaliText>{pricing.title}</BengaliText>
@@ -1204,16 +1147,8 @@ function FaqSection({ faqs }: { faqs: Faq[] }) {
   return (
     <section id="faq" className="px-[clamp(20px,4.5vw,56px)] py-[84px]" style={{ background: "#fff" }}>
       <div className="max-w-[800px] mx-auto">
-        <div className="text-center mb-12">
-          <Pill tone="green">যেকোনো প্রশ্ন</Pill>
-          <h2
-            className="font-display font-semibold mt-6"
-            style={{ fontSize: "clamp(26px,3vw,34px)", color: "var(--ink)" }}
-          >
-            <BengaliText>সচরাচর জিজ্ঞাসা</BengaliText>
-          </h2>
-        </div>
-        <div className="flex flex-col gap-4">
+        <SectionIntro kicker="প্রশ্ন থাকলে" title="যা যা সবাই জিজ্ঞেস করে" align="center" />
+        <div className="flex flex-col gap-4 mt-8">
           {faqs.map((faq) => (
             <details
               key={faq.q}
@@ -1296,15 +1231,15 @@ function FinalCta({
               <Gift className="w-5 h-5" style={{ color: "#7CF0BD" }} />
             </span>
             <div>
-              <div className="font-mono text-[10px] font-bold tracking-[0.24em]" style={{ color: "#7CF0BD" }}>
-                WISHLIST DISCOUNT
+              <div className="text-[10.5px] font-semibold" style={{ color: "#7CF0BD" }}>
+                <BengaliText>ওয়েটলিস্ট বোনাস</BengaliText>
               </div>
               <div className="font-display text-[16px] font-semibold text-white mt-0.5">
-                <BengaliText>জয়েন করলেই {WISHLIST_DISCOUNT_PERCENT}% ছাড়</BengaliText>
+                <BengaliText>ভর্তি হলে {WISHLIST_DISCOUNT_PERCENT}% ছাড়</BengaliText>
               </div>
               <div className="text-[12.5px] leading-snug mt-0.5" style={{ color: "#B7C4D6" }}>
                 <BengaliText>
-                  কোর্সে ভর্তি হলে {WISHLIST_DISCOUNT_PERCENT}% ছাড় — শুধু ওয়েটলিস্ট মেম্বারদের জন্য।
+                  শুধু যারা এখন ওয়েটলিস্টে আছে, তারাই এই ছাড় পাবে।
                 </BengaliText>
               </div>
             </div>
@@ -1332,11 +1267,8 @@ function RelatedProgramsSection({ programs }: { programs: RelatedProgramLanding[
       <div className="max-w-[1320px] mx-auto">
         <div className="flex items-end justify-between gap-4 flex-wrap mb-11">
           <div>
-            <div
-              className="font-mono text-[11px] font-semibold tracking-[0.32em] mb-2"
-              style={{ color: "var(--brand-2)" }}
-            >
-              EXPLORE MORE
+            <div className="text-[13px] font-semibold mb-2" style={{ color: "var(--brand-2)" }}>
+              <BengaliText>আরও দেখতে পারো</BengaliText>
             </div>
             <h2
               className="font-display font-semibold leading-[1.2]"
@@ -1350,7 +1282,7 @@ function RelatedProgramsSection({ programs }: { programs: RelatedProgramLanding[
             className="view-all font-semibold text-[13.5px] inline-flex items-center gap-[6px] shrink-0 mb-[3px]"
             style={{ color: "var(--brand-2)" }}
           >
-            View all
+            সব দেখো
             <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none">
               <path
                 d="M5 12H19M19 12L13 6M19 12L13 18"
@@ -1463,10 +1395,10 @@ function DbCoursePage({
                 className="font-display text-[22px] font-semibold"
                 style={{ color: "var(--ink)" }}
               >
-                You&apos;re enrolled in this course
+                তুমি এই কোর্সে ভর্তি আছো
               </h2>
               <p className="text-[14px] mt-2 mb-8" style={{ color: "var(--body)" }}>
-                {lessonCount} lessons across {moduleCount} modules ready for you.
+                {moduleCount} মডিউলে {lessonCount} লেসন তোমার জন্য রেডি।
               </p>
               <Link
                 href={`/dashboard/courses/${checkoutCourse.slug}/learn`}
@@ -1476,7 +1408,7 @@ function DbCoursePage({
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                   <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" />
                 </svg>
-                Open Player
+                ক্লাসে যাও
               </Link>
             </div>
           </div>
@@ -1513,10 +1445,10 @@ function DbCoursePage({
                   </div>
                   <div className="p-5 sm:p-6 flex flex-col justify-center">
                     <span
-                      className="font-mono text-[10px] font-semibold tracking-[0.3em] mb-2 inline-block w-fit"
+                      className="text-[11px] font-semibold mb-2 inline-block w-fit"
                       style={{ color: "var(--brand-2)" }}
                     >
-                      {checkoutCourse.badge.toUpperCase()}
+                      {checkoutCourse.badge}
                     </span>
                     <h1
                       className="font-display text-[19px] font-semibold leading-[1.3]"
@@ -1573,7 +1505,7 @@ function DbCoursePage({
                     className="text-[12px] font-semibold uppercase tracking-[0.08em] mb-5"
                     style={{ color: "var(--body)" }}
                   >
-                    Order summary
+                    অর্ডার সামারি
                   </p>
 
                   {/* Line item */}
@@ -1609,15 +1541,15 @@ function DbCoursePage({
                   {/* Price breakdown */}
                   <div className="py-4 space-y-2.5 border-b" style={{ borderColor: "var(--line)" }}>
                     <div className="flex items-center justify-between text-[13.5px]">
-                      <span style={{ color: "var(--body)" }}>Subtotal</span>
+                      <span style={{ color: "var(--body)" }}>সাবটোটাল</span>
                       <span className="font-medium" style={{ color: "var(--ink)" }}>
                         {isFree
-                          ? "Free"
+                          ? "ফ্রি"
                           : formatPriceText(checkoutCourse)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[13.5px]">
-                      <span style={{ color: "var(--body)" }}>Tax</span>
+                      <span style={{ color: "var(--body)" }}>ট্যাক্স</span>
                       <span className="font-medium" style={{ color: "var(--ink)" }}>
                         0.00
                       </span>
@@ -1627,14 +1559,14 @@ function DbCoursePage({
                   {/* Total */}
                   <div className="flex items-center justify-between pt-4">
                     <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-                      Total
+                      মোট
                     </span>
                     <span
                       className="text-[22px] font-bold leading-none"
                       style={{ color: "var(--ink)" }}
                     >
                       {isFree
-                        ? "Free"
+                        ? "ফ্রি"
                         : formatPriceText(checkoutCourse)}
                     </span>
                   </div>
@@ -1644,7 +1576,7 @@ function DbCoursePage({
                       className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
                       style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
                     >
-                      This course is coming soon — join the waitlist to be notified.
+                      এই কোর্সটা শিগগিরই আসছে — নোটিফিকেশন পেতে ওয়েটলিস্টে যুক্ত হও।
                     </div>
                   )}
                 </div>
@@ -1655,15 +1587,15 @@ function DbCoursePage({
                     className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3"
                     style={{ color: "var(--body)" }}
                   >
-                    What&apos;s included
+                    যা যা পাবে
                   </p>
                   <ul className="space-y-2.5">
                     {[
-                      "Instant access after enrollment",
-                      `${moduleCount} modules · ${lessonCount} lessons`,
-                      "Lifetime access — learn at your own pace",
-                      "Certificate of completion",
-                      "Live support from instructors",
+                      "ভর্তির সাথে সাথেই অ্যাক্সেস",
+                      `${moduleCount} মডিউল · ${lessonCount} লেসন`,
+                      "লাইফটাইম অ্যাক্সেস — নিজের গতিতে শেখো",
+                      "কোর্স সম্পন্নের সার্টিফিকেট",
+                      "ইনস্ট্রাক্টরদের লাইভ সাপোর্ট",
                     ].map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-[13px]">
                         <span
@@ -1672,7 +1604,7 @@ function DbCoursePage({
                         >
                           <Check className="w-[10px] h-[10px]" strokeWidth={3} />
                         </span>
-                        <span style={{ color: "var(--ink)" }}>{item}</span>
+                        <BengaliText><span style={{ color: "var(--ink)" }}>{item}</span></BengaliText>
                       </li>
                     ))}
                   </ul>
@@ -1682,9 +1614,9 @@ function DbCoursePage({
                 <div className="px-6 pb-6">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {[
-                      { icon: Lock, label: "SSL Encrypted" },
-                      { icon: ShieldCheck, label: "30-day guarantee" },
-                      { icon: Zap, label: "Instant access" },
+                      { icon: Lock, label: "SSL এনক্রিপ্টেড" },
+                      { icon: ShieldCheck, label: "৩০ দিনের গ্যারান্টি" },
+                      { icon: Zap, label: "তাৎক্ষণিক অ্যাক্সেস" },
                     ].map(({ icon: Icon, label }) => (
                       <div key={label} className="flex flex-col items-center gap-1.5">
                         <span
@@ -1697,7 +1629,7 @@ function DbCoursePage({
                           className="text-[10.5px] font-medium leading-tight"
                           style={{ color: "var(--body)" }}
                         >
-                          {label}
+                          <BengaliText>{label}</BengaliText>
                         </span>
                       </div>
                     ))}
@@ -1712,10 +1644,10 @@ function DbCoursePage({
       {/* Course Books */}
       {(course.books ?? []).length > 0 && (
         <section className="px-[clamp(20px,4.5vw,56px)] pb-[70px] max-w-[1320px] mx-auto">
-          <SectionHeading
-            eyebrow="COURSE MATERIALS"
-            title="Books & reading materials"
-            desc="Included with this course — download and study at your own pace"
+          <SectionIntro
+            kicker="কোর্সের বই"
+            title="বই ও রিডিং ম্যাটেরিয়াল"
+            desc="কোর্সের সাথে ফ্রি — নিজের সময়মতো ডাউনলোড করে পড়ো"
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(course.books ?? []).map((book, i) => (
@@ -1768,7 +1700,7 @@ function DbCoursePage({
                       <line x1="12" y1="18" x2="12" y2="12" />
                       <polyline points="9 15 12 18 15 15" />
                     </svg>
-                    Download PDF
+                    ডাউনলোড PDF
                   </a>
                 ) : (
                   <span
@@ -1776,7 +1708,7 @@ function DbCoursePage({
                     style={{ color: "var(--body)", borderColor: "var(--line)", cursor: "not-allowed" }}
                   >
                     <Lock size={13} />
-                    Enroll to download
+                    ভর্তি হলে পাবে
                   </span>
                 )}
               </div>
@@ -2088,17 +2020,18 @@ export default async function IeltsFullReadinessLandingPage() {
         </>
       ) : (
         <section className="px-[clamp(20px,4.5vw,56px)] py-[90px] max-w-[1320px] mx-auto text-center">
-          <SectionHeading
-            eyebrow="COMING SOON"
-            title="This course is being prepared"
-            desc="Full curriculum, video lessons, and resources for this program are on the way. Check back soon."
+          <SectionIntro
+            kicker="শিগগিরই আসছে"
+            title="এই কোর্সটা এখনো প্রস্তুত হচ্ছে"
+            desc="ভিডিও লেসন, রিসোর্স আর ফুল কারিকুলাম রেডি হলেই এখানে দেখতে পাবে। একটু পরে আবার দেখো।"
+            align="center"
           />
           <a
             href="/"
             className="inline-flex items-center gap-[9px] font-medium text-[15px] text-white rounded-full px-[26px] py-[15px]"
             style={{ background: "var(--brand)" }}
           >
-            Back to programs
+            প্রোগ্রামে ফিরে যাও
             {arrow}
           </a>
         </section>

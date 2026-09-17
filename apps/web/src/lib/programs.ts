@@ -71,7 +71,7 @@ export const programs: Program[] = [
     badgeColor: "var(--mint-ink)",
     upcoming: true,
     image: "/programs/ielts-full-readiness.svg",
-    href: "/programs/ielts-full-readiness/landing",
+    href: "/ielts-full-readiness",
   },
 ];
 
