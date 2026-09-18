@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Bot, Brain, FileText, MessageCircle, Mic, Users } from "lucide-react";
+import { BookOpen, Bot, Brain, FileText, MessageCircle, Mic, Users } from "lucide-react";
 
 export type Lesson = {
   title: string;
@@ -704,25 +704,25 @@ export const courseDetails: Record<string, CourseDetails> = {
       desc: "Earn a verified FlyBridge certificate when you complete all 24 lessons and the final speaking challenge.",
     },
   },
-  "ielts-full-readiness": {
-    slug: "ielts-full-readiness",
+  "ielts-band-score-machine": {
+    slug: "ielts-band-score-machine",
     badge: "IELTS",
     title: "IELTS Band Score Machine",
     titleAccent: "— শুরু থেকে শেষ, একই জায়গায়",
     subtitle: "Target Band 7 2026",
     heroPill: "🔥 IELTS Band Score Machine — ব্যাচ ১-এর ওয়েটলিস্ট খোলা রয়েছে",
     targetBand: { label: "TARGET", value: "Band 7", sub: "IELTS 2026" },
-    desc: "Speaking, Writing, Listening ও Reading — চারটা স্কিলেই টার্গেট স্কোর পাওয়ার এক অ্যানিমেটেড সিস্টেম। আপনার বর্তমান লেভেল যা-ই হোক, স্কোর বাড়াবে নিখুঁতভাবে।",
+    desc: "Speaking, Writing, Listening ও Reading — চারটা স্কিলেই টার্গেট স্কোর পাওয়ার এক সম্পূর্ণ সিস্টেম। আপনার বর্তমান লেভেল যা-ই হোক, স্কোর বাড়াবে নিখুঁতভাবে।",
     level: "Beginner to advanced",
     language: "বাংলা + English",
-    pace: "Self-paced · 30 animated masterclasses",
+    pace: "Self-paced · 30 masterclasses",
     access: "1 year access",
     heroCta: { label: "এখনই ওয়েটলিস্টে জয়েন করুন", href: "#pricing" },
     heroStats: [
-      { value: "৩০", label: "অ্যানিমেটেড ভিডিও মাস্টারক্লাস" },
+      { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
       { value: "Live", label: "নিয়মিত লাইভ সেমিনার" },
       { value: "০৫", label: "বোনাস ক্লাস" },
-      { value: "Online", label: "ওয়েবসাইটেই মক এক্সাম" },
+      { value: "১৫", label: "ওয়েবসাইটেই মক এক্সাম" },
     ],
     stats: [
       { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
@@ -738,7 +738,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       cards: [
         {
           title: "১. আসল জিনিসটা দেখুন",
-          desc: "অ্যানিমেটেড ভিডিওর মাধ্যমে রিয়েল টেস্ট ফরম্যাট, রিয়েল মডেল আনসার ও এক্সাম-লেভেলের মেটেরিয়াল — কোনো সহজ ফেইক এক্সাম্পল নয়।",
+          desc: "ভিডিওর মাধ্যমে রিয়েল টেস্ট ফরম্যাট, রিয়েল মডেল আনসার ও এক্সাম-লেভেলের মেটেরিয়াল — কোনো সহজ ফেইক এক্সাম্পল নয়।",
         },
         {
           title: "২. পার্থক্যটা বুঝুন",
@@ -756,7 +756,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: Brain,
         title: "Band 6 বনাম Band 8+ তুলনা",
-        desc: "প্রতিটা অ্যানিমেটেড লেসনে সরাসরি দেখানো হয় কোন উত্তরটা কেন কম স্কোর পায় আর কোনটা Band 8+ — তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
+        desc: "প্রতিটা লেসনে সরাসরি দেখানো হয় কোন উত্তরটা কেন কম স্কোর পায় আর কোনটা Band 8+ — তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
       },
       {
         icon: Mic,
@@ -781,14 +781,19 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: Bot,
         title: "লাইভ সেমিনার ও সাপোর্ট",
-        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই ১ বছরের জন্য মক এক্সামের সুবিধা।",
+        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই ১ বছরের জন্য ডেস্কটপ-ভিত্তিক ১৫টা মক এক্সামের সুবিধা।",
+      },
+      {
+        icon: BookOpen,
+        title: "Companion Book (PDF)",
+        desc: "প্রতিটা লেসনের মূল শিক্ষা, মডেল আনসার, Band 6 বনাম Band 8+ তুলনা আর প্র্যাকটিস টেস্ট — সবকিছু একসাথে একটা সম্পূর্ণ companion PDF বইয়ে।",
       },
     ],
     book: {
       title: "IELTS Band Score Machine — Companion Book",
       desc: "৩০টা ভিডিও মাস্টারক্লাসের পাশাপাশি একটা সম্পূর্ণ companion PDF বই — প্রতিটা লেসনের মূল শিক্ষা, প্রতিটা মডেল আনসার, Band 6 বনাম Band 8+ তুলনা, আর প্রতিটা প্র্যাকটিস টেস্ট, সব একসাথে।",
       includedNote: "The complete companion book is included free with every enrollment.",
-      image: "/programs/ielts-full-readiness-book.svg",
+      image: "/programs/ielts-band-score-machine-book.svg",
     },
     outcomes: [
       { title: "Speaking-এর Part 1, 2, 3-এ আত্মবিশ্বাসের সাথে উত্তর দিতে পারবেন" },
@@ -865,9 +870,9 @@ export const courseDetails: Record<string, CourseDetails> = {
         { left: "দুই-একটা উদাহরণ বাক্য", right: "সম্পূর্ণ মডেল আনসার, শব্দসংখ্যা ও ব্যান্ড স্কোরসহ বিশ্লেষণ" },
         {
           left: "একটা মক টেস্ট, থাকলেও থাকতে পারে",
-          right: "ওয়েবসাইটেই একাধিক ফুল-লেংথ অনলাইন মক টেস্ট",
+          right: "ওয়েবসাইটেই ১৫টা ফুল-লেংথ মক টেস্ট (ডেস্কটপ)",
         },
-        { left: "শুধু সাধারণ ভিডিও ক্লাসে সীমাবদ্ধ", right: "৩০টি অ্যানিমেটেড ভিডিও মাস্টারক্লাস + সম্পূর্ণ PDF বই" },
+        { left: "শুধু সাধারণ ভিডিও ক্লাসে সীমাবদ্ধ", right: "৩০টি ভিডিও মাস্টারক্লাস + সম্পূর্ণ PDF বই" },
         { left: "গ্রামার-টিপস নির্ভর সেশন", right: "স্কিল-ভিত্তিক, আসল পরীক্ষা ও রিয়েল টেস্ট ফরম্যাটে সাজানো" },
       ],
     },
@@ -925,7 +930,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     ],
     pdfs: [
       {
-        title: "IELTS Full Readiness Companion Book",
+        title: "IELTS Band Score Machine Companion Book",
         desc: "Every lesson, model answer and Band 6 vs Band 8+ comparison — designed for mobile reading.",
         pages: 180,
         size: "12.4 MB",
@@ -954,7 +959,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       note: "এককালীন পেমেন্ট · ১ বছরের সম্পূর্ণ অ্যাক্সেস",
       ctaLabel: "এখনই ওয়েটলিস্টে জয়েন করুন",
       ctaHref: "#waitlist",
-      includedLine: "৩০টা অ্যানিমেটেড মাস্টারক্লাস · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
+      includedLine: "৩০টা মাস্টারক্লাস · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
       paymentLabel: "নিরাপদ পেমেন্ট, যেভাবে আপনার সুবিধা",
       paymentMethods: ["bKash", "Nagad", "Rocket", "Stripe"],
     },

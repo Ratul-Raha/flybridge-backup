@@ -63,15 +63,15 @@ export const programs: Program[] = [
     hasDb: true,
   },
   {
-    slug: "ielts-full-readiness",
+    slug: "ielts-band-score-machine",
     badge: "IELTS",
-    title: "IELTS Full Readiness",
+    title: "IELTS Band Score Machine",
     desc: "Speaking, Writing, Listening, Reading — one complete, exam-shaped system built to reach your target band.",
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",
     upcoming: true,
-    image: "/programs/ielts-full-readiness.svg",
-    href: "/ielts-full-readiness",
+    image: "/programs/ielts-band-score-machine.svg",
+    href: "/ielts-band-score-machine",
   },
 ];
 

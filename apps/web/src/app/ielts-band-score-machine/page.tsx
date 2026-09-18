@@ -44,7 +44,7 @@ import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 
-const SLUG = "ielts-full-readiness";
+const SLUG = "ielts-band-score-machine";
 
 export const dynamic = "force-dynamic";
 
@@ -550,7 +550,7 @@ function CourseHero({
             <div className="flex items-center gap-5 mt-6 flex-wrap text-[13px] font-medium" style={{ color: "#8CA0B8" }}>
               {[
                 { icon: Zap, label: "ইনস্ট্যান্ট ফুল অ্যাক্সেস" },
-                { icon: FileText, label: "ওয়েবসাইটেই মক এক্সাম" },
+                { icon: FileText, label: "ওয়েবসাইটেই ১৫টা মক এক্সাম (ডেস্কটপ)" },
                 { icon: CalendarDays, label: "১ বছরের সম্পূর্ণ অ্যাক্সেস" },
               ].map((t) => (
                 <span key={t.label} className="inline-flex items-center gap-1.5">

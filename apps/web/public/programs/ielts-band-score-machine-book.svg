@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" fill="none" role="img" aria-label="IELTS Full Readiness Companion Book">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" fill="none" role="img" aria-label="IELTS Band Score Machine Companion Book">
   <defs>
     <linearGradient id="cover" x1="0" y1="0" x2="900" y2="1200" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#153C69" />
@@ -24,14 +24,14 @@
   <text x="130" y="120" fill="#14B57E" font-family="'Inter Variable', Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4">FLYBRIDGE EDUCATION GROUP</text>
 
   <text x="130" y="430" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="96" font-weight="700" letter-spacing="-2">IELTS</text>
-  <text x="130" y="530" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="96" font-weight="700" letter-spacing="-2">Full</text>
-  <text x="130" y="630" fill="#14B57E" font-family="'Inter Variable', Arial, sans-serif" font-size="96" font-weight="700" letter-spacing="-2">Readiness</text>
+  <text x="130" y="530" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="96" font-weight="700" letter-spacing="-2">Band</text>
+  <text x="130" y="626" fill="#14B57E" font-family="'Inter Variable', Arial, sans-serif" font-size="74" font-weight="700" letter-spacing="-2">Score Machine</text>
 
   <rect x="130" y="700" width="96" height="4" rx="2" fill="#14B57E" />
 
   <g font-family="'Inter Variable', Arial, sans-serif" font-size="30" font-weight="500" fill="#A9BCD3">
     <text x="130" y="790">Companion Book</text>
-    <text x="130" y="840">25 Video Masterclasses</text>
+    <text x="130" y="840">30 Video Masterclasses</text>
     <text x="130" y="890">Model Answers · Practice Tests</text>
   </g>
 

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none" role="img" aria-label="IELTS Full Readiness">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none" role="img" aria-label="IELTS Band Score Machine">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#122043" />
@@ -24,8 +24,8 @@
     <text x="54" y="38" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="30" font-weight="600">FlyBridge</text>
   </g>
 
-  <text x="80" y="300" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">IELTS Full</text>
-  <text x="80" y="396" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">Readiness</text>
+  <text x="80" y="300" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">IELTS Band</text>
+  <text x="80" y="396" fill="#FFFFFF" font-family="'Inter Variable', Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2">Score Machine</text>
   <text x="80" y="468" fill="#A9BCD3" font-family="'Inter Variable', Arial, sans-serif" font-size="28" font-weight="500">Speaking · Writing · Listening · Reading</text>
 
   <g transform="translate(80 512)">

@@ -217,7 +217,7 @@
   .fb-map-ring { animation: none; }
 }
 
-/* IELTS Full Readiness landing page — Bengali font fallback */
+/* IELTS Band Score Machine landing page — Bengali font fallback */
 .ielts-landing {
   --font-display: 'Inter Variable', 'Bornomala', sans-serif;
   --font-body: 'Inter Variable', 'Bornomala', sans-serif;
