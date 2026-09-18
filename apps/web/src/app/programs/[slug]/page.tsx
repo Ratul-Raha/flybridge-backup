@@ -387,7 +387,7 @@ function CourseHero({
             className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium"
             style={{ color: "var(--body)" }}
           >
-            {["Instant access", "Live support", "Verified certificate"].map((t) => (
+            {["Instant access", "Live support"].map((t) => (
               <span key={t} className="inline-flex items-center gap-1.5">
                 <Check
                   className="w-3.5 h-3.5"

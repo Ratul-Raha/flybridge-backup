@@ -18,7 +18,6 @@ import {
   Check,
   ChevronDown,
   Clock,
-  Eye,
   FileText,
   Gift,
   GraduationCap,
@@ -33,14 +32,12 @@ import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
 import {
   courseDetails,
-  type ComparisonSection,
   type CourseBook,
   type CourseDetails,
   type CourseFeature,
   type CurriculumSection,
   type Faq,
   type PricingSection,
-  type StepsSection,
   type TargetBand,
 } from "../programs/[slug]/course-data";
 import { BengaliText } from "@/components/bengali-text";
@@ -581,74 +578,54 @@ function CourseHero({
         {/* Stats cards */}
         {heroStats?.length ? (
           <div className="mt-[56px] grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {heroStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="fb-reveal relative rounded-[14px] px-6 py-[24px] overflow-hidden transition-transform duration-300 hover:-translate-y-1.5"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(4px)",
-                }}
-              >
-                <div className="font-display text-[34px] font-semibold leading-none" style={{ color: "#7CF0BD" }}>
-                  {stat.value}
-                </div>
-                <div className="text-[13.5px] mt-[9px] leading-snug" style={{ color: "#B7C4D6" }}>
-                  <BengaliText>{stat.label}</BengaliText>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
-const STEP_ICONS = [Eye, Check, Zap];
-
-function StepsSection({ steps }: { steps: StepsSection }) {
-  return (
-    <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]">
-      <div className="max-w-[1320px] mx-auto">
-        <SectionIntro kicker="যেভাবে কাজ করে Band Score Machine" title={steps.title} align="center" />
-        <div className="grid md:grid-cols-3 gap-6 mt-10">
-          {steps.cards.map((card, i) => {
-            const Icon = STEP_ICONS[i % STEP_ICONS.length];
-            const isLast = i === steps.cards.length - 1;
-            return (
-              <div key={card.title} className="relative">
+            {heroStats.map((stat, i) => {
+              const Icon = [Target, Users, Clock, GraduationCap][i % 4];
+              return (
                 <div
-                  className="fb-card fb-reveal rounded-[16px] p-8 h-full"
+                  key={stat.label}
+                  className="fb-reveal group relative rounded-[16px] p-px overflow-hidden transition-transform duration-300 hover:-translate-y-1.5"
                   style={{
-                    border: "1px solid var(--line)",
-                    background: "#fff",
+                    background:
+                      "linear-gradient(150deg, rgba(124,240,189,0.45), rgba(255,255,255,0.06) 42%, rgba(31,92,138,0.4))",
                   }}
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <span
-                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 font-display font-semibold text-[16px]"
-                      style={{ background: "rgba(46,158,107,0.1)", color: "#0A3D2E" }}
+                  <div
+                    className="relative h-full rounded-[15px] px-6 py-[22px] overflow-hidden"
+                    style={{
+                      background: "linear-gradient(160deg, rgba(11,37,69,0.94), rgba(8,11,16,0.94))",
+                      backdropFilter: "blur(6px)",
+                    }}
+                  >
+                    <div
+                      className="pointer-events-none absolute -top-12 -right-10 w-[120px] h-[120px] rounded-full opacity-50 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{ background: "radial-gradient(circle, rgba(124,240,189,0.4), transparent 70%)" }}
+                    />
+                    <div className="relative flex items-center justify-between mb-5">
+                      <span
+                        className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px]"
+                        style={{ background: "rgba(124,240,189,0.12)", border: "1px solid rgba(124,240,189,0.28)" }}
+                      >
+                        <Icon className="w-[17px] h-[17px]" strokeWidth={2} style={{ color: "#7CF0BD" }} />
+                      </span>
+                      <span className="text-[11px] font-semibold tabular-nums" style={{ color: "#5B6B7F" }}>
+                        0{i + 1}
+                      </span>
+                    </div>
+                    <div
+                      className="relative font-display text-[36px] font-semibold leading-none tracking-[-0.02em]"
+                      style={{ color: "#fff" }}
                     >
-                      {i + 1}
-                    </span>
-                    <Icon className="w-[20px] h-[20px]" strokeWidth={1.8} style={{ color: "var(--brand-2)" }} />
+                      {stat.value}
+                    </div>
+                    <div className="relative text-[13px] mt-[10px] leading-snug" style={{ color: "#9DB0C6" }}>
+                      <BengaliText>{stat.label}</BengaliText>
+                    </div>
                   </div>
-                  <h3 className="font-display text-[18px] font-semibold leading-[1.3]" style={{ color: "var(--ink)" }}>
-                    <BengaliText>{card.title}</BengaliText>
-                  </h3>
-                  <p className="mt-3 text-[14px] leading-[1.75]" style={{ color: "var(--body)" }}>
-                    <BengaliText>{card.desc}</BengaliText>
-                  </p>
                 </div>
-                {!isLast && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px" style={{ background: "var(--line)" }} />
-                )}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -689,65 +666,6 @@ function FeaturesSection({
               <p className="mt-2.5 text-[13.5px] leading-[1.75]" style={{ color: "var(--body)" }}>
                 <BengaliText>{fdesc}</BengaliText>
               </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ProblemSection({ problem }: { problem: { title: string; desc: string } }) {
-  return (
-    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
-      <div className="max-w-[760px] mx-auto text-center">
-        <h2
-          className="font-display font-semibold leading-[1.4]"
-          style={{ fontSize: "clamp(24px,2.9vw,34px)", color: "var(--ink)" }}
-        >
-          <BengaliText>{problem.title}</BengaliText>
-        </h2>
-        <p className="mt-6 text-[16.5px] leading-[1.9]" style={{ color: "var(--body)" }}>
-          <BengaliText>{problem.desc}</BengaliText>
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function OutcomesSection({ details }: { details: CourseDetails }) {
-  return (
-    <section className="px-[clamp(20px,4.5vw,56px)] py-[76px]" style={{ background: "#fff" }}>
-      <div className="max-w-[1320px] mx-auto">
-        <SectionIntro
-          kicker="কোর্স শেষে"
-          title="পরীক্ষার দিন আপনি প্রস্তুত থাকবেন"
-          desc="কোর্স শেষে এই জিনিসগুলো আত্মবিশ্বাসের সাথে করতে পারবেন:"
-          align="center"
-        />
-        <div className="grid sm:grid-cols-2 gap-4 mt-10">
-          {details.outcomes.map((o) => (
-            <div
-              key={o.title}
-              className="fb-card fb-reveal flex items-start gap-4 rounded-xl px-6 py-5"
-              style={{ border: "1px solid var(--line)", background: "#fff" }}
-            >
-              <span
-                className="w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 mt-[2px]"
-                style={{ background: "rgba(46,158,107,0.12)" }}
-              >
-                <Check className="w-[13px] h-[13px]" strokeWidth={3} style={{ color: "#0A3D2E" }} />
-              </span>
-              <div>
-                <div className="text-[14.5px] font-medium leading-[1.6]" style={{ color: "var(--ink)" }}>
-                  <BengaliText>{o.title}</BengaliText>
-                </div>
-                {o.desc && (
-                  <div className="text-[13px] mt-[4px] leading-[1.65]" style={{ color: "var(--body)" }}>
-                    <BengaliText>{o.desc}</BengaliText>
-                  </div>
-                )}
-              </div>
             </div>
           ))}
         </div>
@@ -1005,46 +923,6 @@ function CurriculumSection({ curriculum }: { curriculum: CurriculumSection }) {
             </p>
           </div>
         )}
-      </div>
-    </section>
-  );
-}
-
-function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
-  return (
-    <section className="px-[clamp(20px,4.5vw,56px)] py-[80px]" style={{ background: "var(--bg-soft)" }}>
-      <div className="max-w-[1000px] mx-auto">
-        <SectionIntro kicker="তুলনা করে দেখুন" title={comparison.title} align="center" />
-        <div className="fb-reveal rounded-[16px] overflow-hidden mt-4" style={{ background: "#fff", border: "1px solid var(--line)", boxShadow: "0 24px 60px -32px rgba(11,37,69,0.35)" }}>
-          <div className="grid grid-cols-2">
-            <div className="px-6 md:px-8 py-6" style={{ background: "#F8FAFC", borderRight: "1px solid var(--line)" }}>
-              <span className="text-[12.5px] font-bold tracking-[0.02em]" style={{ color: "#64748B" }}>
-                <BengaliText>{comparison.leftLabel}</BengaliText>
-              </span>
-            </div>
-            <div className="px-6 md:px-8 py-6" style={{ background: "rgba(46,158,107,0.08)" }}>
-              <span className="text-[12.5px] font-bold tracking-[0.02em]" style={{ color: "#0A3D2E" }}>
-                <BengaliText>{comparison.rightLabel}</BengaliText>
-              </span>
-            </div>
-          </div>
-          {comparison.rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-2" style={{ borderTop: "1px solid var(--line)" }}>
-              <div
-                className="px-6 md:px-8 py-5 text-[14px] leading-[1.65]"
-                style={{ borderRight: "1px solid var(--line)", color: "#64748B", background: i % 2 ? "#FAFBFC" : "#fff" }}
-              >
-                <BengaliText>{row.left}</BengaliText>
-              </div>
-              <div
-                className="px-6 md:px-8 py-5 text-[14px] font-semibold leading-[1.65]"
-                style={{ color: "#0F172A", background: i % 2 ? "rgba(46,158,107,0.05)" : "rgba(46,158,107,0.02)" }}
-              >
-                <BengaliText>{row.right}</BengaliText>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -1981,12 +1859,8 @@ export default async function IeltsFullReadinessLandingPage() {
 
       {details ? (
         <>
-          {/* Problem */}
-          {details.problem && <ProblemSection problem={details.problem} />}
-
-          {/* Steps + Features */}
+          {/* Features */}
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[80px] max-w-[1320px] mx-auto">
-            {details.steps && <StepsSection steps={details.steps} />}
             <FeaturesSection
               features={details.features ?? BLUEPRINT_FEATURES}
               desc={details.featuresDesc}
@@ -1996,18 +1870,12 @@ export default async function IeltsFullReadinessLandingPage() {
           {/* Book */}
           {details.book && <BookSection book={details.book} />}
 
-          {/* Outcomes */}
-          {details.outcomes.length > 0 && <OutcomesSection details={details} />}
-
           {/* Curriculum (dark) or highlights */}
           {details.curriculum ? (
             <CurriculumSection curriculum={details.curriculum} />
           ) : (
             <HighlightsGrid details={details} />
           )}
-
-          {/* Comparison */}
-          {details.comparison && <ComparisonSection comparison={details.comparison} />}
 
           {/* Reviews */}
           {program.hasDb && course ? (
