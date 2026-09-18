@@ -90,7 +90,7 @@ export function MobileUserApp({ children }: { children: ReactNode }) {
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between h-14 px-5">
-          <Link href="/dashboard" className="brand flex flex-col items-start leading-none">
+          <Link href="/" className="brand flex flex-col items-start leading-none">
             <Image
               src="/transparent-logo-dark.png"
               alt="FlyBridge Education Group"
