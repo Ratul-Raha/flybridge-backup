@@ -5,6 +5,7 @@ import { SuccessStories } from "@/components/success-stories";
 import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
+import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import { getTotalUsers } from "@/lib/site-stats";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function HomePage() {
         <PublicLeaderboard />
         <SuccessStories userCount={totalUsers} />
       </main>
+      <IeltsPromoPopup />
     </>
   );
 }
