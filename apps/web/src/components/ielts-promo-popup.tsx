@@ -1,27 +1,58 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
+  BookOpen,
+  Monitor,
+  FileText,
+  Gift,
   GraduationCap,
+  Users,
   ArrowRight,
   X,
 } from "lucide-react";
-import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
-export function PromoPopup() {
+
+const IELTS_FEATURES = [
+  {
+    icon: BookOpen,
+    title: "৩০টি ভিডিও মাস্টারক্লাস",
+    desc: "Speaking, Writing, Listening, Reading — ৪ স্কিলের সম্পূর্ণ সিস্টেম এক প্যাকেজে।",
+  },
+  {
+    icon: Monitor,
+    title: "১৫টি কম্পিউটার-বেসড মক টেস্ট",
+    desc: "রিডিং, রাইটিং আর লিসেনিং — পরীক্ষার হলে যেভাবে, ওয়েবসাইটেই ঠিক সেভাবে।",
+  },
+  {
+    icon: FileText,
+    title: "Companion PDF বই",
+    desc: "প্রতিটা মডেল আনসার, Band 6 বনাম Band 8+ তুলনা — সব একসাথে।",
+  },
+  {
+    icon: Users,
+    title: "লাইভ সেমিনার ও ৫টা বোনাস ক্লাস",
+    desc: "নিয়মিত লাইভ সেমিনার আর এক্সপার্টদের সরাসরি সাপোর্ট।",
+  },
+];
+
+export function IeltsPromoPopup() {
   const [open, setOpen] = useState(false);
+
+  const close = () => {
+    sessionStorage.setItem("ielts-popup-seen", "1");
+    setOpen(false);
+  };
+
   useEffect(() => {
-    if (localStorage.getItem("promo-popup-seen")) return;
+    if (sessionStorage.getItem("ielts-popup-seen")) return;
     const t = setTimeout(() => setOpen(true), 1500);
     return () => clearTimeout(t);
   }, []);
+
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        localStorage.setItem("promo-popup-seen", "1");
-        setOpen(false);
-      }
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -29,17 +60,18 @@ export function PromoPopup() {
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
   if (!open) return null;
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Student Visa Blueprint offer"
+      aria-label="IELTS Band Score Machine waitlist offer"
     >
       <div
         className="absolute inset-0 bg-[rgba(18,32,67,0.5)] backdrop-blur-[2px] fb-pop-fade"
-          onClick={() => { localStorage.setItem("promo-popup-seen", "1"); setOpen(false); }}
+        onClick={close}
       />
 
       <div
@@ -64,7 +96,7 @@ export function PromoPopup() {
         />
 
         <button
-        onClick={() => { localStorage.setItem("promo-popup-seen", "1"); setOpen(false); }}
+          onClick={close}
           aria-label="Close popup"
           className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-[#E7EBF0] transition-transform hover:scale-105"
           style={{ color: "var(--ink)" }}
@@ -73,9 +105,7 @@ export function PromoPopup() {
         </button>
 
         {/* Intro offer — circular seal, bottom-right corner (desktop) */}
-        <div
-          className="hidden sm:flex absolute bottom-4 right-4 lg:bottom-5 lg:right-5 z-10"
-        >
+        <div className="hidden sm:flex absolute bottom-4 right-4 lg:bottom-5 lg:right-5 z-10">
           <div
             className="relative w-[148px] h-[148px] rounded-full bg-[#0B1F3A] flex flex-col items-center justify-center text-center"
             style={{ boxShadow: "0 18px 40px -18px rgba(11,31,58,0.55)" }}
@@ -83,14 +113,10 @@ export function PromoPopup() {
             <div className="absolute inset-[6px] rounded-full border border-dashed border-white/25" />
             <div className="absolute inset-[14px] rounded-full border border-[#0F9D58]/40" />
             <div className="relative">
-              <div className="mt-1.5 text-[11px] font-semibold text-white/70">
-                মাত্র
-              </div>
-              <div className="mt-0.5 text-[27px] font-extrabold leading-none text-white">
-                $29.99
-              </div>
+              <div className="mt-1.5 text-[11px] font-semibold text-white/70">TARGET</div>
+              <div className="mt-0.5 text-[25px] font-extrabold leading-none text-white">Band 7</div>
               <div className="mt-1.5 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9.5px] font-bold text-[#5EEAA6]">
-                ৩ মাসের পূর্ণ এক্সেস
+                IELTS 2026
               </div>
             </div>
           </div>
@@ -102,26 +128,20 @@ export function PromoPopup() {
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#0B1F3A] px-3 py-1">
               <GraduationCap className="h-3 w-3 text-[#5EEAA6]" strokeWidth={2.5} />
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-white">
-                Your Study Abroad Journey, Simplified
+                ব্যাচ ১-এর ওয়েটলিস্ট খোলা রয়েছে
               </span>
             </div>
 
             {/* Heading */}
             <div className="mt-4">
               <h2 className="text-[2.1rem] font-extrabold leading-[0.98] tracking-tight text-[#0B1F3A] sm:text-[2.5rem]">
-                Student Visa
+                IELTS
                 <br />
-                <span className="text-[#0F9D58]">Blueprint</span>
-                <sup className="ml-0.5 text-[0.9rem] font-bold text-[#0F9D58]">
-                  ™
-                </sup>
+                <span className="text-[#0F9D58]">Band Score Machine</span>
               </h2>
               <p className="mt-2.5 max-w-sm text-[13.5px] leading-relaxed text-[#4B5768]">
-                The complete step-by-step system to prepare your study visa
-                application{" "}
-                <span className="font-semibold text-[#0B1F3A]">
-                  with confidence.
-                </span>
+                Target Band 7-এর সম্পূর্ণ সিস্টেম — শুরু থেকে শেষ,{" "}
+                <span className="font-semibold text-[#0B1F3A]">একই জায়গায়।</span>
               </p>
             </div>
 
@@ -135,7 +155,7 @@ export function PromoPopup() {
                 }}
               />
               <div className="flex flex-col gap-3.5">
-                {BLUEPRINT_FEATURES.map(({ icon: Icon, title, desc }, i) => (
+                {IELTS_FEATURES.map(({ icon: Icon, title, desc }) => (
                   <div key={title} className="relative flex items-start gap-3">
                     <span className="relative z-[1] flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border-2 border-[#0F9D58] bg-white">
                       <Icon
@@ -159,26 +179,33 @@ export function PromoPopup() {
             {/* Offer highlight */}
             <div className="mt-5 w-fit max-w-full rounded-xl bg-[#EAF9F1] px-4 py-3">
               <p className="text-[14.5px] font-extrabold leading-snug text-[#0B1F3A]">
-                প্রিপারেশন থেকে ভিসা পর্যন্ত সব প্রসেস{" "}
-                <span className="text-[#0F9D58]">নিজের হাতে করুন</span>
+                Band 7-এর জন্য ৩০টা মাস্টারক্লাস{" "}
+                <span className="text-[#0F9D58]">একটাই সিস্টেমে</span>
               </p>
               <p className="mt-1 text-[11.5px] text-[#4B5768]">
-                সব রিসোর্স, টুলস ও গাইডেন্সসহ
+                ওয়েটলিস্টে জয়েন করলে থাকছে স্কলারশিপের সুযোগ
               </p>
             </div>
 
             {/* CTA */}
-            <Link
-              href="/programs/study-visa-prep-us"
-              onClick={() => {
-                localStorage.setItem("promo-popup-seen", "1");
-                setOpen(false);
-              }}
-              className="group mt-4 inline-flex items-center gap-2 rounded-full bg-[#0F9D58] px-6 py-2.5 text-white transition-colors hover:bg-[#0C8A4C]"
-            >
-              <span className="text-[13.5px] font-bold">Get access now</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <div className="mt-4 flex items-center gap-3 flex-wrap">
+              <a
+                href="#waitlist"
+                onClick={close}
+                className="group inline-flex items-center gap-2 rounded-full bg-[#0F9D58] px-6 py-2.5 text-white transition-colors hover:bg-[#0C8A4C]"
+              >
+                <span className="text-[13.5px] font-bold">এখনই ওয়েটলিস্টে জয়েন করুন</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </a>
+              <a
+                href="#curriculum"
+                onClick={close}
+                className="inline-flex items-center gap-1 text-[13.5px] font-semibold text-[#0F9D58] transition-colors hover:text-[#0C8A4C]"
+              >
+                <Gift className="h-3.5 w-3.5" />
+                কোর্সে কী আছে দেখো
+              </a>
+            </div>
 
             {/* Intro offer — circular seal (mobile) */}
             <div className="sm:hidden flex justify-center mt-5">
@@ -189,14 +216,10 @@ export function PromoPopup() {
                 <div className="absolute inset-[5px] rounded-full border border-dashed border-white/25" />
                 <div className="absolute inset-[12px] rounded-full border border-[#0F9D58]/40" />
                 <div className="relative">
-                  <div className="text-[10px] font-semibold text-white/70">
-                    মাত্র
-                  </div>
-                  <div className="mt-0.5 text-[22px] font-extrabold leading-none text-white">
-                    $29.99
-                  </div>
+                  <div className="text-[10px] font-semibold text-white/70">TARGET</div>
+                  <div className="mt-0.5 text-[21px] font-extrabold leading-none text-white">Band 7</div>
                   <div className="mt-1 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9px] font-bold text-[#5EEAA6]">
-                    ৩ মাসের পূর্ণ এক্সেস
+                    IELTS 2026
                   </div>
                 </div>
               </div>

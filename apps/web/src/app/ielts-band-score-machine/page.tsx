@@ -45,6 +45,7 @@ import {
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
+import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 
 const SLUG = "ielts-band-score-machine";
 const MOCK_TEST_COUNT = 15;
@@ -1711,6 +1712,8 @@ export default async function IeltsFullReadinessLandingPage() {
         lessonCount={lessonCount}
         moduleCount={moduleCount}
       />
+
+      <IeltsPromoPopup />
 
       {details ? (
         <>

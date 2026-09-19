@@ -4,7 +4,6 @@ import { PartnersStrip } from "@/components/partners-strip";
 import { SuccessStories } from "@/components/success-stories";
 import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
-import { PromoPopup } from "@/components/promo-popup";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 import { getTotalUsers } from "@/lib/site-stats";
 
@@ -26,7 +25,6 @@ export default async function HomePage() {
         <PublicLeaderboard />
         <SuccessStories userCount={totalUsers} />
       </main>
-      <PromoPopup />
     </>
   );
 }
