@@ -34,16 +34,18 @@ const IELTS_FEATURES = [
   },
 ];
 
+let dismissedInSession = false;
+
 export function IeltsPromoPopup() {
   const [open, setOpen] = useState(false);
 
   const close = () => {
-    sessionStorage.setItem("ielts-popup-seen", "1");
+    dismissedInSession = true;
     setOpen(false);
   };
 
   useEffect(() => {
-    if (sessionStorage.getItem("ielts-popup-seen")) return;
+    if (dismissedInSession) return;
     const t = setTimeout(() => setOpen(true), 1500);
     return () => clearTimeout(t);
   }, []);
@@ -83,7 +85,7 @@ export function IeltsPromoPopup() {
       >
         {/* Background image + readability overlay (desktop only) */}
         <img
-          src="/watermark.png"
+          src="/ielts-band-score-machine-popup.png"
           alt=""
           className="hidden sm:block absolute inset-0 w-full h-full object-cover"
         />
@@ -116,7 +118,7 @@ export function IeltsPromoPopup() {
               <div className="mt-1.5 text-[11px] font-semibold text-white/70">TARGET</div>
               <div className="mt-0.5 text-[25px] font-extrabold leading-none text-white">Band 7</div>
               <div className="mt-1.5 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9.5px] font-bold text-[#5EEAA6]">
-                IELTS 2026
+                IELTS
               </div>
             </div>
           </div>
@@ -128,7 +130,7 @@ export function IeltsPromoPopup() {
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#0B1F3A] px-3 py-1">
               <GraduationCap className="h-3 w-3 text-[#5EEAA6]" strokeWidth={2.5} />
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-white">
-                ব্যাচ ১-এর ওয়েটলিস্ট খোলা রয়েছে
+                Your Path to Band 7, Simplified
               </span>
             </div>
 
@@ -219,7 +221,7 @@ export function IeltsPromoPopup() {
                   <div className="text-[10px] font-semibold text-white/70">TARGET</div>
                   <div className="mt-0.5 text-[21px] font-extrabold leading-none text-white">Band 7</div>
                   <div className="mt-1 rounded-full bg-[#0F9D58]/20 px-2 py-0.5 text-[9px] font-bold text-[#5EEAA6]">
-                    IELTS 2026
+                    IELTS
                   </div>
                 </div>
               </div>
