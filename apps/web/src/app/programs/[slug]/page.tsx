@@ -179,6 +179,8 @@ function CourseHero({
   access,
   rating,
   lessonCount,
+  moduleCount,
+  chips,
   cta,
   heroPill,
   titleAccent,
@@ -195,6 +197,8 @@ function CourseHero({
   access?: string;
   rating?: { average: number; count: number };
   lessonCount: number;
+  moduleCount: number;
+  chips?: string[];
   cta?: CourseCta;
   heroPill?: string;
   titleAccent?: string;
@@ -387,14 +391,14 @@ function CourseHero({
             className="flex items-center gap-4 mt-5 flex-wrap text-[12.5px] font-medium"
             style={{ color: "var(--body)" }}
           >
-            {["Instant access", "Live support"].map((t) => (
+            {(chips ?? ["Instant access", "Live support"]).map((t) => (
               <span key={t} className="inline-flex items-center gap-1.5">
                 <Check
                   className="w-3.5 h-3.5"
                   strokeWidth={3}
                   style={{ color: "var(--brand-2)" }}
                 />
-                {t}
+                <BengaliText>{t}</BengaliText>
               </span>
             ))}
           </div>
@@ -464,7 +468,7 @@ function CourseHero({
                   PREVIEW
                 </span>
                 <span className="font-mono text-[10px] font-semibold tracking-[0.18em] text-white/85 bg-white/10 border border-white/15 rounded-full px-[10px] py-[4px]">
-                  {lessonCount} LESSONS
+                  {lessonCount} LESSONS · {moduleCount} MODULES
                 </span>
               </div>
 
@@ -1435,6 +1439,7 @@ export default async function ProgramPage({ params }: Props) {
 
   const details = courseDetails[params.slug];
   const lessonCount = details ? details.modules.reduce((n, m) => n + m.lessons.length, 0) : 30;
+  const moduleCount = details ? details.modules.length : 0;
 
   let cta: CourseCta | undefined;
   if (program.hasDb && course) {
@@ -1555,7 +1560,7 @@ export default async function ProgramPage({ params }: Props) {
         title={details?.title ?? program.title}
         subtitle={details?.subtitle}
         desc={details?.desc ?? program.desc}
-        price={details?.price}
+        price={details?.price ?? details?.pricing?.price}
         originalPrice={details?.originalPrice}
         savings={details?.savings}
         access={details?.access}
@@ -1565,6 +1570,8 @@ export default async function ProgramPage({ params }: Props) {
             : undefined
         }
         lessonCount={lessonCount}
+        moduleCount={moduleCount}
+        chips={details?.chips}
         cta={cta}
         heroPill={details?.heroPill}
         titleAccent={details?.titleAccent}

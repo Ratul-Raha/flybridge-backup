@@ -125,6 +125,7 @@ export type CourseDetails = {
   originalPrice?: string;
   savings?: string;
   access?: string;
+  chips?: string[];
   rating?: RatingSummary;
   reviews?: Review[];
   stats: { value: string; label: string }[];
@@ -715,7 +716,8 @@ export const courseDetails: Record<string, CourseDetails> = {
     level: "Beginner to advanced",
     language: "বাংলা + English",
     pace: "Self-paced · 30 masterclasses",
-    access: "1 year access",
+    access: "Lifetime access",
+    chips: ["লাইফটাইম অ্যাক্সেস", "১৫টি ফ্রি মক টেস্ট", "নিজের গতিতে শেখো"],
     heroCta: { label: "এখনই ওয়েটলিস্টে জয়েন করুন", href: "#pricing" },
     heroStats: [
       { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
@@ -780,7 +782,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: Bot,
         title: "লাইভ সেমিনার ও সাপোর্ট",
-        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই ১ বছরের জন্য ডেস্কটপ-ভিত্তিক ১৫টা মক এক্সামের সুবিধা।",
+        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই ডেস্কটপ-ভিত্তিক ১৫টা মক এক্সামের সুবিধা।",
       },
       {
         icon: BookOpen,
@@ -799,7 +801,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       { title: "Writing Task 1 ও Task 2-এর Band 8+ স্ট্রাকচার নিজে লিখতে পারবেন" },
       { title: "Listening-এর প্রতিটা সেকশনে ফাঁদ চিনে সঠিক উত্তর ধরতে পারবেন" },
       { title: "Reading-এ সময় ভাগ করে True/False/Not Given সহ সব প্রশ্নে দক্ষ হবেন" },
-      { title: "ওয়েবসাইটে একাধিক ফুল-লেংথ মক টেস্টে ১ বছরের জন্য নিজের স্কোর যাচাই করতে পারবেন" },
+      { title: "ওয়েবসাইটে একাধিক ফুল-লেংথ মক টেস্টে নিজের স্কোর যাচাই করতে পারবেন" },
       { title: "পরীক্ষার দিনের জন্য IELTS Band Score Machine-এর প্রমাণিত ফ্রেমওয়ার্ক পাবেন" },
     ],
     curriculum: {
@@ -955,10 +957,10 @@ export const courseDetails: Record<string, CourseDetails> = {
       title: "১লা অক্টোবরের আগেই সিট বুক করুন",
       subtitle: "আর্লি-বার্ড ডিসকাউন্ট শীঘ্রই ঘোষণা করা হবে",
       price: "শীঘ্রই ঘোষণা",
-      note: "এককালীন পেমেন্ট · ১ বছরের সম্পূর্ণ অ্যাক্সেস",
+      note: "এককালীন পেমেন্ট · লাইফটাইম অ্যাক্সেস",
       ctaLabel: "এখনই ওয়েটলিস্টে জয়েন করুন",
       ctaHref: "#waitlist",
-      includedLine: "৩০টা মাস্টারক্লাস · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
+      includedLine: "৩০টা মাস্টারক্লাস · ১৫টা ফ্রি মক টেস্ট · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
       paymentLabel: "নিরাপদ পেমেন্ট, যেভাবে আপনার সুবিধা",
       paymentMethods: ["bKash", "Nagad", "Rocket", "Stripe"],
     },
