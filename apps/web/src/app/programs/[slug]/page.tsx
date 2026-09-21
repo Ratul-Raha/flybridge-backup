@@ -888,6 +888,89 @@ function FaqSection({ faqs }: { faqs: Faq[] }) {
   );
 }
 
+function RefundPolicySection() {
+  const facts = [
+    { value: "৩ দিন", label: "রিফান্ড উইন্ডো" },
+    { value: "১০০%", label: "টাকা ফেরত" },
+    { value: "৭–১৫", label: "কার্যদিবসে টাকা পাবেন" },
+  ];
+
+  return (
+    <section
+      id="refund"
+      className="px-[clamp(20px,4.5vw,56px)] py-[80px]"
+      style={{ background: "var(--bg-soft)" }}
+    >
+      <div className="max-w-[1000px] mx-auto">
+        <div
+          className="rounded-2xl border bg-white p-8 md:p-12"
+          style={{ borderColor: "var(--line)", boxShadow: "0 30px 60px -40px rgba(18,32,67,0.22)" }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,440px)] gap-10 md:gap-14 items-start">
+            <div>
+              <SectionHeading
+                eyebrow="REFUND POLICY"
+                title="কোর্সটা ভালো না লাগলে ৩ দিনে ১০০% টাকা ফেরত"
+                desc="কেনার ৩ দিনের মধ্যে যেকোনো কারণে কোর্সটা যদি আপনার পছন্দ না হয়, রিফান্ড দাবি করলেই পুরো টাকা ফেরত পাবেন। কোনো ঝামেলা নেই, কোনো প্রশ্ন নেই।"
+              />
+              <div className="grid grid-cols-3 gap-4">
+                {facts.map((f) => (
+                  <div
+                    key={f.label}
+                    className="rounded-xl px-3 py-4 text-center"
+                    style={{ background: "var(--brand-soft)", border: "1px solid rgba(20,181,126,0.25)" }}
+                  >
+                    <div
+                      className="font-display text-[clamp(20px,2.4vw,28px)] font-bold leading-none"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      <BengaliText>{f.value}</BengaliText>
+                    </div>
+                    <div className="mt-2 text-[12.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
+                      <BengaliText>{f.label}</BengaliText>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/refund"
+                className="inline-flex items-center gap-2 mt-8 text-[14.5px] font-semibold"
+                style={{ color: "var(--brand-2)" }}
+              >
+                <BengaliText>সম্পূর্ণ রিফান্ড পলিসি দেখুন</BengaliText>
+                {arrow}
+              </Link>
+            </div>
+
+            <div
+              className="rounded-2xl px-6 py-7 flex flex-col gap-5"
+              style={{ border: "1px dashed var(--line)", background: "var(--brand-soft)" }}
+            >
+              {[
+                "কেনার ৩ দিনের মধ্যে রিফান্ড দাবি করুন",
+                "অনুমোদনের পর ১০০% টাকা ফেরত পাবেন",
+                "টাকা ফেরত আসতে ৭–১৫ কার্যদিবস লাগে",
+              ].map((t) => (
+                <div key={t} className="flex items-start gap-3">
+                  <span
+                    className="w-[20px] h-[20px] rounded-full flex items-center justify-center shrink-0 mt-[2px]"
+                    style={{ background: "var(--brand)", color: "#fff" }}
+                  >
+                    <Check className="w-[11px] h-[11px]" strokeWidth={3} />
+                  </span>
+                  <p className="text-[15px] leading-[1.7]" style={{ color: "var(--ink)" }}>
+                    <BengaliText>{t}</BengaliText>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FinalCta({
   cta,
   pricing,
@@ -1874,6 +1957,8 @@ export default async function ProgramPage({ params }: Props) {
               averageRating={details.rating?.average ?? 0}
             />
           ) : null}
+
+          {details.slug === "ielts-band-score-machine" && <RefundPolicySection />}
 
           {details.pricing && <PricingSection pricing={details.pricing} />}
 
