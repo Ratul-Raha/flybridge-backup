@@ -838,6 +838,104 @@ function BookBand({ book }: { book: CourseBook }) {
   );
 }
 
+/* ───────────────────────── refund policy ───────────────────────── */
+
+function RefundSection() {
+  const facts = [
+    { value: "৩ দিন", label: "রিফান্ড উইন্ডো" },
+    { value: "১০০%", label: "টাকা ফেরত" },
+    { value: "৭–১৫", label: "কার্যদিবসে টাকা পাবেন" },
+  ];
+
+  return (
+    <section id="refund" className={sectionY} style={{ background: "var(--ib-fog)" }}>
+      <div className={wrap}>
+        <Reveal>
+          <div
+            className="rounded-[18px] p-[clamp(28px,4vw,44px)] relative overflow-hidden"
+            style={{
+              background: "#fff",
+              border: "1px solid var(--ib-line)",
+              boxShadow: "0 30px 60px -40px rgba(12,26,51,0.25)",
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,520px)] gap-10 md:gap-14 items-start">
+              <div>
+                <div className="text-[14px] font-semibold mb-3" style={{ color: "var(--ib-brand-2)" }}>
+                  <BengaliText>রিফান্ড পলিসি</BengaliText>
+                </div>
+                <h2
+                  className="font-display font-semibold leading-[1.4]"
+                  style={{ fontSize: "clamp(26px,3.1vw,38px)", color: "var(--ib-ink)" }}
+                >
+                  <BengaliText>কোর্সটা ভালো না লাগলে ৩ দিনে ১০০% টাকা ফেরত</BengaliText>
+                </h2>
+                <p className="mt-4 text-[16px] leading-[1.9]" style={{ color: "var(--ib-body)" }}>
+                  <BengaliText>
+                    কেনার ৩ দিনের মধ্যে যেকোনো কারণে কোর্সটা যদি আপনার পছন্দ না হয়, রিফান্ড দাবি করলেই
+                    পুরো টাকা ফেরত পাবেন। কোনো ঝামেলা নেই, কোনো প্রশ্ন নেই।
+                  </BengaliText>
+                </p>
+                <div className="mt-7 grid grid-cols-3 gap-4">
+                  {facts.map((f) => (
+                    <div
+                      key={f.label}
+                      className="rounded-[12px] px-3.5 py-4 text-center"
+                      style={{ background: "var(--ib-fog)", border: "1px solid var(--ib-line)" }}
+                    >
+                      <div
+                        className="font-display text-[clamp(20px,2.6vw,28px)] font-bold leading-none tabular-nums"
+                        style={{ color: "var(--ib-brand-2)" }}
+                      >
+                        <BengaliText>{f.value}</BengaliText>
+                      </div>
+                      <div className="mt-2 text-[12.5px] leading-[1.5]" style={{ color: "var(--ib-muted)" }}>
+                        <BengaliText>{f.label}</BengaliText>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href="/refund"
+                  className="inline-flex items-center gap-2 mt-8 text-[15px] font-bold"
+                  style={{ color: "var(--ib-brand-2)" }}
+                >
+                  <BengaliText>সম্পূর্ণ রিফান্ড পলিসি দেখুন</BengaliText>
+                  <ArrowRight className="w-[16px] h-[16px]" strokeWidth={2.4} />
+                </Link>
+              </div>
+
+              <div
+                className="rounded-[14px] px-6 py-7 flex flex-col gap-5"
+                style={{ border: "1px dashed var(--ib-line)", background: "var(--ib-fog)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <Check className="w-[18px] h-[18px] mt-[2px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                  <p className="text-[15px] leading-[1.8]" style={{ color: "var(--ib-ink)" }}>
+                    <BengaliText>কেনার <span className="font-bold">৩ দিনের মধ্যে</span> রিফান্ড দাবি করুন।</BengaliText>
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-[18px] h-[18px] mt-[2px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                  <p className="text-[15px] leading-[1.8]" style={{ color: "var(--ib-ink)" }}>
+                    <BengaliText>অনুমোদনের পর <span className="font-bold">১০০% টাকা</span> ফেরত পাবেন।</BengaliText>
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-[18px] h-[18px] mt-[2px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                  <p className="text-[15px] leading-[1.8]" style={{ color: "var(--ib-ink)" }}>
+                    <BengaliText>টাকা ফেরত আসতে <span className="font-bold">৭–১৫ কার্যদিবস</span> লাগে।</BengaliText>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ───────────────────────── closing offer ───────────────────────── */
 
 const PAYMENT_COLORS: Record<string, string> = {
@@ -1142,6 +1240,8 @@ export default async function IeltsFullReadinessLandingPage() {
               </Reveal>
             ) : null}
           </div>
+
+          {!isEnrolled && <RefundSection />}
 
           {!isEnrolled && <ClosingSection details={details} offer={offer} />}
         </>

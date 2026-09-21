@@ -80,7 +80,7 @@ const faqGroups = [
       },
       {
         q: "Can I get a refund?",
-        a: "Refund eligibility depends on the specific course or program you purchased. Reach out to us with your details and we will help immediately.",
+        a: "Yes — every course purchase comes with a 3-day full refund window. If you are not satisfied within 3 days, you can claim a 100% refund. Refunds are processed within 7–15 business days. See our refund policy for details.",
       },
     ],
   },

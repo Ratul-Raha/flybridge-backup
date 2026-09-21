@@ -42,7 +42,7 @@ const sections = [
     title: "Payments & refunds",
     paragraphs: [
       "Where paid content or services are offered, prices are displayed at the time of purchase. We may update prices for future purchases, with existing entitlements honoured as described at purchase.",
-      "Unless otherwise stated at checkout, purchases are non-refundable once access has been granted. If you believe you were charged in error, contact us within 14 days and we will investigate and, where appropriate, issue a refund.",
+      "Every course purchase comes with a 3-day full refund window. If you are not satisfied within 3 days of purchase, you can claim a 100% refund. Refunds are processed within 7–15 business days of approval. See our full Refund Policy for details.",
     ],
   },
   {
