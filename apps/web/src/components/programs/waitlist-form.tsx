@@ -96,13 +96,11 @@ export function WaitlistForm({
         </p>
       )}
 
-      <p className="mt-3 text-center text-[11.5px] leading-[1.6]" style={{ color: "#64748B" }}>
-        <BengaliText>
-          {user
-            ? "এক ক্লিকেই যুক্ত হয়ে যাবে — কোনো ফর্ম পূরণ নেই।"
-            : "Google দিয়ে সাইন ইন করলেই অটোমেটিক ওয়েটলিস্টে যুক্ত হয়ে যাবে।"}
-        </BengaliText>
-      </p>
+      {!user && (
+        <p className="mt-3 text-center text-[11.5px] leading-[1.6]" style={{ color: "#64748B" }}>
+          <BengaliText>Google দিয়ে সাইন ইন করলেই অটোমেটিক ওয়েটলিস্টে যুক্ত হয়ে যাবে।</BengaliText>
+        </p>
+      )}
     </div>
   );
 }

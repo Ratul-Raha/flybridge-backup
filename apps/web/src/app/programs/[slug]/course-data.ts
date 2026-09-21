@@ -709,7 +709,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     slug: "ielts-band-score-machine",
     badge: "IELTS",
     title: "IELTS Band Score Machine",
-    titleAccent: "— শুরু থেকে শেষ, একই জায়গায়",
+    titleAccent: "Interactive IELTS Course",
     subtitle: "Target Band 7",
     targetBand: { label: "TARGET", value: "Band 7", sub: "IELTS" },
     desc: "Speaking, Writing, Listening ও Reading — চারটা স্কিলেই টার্গেট স্কোর পাওয়ার এক সম্পূর্ণ সিস্টেম। আপনার বর্তমান লেভেল যা-ই হোক, স্কোর বাড়াবে নিখুঁতভাবে।",
@@ -717,8 +717,11 @@ export const courseDetails: Record<string, CourseDetails> = {
     language: "বাংলা + English",
     pace: "Self-paced · 30 masterclasses",
     access: "Lifetime access",
-    chips: ["লাইফটাইম অ্যাক্সেস", "১৫টি ফ্রি মক টেস্ট", "নিজের গতিতে শেখো"],
-    heroCta: { label: "এখনই ওয়েটলিস্টে জয়েন করুন", href: "#pricing" },
+    price: "৳2,999",
+    originalPrice: "৳3,999",
+    savings: "৳1,000",
+    chips: ["লাইফটাইম অ্যাক্সেস", "১৫টি ফ্রি মক টেস্ট", "নিজের গতিতে শিখুন"],
+    heroCta: { label: "Join the waitlist", href: "#waitlist" },
     heroStats: [
       { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
       { value: "Live", label: "নিয়মিত লাইভ সেমিনার" },
@@ -732,7 +735,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     ],
     problem: {
       title: "বেশিরভাগ IELTS কোর্স শুধু টিপস শেখায়, পরীক্ষাটা শেখায় না",
-      desc: '"বেশি প্র্যাকটিস করো", "ভালো ভোকাবুলারি ইউজ করো" — এইসব জেনারেল কথা তো সবাই বলে। কিন্তু আসল প্রশ্ন হলো — Band 6 আর Band 8-এর উত্তরের মধ্যে আসলে পার্থক্যটা কোথায়? পরীক্ষার পুরো ৪০টা প্রশ্ন একসাথে কেমন দেখতে হয়, সেটা কখনো দেখেছেন? বেশিরভাগ কোর্স ঠিক এই জায়গাতেই আটকে যায়। আর এই গ্যাপ দূর করতেই এসেছে IELTS Band Score Machine।',
+      desc: '"বেশি প্র্যাকটিস করো", "ভালো ভোকাবুলারি ইউজ করো" — এইসব জেনারেল কথা তো সবাই বলে। কিন্তু আসল প্রশ্ন হলো — Band 6 আর Band 7-এর উত্তরের মধ্যে আসলে পার্থক্যটা কোথায়? পরীক্ষার পুরো ৪০টা প্রশ্ন একসাথে কেমন দেখতে হয়, সেটা কখনো দেখেছেন? বেশিরভাগ কোর্স ঠিক এই জায়গাতেই আটকে যায়। আর এই গ্যাপ দূর করতেই এসেছে IELTS Band Score Machine।',
     },
     steps: {
       title: "একটা সিস্টেম। চারটা স্কিল। পরীক্ষা যেভাবে হয়, ঠিক সেভাবেই তৈরি।",
@@ -743,7 +746,7 @@ export const courseDetails: Record<string, CourseDetails> = {
         },
         {
           title: "২. পার্থক্যটা বুঝুন",
-          desc: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 8+ তুলনা আছে, তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
+          desc: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 7 তুলনা আছে, তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
         },
         {
           title: "৩. প্র্যাকটিস করুন",
@@ -756,8 +759,8 @@ export const courseDetails: Record<string, CourseDetails> = {
     features: [
       {
         icon: Brain,
-        title: "Band 6 বনাম Band 8+ তুলনা",
-        desc: "প্রতিটা লেসনে সরাসরি দেখানো হয় কোন উত্তরটা কেন কম স্কোর পায় আর কোনটা Band 8+ — তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
+        title: "Band 6 বনাম Band 7 তুলনা",
+        desc: "প্রতিটা লেসনে সরাসরি দেখানো হয় কোন উত্তরটা কেন কম স্কোর পায় আর কোনটা Band 7 — তাই জানবেন ঠিক কী ফিক্স করতে হবে।",
       },
       {
         icon: Mic,
@@ -767,7 +770,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: FileText,
         title: "IELTS Writing Mastery",
-        desc: "Academic ও General Training Task 1, Task 2-এর প্যারাগ্রাফিং, Band 8+ ভোকাবুলারি আর ৫ ধরনের Essay Structure Formula।",
+        desc: "Academic ও General Training Task 1, Task 2-এর প্যারাগ্রাফিং, Band 7 ভোকাবুলারি আর ৫ ধরনের Essay Structure Formula।",
       },
       {
         icon: MessageCircle,
@@ -787,18 +790,18 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: BookOpen,
         title: "Companion Book (PDF)",
-        desc: "প্রতিটা লেসনের মূল শিক্ষা, মডেল আনসার, Band 6 বনাম Band 8+ তুলনা আর প্র্যাকটিস টেস্ট — সবকিছু একসাথে একটা সম্পূর্ণ companion PDF বইয়ে।",
+        desc: "প্রতিটা লেসনের মূল শিক্ষা, মডেল আনসার, Band 6 বনাম Band 7 তুলনা আর প্র্যাকটিস টেস্ট — সবকিছু একসাথে একটা সম্পূর্ণ companion PDF বইয়ে।",
       },
     ],
     book: {
       title: "IELTS Band Score Machine — Companion Book",
-      desc: "৩০টা ভিডিও মাস্টারক্লাসের পাশাপাশি একটা সম্পূর্ণ companion PDF বই — প্রতিটা লেসনের মূল শিক্ষা, প্রতিটা মডেল আনসার, Band 6 বনাম Band 8+ তুলনা, আর প্রতিটা প্র্যাকটিস টেস্ট, সব একসাথে।",
+      desc: "৩০টা ভিডিও মাস্টারক্লাসের পাশাপাশি একটা সম্পূর্ণ companion PDF বই — প্রতিটা লেসনের মূল শিক্ষা, প্রতিটা মডেল আনসার, Band 6 বনাম Band 7 তুলনা, আর প্রতিটা প্র্যাকটিস টেস্ট, সব একসাথে।",
       includedNote: "The complete companion book is included free with every enrollment.",
       image: "/programs/ielts-band-score-machine-book.svg",
     },
     outcomes: [
       { title: "Speaking-এর Part 1, 2, 3-এ আত্মবিশ্বাসের সাথে উত্তর দিতে পারবেন" },
-      { title: "Writing Task 1 ও Task 2-এর Band 8+ স্ট্রাকচার নিজে লিখতে পারবেন" },
+      { title: "Writing Task 1 ও Task 2-এর Band 7 স্ট্রাকচার নিজে লিখতে পারবেন" },
       { title: "Listening-এর প্রতিটা সেকশনে ফাঁদ চিনে সঠিক উত্তর ধরতে পারবেন" },
       { title: "Reading-এ সময় ভাগ করে True/False/Not Given সহ সব প্রশ্নে দক্ষ হবেন" },
       { title: "ওয়েবসাইটে একাধিক ফুল-লেংথ মক টেস্টে নিজের স্কোর যাচাই করতে পারবেন" },
@@ -829,7 +832,7 @@ export const courseDetails: Record<string, CourseDetails> = {
             "Academic Task 1: Line Graph, Bar Chart, Table, Process",
             "GT Task 1: Formal, Semi-Formal, Informal লেটার",
             "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং",
-            "Task 2-এর Band 8+ ভোকাবুলারি ও Cohesive Devices",
+            "Task 2-এর Band 7 ভোকাবুলারি ও Cohesive Devices",
           ],
           capstone: "৫ ধরনের Essay Structure Formula",
         },
@@ -866,7 +869,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       rows: [
         {
           left: 'ভাসা ভাসা পরামর্শ ("আরও প্র্যাকটিস করো")',
-          right: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 8+ তুলনা",
+          right: "প্রতিটা লেসনে সরাসরি Band 6 বনাম Band 7 তুলনা",
         },
         { left: "দুই-একটা উদাহরণ বাক্য", right: "সম্পূর্ণ মডেল আনসার, শব্দসংখ্যা ও ব্যান্ড স্কোরসহ বিশ্লেষণ" },
         {
@@ -897,7 +900,7 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Academic Task 1: Line Graph, Bar Chart, Table, Process", duration: "14:05" },
           { title: "GT Task 1: Formal, Semi-Formal, Informal লেটার", duration: "12:40" },
           { title: "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং", duration: "13:50" },
-          { title: "Task 2-এর Band 8+ ভোকাবুলারি ও Cohesive Devices", duration: "11:35" },
+          { title: "Task 2-এর Band 7 ভোকাবুলারি ও Cohesive Devices", duration: "11:35" },
           { title: "Writing Mock Test: Task 1 + Task 2 সম্পূর্ণ রিভিউ", duration: "17:10" },
           { title: "Capstone: ৫ ধরনের Essay Structure Formula", duration: "16:20" },
         ],
@@ -932,7 +935,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     pdfs: [
       {
         title: "IELTS Band Score Machine Companion Book",
-        desc: "Every lesson, model answer and Band 6 vs Band 8+ comparison — designed for mobile reading.",
+        desc: "Every lesson, model answer and Band 6 vs Band 7 comparison — designed for mobile reading.",
         pages: 180,
         size: "12.4 MB",
       },
@@ -955,10 +958,10 @@ export const courseDetails: Record<string, CourseDetails> = {
     },
     pricing: {
       title: "১লা অক্টোবরের আগেই সিট বুক করুন",
-      subtitle: "আর্লি-বার্ড ডিসকাউন্ট শীঘ্রই ঘোষণা করা হবে",
-      price: "শীঘ্রই ঘোষণা",
-      note: "এককালীন পেমেন্ট · লাইফটাইম অ্যাক্সেস",
-      ctaLabel: "এখনই ওয়েটলিস্টে জয়েন করুন",
+      subtitle: "৳1,000 discount for a limited time",
+      price: "৳2,999",
+      note: "One-time payment · Lifetime access",
+      ctaLabel: "Join the waitlist",
       ctaHref: "#waitlist",
       includedLine: "৩০টা মাস্টারক্লাস · ১৫টা ফ্রি মক টেস্ট · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
       paymentLabel: "নিরাপদ পেমেন্ট, যেভাবে আপনার সুবিধা",
