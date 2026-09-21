@@ -32,11 +32,12 @@ import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
-import { ExamWindow, Reveal, SkillTabs, StickyOffer } from "@/components/ielts/interactive";
+import { Countdown, ExamWindow, Reveal, SkillTabs, StickyOffer } from "@/components/ielts/interactive";
 import { DbCoursePage } from "./db-course-page";
 
 const SLUG = "ielts-band-score-machine";
 const MOCK_TEST_COUNT = 15;
+const LAUNCH_DATE = "2026-10-01T00:00:00+06:00";
 
 export const dynamic = "force-dynamic";
 
@@ -467,6 +468,12 @@ function Hero({
             <p className="mt-5 text-[17px] leading-[1.9] max-w-[560px]" style={{ color: "var(--ib-body)" }}>
               <BengaliText>{COPY.heroSub}</BengaliText>
             </p>
+
+            {offer.mode === "waitlist" && (
+              <div className="mt-6">
+                <Countdown target={LAUNCH_DATE} />
+              </div>
+            )}
 
             <OfferCard offer={offer} note={pricingNote} className="mt-8 max-w-[520px]" />
           </Reveal>

@@ -563,6 +563,89 @@ export function StickyOffer({
   );
 }
 
+/* ───────────────────────── waitlist launch countdown ───────────────────────── */
+
+/** Counts down to a fixed launch date on the client. */
+export function Countdown({
+  target,
+  labels = ["দিন", "ঘণ্টা", "মিনিট", "সেকেন্ড"],
+}: {
+  target: string;
+  labels?: [string, string, string, string];
+}) {
+  const toUnits = (ms: number) => {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return {
+      days: Math.floor(s / 86400),
+      hours: Math.floor((s % 86400) / 3600),
+      minutes: Math.floor((s % 3600) / 60),
+      seconds: s % 60,
+    };
+  };
+
+  const [remaining, setRemaining] = useState<ReturnType<typeof toUnits>>(() => toUnits(new Date(target).getTime() - Date.now()));
+
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(toUnits(new Date(target).getTime() - Date.now())), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+
+  const done = remaining.days === 0 && remaining.hours === 0 && remaining.minutes === 0 && remaining.seconds === 0;
+
+  const cells = [
+    { value: remaining.days, label: labels[0] },
+    { value: remaining.hours, label: labels[1] },
+    { value: remaining.minutes, label: labels[2] },
+    { value: remaining.seconds, label: labels[3] },
+  ];
+
+  if (done) {
+    return (
+      <div
+        className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13.5px] font-semibold"
+        style={{ background: "var(--ib-mint)", color: "#052117" }}
+      >
+        <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "#052117" }} />
+        কোর্স লাইভ — এখনই ভর্তি হন
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="timer"
+      aria-label="কোর্স লঞ্চ পর্যন্ত বাকি সময়"
+      className="inline-flex flex-wrap items-center gap-2 rounded-[12px] px-3 py-2.5"
+      style={{ background: "#fff", border: "1px solid var(--ib-line)", boxShadow: "0 10px 24px -14px rgba(12,26,51,0.25)" }}
+    >
+      <span className="flex items-center gap-2 text-[12.5px] font-bold mr-1" style={{ color: "var(--ib-brand-2)" }}>
+        <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "var(--ib-brand)" }} />
+        লঞ্চ হতে বাকি
+      </span>
+      {cells.map((c, i) => (
+        <span key={c.label} className="flex items-center gap-2">
+          <span className="flex flex-col items-center rounded-[9px] px-2.5 py-1.5 min-w-[46px]" style={{ background: "var(--ib-fog)" }}>
+            <span
+              className="font-display text-[17px] font-bold leading-none tabular-nums"
+              style={{ color: "var(--ib-ink)" }}
+            >
+              {String(c.value).padStart(2, "0")}
+            </span>
+            <span className="mt-0.5 text-[10px] font-semibold leading-none" style={{ color: "var(--ib-muted)" }}>
+              {c.label}
+            </span>
+          </span>
+          {i < cells.length - 1 && (
+            <span className="font-display text-[14px] font-bold tabular-nums" style={{ color: "var(--ib-muted)" }}>
+              :
+            </span>
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /* ───────────────────────── scroll reveal ─────────────────────────
  * Fade + rise sections into view once, on first scroll into the viewport.
  * If the user prefers reduced motion, content is shown instantly.
