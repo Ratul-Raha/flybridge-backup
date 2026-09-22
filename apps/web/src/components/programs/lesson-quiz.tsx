@@ -41,6 +41,8 @@ export function LessonQuiz({
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [quizId, setQuizId] = useState<string | null>(null);
+  const [mode, setMode] = useState<"ielts" | "general" | null>(null);
+  const [ieltsSkill, setIeltsSkill] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<ResultsData | null>(null);
@@ -59,6 +61,8 @@ export function LessonQuiz({
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || "Failed to load quiz");
       setQuizId(data.quizId);
+      setMode(data.mode === "ielts" ? "ielts" : "general");
+      setIeltsSkill(data.ieltsSkill ?? null);
       setQuestions(data.questions);
       setAnswers({});
       setPhase("taking");
@@ -99,6 +103,8 @@ export function LessonQuiz({
 
   const resetQuiz = () => {
     setQuizId(null);
+    setMode(null);
+    setIeltsSkill(null);
     setQuestions([]);
     setAnswers({});
     setResults(null);
@@ -282,6 +288,24 @@ export function LessonQuiz({
 
   return (
     <div className="flex flex-col gap-5 py-4">
+      {mode === "ielts" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className="font-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded-full"
+            style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+          >
+            IELTS practice quiz
+          </span>
+          {ieltsSkill && (
+            <span
+              className="font-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded-full"
+              style={{ background: "rgba(22,163,74,0.1)", color: "#16a34a" }}
+            >
+              {ieltsSkill}
+            </span>
+          )}
+        </div>
+      )}
       {questions.map((q, i) => (
         <div
           key={q.id}
