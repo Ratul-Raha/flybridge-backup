@@ -85,6 +85,8 @@ export async function POST(
   }
 
   try {
+    const isStaff = session.role === "admin" || session.role === "moderator";
+
     const body = await request.json();
     const { moduleIndex, lessonIndex, quizId, answers } = body as {
       moduleIndex: number;
@@ -107,19 +109,21 @@ export async function POST(
 
     const course = await Course.findOne({
       _id: params.id,
-      $or: [{ published: true }, { upcoming: true }],
+      ...(isStaff ? {} : { $or: [{ published: true }, { upcoming: true }] }),
     });
     if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    const enrolled = await CourseEnrollment.exists({
-      user: session.userId,
-      course: course._id,
-      status: "active",
-    });
-    if (!enrolled) {
-      return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
+    if (!isStaff) {
+      const enrolled = await CourseEnrollment.exists({
+        user: session.userId,
+        course: course._id,
+        status: "active",
+      });
+      if (!enrolled) {
+        return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
+      }
     }
 
     const pending = await QuizPending.findOne({

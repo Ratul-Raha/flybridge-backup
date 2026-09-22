@@ -9,6 +9,7 @@ const lessonSchema = new Schema(
     duration: { type: String, trim: true },
     videoUrl: { type: String, trim: true },
     pdfUrl: { type: String, trim: true },
+    content: { type: String, trim: true },
   },
   { _id: false }
 );

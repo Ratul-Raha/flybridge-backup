@@ -22,6 +22,7 @@ type Lesson = {
   duration: string;
   videoUrl: string;
   pdfUrl: string;
+  content: string;
 };
 
 type Module = { title: string; lessons: Lesson[] };
@@ -32,6 +33,7 @@ type FlatLesson = {
   duration: string;
   videoUrl: string;
   pdfUrl: string;
+  content: string;
 };
 
 type GradeData = {
@@ -444,7 +446,7 @@ export function LessonPlayer({
                   </svg>
                 </a>
               )}
-              {tab === "lesson" && !current.videoUrl && !current.pdfUrl && (
+              {tab === "lesson" && !current.videoUrl && !current.pdfUrl && !current.content && (
                 <div
                   className="rounded-xl border flex flex-col items-center justify-center gap-3 py-20 text-center px-6"
                   style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
@@ -500,6 +502,19 @@ export function LessonPlayer({
               {/* Content area */}
               {tab === "lesson" ? (
                 <>
+                  {current.content && (
+                    <div
+                      className="mt-5 rounded-xl border p-5"
+                      style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
+                    >
+                      <p className="font-mono text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: "var(--body)" }}>
+                        Lesson Text
+                      </p>
+                      <div className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: "var(--ink)" }}>
+                        <BengaliText>{current.content}</BengaliText>
+                      </div>
+                    </div>
+                  )}
                   {current.pdfUrl && current.videoUrl && (
                     <a
                       href={current.pdfUrl}

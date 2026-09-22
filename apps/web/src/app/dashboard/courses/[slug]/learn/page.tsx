@@ -108,6 +108,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
         duration: l.duration ?? "",
         videoUrl: await signMediaUrl(l.videoUrl),
         pdfUrl: await signMediaUrl(l.pdfUrl),
+        content: l.content ?? "",
       }))
     )
   );
@@ -124,6 +125,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
           duration: l.duration ?? "",
           videoUrl: await signMediaUrl(l.videoUrl),
           pdfUrl: await signMediaUrl(l.pdfUrl),
+          content: l.content ?? "",
         }))
       ),
     }))

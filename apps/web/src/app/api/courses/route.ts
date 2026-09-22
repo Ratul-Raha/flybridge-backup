@@ -42,7 +42,9 @@ function toDto(
       lessons: (m.lessons ?? []).map((l) => ({
         title: l.title,
         duration: l.duration ?? "",
-        ...(includeContent ? { videoUrl: l.videoUrl ?? "", pdfUrl: l.pdfUrl ?? "" } : {}),
+        ...(includeContent
+          ? { videoUrl: l.videoUrl ?? "", pdfUrl: l.pdfUrl ?? "", content: l.content ?? "" }
+          : {}),
       })),
     })),
     books: (c.books ?? []).map((b) => ({
@@ -211,7 +213,13 @@ function normalizeModules(
   raw: unknown,
 ): {
   title: string;
-  lessons: { title: string; duration?: string; videoUrl?: string; pdfUrl?: string }[];
+  lessons: {
+    title: string;
+    duration?: string;
+    videoUrl?: string;
+    pdfUrl?: string;
+    content?: string;
+  }[];
 }[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -227,6 +235,7 @@ function normalizeModules(
                 duration: typeof lesson.duration === "string" ? lesson.duration.trim() : "",
                 videoUrl: typeof lesson.videoUrl === "string" ? lesson.videoUrl.trim() : "",
                 pdfUrl: typeof lesson.pdfUrl === "string" ? lesson.pdfUrl.trim() : "",
+                content: typeof lesson.content === "string" ? lesson.content.trim() : "",
               };
             })
             .filter((l) => l.title)

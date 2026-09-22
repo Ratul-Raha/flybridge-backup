@@ -8,7 +8,7 @@ import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 
-type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string };
+type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string; content: string };
 type Module = { title: string; lessons: Lesson[] };
 type Book = { title: string; description: string; pdfUrl: string };
 
@@ -88,7 +88,7 @@ const emptyForm: FormState = {
 };
 
 function emptyLesson(): Lesson {
-  return { title: "", duration: "", videoUrl: "", pdfUrl: "" };
+  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "" };
 }
 
 async function uploadFile(file: File): Promise<string> {
@@ -162,6 +162,7 @@ export function CourseManage() {
           duration: l.duration ?? "",
           videoUrl: l.videoUrl ?? "",
           pdfUrl: l.pdfUrl ?? "",
+          content: l.content ?? "",
         })),
       })),
       books: (c.books ?? []).map((b) => ({
@@ -687,6 +688,14 @@ export function CourseManage() {
                               />
                             </label>
                           </div>
+                          <textarea
+                            value={l.content}
+                            onChange={(e) => updateLesson(mi, li, { content: e.target.value })}
+                            placeholder="Lesson text content (optional) — used by IELTS quizzes"
+                            rows={4}
+                            className={inputClass + " resize-y"}
+                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                          />
                         </div>
                       ))}
                       <button
