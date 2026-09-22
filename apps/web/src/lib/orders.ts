@@ -261,26 +261,47 @@ export async function createOrder(input: {
     };
   }
 
-  const order = await Order.create({
-    user: input.user.id,
-    email: input.user.email,
-    items: [
-      {
-        itemType: product.itemType,
-        itemId: product.itemId,
-        title: product.title,
-        price: resolved.total,
-      },
-    ],
-    subtotal: resolved.subtotal,
-    discountAmount: resolved.discount,
-    discountId: resolved.discountId ?? undefined,
-    discountCode: resolved.code ?? undefined,
-    discountLabel: resolved.label ?? undefined,
-    total: resolved.total,
-    currency,
-    status: "pending",
-  });
+  let order: OrderDoc | null;
+  try {
+    order = await Order.create({
+      user: input.user.id,
+      email: input.user.email,
+      items: [
+        {
+          itemType: product.itemType,
+          itemId: product.itemId,
+          title: product.title,
+          price: resolved.total,
+        },
+      ],
+      subtotal: resolved.subtotal,
+      discountAmount: resolved.discount,
+      discountId: resolved.discountId ?? undefined,
+      discountCode: resolved.code ?? undefined,
+      discountLabel: resolved.label ?? undefined,
+      total: resolved.total,
+      currency,
+      status: "pending",
+    });
+  } catch (error) {
+    // Duplicate key: a concurrent checkout claimed this user+item first.
+    if ((error as { code?: number })?.code === 11000) {
+      const winner = await Order.findOne({
+        user: input.user.id,
+        "items.itemId": product.itemId,
+        status: { $in: ["pending", "completed"] },
+      });
+      if (winner) {
+        return {
+          order: winner as OrderDoc & { save(): Promise<unknown> },
+          requiresPayment: winner.status === "pending",
+          duplicate: true,
+        };
+      }
+    }
+    throw error;
+  }
+  if (!order) throw new Error("Failed to create order");
 
   await emitEvent("order.created", {
     order: serializeOrder(order),

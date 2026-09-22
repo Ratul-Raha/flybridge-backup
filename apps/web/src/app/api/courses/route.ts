@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { Course, type CourseDoc } from "@/lib/models/course";
+import { Course, isCourseCategory, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
@@ -18,6 +18,7 @@ function toDto(
     slug: c.slug,
     title: c.title,
     badge: c.badge ?? "",
+    category: c.category ?? "",
     subtitle: c.subtitle ?? "",
     description: c.description ?? "",
     level: c.level ?? "",
@@ -161,6 +162,9 @@ export async function POST(request: NextRequest) {
       slug: rawSlug,
       title,
       badge: typeof body.badge === "string" ? body.badge.trim() : "",
+      category: isCourseCategory(body.category)
+        ? body.category
+        : undefined,
       subtitle: typeof body.subtitle === "string" ? body.subtitle.trim() : "",
       description: typeof body.description === "string" ? body.description.trim() : "",
       level: typeof body.level === "string" ? body.level.trim() : "",

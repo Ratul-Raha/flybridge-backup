@@ -42,6 +42,16 @@ const orderSchema = new Schema(
   { timestamps: true }
 );
 
+orderSchema.index(
+  { user: 1, "items.itemId": 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      $or: [{ status: "pending" }, { status: "completed" }],
+    },
+  }
+);
+
 export type OrderItem = InferSchemaType<typeof orderItemSchema>;
 
 export type OrderDoc = InferSchemaType<typeof orderSchema> & {

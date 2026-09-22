@@ -1,4 +1,7 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import { COURSE_CATEGORIES } from "@/lib/course-categories";
+
+export { COURSE_CATEGORIES, isCourseCategory, type CourseCategory } from "@/lib/course-categories";
 
 const lessonSchema = new Schema(
   {
@@ -44,6 +47,12 @@ const courseSchema = new Schema(
     },
     title: { type: String, required: true, trim: true },
     badge: { type: String, trim: true },
+    category: {
+      type: String,
+      enum: COURSE_CATEGORIES,
+      default: null,
+      index: true,
+    },
     subtitle: { type: String, trim: true },
     description: { type: String, trim: true },
     level: { type: String, trim: true },

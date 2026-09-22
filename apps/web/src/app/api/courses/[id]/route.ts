@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { Course } from "@/lib/models/course";
+import { Course, isCourseCategory } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { sanitizePrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
@@ -16,6 +16,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   title: "Title",
   slug: "Slug",
   badge: "Badge",
+  category: "Category",
   subtitle: "Subtitle",
   description: "Description",
   level: "Level",
@@ -83,6 +84,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       "pace",
     ] as const) {
       if (typeof body[field] === "string") course[field] = body[field].trim();
+    }
+    if (body.category === null || body.category === "") {
+      course.category = null as unknown as typeof course.category;
+    } else if (isCourseCategory(body.category)) {
+      course.category = body.category;
+    } else if (body.category !== undefined) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
     if (typeof body.price === "number") course.price = Math.max(0, body.price);
     if (typeof body.currency === "string" && body.currency.trim()) {

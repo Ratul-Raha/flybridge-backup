@@ -6,6 +6,7 @@ import { BookOpen, Heart, Loader2, Plus, Trash2, Upload, Users } from "lucide-re
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { COURSE_CATEGORIES } from "@/lib/course-categories";
 
 type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string };
 type Module = { title: string; lessons: Lesson[] };
@@ -16,6 +17,7 @@ type Course = {
   slug: string;
   title: string;
   badge: string;
+  category: string;
   subtitle: string;
   description: string;
   level: string;
@@ -40,6 +42,7 @@ type FormState = {
   title: string;
   slug: string;
   badge: string;
+  category: string;
   subtitle: string;
   description: string;
   level: string;
@@ -65,6 +68,7 @@ const emptyForm: FormState = {
   title: "",
   slug: "",
   badge: "",
+  category: "",
   subtitle: "",
   description: "",
   level: "",
@@ -103,15 +107,19 @@ export function CourseManage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/courses?all=true", { cache: "no-store" });
       const data = await res.json();
       setCourses(data.courses ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -131,6 +139,7 @@ export function CourseManage() {
       title: c.title,
       slug: c.slug,
       badge: c.badge ?? "",
+      category: c.category ?? "",
       subtitle: c.subtitle ?? "",
       description: c.description ?? "",
       level: c.level ?? "",
@@ -316,6 +325,21 @@ export function CourseManage() {
                 className={inputClass}
                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>Category</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              >
+                <option value="">None</option>
+                {COURSE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -874,7 +898,14 @@ export function CourseManage() {
       })()}
 
       {/* ── Course table ── */}
-      {courses.length === 0 && !formOpen ? (
+      {loading ? (
+        <div className="rounded-lg border bg-white p-16 text-center" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
+          <Loader2 size={28} className="animate-spin mx-auto" style={{ color: "var(--brand)" }} />
+          <p className="text-[14px] font-medium mt-5" style={{ color: "var(--body)" }}>
+            Loading courses…
+          </p>
+        </div>
+      ) : courses.length === 0 && !formOpen ? (
         <div className="rounded-lg border bg-white p-16 text-center" style={{ borderColor: "var(--line)", boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}>
           <div className="w-14 h-14 rounded-lg mx-auto mb-5 flex items-center justify-center" style={{ background: "var(--bg-soft)" }}>
             <BookOpen size={22} style={{ color: "var(--body)" }} />
