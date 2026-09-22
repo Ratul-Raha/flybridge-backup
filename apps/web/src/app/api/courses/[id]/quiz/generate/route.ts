@@ -4,8 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizPending } from "@/lib/models/quiz-pending";
-import { generateQuiz, detectIeltsFocus } from "@/lib/ai/quiz";
-import { COURSE_CATEGORIES } from "@/lib/course-categories";
+import { generateQuiz } from "@/lib/ai/quiz";
 
 export async function POST(
   request: NextRequest,
@@ -60,19 +59,6 @@ export async function POST(
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
 
-    const mode = course.category === COURSE_CATEGORIES[0] ? "ielts" : "general";
-    const ieltsFocus =
-      mode === "ielts" ? detectIeltsFocus(mod.title, lesson.title) : null;
-    console.log("[quiz] generate", {
-      course: course.title,
-      category: course.category ?? null,
-      lesson: lesson.title,
-      module: mod.title,
-      lessonContentLength: (lesson.content ?? "").length,
-      mode,
-      ieltsSkill: ieltsFocus?.skill ?? null,
-    });
-
     const questions = await generateQuiz(
       course.title,
       mod.title,
@@ -98,12 +84,7 @@ export async function POST(
       questions,
     });
 
-    return NextResponse.json({
-      quizId: pending._id.toString(),
-      mode,
-      ieltsSkill: ieltsFocus?.skill ?? null,
-      questions,
-    });
+    return NextResponse.json({ quizId: pending._id.toString(), questions });
   } catch (error) {
     console.error("quiz generate error", error);
     const detail = error instanceof Error ? error.message : "Unknown error";

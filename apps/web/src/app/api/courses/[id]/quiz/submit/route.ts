@@ -8,6 +8,7 @@ import { QuizAttempt } from "@/lib/models/quiz-attempt";
 import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
 import type { QuizQuestion } from "@/lib/ai/quiz";
+import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { emitEvent } from "@/lib/events/emit";
 
 /* ------------------------------------------------------------------ */
@@ -182,119 +183,124 @@ export async function POST(
         ? Math.round((correctCount / totalQuestions) * 100)
         : 0;
 
-    await QuizAttempt.create({
-      user: session.userId,
-      course: course._id,
-      courseSlug: course.slug,
-      moduleIndex,
-      lessonIndex,
-      questions,
-      answers: [...answerMap.entries()].map(([questionId, answer]) => ({
-        questionId,
-        answer,
-      })),
-      score,
-      totalQuestions,
-      correctCount,
-    });
+    const isIelts = course.category === COURSE_CATEGORIES[0];
 
     await QuizPending.deleteOne({ _id: pending._id });
 
-    // Update CourseProgress with quiz score (replace on retake)
-    const totalLessons = (course.modules ?? []).reduce(
-      (n, m) => n + (m.lessons?.length ?? 0),
-      0
-    );
-
-    const existingProgress = await CourseProgress.findOne({
-      user: session.userId,
-      course: course._id,
-    });
-
-    let quizScores = (existingProgress?.quizScores as {
-      moduleIndex: number;
-      lessonIndex: number;
-      score: number;
-      totalQuestions: number;
-      correctCount: number;
-      attempts: number;
-    }[]) ?? [];
-
-    const existingIdx = quizScores.findIndex(
-      (s) => s.moduleIndex === moduleIndex && s.lessonIndex === lessonIndex
-    );
-
-    if (existingIdx >= 0) {
-      quizScores[existingIdx] = {
+    // IELTS practice is not tracked: submit -> instant feedback, nothing saved.
+    if (!isIelts) {
+      await QuizAttempt.create({
+        user: session.userId,
+        course: course._id,
+        courseSlug: course.slug,
         moduleIndex,
         lessonIndex,
+        questions,
+        answers: [...answerMap.entries()].map(([questionId, answer]) => ({
+          questionId,
+          answer,
+        })),
         score,
         totalQuestions,
         correctCount,
-        attempts: (quizScores[existingIdx].attempts ?? 1) + 1,
-      };
-    } else {
-      quizScores.push({
-        moduleIndex,
-        lessonIndex,
-        score,
-        totalQuestions,
-        correctCount,
-        attempts: 1,
+      });
+
+      // Update CourseProgress with quiz score (replace on retake)
+      const totalLessons = (course.modules ?? []).reduce(
+        (n, m) => n + (m.lessons?.length ?? 0),
+        0
+      );
+
+      const existingProgress = await CourseProgress.findOne({
+        user: session.userId,
+        course: course._id,
+      });
+
+      let quizScores = (existingProgress?.quizScores as {
+        moduleIndex: number;
+        lessonIndex: number;
+        score: number;
+        totalQuestions: number;
+        correctCount: number;
+        attempts: number;
+      }[]) ?? [];
+
+      const existingIdx = quizScores.findIndex(
+        (s) => s.moduleIndex === moduleIndex && s.lessonIndex === lessonIndex
+      );
+
+      if (existingIdx >= 0) {
+        quizScores[existingIdx] = {
+          moduleIndex,
+          lessonIndex,
+          score,
+          totalQuestions,
+          correctCount,
+          attempts: (quizScores[existingIdx].attempts ?? 1) + 1,
+        };
+      } else {
+        quizScores.push({
+          moduleIndex,
+          lessonIndex,
+          score,
+          totalQuestions,
+          correctCount,
+          attempts: 1,
+        });
+      }
+
+      const avgScore =
+        quizScores.length > 0
+          ? Math.round(
+              quizScores.reduce((sum, q) => sum + q.score, 0) /
+                quizScores.length
+            )
+          : 0;
+
+      const passed = avgScore >= 60 && quizScores.length === totalLessons;
+
+      await CourseProgress.findOneAndUpdate(
+        { user: session.userId, course: course._id },
+        {
+          $setOnInsert: {
+            user: session.userId,
+            course: course._id,
+            courseSlug: course.slug,
+            totalQuizzes: totalLessons,
+          },
+          $set: {
+            quizScores,
+            overallPercentage: avgScore,
+            completedQuizzes: quizScores.length,
+            passed,
+          },
+        },
+        { upsert: true }
+      );
+
+      void emitEvent(
+        "course.progress_updated",
+        {
+          user: {
+            id: session.userId,
+            name: session.name,
+            email: session.email,
+          },
+          course: {
+            id: course._id.toString(),
+            slug: course.slug,
+            title: course.title,
+          },
+          progress: {
+            overallPercentage: avgScore,
+            passed,
+            certificateIssued: false,
+          },
+        }
+      ).catch((error) => {
+        console.error("course.progress_updated emit error", error);
       });
     }
-
-    const avgScore =
-      quizScores.length > 0
-        ? Math.round(
-            quizScores.reduce((sum, q) => sum + q.score, 0) /
-              quizScores.length
-          )
-        : 0;
-
-    const passed = avgScore >= 60 && quizScores.length === totalLessons;
-
-    await CourseProgress.findOneAndUpdate(
-      { user: session.userId, course: course._id },
-      {
-        $setOnInsert: {
-          user: session.userId,
-          course: course._id,
-          courseSlug: course.slug,
-          totalQuizzes: totalLessons,
-        },
-        $set: {
-          quizScores,
-          overallPercentage: avgScore,
-          completedQuizzes: quizScores.length,
-          passed,
-        },
-      },
-      { upsert: true }
-    );
-
-    void emitEvent(
-      "course.progress_updated",
-      {
-        user: {
-          id: session.userId,
-          name: session.name,
-          email: session.email,
-        },
-        course: {
-          id: course._id.toString(),
-          slug: course.slug,
-          title: course.title,
-        },
-        progress: {
-          overallPercentage: avgScore,
-          passed,
-          certificateIssued: false,
-        },
-      }
-    ).catch((error) => {
-      console.error("course.progress_updated emit error", error);
-    });
 
     return NextResponse.json({ score, totalQuestions, correctCount, results });
   } catch (error) {
