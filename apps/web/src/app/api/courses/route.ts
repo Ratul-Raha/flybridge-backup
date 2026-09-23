@@ -7,6 +7,10 @@ import { CourseWishlist } from "@/lib/models/wishlist";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
 
+export const dynamic = "force-dynamic";
+
+const CACHE_CONTROL = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+
 function toDto(
   c: CourseDoc,
   enrollmentCount?: number,
@@ -130,7 +134,10 @@ export async function GET(request: NextRequest) {
     const sorted = courses
       .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
       .sort((a, b) => b.count - a.count);
-    return NextResponse.json({ courses: sorted.map(({ doc, count }) => toDto(doc, count)) });
+    return NextResponse.json(
+      { courses: sorted.map(({ doc, count }) => toDto(doc, count)) },
+      { headers: { "Cache-Control": CACHE_CONTROL } }
+    );
   } catch (error) {
     console.error("courses GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

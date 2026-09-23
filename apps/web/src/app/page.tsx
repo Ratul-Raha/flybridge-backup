@@ -1,14 +1,26 @@
+import dynamic from "next/dynamic";
 import { Nav } from "@/components/nav";
 import { Hero } from "@/components/hero";
 import { PartnersStrip } from "@/components/partners-strip";
 import { SuccessStories } from "@/components/success-stories";
 import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
-import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
-import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import { getTotalUsers } from "@/lib/site-stats";
 
-export const dynamic = "force-dynamic";
+const ScholarshipTicker = dynamic(
+  () =>
+    import("@/components/dashboard/scholarship-ticker").then(
+      (m) => m.ScholarshipTicker
+    ),
+  { ssr: false, loading: () => null }
+);
+
+const IeltsPromoPopup = dynamic(
+  () => import("@/components/ielts-promo-popup").then((m) => m.IeltsPromoPopup),
+  { ssr: false, loading: () => null }
+);
+
+export const revalidate = 60;
 
 export default async function HomePage() {
   const totalUsers = await getTotalUsers();

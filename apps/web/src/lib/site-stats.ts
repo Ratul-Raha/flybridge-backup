@@ -1,11 +1,20 @@
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { User } from "@/lib/models/user";
 
-export async function getTotalUsers(): Promise<number> {
-  try {
+const getTotalUsersCached = unstable_cache(
+  async () => {
     await connectDb();
     const count = await User.countDocuments();
     return count;
+  },
+  ["site-stats", "total-users"],
+  { revalidate: 60 }
+);
+
+export async function getTotalUsers(): Promise<number> {
+  try {
+    return await getTotalUsersCached();
   } catch (error) {
     console.error("getTotalUsers error", error);
     return 0;

@@ -3,6 +3,10 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { SuccessStory, type SuccessStoryDoc } from "@/lib/models/success-story";
 
+export const dynamic = "force-dynamic";
+
+const CACHE_CONTROL = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+
 type StoryDto = {
   id: string;
   name: string;
@@ -62,7 +66,10 @@ export async function GET(request: NextRequest) {
     }
 
     const stories = await SuccessStory.find({ active: true }).sort({ createdAt: -1 });
-    return NextResponse.json({ stories: stories.map(toDto) });
+    return NextResponse.json(
+      { stories: stories.map(toDto) },
+      { headers: { "Cache-Control": CACHE_CONTROL } }
+    );
   } catch (error) {
     console.error("success-stories GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

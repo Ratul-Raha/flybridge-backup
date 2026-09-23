@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { type DbCourse } from "@/components/programs/db-course-card";
@@ -54,6 +55,71 @@ type CourseCta = {
   paid: boolean;
   hasDb?: boolean;
 };
+
+const getReviewsCached = unstable_cache(
+  async (courseId: string) => {
+    const reviews = await CourseReview.find({ course: courseId })
+      .populate("user", "name avatar")
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+    return reviews.map((r) => ({
+      id: r._id.toString(),
+      rating: r.rating,
+      text: r.text,
+      userName: (r.user as any)?.name ?? "Anonymous",
+      userAvatar: (r.user as any)?.avatar ?? null,
+      date: new Date(r.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    })) as ReviewItem[];
+  },
+  ["program-course-reviews"],
+  { revalidate: 60 }
+);
+
+const getOtherDbCoursesCached = unstable_cache(
+  async (slug: string) => {
+    const [otherEnrollCounts, dbCourses] = await Promise.all([
+      CourseEnrollment.aggregate([{ $group: { _id: "$course", count: { $sum: 1 } } }]),
+      Course.find({
+        slug: { $ne: slug },
+        $or: [{ published: true }, { upcoming: true }],
+      })
+        .sort({ createdAt: -1 })
+        .limit(4),
+    ]);
+    const enrollMap = new Map(
+      otherEnrollCounts.map((r) => [r._id.toString(), r.count as number])
+    );
+    return dbCourses.map((c) => {
+      const courseId = c._id.toString();
+      return {
+        id: courseId,
+        slug: c.slug,
+        title: c.title,
+        badge: c.badge ?? "",
+        subtitle: c.subtitle ?? "",
+        description: c.description ?? "",
+        price: c.price ?? 0,
+        currency: c.currency ?? "USD",
+        image: c.image ?? null,
+        level: c.level ?? "",
+        upcoming: c.upcoming ?? false,
+        averageRating: c.averageRating ?? 0,
+        enrollmentCount: enrollMap.get(courseId) ?? 0,
+        modules: (c.modules ?? []).map((m) => ({
+          title: m.title,
+          lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+        })),
+      } as DbCourse;
+    });
+  },
+  ["program-other-courses"],
+  { revalidate: 60 }
+);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const program = getProgram(params.slug);
@@ -1475,28 +1541,13 @@ export default async function ProgramPage({ params }: Props) {
       }));
 
     const [reviews, userReviewDoc] = await Promise.all([
-      CourseReview.find({ course: course._id })
-        .populate("user", "name avatar")
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .lean(),
+      getReviewsCached(course._id.toString()),
       session?.userId
         ? CourseReview.findOne({ course: course._id, user: session.userId }).lean()
         : null,
     ]);
 
-    const reviewItems = reviews.map((r) => ({
-      id: r._id.toString(),
-      rating: r.rating,
-      text: r.text,
-      userName: (r.user as any)?.name ?? "Anonymous",
-      userAvatar: (r.user as any)?.avatar ?? null,
-      date: new Date(r.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-    }));
+    const reviewItems = reviews;
 
     return (
       <DbCoursePage
@@ -1544,65 +1595,15 @@ export default async function ProgramPage({ params }: Props) {
   const [liveReviews, userReviewDoc] =
     program.hasDb && course
       ? await Promise.all([
-          CourseReview.find({ course: course._id })
-            .populate("user", "name avatar")
-            .sort({ createdAt: -1 })
-            .limit(20)
-            .lean(),
+          getReviewsCached(course._id.toString()),
           sessionForReviews?.userId
             ? CourseReview.findOne({ course: course._id, user: sessionForReviews.userId }).lean()
             : null,
         ])
       : [[], null];
-  const liveReviewItems = liveReviews.map((r: any) => ({
-    id: r._id.toString(),
-    rating: r.rating,
-    text: r.text,
-    userName: r.user?.name ?? "Anonymous",
-    userAvatar: r.user?.avatar ?? null,
-    date: new Date(r.createdAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-  }));
+  const liveReviewItems = liveReviews;
 
-  const otherEnrollCounts = await CourseEnrollment.aggregate([
-    { $group: { _id: "$course", count: { $sum: 1 } } },
-  ]);
-  const otherEnrollmentMap = new Map(
-    otherEnrollCounts.map((r) => [r._id.toString(), r.count as number])
-  );
-
-  const otherDbCourses = (
-    await Course.find({
-      slug: { $ne: params.slug },
-      $or: [{ published: true }, { upcoming: true }],
-    })
-      .sort({ createdAt: -1 })
-      .limit(4)
-  ).map((c) => {
-    const courseId = c._id.toString();
-    return {
-      id: courseId,
-      slug: c.slug,
-      title: c.title,
-      badge: c.badge ?? "",
-      subtitle: c.subtitle ?? "",
-      description: c.description ?? "",
-      price: c.price ?? 0,
-      currency: c.currency ?? "USD",
-      image: c.image ?? null,
-      level: c.level ?? "",
-      upcoming: c.upcoming ?? false,
-      averageRating: c.averageRating ?? 0,
-      enrollmentCount: otherEnrollmentMap.get(courseId) ?? 0,
-      modules: (c.modules ?? []).map((m) => ({
-        title: m.title,
-        lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-      })),
-    };
-  }) as DbCourse[];
+  const otherDbCourses = await getOtherDbCoursesCached(params.slug);
 
   const relatedPrograms: RelatedProgram[] = [
     ...programs

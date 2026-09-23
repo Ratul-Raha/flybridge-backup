@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { Scholarship, type ScholarshipDoc } from "@/lib/models/scholarship";
 
+export const dynamic = "force-dynamic";
+
+const CACHE_CONTROL = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+
 type PublicScholarshipDto = {
   id: string;
   institution: string;
@@ -43,17 +47,23 @@ export async function GET(request: NextRequest) {
       if (!scholarship) {
         return NextResponse.json({ error: "Scholarship not found" }, { status: 404 });
       }
-      return NextResponse.json({ scholarship: toPublicDto(scholarship as ScholarshipDoc) });
+      return NextResponse.json(
+        { scholarship: toPublicDto(scholarship as ScholarshipDoc) },
+        { headers: { "Cache-Control": CACHE_CONTROL } }
+      );
     }
 
     const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? 60), 1), 120);
     const scholarships = await Scholarship.find({ active: true })
       .sort({ createdAt: -1 })
       .limit(limit);
-    return NextResponse.json({
-      scholarships: scholarships.map(toPublicDto),
-      total: scholarships.length,
-    });
+    return NextResponse.json(
+      {
+        scholarships: scholarships.map(toPublicDto),
+        total: scholarships.length,
+      },
+      { headers: { "Cache-Control": CACHE_CONTROL } }
+    );
   } catch (error) {
     console.error("public scholarships GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

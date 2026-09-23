@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/caveat";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
-import { NavigationProgress } from "@/components/navigation-progress";
-import { ChatWidget } from "@/components/chat/chat-widget";
-import { ReadinessFab } from "@/components/readiness/readiness-fab";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
+
+const NavigationProgress = dynamic(
+  () => import("@/components/navigation-progress").then((m) => m.NavigationProgress),
+  { ssr: false, loading: () => null }
+);
+
+const ReadinessFab = dynamic(
+  () => import("@/components/readiness/readiness-fab").then((m) => m.ReadinessFab),
+  { ssr: false, loading: () => null }
+);
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com";
 
@@ -49,7 +57,6 @@ export default function RootLayout({
           {children}
           <FooterWithRoutes />
           <ReadinessFab />
-          <ChatWidget />
         </AuthProvider>
       </body>
       {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}

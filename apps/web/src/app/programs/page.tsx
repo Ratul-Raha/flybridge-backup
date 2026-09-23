@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { Nav } from "@/components/nav";
@@ -10,7 +11,7 @@ import { programs } from "@/lib/programs";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Programs | FlyBridge",
@@ -35,38 +36,46 @@ const included = [
   },
 ];
 
-async function getPublishedCourses(): Promise<DbCourse[]> {
-  await connectDb();
-  const courses = await Course.find({
-    $or: [{ published: true }, { upcoming: true }],
-  }).sort({ createdAt: -1 });
+async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
+  try {
+    await connectDb();
+    const courses = await Course.find({
+      $or: [{ published: true }, { upcoming: true }],
+    }).sort({ createdAt: -1 });
 
-  const enrollCounts = await CourseEnrollment.aggregate([
-    { $group: { _id: "$course", count: { $sum: 1 } } },
-  ]);
-  const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+    const enrollCounts = await CourseEnrollment.aggregate([
+      { $group: { _id: "$course", count: { $sum: 1 } } },
+    ]);
+    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
 
-  return courses
-    .map((c) => ({
-      id: c._id.toString(),
-      slug: c.slug,
-      title: c.title,
-      badge: c.badge ?? "",
-      subtitle: c.subtitle ?? "",
-      description: c.description ?? "",
-      price: c.price ?? 0,
-      currency: c.currency ?? "USD",
-      image: c.image ?? null,
-      level: c.level ?? "",
-      upcoming: c.upcoming ?? false,
-      enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
-      modules: (c.modules ?? []).map((m) => ({
-        title: m.title,
-        lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-      })),
-    }))
-    .sort((a, b) => b.enrollmentCount - a.enrollmentCount);
+    return courses
+      .map((c) => ({
+        id: c._id.toString(),
+        slug: c.slug,
+        title: c.title,
+        badge: c.badge ?? "",
+        subtitle: c.subtitle ?? "",
+        description: c.description ?? "",
+        price: c.price ?? 0,
+        currency: c.currency ?? "USD",
+        image: c.image ?? null,
+        level: c.level ?? "",
+        upcoming: c.upcoming ?? false,
+        enrollmentCount: enrollMap.get(c._id.toString()) ?? 0,
+        modules: (c.modules ?? []).map((m) => ({
+          title: m.title,
+          lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+        })),
+      }))
+      .sort((a, b) => b.enrollmentCount - a.enrollmentCount);
+  } catch {
+    return [];
+  }
 }
+
+const getPublishedCourses = unstable_cache(getPublishedCoursesUncached, ["published-courses"], {
+  revalidate: 60,
+});
 
 export default async function ProgramsPage() {
   const dbCourses = await getPublishedCourses();

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { CourseProgress } from "@/lib/models/course-progress";
@@ -29,7 +30,7 @@ export type RankedUser = {
   weeklyActivity: number;
 };
 
-async function computeRankedUsers(periodDays: number): Promise<RankedUser[]> {
+async function computeRankedUsersUncached(periodDays: number): Promise<RankedUser[]> {
   await connectDb();
 
   const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
@@ -116,6 +117,14 @@ async function computeRankedUsers(periodDays: number): Promise<RankedUser[]> {
 
   return rows;
 }
+
+const computeRankedUsers = unstable_cache(
+  async (periodDays: number) => {
+    return computeRankedUsersUncached(periodDays);
+  },
+  ["leaderboard", "ranked-users"],
+  { revalidate: 60 }
+);
 
 export async function computeLeaderboard(
   options: LeaderboardOptions = {}

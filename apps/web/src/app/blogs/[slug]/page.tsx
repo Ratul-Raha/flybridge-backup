@@ -7,7 +7,7 @@ import { BlogDetail } from "@/components/blogs/blog-detail";
 
 type Params = { params: { slug: string } };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   try {

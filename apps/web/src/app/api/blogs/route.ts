@@ -4,6 +4,10 @@ import { readSession } from "@/lib/auth/session";
 import { Blog, type BlogDoc } from "@/lib/models/blog";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 
+export const dynamic = "force-dynamic";
+
+const CACHE_CONTROL = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+
 function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
 }
@@ -45,7 +49,10 @@ export async function GET(request: NextRequest) {
     if (slug) {
       const blog = await Blog.findOne({ slug, published: true });
       if (!blog) return NextResponse.json({ error: "Not found" }, { status: 404 });
-      return NextResponse.json({ blog: toDto(blog) });
+      return NextResponse.json(
+        { blog: toDto(blog) },
+        { headers: { "Cache-Control": CACHE_CONTROL } }
+      );
     }
 
     if (all) {
@@ -57,7 +64,10 @@ export async function GET(request: NextRequest) {
     }
 
     const blogs = await Blog.find({ published: true }).sort({ publishedAt: -1 });
-    return NextResponse.json({ blogs: blogs.map(toDto) });
+    return NextResponse.json(
+      { blogs: blogs.map(toDto) },
+      { headers: { "Cache-Control": CACHE_CONTROL } }
+    );
   } catch (error) {
     console.error("blogs GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

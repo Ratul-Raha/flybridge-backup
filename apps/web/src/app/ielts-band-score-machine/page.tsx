@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram } from "@/lib/programs";
@@ -1038,6 +1039,26 @@ function ClosingSection({ details, offer }: { details: CourseDetails; offer: Off
 const dateFmt = (d: Date | string) =>
   new Date(d).toLocaleDateString("bn-BD", { month: "short", day: "numeric", year: "numeric" });
 
+const getCourseReviewsCached = unstable_cache(
+  async (courseId: string) => {
+    const reviews = await CourseReview.find({ course: courseId })
+      .populate("user", "name avatar")
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+    return reviews.map((r: any) => ({
+      id: r._id.toString(),
+      rating: r.rating,
+      text: r.text,
+      userName: r.user?.name ?? "একজন শিক্ষার্থী",
+      userAvatar: r.user?.avatar ?? null,
+      date: dateFmt(r.createdAt),
+    }));
+  },
+  ["ielts-course-reviews"],
+  { revalidate: 60 }
+);
+
 export default async function IeltsFullReadinessLandingPage() {
   const program = getProgram(SLUG);
 
@@ -1056,20 +1077,11 @@ export default async function IeltsFullReadinessLandingPage() {
   if (!program) {
     if (!course) notFound();
 
-    const [enrolledDoc, reviews, userReviewDoc] = await Promise.all([
+    const [enrolledDoc, reviewItems, userReviewDoc] = await Promise.all([
       userId ? CourseEnrollment.exists({ user: userId, course: course._id, status: "active" }) : null,
-      CourseReview.find({ course: course._id }).populate("user", "name avatar").sort({ createdAt: -1 }).limit(20).lean(),
+      getCourseReviewsCached(course._id.toString()),
       userId ? CourseReview.findOne({ course: course._id, user: userId }).lean() : null,
     ]);
-
-    const reviewItems = reviews.map((r: any) => ({
-      id: r._id.toString(),
-      rating: r.rating,
-      text: r.text,
-      userName: r.user?.name ?? "একজন শিক্ষার্থী",
-      userAvatar: r.user?.avatar ?? null,
-      date: dateFmt(r.createdAt),
-    }));
 
     return (
       <DbCoursePage
@@ -1091,9 +1103,7 @@ export default async function IeltsFullReadinessLandingPage() {
 
   const [enrolledDoc, liveReviews, userReviewDoc] = await Promise.all([
     liveCourse && userId ? CourseEnrollment.exists({ user: userId, course: liveCourse._id, status: "active" }) : null,
-    liveCourse
-      ? CourseReview.find({ course: liveCourse._id }).populate("user", "name avatar").sort({ createdAt: -1 }).limit(20).lean()
-      : [],
+    liveCourse ? getCourseReviewsCached(liveCourse._id.toString()) : [],
     liveCourse && userId ? CourseReview.findOne({ course: liveCourse._id, user: userId }).lean() : null,
   ]);
 
@@ -1107,14 +1117,7 @@ export default async function IeltsFullReadinessLandingPage() {
       }
     : undefined;
 
-  const liveReviewItems = (liveReviews as any[]).map((r) => ({
-    id: r._id.toString(),
-    rating: r.rating,
-    text: r.text,
-    userName: r.user?.name ?? "একজন শিক্ষার্থী",
-    userAvatar: r.user?.avatar ?? null,
-    date: dateFmt(r.createdAt),
-  }));
+  const liveReviewItems = (liveReviews as any[]);
 
   /* ---- Offer: the single source of truth for every CTA ---- */
   const waitlistEnabled = course?.waitlistEnabled === true;

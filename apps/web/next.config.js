@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@flybridge/ui", "@flybridge/config"],
+  compiler: {
+    removeConsole: { exclude: ["error"] },
+  },
   images: {
     remotePatterns: [
       {

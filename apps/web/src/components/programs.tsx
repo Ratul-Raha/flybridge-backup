@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
@@ -6,7 +7,7 @@ import { programs } from "@/lib/programs";
 import { ProgramCard } from "./program-card";
 import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
 
-async function getDbCourses(): Promise<DbCourse[]> {
+async function getDbCoursesUncached(): Promise<DbCourse[]> {
   try {
     await connectDb();
     const courses = await Course.find({
@@ -42,6 +43,10 @@ async function getDbCourses(): Promise<DbCourse[]> {
     return [];
   }
 }
+
+const getDbCourses = unstable_cache(getDbCoursesUncached, ["db-courses"], {
+  revalidate: 60,
+});
 
 export async function Programs() {
   const dbCourses = await getDbCourses();
