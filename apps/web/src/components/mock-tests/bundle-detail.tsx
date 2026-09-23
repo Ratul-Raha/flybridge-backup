@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -157,10 +158,11 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
         <div className="relative h-[200px] sm:h-[260px] overflow-hidden">
           {bundle.image ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={bundle.image}
                 alt={bundle.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 1320px"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { countryByCode } from "@/lib/countries";
 
 type StoryDto = {
@@ -91,7 +92,13 @@ export function SuccessStoriesGrid() {
           style={{ border: "1px solid var(--line)" }}
         >
           <div className="relative flex-1 overflow-hidden">
-            <img src={s.src} alt={s.alt} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+            <Image
+              src={s.src}
+              alt={s.alt}
+              fill
+              sizes="(max-width: 640px) 50vw, 25vw"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <span
               aria-hidden="true"
               className="absolute left-0 top-0 h-24 w-28 rounded-tr-3xl select-none pointer-events-none"
@@ -100,12 +107,13 @@ export function SuccessStoriesGrid() {
                   "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0) 70%)",
               }}
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/stamp.png"
               alt=""
               aria-hidden="true"
-              className="absolute left-3 top-2.5 w-[15%] -rotate-12 select-none pointer-events-none"
+              width={344}
+              height={355}
+              className="absolute left-3 top-2.5 w-[15%] h-auto -rotate-12 select-none pointer-events-none"
             />
           </div>
           <div className="px-4 pb-4 pt-3 flex flex-col" style={{ borderTop: "1px solid var(--line)" }}>

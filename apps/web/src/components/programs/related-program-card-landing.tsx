@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BengaliText } from "../bengali-text";
 
 export type RelatedProgramLanding = {
@@ -23,10 +24,11 @@ export function RelatedProgramCardLanding({ p }: { p: RelatedProgramLanding }) {
         style={{ background: p.bg }}
       >
         {p.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={p.image}
             alt={p.title}
+            fill
+            sizes="(max-width: 640px) 50vw, 25vw"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
           />
         ) : (

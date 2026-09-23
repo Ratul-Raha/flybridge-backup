@@ -6,6 +6,7 @@
  * `getProgram(SLUG)` returns nothing but the course exists in the database.
  */
 import Link from "next/link";
+import Image from "next/image";
 import { Nav } from "@/components/nav";
 import { BookOpen, Check, Lock, ShieldCheck, Zap } from "lucide-react";
 import { formatPriceText, cleanPrices } from "@/lib/pricing";
@@ -149,8 +150,7 @@ export function DbCoursePage({
                   >
                     {checkoutCourse.image ? (
                       <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={checkoutCourse.image} alt={checkoutCourse.title} className="absolute inset-0 w-full h-full object-cover" />
+                        <Image src={checkoutCourse.image} alt={checkoutCourse.title} fill sizes="200px" className="absolute inset-0 w-full h-full object-cover" />
                         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(18,32,67,0.18), transparent 50%)" }} />
                       </>
                     ) : (
@@ -201,8 +201,7 @@ export function DbCoursePage({
                   <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
                     <div className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style={{ background: "var(--brand-soft)" }}>
                       {checkoutCourse.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={checkoutCourse.image} alt="" className="w-full h-full object-cover" />
+                        <Image src={checkoutCourse.image} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
                       ) : (
                         <BookOpen size={20} className="text-white/50" />
                       )}

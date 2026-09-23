@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Plane } from "lucide-react";
 
 const STATS_BASE = [
@@ -139,11 +140,13 @@ export function SeminarsHero({ userCount = 10000 }: { userCount?: number }) {
     <section className="relative overflow-hidden pt-[clamp(120px,15vh,150px)]">
       {/* Background image + overlays */}
       <div className="absolute inset-0 z-0" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/seminars/seminar-1.png"
           alt=""
-          className="h-full w-full object-cover object-center"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
         <div
           className="absolute inset-0 hidden lg:block"

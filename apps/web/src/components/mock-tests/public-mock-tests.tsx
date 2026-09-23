@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, BookOpen, Clock, Loader2, Sparkles } from "lucide-react";
 import { SKILL_META, type BundleDto } from "@/lib/mock-test-ui";
 import { formatPriceText } from "@/lib/pricing";
@@ -145,10 +146,11 @@ export function PublicMockTests() {
                 >
                   <div className="relative h-[150px] overflow-hidden">
                     {b.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={b.image}
                         alt={b.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                       />
                     ) : (

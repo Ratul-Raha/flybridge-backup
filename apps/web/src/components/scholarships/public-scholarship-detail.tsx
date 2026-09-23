@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -111,16 +112,17 @@ export function PublicScholarshipDetail({ scholarship: s }: { scholarship: Publi
 
       {/* Cover hero */}
       <div
-        className="relative mt-6 overflow-hidden rounded-2xl border"
+        className="relative mt-6 h-[240px] w-full overflow-hidden rounded-2xl border sm:h-[320px] lg:h-[380px]"
         style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -32px rgba(18,32,67,0.28)" }}
       >
         {s.imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={s.imageUrl}
               alt={s.title || s.institution}
-              className="h-[240px] w-full object-cover sm:h-[320px] lg:h-[380px]"
+              fill
+              sizes="(max-width: 640px) 100vw, 1320px"
+              className="object-cover"
             />
             <div
               className="absolute inset-0"

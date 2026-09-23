@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Award, Check, GraduationCap, Lock, School, Share2 } from "lucide-react";
 import { countryByCode } from "@/lib/countries";
 import { LEVEL_LABELS, type PublicScholarship } from "./types";
@@ -78,8 +79,7 @@ function ScholarshipCard({ s }: { s: PublicScholarship }) {
     >
       {s.imageUrl ? (
         <div className="relative aspect-[16/9]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.imageUrl} alt={s.title || s.institution} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={s.imageUrl} alt={s.title || s.institution} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="absolute inset-0 w-full h-full object-cover" />
         </div>
       ) : (
         <div

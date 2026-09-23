@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Check, Clock, Share2, Users, Video } from "lucide-react";
 import {
   SeminarRegisterModal,
@@ -150,10 +151,11 @@ export function SeminarList() {
       <div className="relative h-[174px] overflow-hidden">
         {s.image ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={s.image}
               alt={s.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
             <div

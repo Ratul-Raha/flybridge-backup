@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { type DbCourse } from "@/components/programs/db-course-card";
@@ -1135,10 +1136,11 @@ function DbCoursePage({
                   >
                     {checkoutCourse.image ? (
                       <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={checkoutCourse.image}
                           alt={checkoutCourse.title}
+                          fill
+                          sizes="200px"
                           className="absolute inset-0 w-full h-full object-cover"
                         />
                         <div
@@ -1225,12 +1227,7 @@ function DbCoursePage({
                       style={{ background: "var(--brand-soft)" }}
                     >
                       {checkoutCourse.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={checkoutCourse.image}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <Image src={checkoutCourse.image} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
                       ) : (
                         <BookOpen size={20} className="text-white/50" />
                       )}
@@ -1748,10 +1745,12 @@ export default async function ProgramPage({ params }: Props) {
                   />
                   <div className="rounded-lg border border-line bg-white overflow-hidden">
                     <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={details.book.image}
                         alt={details.book.title}
+                        width={440}
+                        height={586}
+                        sizes="220px"
                         className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
                         style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
                       />

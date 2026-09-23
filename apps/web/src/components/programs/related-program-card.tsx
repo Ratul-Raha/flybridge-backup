@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BengaliText } from "../bengali-text";
 
 export type RelatedProgram = {
@@ -23,8 +24,7 @@ export function RelatedProgramCard({ p }: { p: RelatedProgram }) {
         style={{ background: p.bg }}
       >
         {p.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+          <Image src={p.image} alt={p.title} width={120} height={120} sizes="60px" className="w-full h-full object-cover" />
         ) : (
           <span
             className="font-mono text-[10px] font-bold tracking-[0.1em] px-2 text-center leading-snug"

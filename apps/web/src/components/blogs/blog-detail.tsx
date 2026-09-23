@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -220,8 +221,7 @@ function ShareCard({ blog }: { blog: BlogDetailData }) {
       {/* Banner thumbnail with gradient overlay */}
       <div className="relative h-[132px] w-full overflow-hidden">
         {blog.cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={blog.cover} alt="" className="h-full w-full object-cover" />
+          <Image src={blog.cover} alt="" fill sizes="(max-width: 640px) 100vw, 880px" className="object-cover" />
         ) : (
           <div
             className="h-full w-full flex items-center justify-center"
@@ -326,8 +326,7 @@ function RecentCard({ r }: { r: BlogCardData }) {
     >
       <span className="relative h-[84px] w-[116px] shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--line)" }}>
         {r.cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={r.cover} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
+          <Image src={r.cover} alt="" fill sizes="116px" className="object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
         ) : (
           <span className="flex h-full w-full items-center justify-center" style={{ background: `${accent}12`, color: accent }}>
             <BookOpen size={22} strokeWidth={1.6} />
@@ -487,9 +486,14 @@ export function BlogDetail({
       {/* ===== Banner image ===== */}
       {blog.cover && (
         <section className="relative z-10 mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          <div className="relative overflow-hidden rounded-[22px] border" style={{ borderColor: "var(--line)", boxShadow: "0 30px 60px -30px rgba(18,32,67,0.4)" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={blog.cover} alt={blog.title} className="h-[240px] w-full object-cover sm:h-[400px]" />
+          <div className="relative h-[240px] w-full overflow-hidden rounded-[22px] border sm:h-[400px]" style={{ borderColor: "var(--line)", boxShadow: "0 30px 60px -30px rgba(18,32,67,0.4)" }}>
+            <Image
+              src={blog.cover}
+              alt={blog.title}
+              fill
+              sizes="(max-width: 640px) 100vw, 1320px"
+              className="object-cover"
+            />
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(to top, rgba(18,32,67,0.35), transparent 55%)" }}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { X, Play } from "lucide-react";
 
 export type StoryVideo = {
@@ -91,10 +92,11 @@ export function HeroVideo({ video }: { video: StoryVideo }) {
         ) : (
           <>
             {hasVideo && video.poster ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={video.poster}
                 alt={video.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 50vw"
                 className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (

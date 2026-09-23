@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Award, BadgeCheck, Loader2, ShieldAlert, ShieldQuestion } from "lucide-react";
 
 type VerifyState =
@@ -73,10 +74,11 @@ export default function VerifyPage({ params }: { params: { certId: string } }) {
       <div className="w-full max-w-[520px]">
         {/* Logo */}
         <Link href="/" className="flex justify-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/transparent-logo-dark.png"
             alt="FlyBridge Education Group"
+            width={180}
+            height={36}
             className="h-9 w-auto object-contain"
           />
         </Link>

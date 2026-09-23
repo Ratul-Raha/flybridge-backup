@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   GraduationCap,
   ArrowRight,
@@ -50,9 +51,11 @@ export function PromoPopup() {
         }}
       >
         {/* Background image + readability overlay (desktop only) */}
-        <img
+        <Image
           src="/watermark.webp"
           alt=""
+          fill
+          sizes="880px"
           className="hidden sm:block absolute inset-0 w-full h-full object-cover"
         />
         <div

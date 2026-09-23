@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
@@ -116,10 +117,11 @@ export default async function CheckoutPage({ params }: Props) {
                 >
                   {checkoutCourse.image ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={checkoutCourse.image}
                         alt={checkoutCourse.title}
+                        fill
+                        sizes="200px"
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                       <div
@@ -206,12 +208,7 @@ export default async function CheckoutPage({ params }: Props) {
                     style={{ background: "var(--brand-soft)" }}
                   >
                     {checkoutCourse.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={checkoutCourse.image}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                      <Image src={checkoutCourse.image} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
                     ) : (
                       <BookOpen size={20} className="text-white/50" />
                     )}

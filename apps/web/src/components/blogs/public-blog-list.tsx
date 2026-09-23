@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
@@ -63,12 +64,15 @@ function BlogCard({ b }: { b: BlogCardData }) {
       style={{ borderColor: "var(--line)", boxShadow: "0 4px 20px -14px rgba(18,32,67,0.14)" }}
     >
       {b.cover ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={b.cover}
-          alt={b.title}
-          className="h-[200px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-        />
+        <div className="relative h-[200px] w-full overflow-hidden">
+          <Image
+            src={b.cover}
+            alt={b.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        </div>
       ) : (
         <div
           className="flex h-[200px] w-full items-center justify-center"
@@ -299,12 +303,15 @@ export function PublicBlogList() {
                 </div>
               </div>
               {featured.cover ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={featured.cover}
-                  alt={featured.title}
-                  className="h-full min-h-[200px] w-full object-cover"
-                />
+                <div className="relative h-[200px] w-full min-h-[200px] sm:h-full">
+                  <Image
+                    src={featured.cover}
+                    alt={featured.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 260px"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div
                   className="flex min-h-[200px] items-center justify-center"

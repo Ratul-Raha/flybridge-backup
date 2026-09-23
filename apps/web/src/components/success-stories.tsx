@@ -241,11 +241,13 @@ export function SuccessStories({ userCount = 10000 }: { userCount?: number }) {
                           "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0) 70%)",
                       }}
                     />
-                    <img
+                    <Image
                       src="/stamp.png"
                       alt=""
                       aria-hidden="true"
-                      className="absolute left-3 top-2.5 w-[15%] -rotate-12 select-none pointer-events-none"
+                      width={344}
+                      height={355}
+                      className="absolute left-3 top-2.5 w-[15%] h-auto -rotate-12 select-none pointer-events-none"
                     />
                   </div>
                   <div className="px-4 pb-4 pt-3 flex flex-col" style={{ borderTop: "1px solid var(--line)" }}>

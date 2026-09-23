@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Calendar, Check, Clock, Share2, Users } from "lucide-react";
 import {
   SeminarRegisterModal,
@@ -61,10 +62,11 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
         <div className="relative h-[220px] sm:h-[280px] overflow-hidden">
           {seminar.image ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={seminar.image}
                 alt={seminar.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 1320px"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div

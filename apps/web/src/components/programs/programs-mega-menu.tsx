@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { programs } from "@/lib/programs";
 import { BengaliText } from "../bengali-text";
@@ -183,8 +184,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
                 style={{ background: item.tileBg }}
               >
                 {item.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  <Image src={item.image} alt="" width={88} height={88} sizes="44px" className="w-full h-full object-cover" />
                 ) : (
                   <span
                     className="font-mono text-[11px] font-bold tracking-[0.12em] uppercase"
