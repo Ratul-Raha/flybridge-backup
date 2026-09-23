@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { Program } from "@/lib/programs";
 import { BengaliText } from "./bengali-text";
@@ -57,9 +58,11 @@ export function ProgramCard({ p }: { p: Program }) {
     >
       {p.image ? (
         <>
-          <img
+          <Image
             src={p.image}
             alt={p.title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div

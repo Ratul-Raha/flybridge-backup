@@ -21,7 +21,7 @@ export const programs: Program[] = [
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
     price: "$29.99",
-    image: "/watermark.png",
+    image: "/watermark.webp",
   },
   {
     slug: "obocheton-mone-ilish-level-01",
@@ -40,7 +40,7 @@ export const programs: Program[] = [
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",
     upcoming: true,
-    image: "/programs/work-permit-blueprint.png",
+    image: "/programs/work-permit-blueprint.webp",
   },
   {
     slug: "interview-readiness",

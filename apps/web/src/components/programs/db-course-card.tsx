@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { BookOpen, Star, Users } from "lucide-react";
 import { BengaliText } from "../bengali-text";
 
@@ -43,9 +44,11 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
     >
       {course.image && !imgError ? (
         <>
-          <img
+          <Image
             src={course.image}
             alt={course.title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="absolute inset-0 w-full h-full object-cover"
             onError={() => setImgError(true)}
           />

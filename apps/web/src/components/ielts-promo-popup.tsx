@@ -85,7 +85,7 @@ export function IeltsPromoPopup() {
       >
         {/* Background image + readability overlay (desktop only) */}
         <img
-          src="/ielts-band-score-machine-popup.png"
+          src="/ielts-band-score-machine-popup.webp"
           alt=""
           className="hidden sm:block absolute inset-0 w-full h-full object-cover"
         />

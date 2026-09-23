@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { countryByCode } from "@/lib/countries";
 
 type StoryDto = {
@@ -161,10 +162,13 @@ export function SuccessStories({ userCount = 10000 }: { userCount?: number }) {
           <div className="mt-8 flex items-center gap-5">
             <div className="flex -space-x-3">
               {avatarPreview.map((s) => (
-                <img
+                <Image
                   key={s.src}
                   src={s.src}
                   alt=""
+                  width={80}
+                  height={80}
+                  sizes="40px"
                   className="w-10 h-10 rounded-full object-cover border-2 border-white"
                   style={{ boxShadow: "0 2px 6px -2px rgba(18,32,67,0.3)" }}
                 />
@@ -222,7 +226,13 @@ export function SuccessStories({ userCount = 10000 }: { userCount?: number }) {
                   style={{ border: "1px solid var(--line)" }}
                 >
                   <div className="relative flex-1 overflow-hidden">
-                    <img src={s.src} alt={s.alt} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <Image
+                      src={s.src}
+                      alt={s.alt}
+                      fill
+                      sizes="(max-width: 640px) 260px, (max-width: 1024px) 33vw, 25vw"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
                     <span
                       aria-hidden="true"
                       className="absolute left-0 top-0 h-24 w-28 rounded-tr-3xl select-none pointer-events-none"

@@ -51,7 +51,7 @@ export function PromoPopup() {
       >
         {/* Background image + readability overlay (desktop only) */}
         <img
-          src="/watermark.png"
+          src="/watermark.webp"
           alt=""
           className="hidden sm:block absolute inset-0 w-full h-full object-cover"
         />

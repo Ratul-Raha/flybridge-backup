@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
-import { successStoryImages } from "@/lib/stories";
 import { Nav } from "@/components/nav";
+import { StoryAvatars } from "@/components/story-avatars";
 import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { TrackAccordion } from "@/components/programs/track-accordion";
@@ -137,18 +137,7 @@ export default async function ProgramsPage() {
                 </p>
 
                 <div className="flex items-center gap-[18px] mt-9">
-                  <div className="flex -space-x-3">
-                    {successStoryImages.map((s) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={s.src}
-                        src={s.src}
-                        alt=""
-                        className="w-11 h-11 rounded-full object-cover border-2 border-white"
-                        style={{ boxShadow: "0 4px 10px -4px rgba(18,32,67,0.3)" }}
-                      />
-                    ))}
-                  </div>
+                  <StoryAvatars sizeClass="w-11 h-11" />
                   <div>
                     <div className="text-[15px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
                       {formatUsersFull(totalUsers)} learners

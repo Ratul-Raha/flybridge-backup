@@ -17,7 +17,7 @@ export default function ReadinessResultPage() {
         {/* Watermark background layer (full bleed) */}
         <div className="absolute inset-0 -z-20" aria-hidden="true">
           <Image
-            src="/watermark.png"
+            src="/watermark.webp"
             alt=""
             fill
             priority

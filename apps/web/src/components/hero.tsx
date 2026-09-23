@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { successStoryImages } from "@/lib/stories";
+import { StoryAvatars } from "./story-avatars";
 
 const courseCards = [
   { title: "Study Visa Prep — US", meta: "12 lessons · 3h 40m", progress: "64%", color: "blue" },
@@ -147,17 +147,7 @@ export function Hero({ userCount = 10000 }: { userCount?: number }) {
               </div>
 
               <div className="flex items-center gap-3.5">
-                <div className="flex -space-x-3">
-                  {successStoryImages.map((s) => (
-                    <img
-                      key={s.src}
-                      src={s.src}
-                      alt=""
-                      className="w-10 h-10 rounded-full object-cover border-2 border-white"
-                      style={{ boxShadow: "0 4px 10px -4px rgba(18,32,67,0.3)" }}
-                    />
-                  ))}
-                </div>
+                <StoryAvatars />
                 <div>
                   <div className="text-[14.5px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
                     {userCount.toLocaleString()}+
