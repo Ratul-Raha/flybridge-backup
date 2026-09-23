@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -69,34 +69,75 @@ function getYouTubeId(url: string): string | null {
   return null;
 }
 
-function VideoPlayer({ url, onEnded }: { url: string; onEnded?: () => void }) {
+function Watermark({ text }: { text: string }) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden select-none"
+      aria-hidden="true"
+    >
+      <span
+        className="absolute whitespace-nowrap font-mono text-[11px] tracking-wide leading-tight"
+        style={{
+          color: "rgba(255,255,255,0.4)",
+          textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+          animation: "flybridge-drifter 24s linear infinite",
+        }}
+      >
+        {text}
+      </span>
+      <style jsx>{`
+        @keyframes flybridge-drifter {
+          0%   { top: 6%; left: 4%; }
+          20%  { top: 72%; left: 58%; }
+          40%  { top: 24%; left: 66%; }
+          60%  { top: 84%; left: 18%; }
+          80%  { top: 46%; left: 78%; }
+          100% { top: 6%; left: 4%; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function VideoPlayer({ url, watermark }: { url: string; watermark?: string }) {
   const ytId = useMemo(() => getYouTubeId(url), [url]);
+
+  const blockContext = (e: ReactMouseEvent) => {
+    e.preventDefault();
+  };
 
   if (ytId) {
     return (
-      <div className="w-full aspect-video">
+      <div className="relative w-full aspect-video" onContextMenu={blockContext}>
         <iframe
           src={`https://www.youtube.com/embed/${ytId}?rel=0`}
           title="YouTube video"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="w-full h-full"
-          onLoad={() => onEnded?.()}
+          onLoad={() => undefined}
         />
+        {watermark && <Watermark text={watermark} />}
       </div>
     );
   }
 
   return (
-    <video
-      key={url}
-      controls
-      playsInline
-      className="w-full aspect-video"
-      onEnded={onEnded}
-    >
-      <source src={url} />
-    </video>
+    <div className="relative w-full aspect-video bg-black" onContextMenu={blockContext}>
+      <video
+        key={url}
+        controls
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
+        disableRemotePlayback
+        playsInline
+        className="w-full h-full"
+        onContextMenu={blockContext}
+      >
+        <source src={url} />
+      </video>
+      {watermark && <Watermark text={watermark} />}
+    </div>
   );
 }
 
@@ -104,6 +145,7 @@ export function LessonPlayer({
   course,
   lessons,
   initialIndex,
+  user,
 }: {
   course: {
     id: string;
@@ -115,6 +157,7 @@ export function LessonPlayer({
   };
   lessons: FlatLesson[];
   initialIndex: number;
+  user?: { name?: string; email?: string } | null;
 }) {
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
@@ -123,6 +166,12 @@ export function LessonPlayer({
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const watermark = useMemo(() => {
+    if (!user?.email && !user?.name) return undefined;
+    const id = user.name || user.email;
+    return `FlyBridge · ${id} · ${new Date().toLocaleDateString()}`.toLowerCase();
+  }, [user]);
 
   const current = lessons[index];
 
@@ -415,7 +464,7 @@ export function LessonPlayer({
               {/* Video player at top */}
               {tab === "lesson" && current.videoUrl && (
                 <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--line)", background: "#000" }}>
-                  <VideoPlayer url={current.videoUrl} />
+                  <VideoPlayer url={current.videoUrl} watermark={watermark} />
                 </div>
               )}
               {tab === "lesson" && !current.videoUrl && current.pdfUrl && (

@@ -49,6 +49,38 @@ export async function getS3Object(
   return { stream, contentLength: output.ContentLength, contentType: output.ContentType };
 }
 
+/** Fetch an S3 object with an optional HTTP `Range` header (used for video
+ *  streaming). Returns the stream plus the metadata needed to build a proper
+ *  `206 Partial Content` response. */
+export async function getS3ObjectRange(
+  ref: string,
+  range?: string
+): Promise<{
+  stream: ReadableStream | null;
+  contentLength?: number;
+  contentType?: string;
+  contentRange?: string;
+  statusCode?: number;
+}> {
+  const command = new GetObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: s3KeyOf(ref),
+    ...(range ? { Range: range } : {}),
+  });
+  const output = await s3Client().send(command);
+  const body = output.Body as (GetObjectCommandOutput["Body"] & { transformToWebStream?: () => ReadableStream }) | undefined;
+  const stream = body?.transformToWebStream
+    ? body.transformToWebStream()
+    : null;
+  return {
+    stream,
+    contentLength: output.ContentLength,
+    contentType: output.ContentType,
+    contentRange: output.ContentRange,
+    statusCode: output.$metadata.httpStatusCode,
+  };
+}
+
 /** Delete a stored media reference. New S3 refs/keys go to the bucket; legacy
  *  Cloudinary publicIds keep using the existing destroy path. */
 export async function deleteMediaRef(ref?: string | null, resourceType?: string): Promise<void> {

@@ -4,8 +4,15 @@ import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { readSession } from "@/lib/auth/session";
-import { signMediaUrl } from "@/lib/storage";
+import { signMediaUrl, isS3Ref } from "@/lib/storage";
 import { LessonPlayer } from "@/components/programs/lesson-player";
+
+function videoPlaybackUrl(courseId: string, videoUrl?: string | null, flatIndex?: number): string {
+  if (isS3Ref(videoUrl)) {
+    return `/api/courses/${courseId}/lessons/${flatIndex ?? 0}/video`;
+  }
+  return videoUrl ?? "";
+}
 
 function LockedScreen({
   title,
@@ -100,16 +107,22 @@ export default async function LearnPage({ params, searchParams }: Props) {
     );
   }
 
+  const courseId = course._id.toString();
+  let flatIndex = 0;
+
   const lessons = await Promise.all(
     (course.modules ?? []).flatMap((m) =>
-      (m.lessons ?? []).map(async (l) => ({
-        moduleTitle: m.title,
-        title: l.title,
-        duration: l.duration ?? "",
-        videoUrl: await signMediaUrl(l.videoUrl),
-        pdfUrl: await signMediaUrl(l.pdfUrl),
-        content: l.content ?? "",
-      }))
+      (m.lessons ?? []).map(async (l) => {
+        const idx = flatIndex++;
+        return {
+          moduleTitle: m.title,
+          title: l.title,
+          duration: l.duration ?? "",
+          videoUrl: videoPlaybackUrl(courseId, l.videoUrl, idx),
+          pdfUrl: await signMediaUrl(l.pdfUrl),
+          content: l.content ?? "",
+        };
+      })
     )
   );
 
@@ -123,7 +136,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
         (m.lessons ?? []).map(async (l) => ({
           title: l.title,
           duration: l.duration ?? "",
-          videoUrl: await signMediaUrl(l.videoUrl),
+          videoUrl: videoPlaybackUrl(courseId, l.videoUrl),
           pdfUrl: await signMediaUrl(l.pdfUrl),
           content: l.content ?? "",
         }))
@@ -151,6 +164,10 @@ export default async function LearnPage({ params, searchParams }: Props) {
       }}
       initialIndex={initialIndex}
       lessons={lessons}
+      user={{
+        name: session.name,
+        email: session.email,
+      }}
     />
   );
 }

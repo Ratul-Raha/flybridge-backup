@@ -5,7 +5,7 @@ import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { Order } from "@/lib/models/order";
 import { assertSafeFetchUrl, assertSafeRedirectUrl } from "@/lib/url-safety";
-import { isS3Ref, getS3Object } from "@/lib/storage";
+import { isS3Ref, getS3ObjectRange } from "@/lib/storage";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -18,6 +18,10 @@ const MIME: Record<string, string> = {
   mp3: "audio/mpeg",
   wav: "audio/wav",
   m4a: "audio/mp4",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  mkv: "video/x-matroska",
   zip: "application/zip",
   txt: "text/plain",
   csv: "text/csv",
@@ -77,7 +81,7 @@ export async function GET(
     const fileName = resource.fileName || `download.${extOf(resource.fileUrl)}`;
     const ext = extOf(fileName);
     const mime = MIME[ext] ?? "application/octet-stream";
-    const inlineTypes = new Set(["pdf", "mp3", "wav", "m4a", "txt"]);
+    const inlineTypes = new Set(["pdf", "mp3", "wav", "m4a", "mp4", "webm", "mov", "txt"]);
     const forceDownload = _request.nextUrl.searchParams.get("dl") === "1";
     const disposition = forceDownload || !inlineTypes.has(ext) ? "attachment" : "inline";
 
@@ -88,6 +92,7 @@ export async function GET(
       `${disposition}; filename="${asciiSafe(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
     );
     headers.set("Cache-Control", "public, max-age=3600");
+    headers.set("Accept-Ranges", "bytes");
 
     if (session?.userId) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
@@ -95,15 +100,22 @@ export async function GET(
       );
     }
 
+    const range = _request.headers.get("range") ?? undefined;
+
     // New private S3 storage — pipe the object stream straight through.
     if (isS3Ref(resource.fileUrl)) {
       try {
-        const { stream, contentLength, contentType } = await getS3Object(resource.fileUrl);
+        const { stream, contentLength, contentType, contentRange, statusCode } =
+          await getS3ObjectRange(resource.fileUrl, range);
         if (!stream) {
           return NextResponse.json({ error: "File unavailable" }, { status: 502 });
         }
         if (contentType) headers.set("Content-Type", contentType);
         if (contentLength) headers.set("Content-Length", String(contentLength));
+        if (range && statusCode === 206 && contentRange) {
+          headers.set("Content-Range", contentRange);
+          return new Response(stream, { status: 206, headers });
+        }
         return new Response(stream, { status: 200, headers });
       } catch (error) {
         console.error("resource S3 file GET error", error);
@@ -117,15 +129,28 @@ export async function GET(
       return NextResponse.json({ error: "Unsafe file URL" }, { status: 400 });
     }
 
-    const upstream = await fetch(resource.fileUrl, { cache: "no-store", redirect: "error" });
-    if (!upstream.ok || !upstream.body) {
+    const upstream = await fetch(resource.fileUrl, {
+      cache: "no-store",
+      redirect: "error",
+      headers: range ? { Range: range } : undefined,
+    });
+    if (!upstream.ok && upstream.status !== 206) {
+      return NextResponse.json({ error: "File unavailable" }, { status: 502 });
+    }
+    if (!upstream.body) {
       return NextResponse.json({ error: "File unavailable" }, { status: 502 });
     }
 
     const length = upstream.headers.get("content-length");
     if (length) headers.set("Content-Length", length);
 
-    return new Response(upstream.body, { status: 200, headers });
+    const upstreamContentRange = upstream.headers.get("content-range");
+    if (upstreamContentRange) headers.set("Content-Range", upstreamContentRange);
+
+    return new Response(upstream.body, {
+      status: upstream.status === 206 ? 206 : 200,
+      headers,
+    });
   } catch (error) {
     console.error("resource file GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

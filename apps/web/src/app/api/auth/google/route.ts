@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { createSession, SESSION_COOKIE } from "@/lib/auth/session";
+import {
+  DEVICE_COOKIE,
+  MAX_DEVICES,
+  newDeviceId,
+  describeDevice,
+  registerDevice,
+  touchDevice,
+  deviceCookieAttrs,
+} from "@/lib/auth/devices";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
@@ -110,6 +119,30 @@ export async function POST(request: NextRequest) {
       user = await loadOrCreateUser(email, claims, source);
     }
 
+    const ua = request.headers.get("user-agent") ?? null;
+    let deviceId = request.cookies.get(DEVICE_COOKIE)?.value ?? null;
+
+    const isStaff = user.accountType === "admin" || user.accountType === "moderator";
+
+    if (!isStaff) {
+      if (!deviceId) deviceId = newDeviceId();
+      const outcome = await registerDevice(
+        user._id.toString(),
+        deviceId,
+        describeDevice(ua),
+        ua
+      );
+      if (!outcome.allowed) {
+        return NextResponse.json(
+          {
+            error: `You've reached the ${MAX_DEVICES}-device limit for your account. Remove an old device from Account Settings to continue.`,
+          },
+          { status: 403 }
+        );
+      }
+      await touchDevice(user._id.toString(), deviceId, describeDevice(ua), ua);
+    }
+
     const session = await createSession({
       uid: claims.uid,
       userId: user._id.toString(),
@@ -136,6 +169,9 @@ export async function POST(request: NextRequest) {
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
+    if (deviceId) {
+      res.cookies.set(DEVICE_COOKIE, deviceId, deviceCookieAttrs());
+    }
     return res;
   } catch (error) {
     console.error("auth/google error", error);
