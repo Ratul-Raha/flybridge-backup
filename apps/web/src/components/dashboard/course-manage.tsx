@@ -57,6 +57,7 @@ type FormState = {
   published: boolean;
   featured: boolean;
   upcoming: boolean;
+  certificateEnabled: boolean;
   modules: Module[];
   books: Book[];
 };
@@ -83,6 +84,7 @@ const emptyForm: FormState = {
   published: false,
   featured: false,
   upcoming: false,
+  certificateEnabled: true,
   modules: [],
   books: [],
 };
@@ -155,6 +157,7 @@ export function CourseManage() {
       published: c.published ?? false,
       featured: c.featured ?? false,
       upcoming: c.upcoming ?? false,
+      certificateEnabled: c.certificateEnabled ?? true,
       modules: (c.modules ?? []).map((m) => ({
         title: m.title,
         lessons: m.lessons.map((l) => ({
@@ -515,6 +518,15 @@ export function CourseManage() {
               </div>
             </div>
 
+            <label className="flex items-center gap-2.5 text-[13.5px] font-medium md:col-span-2 cursor-pointer" style={{ color: "var(--ink)" }}>
+              <input
+                type="checkbox"
+                checked={form.certificateEnabled}
+                onChange={(e) => setForm({ ...form, certificateEnabled: e.target.checked })}
+                className="w-4 h-4"
+              />
+              Certificate enabled (show certificate button in player)
+            </label>
             <label className="flex items-center gap-2.5 text-[13.5px] font-medium md:col-span-2 cursor-pointer" style={{ color: "var(--ink)" }}>
               <input
                 type="checkbox"

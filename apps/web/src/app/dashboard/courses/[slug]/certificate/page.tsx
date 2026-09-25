@@ -26,6 +26,7 @@ export default function CertificatePage({
     issuedAt,
     downloadCount,
     loading,
+    certificateEnabled,
   } = useCertificateData(params.slug);
 
   const [origin, setOrigin] = useState("");
@@ -84,6 +85,32 @@ export default function CertificatePage({
           className="animate-spin"
           style={{ color: "var(--brand)" }}
         />
+      </div>
+    );
+  }
+
+  if (!certificateEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+        <div className="text-center px-6">
+          <div className="w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: "var(--bg-soft)" }}>
+            <Lock size={28} style={{ color: "var(--body)" }} />
+          </div>
+          <h1 className="font-display text-[22px] font-semibold mb-2" style={{ color: "var(--ink)" }}>
+            Certificate Not Available
+          </h1>
+          <p className="text-[14px] max-w-[420px] mx-auto" style={{ color: "var(--body)" }}>
+            This course does not offer a certificate. Please contact the instructor or check the course details for more information.
+          </p>
+          <Link
+            href={`/dashboard/courses/${params.slug}/learn`}
+            className="mt-6 inline-flex items-center gap-1.5 rounded-full text-white text-[14px] font-medium px-6 py-[11px] hover:opacity-90 transition-opacity"
+            style={{ background: "var(--brand)" }}
+          >
+            <ArrowLeft size={14} />
+            Back to Course
+          </Link>
+        </div>
       </div>
     );
   }

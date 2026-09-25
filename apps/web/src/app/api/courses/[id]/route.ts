@@ -31,6 +31,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   published: "Published",
   featured: "Featured",
   upcoming: "Upcoming",
+  certificateEnabled: "Certificate enabled",
   modules: "Modules",
   books: "Books",
 };
@@ -109,6 +110,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.published === "boolean") course.published = body.published;
     if (typeof body.featured === "boolean") course.featured = body.featured;
     if (typeof body.upcoming === "boolean") course.upcoming = body.upcoming;
+    if (typeof body.certificateEnabled === "boolean") course.certificateEnabled = body.certificateEnabled;
     if (Array.isArray(body.modules)) {
       course.modules = body.modules as typeof course.modules;
     }

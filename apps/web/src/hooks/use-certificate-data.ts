@@ -29,6 +29,7 @@ type UseCertificateData = {
   issuedAt: string | null;
   downloadCount: number;
   loading: boolean;
+  certificateEnabled: boolean;
 };
 
 export function useCertificateData(slug: string): UseCertificateData {
@@ -43,6 +44,7 @@ export function useCertificateData(slug: string): UseCertificateData {
   const [issuedAt, setIssuedAt] = useState<string | null>(null);
   const [downloadCount, setDownloadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [certificateEnabled, setCertificateEnabled] = useState(true);
 
   const load = useCallback(async () => {
     try {
@@ -60,6 +62,7 @@ export function useCertificateData(slug: string): UseCertificateData {
         const course = courseData.course;
         setCourseTitle(course?.title ?? "");
         setCourseId(course?.id ?? "");
+        setCertificateEnabled(course?.certificateEnabled ?? true);
         if (course?.id) {
           const progRes = await fetch(`/api/courses/${course.id}/progress`);
           if (progRes.ok) {
@@ -109,5 +112,6 @@ export function useCertificateData(slug: string): UseCertificateData {
     issuedAt,
     downloadCount,
     loading,
+    certificateEnabled,
   };
 }

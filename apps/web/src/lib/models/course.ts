@@ -68,6 +68,7 @@ const courseSchema = new Schema(
     published: { type: Boolean, default: false, index: true },
     featured: { type: Boolean, default: false },
     upcoming: { type: Boolean, default: false },
+    certificateEnabled: { type: Boolean, default: true },
     modules: { type: [moduleSchema], default: [] },
     books: { type: [bookSchema], default: [] },
     averageRating: { type: Number, default: 0 },
@@ -84,6 +85,7 @@ export type CourseDoc = InferSchemaType<typeof courseSchema> & {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  certificateEnabled: boolean;
 };
 
 export const Course =

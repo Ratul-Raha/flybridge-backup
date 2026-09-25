@@ -154,6 +154,7 @@ export function LessonPlayer({
     image: string | null;
     modules: Module[];
     books: { title: string; description: string; pdfUrl: string }[];
+    certificateEnabled?: boolean;
   };
   lessons: FlatLesson[];
   initialIndex: number;
@@ -278,14 +279,16 @@ export function LessonPlayer({
               </div>
               <span className="font-mono text-[10px] font-semibold" style={{ color: "var(--body)" }}>{progressPct}%</span>
             </div>
-            <Link
-              href={`/dashboard/courses/${course.slug}/certificate`}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-black/5"
-              style={{ color: grade?.passed ? "#16a34a" : "var(--ink)", borderColor: "var(--line)" }}
-            >
-              <Award size={13} />
-              <span className="hidden sm:inline">Certificate</span>
-            </Link>
+            {course.certificateEnabled !== false && (
+              <Link
+                href={`/dashboard/courses/${course.slug}/certificate`}
+                className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-black/5"
+                style={{ color: grade?.passed ? "#16a34a" : "var(--ink)", borderColor: "var(--line)" }}
+              >
+                <Award size={13} />
+                <span className="hidden sm:inline">Certificate</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>

@@ -161,6 +161,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
         image: course.image ?? null,
         modules: signedModules,
         books: signedBooks,
+        certificateEnabled: course.certificateEnabled,
       }}
       initialIndex={initialIndex}
       lessons={lessons}
