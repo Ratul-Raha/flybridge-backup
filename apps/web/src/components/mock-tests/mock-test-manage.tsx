@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { uploadToStorage } from "@/lib/upload-client";
@@ -17,6 +17,9 @@ import { ListeningMediaPlayer } from "@/components/mock-tests/listening-media-pl
 
 const inputClass =
   "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30";
+
+const rowInputClass =
+  "w-full min-w-0 rounded-lg border bg-white px-3 py-2 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-2/30";
 
 const emptyBundleForm = {
   title: "",
@@ -44,17 +47,33 @@ const emptyTestForm = {
   answerKey: "",
 };
 
+type ManagedQuestion = {
+  qid?: string;
+  type?: string;
+  prompt?: string;
+  options?: string[];
+  correctOption?: number;
+  answer?: string;
+  passageRef?: string;
+  wordHint?: string;
+};
+
+type ManagedPassage = { id?: string; title?: string; text?: string };
+
 type ManagedSection = {
   id?: string;
+  passageId?: string;
   type?: string;
   instructions?: string;
   passage?: string;
   image?: string;
   imagePlacement?: string;
-  questions?: { qid?: string; prompt?: string; type?: string }[];
+  questions?: ManagedQuestion[];
 };
 
 type ManagedWritingContent = {
+  passages?: ManagedPassage[];
+  passage?: string;
   sections?: ManagedSection[];
   audioUrl?: string;
   videoUrl?: string;
@@ -76,6 +95,136 @@ const WRITING_PLACEMENTS = [
   { value: "above", label: "Above the task" },
   { value: "below", label: "Below the task, above answer box" },
 ] as const;
+
+/** Question types whose answer is one of the listed options (choice-style). */
+const CHOICE_TYPES: string[] = [
+  "multiple-choice",
+  "true-false-ng",
+  "heading-matching",
+  "matching-features",
+];
+
+const QUESTION_TYPE_OPTIONS = [
+  { value: "multiple-choice", label: "Multiple choice" },
+  { value: "true-false-ng", label: "True / False / Not Given" },
+  { value: "heading-matching", label: "Match headings" },
+  { value: "matching-features", label: "Match features" },
+  { value: "sentence-completion", label: "Sentence completion" },
+  { value: "summary-completion", label: "Summary completion" },
+  { value: "notes-completion", label: "Notes completion" },
+  { value: "form-completion", label: "Form completion" },
+  { value: "table-completion", label: "Table completion" },
+  { value: "diagram-completion", label: "Diagram completion" },
+  { value: "short-answer", label: "Short answer" },
+] as const;
+
+function detectHasOptions(q: { type?: string; options?: string[] }): boolean {
+  const opts = Array.isArray(q.options) ? q.options : [];
+  return CHOICE_TYPES.includes(q.type ?? "") || opts.filter((o) => o?.trim()).length > 1;
+}
+
+function normalizeAnswerText(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[.,"'´`]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/** Returns the answer-key tokenizer map — mirrors server applyAnswerKey. */
+function parseAnswerKeyNumbers(text: string): Map<number, string> {
+  const map = new Map<number, string>();
+  if (!text) return map;
+  const tokenRe = /(\d{1,3})(?:[.:)\]\-]+|\s)\s*/g;
+  const tokens: { n: number; start: number; numStart: number }[] = [];
+  let mt: RegExpExecArray | null;
+  while ((mt = tokenRe.exec(text)) !== null) {
+    tokens.push({ n: parseInt(mt[1], 10), start: mt.index + mt[0].length, numStart: mt.index });
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    const end = i + 1 < tokens.length ? tokens[i + 1].numStart : text.length;
+    const ans = text
+      .slice(t.start, end)
+      .replace(/[\s;,\/]+$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (ans && !/^\d{1,4}$/.test(ans)) map.set(t.n, ans);
+  }
+  return map;
+}
+
+/** Question numbers (1-based, in display order) that have no correct answer yet. */
+function collectMissing(content: unknown): number[] {
+  if (!content || typeof content !== "object") return [];
+  const sections = (content as { sections?: unknown }).sections;
+  if (!Array.isArray(sections)) return [];
+  const missing: number[] = [];
+  let n = 1;
+  for (const s of sections) {
+    const sec = (s as { questions?: unknown }) ?? {};
+    if (!Array.isArray(sec.questions)) continue;
+    for (const q of sec.questions) {
+      const qu = (q as { type?: string; options?: string[]; correctOption?: number; answer?: string }) ?? {};
+      const answered = detectHasOptions(qu)
+        ? typeof qu.correctOption === "number" && qu.correctOption >= 0
+        : typeof qu.answer === "string" && qu.answer.trim().length > 0;
+      if (!answered) missing.push(n);
+      n++;
+    }
+  }
+  return missing;
+}
+
+/**
+ * Reassigns sequential qid values (q1, q2, …) across the whole test so the
+ * number in each qid keeps matching its position and the answer key. Ids are
+ * what the player and the AI grader key answers by, so duplicates are fatal.
+ */
+function renumberQids(content: ManagedWritingContent): void {
+  let n = 1;
+  for (const s of content.sections ?? []) {
+    for (const q of s.questions ?? []) {
+      q.qid = `q${n}`;
+      n++;
+    }
+  }
+}
+
+/** Next free `<prefix><n>` id, so adding after a delete never reuses one. */
+function nextId(prefix: string, existing: (string | undefined)[]): string {
+  const used = new Set(existing.filter((id): id is string => !!id));
+  let n = 1;
+  while (used.has(`${prefix}${n}`)) n++;
+  return `${prefix}${n}`;
+}
+
+/** Applies a question-type change: options + correct answer are kept in sync. */
+function applyQuestionType(q: ManagedQuestion, type: string): void {
+  q.type = type;
+  if (type === "true-false-ng") {
+    q.options = ["True", "False", "Not Given"];
+    if (typeof q.correctOption !== "number") q.correctOption = -1;
+    if (q.correctOption < 0) q.answer = "";
+    else q.answer = q.options[q.correctOption] ?? "";
+  } else if (CHOICE_TYPES.includes(type)) {
+    const filled = (q.options ?? []).filter((o) => o?.trim());
+    if (filled.length >= 2) {
+      q.options = filled;
+      if (typeof q.correctOption !== "number" || q.correctOption >= q.options.length) {
+        q.correctOption = -1;
+        q.answer = "";
+      }
+    } else {
+      q.options = ["", ""];
+      q.correctOption = -1;
+      q.answer = "";
+    }
+  } else {
+    q.options = [];
+    q.correctOption = -1;
+  }
+}
 
 type ManagedWritingTask = "t1" | "t2";
 
@@ -361,6 +510,16 @@ export function MockTestManage() {
         return;
       }
     }
+    if (testForm.status === "published") {
+      const missing = collectMissing(content);
+      if (missing.length > 0) {
+        const shown = missing.slice(0, 10).map((n) => `Q${n}`).join(", ");
+        setError(
+          `${missing.length} question${missing.length === 1 ? "" : "s"} still ${missing.length === 1 ? "has" : "have"} no correct answer (${shown}${missing.length > 10 ? ", …" : ""}). Mark the correct option/answer, or keep the test as a draft.`
+        );
+        return;
+      }
+    }
     const url = editingTestId ? `/api/mock-tests/${editingTestId}` : "/api/mock-tests";
     setSavingTest(true);
     try {
@@ -423,6 +582,18 @@ export function MockTestManage() {
   }, [testForm.contentJson]);
 
   const contentSections = parsedContent?.sections ?? [];
+
+  const contentJsonInvalid = testForm.contentJson.trim().length > 0 && parsedContent === null;
+
+  const sectionStartNums = useMemo(() => {
+    const starts: number[] = [];
+    let n = 1;
+    for (const s of contentSections) {
+      starts.push(n);
+      n += s.questions?.length ?? 0;
+    }
+    return starts;
+  }, [contentSections]);
 
   const taskFields = (task: ManagedWritingTask) =>
     task === "t1"
@@ -569,6 +740,258 @@ export function MockTestManage() {
       setError("Clipboard unavailable — copy the image URL from the field instead.");
     }
   };
+
+  /* ---------------------------------------------------------------- */
+  /*  Manual authoring helpers (form editors drive the Content JSON)   */
+  /* ---------------------------------------------------------------- */
+
+  const updateContent = useCallback((fn: (c: ManagedWritingContent) => void) => {
+    setTestForm((f) => {
+      let current: ManagedWritingContent = {};
+      if (f.contentJson.trim()) {
+        try {
+          const v = JSON.parse(f.contentJson) as unknown;
+          if (v && typeof v === "object") current = v as ManagedWritingContent;
+        } catch {
+          return f;
+        }
+      }
+      const next = JSON.parse(JSON.stringify(current)) as ManagedWritingContent;
+      fn(next);
+      return { ...f, contentJson: JSON.stringify(next, null, 2) };
+    });
+  }, []);
+
+  const passagesList = useMemo<ManagedPassage[]>(() => {
+    const c = parsedContent;
+    if (Array.isArray(c?.passages)) return c.passages as ManagedPassage[];
+    if (typeof c?.passage === "string" && c.passage.trim()) {
+      return [{ id: "p1", title: "Reading Passage 1", text: c.passage }];
+    }
+    return [];
+  }, [parsedContent]);
+
+  const updatePassages = useCallback(
+    (fn: (ps: ManagedPassage[]) => void) =>
+      updateContent((c) => {
+        const ps = JSON.parse(
+          JSON.stringify(
+            Array.isArray(c.passages)
+              ? c.passages
+              : typeof c.passage === "string" && c.passage.trim()
+                ? [{ id: "p1", title: "Reading Passage 1", text: c.passage }]
+                : []
+          )
+        ) as ManagedPassage[];
+        fn(ps);
+        c.passages = ps;
+        if (c.passage) delete c.passage;
+      }),
+    [updateContent]
+  );
+
+  const addPassage = () =>
+    updatePassages((ps) => {
+      const n = ps.length + 1;
+      ps.push({
+        id: nextId("p", ps.map((p) => p.id)),
+        title: `Reading Passage ${n}`,
+        text: "",
+      });
+    });
+
+  const setPassageField = (pi: number, key: keyof ManagedPassage, val: string) =>
+    updatePassages((ps) => {
+      const p = ps[pi];
+      if (p) p[key] = val;
+    });
+
+  const removePassage = (pi: number) => {
+    const pid = passagesList[pi]?.id;
+    updateContent((c) => {
+      const ps = (Array.isArray(c.passages) ? c.passages : []) as ManagedPassage[];
+      ps.splice(pi, 1);
+      c.passages = ps;
+      if (pid) {
+        for (const s of c.sections ?? []) {
+          if (s.passageId === pid) s.passageId = ps[0]?.id ?? "";
+        }
+      }
+      if (c.passage) delete c.passage;
+    });
+  };
+
+  const addSection = () =>
+    updateContent((c) => {
+      c.sections = c.sections ?? [];
+      c.sections.push({
+        id: nextId("s", c.sections.map((s) => s.id)),
+        type: testForm.skill === "listening" ? "form-completion" : "multiple-choice",
+        instructions: "",
+        passageId: passagesList[0]?.id ?? "",
+        passage: "",
+        questions: [],
+      });
+    });
+
+  const removeSection = (si: number) =>
+    updateContent((c) => {
+      c.sections = c.sections ?? [];
+      c.sections.splice(si, 1);
+      renumberQids(c);
+    });
+
+  const setSectionField = (si: number, key: keyof ManagedSection, val: unknown) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (s) (s as unknown as Record<string, unknown>)[key] = val;
+    });
+
+  const changeSectionType = (si: number, type: string) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.type = type;
+      for (const q of s.questions ?? []) applyQuestionType(q, type);
+    });
+
+  const addQuestion = (si: number) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.questions = s.questions ?? [];
+      s.questions.push({
+        type: s.type ?? "short-answer",
+        prompt: "",
+        options: s.type === "true-false-ng" ? ["True", "False", "Not Given"] : [],
+        correctOption: -1,
+        answer: "",
+      });
+      renumberQids(c);
+    });
+
+  const removeQuestion = (si: number, qi: number) =>
+    updateContent((c) => {
+      c.sections?.[si]?.questions?.splice(qi, 1);
+      renumberQids(c);
+    });
+
+  const setQuestionField = (si: number, qi: number, key: keyof ManagedQuestion, val: unknown) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (q) (q as unknown as Record<string, unknown>)[key] = val;
+    });
+
+  const changeQuestionType = (si: number, qi: number, type: string) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (q) applyQuestionType(q, type);
+    });
+
+  const moveQuestion = (si: number, qi: number, dir: -1 | 1) =>
+    updateContent((c) => {
+      const arr = c.sections?.[si]?.questions;
+      if (!arr) return;
+      const j = qi + dir;
+      if (j < 0 || j >= arr.length) return;
+      const t = arr[qi];
+      arr[qi] = arr[j];
+      arr[j] = t;
+      renumberQids(c);
+    });
+
+  const addOption = (si: number, qi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (q) q.options = [...(q.options ?? []), ""];
+    });
+
+  const setOptionValue = (si: number, qi: number, oi: number, val: string) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (q?.options) q.options[oi] = val;
+    });
+
+  const removeOption = (si: number, qi: number, oi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (!q?.options) return;
+      q.options.splice(oi, 1);
+      if (typeof q.correctOption === "number" && q.correctOption >= 0) {
+        if (q.correctOption === oi) {
+          q.correctOption = -1;
+          q.answer = "";
+        } else if (q.correctOption > oi) q.correctOption--;
+      }
+    });
+
+  const moveOption = (si: number, qi: number, oi: number, dir: -1 | 1) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      const arr = q?.options;
+      if (!arr) return;
+      const j = oi + dir;
+      if (j < 0 || j >= arr.length) return;
+      const t = arr[oi];
+      arr[oi] = arr[j];
+      arr[j] = t;
+      if (typeof q.correctOption === "number") {
+        if (q.correctOption === oi) q.correctOption = j;
+        else if (q.correctOption === j) q.correctOption = oi;
+      }
+    });
+
+  const setCorrectOption = (si: number, qi: number, oi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (!q) return;
+      q.correctOption = oi;
+      q.answer = q.options?.[oi] ?? "";
+    });
+
+  const setWritingTaskText = (task: ManagedWritingTask, text: string) => {
+    const f = taskFields(task);
+    updateContent((c) => {
+      const rec = c as unknown as Record<string, unknown>;
+      if (text.trim()) rec[f.text] = text;
+      else delete rec[f.text];
+    });
+  };
+
+  /* Answer completeness + answer-key coverage flags for review */
+  const answerStats = useMemo(() => {
+    const questions = (parsedContent?.sections ?? []).flatMap((s) => s.questions ?? []);
+    const missing = collectMissing(parsedContent);
+    return { total: questions.length, answered: questions.length - missing.length, missing };
+  }, [parsedContent]);
+
+  const keyedNumbers = useMemo(
+    () => parseAnswerKeyNumbers(testForm.answerText.trim() || testForm.answerKey),
+    [testForm.answerText, testForm.answerKey]
+  );
+
+  const questionStatus = useCallback(
+    (q: ManagedQuestion): "key" | "ai" | "missing" => {
+      const opts = Array.isArray(q.options) ? q.options : [];
+      if (detectHasOptions(q)) {
+        const ci = typeof q.correctOption === "number" ? q.correctOption : -1;
+        const expected = ci >= 0 ? opts[ci] : "";
+        const qnum = q.qid ? parseInt(String(q.qid).match(/\d+$/)?.[0] ?? "-1", 10) : -1;
+        const keyVal = keyedNumbers.get(qnum);
+        if (keyVal) return normalizeAnswerText(expected) === normalizeAnswerText(keyVal) ? "key" : "ai";
+        return ci >= 0 ? "ai" : "missing";
+      }
+      const expected = q.answer ?? "";
+      const qnum = q.qid ? parseInt(String(q.qid).match(/\d+$/)?.[0] ?? "-1", 10) : -1;
+      const keyVal = keyedNumbers.get(qnum);
+      if (expected.trim()) {
+        if (keyVal) return normalizeAnswerText(expected) === normalizeAnswerText(keyVal) ? "key" : "ai";
+        return "ai";
+      }
+      return "missing";
+    },
+    [keyedNumbers]
+  );
 
   if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
 
@@ -1131,6 +1554,435 @@ export function MockTestManage() {
                           className={inputClass + " resize-y font-mono text-[11.5px]"}
                           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                         />
+                      </div>
+
+                      {/* Manual authoring editor */}
+                      <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                            Build questions manually
+                          </p>
+                          <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                            Add passages, sections and questions by hand — no AI needed. Use the{" "}
+                            <code className="font-mono" style={{ color: "var(--brand-2)" }}>![alt](url)</code>{" "}
+                            token to embed images anywhere text appears.
+                          </p>
+                        </div>
+
+                        {/* Answer coverage */}
+                        {answerStats.total > 0 && (
+                          <div className="flex flex-col gap-2 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                                Answer coverage
+                              </p>
+                              <span
+                                className="font-mono text-[12px] font-bold"
+                                style={{ color: answerStats.answered === answerStats.total ? "#0FA968" : "var(--brand)" }}
+                              >
+                                {answerStats.answered}/{answerStats.total}
+                              </span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--bg-soft)" }}>
+                              <div
+                                className="h-full rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${answerStats.total ? Math.round((answerStats.answered / answerStats.total) * 100) : 0}%`,
+                                  background: answerStats.answered === answerStats.total ? "#0FA968" : "var(--brand)",
+                                }}
+                              />
+                            </div>
+                            <p className="text-[11px] leading-[1.6]" style={{ color: "var(--body)" }}>
+                              <span className="font-semibold" style={{ color: "#0FA968" }}>Key</span> matches the{" "}
+                              {testForm.answerText.trim() ? "pasted answer text" : "saved answer key"} ·{" "}
+                              <span className="font-semibold" style={{ color: "#E08A17" }}>AI</span> has an
+                              answer but isn&apos;t verified · <span className="font-semibold" style={{ color: "#C0392B" }}>missing</span>{" "}
+                              still needs a correct answer before publishing.
+                            </p>
+                            {answerStats.missing.length > 0 && (
+                              <p className="font-mono text-[11px] leading-[1.6]" style={{ color: "#C0392B" }}>
+                                No answer yet: Q{answerStats.missing.slice(0, 12).join(", Q")}
+                                {answerStats.missing.length > 12 ? ` +${answerStats.missing.length - 12} more` : ""}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {contentJsonInvalid && (
+                          <p className="rounded-xl border px-4 py-3 text-[12px]" style={{ borderColor: "rgba(192,57,43,0.3)", color: "#C0392B" }}>
+                            The Content JSON below is not valid JSON — fix it first, otherwise edits here are ignored.
+                          </p>
+                        )}
+
+                        {/* Writing tasks */}
+                        {testForm.skill === "writing" && (
+                          <div className="flex flex-col gap-2.5">
+                            <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Writing tasks
+                            </p>
+                            {(["t1", "t2"] as const).map((task) => {
+                              const f = taskFields(task);
+                              const label = task === "t1" ? "Writing Task 1" : "Writing Task 2";
+                              const val =
+                                (parsedContent?.[f.text as keyof ManagedWritingContent] as string | undefined) ?? "";
+                              return (
+                                <div key={task} className="flex flex-col gap-1.5 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+                                  <div className="flex items-center justify-between gap-3">
+                                    <span
+                                      className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]"
+                                      style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                                    >
+                                      {label}
+                                    </span>
+                                    <button type="button" onClick={() => setWritingTaskText(task, "")} className="text-[11.5px] font-medium" style={{ color: "#C0392B" }}>
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <textarea
+                                    value={val}
+                                    onChange={(e) => setWritingTaskText(task, e.target.value)}
+                                    rows={6}
+                                    placeholder={`Write the ${label} prompt here (or paste it). Image URLs can be embedded with ![alt](url).`}
+                                    className={inputClass + " resize-y font-mono text-[12px]"}
+                                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Reading passages */}
+                        {testForm.skill === "reading" && (
+                          <div className="flex flex-col gap-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                                Reading passages
+                              </p>
+                              <button
+                                type="button"
+                                onClick={addPassage}
+                                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                                style={{ background: "var(--brand)" }}
+                              >
+                                <Plus size={12} /> Add passage
+                              </button>
+                            </div>
+                            {passagesList.length === 0 && (
+                              <p className="rounded-xl border border-dashed bg-white px-4 py-5 text-center text-[12.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                                No passages yet — add one, then link sections to it below.
+                              </p>
+                            )}
+                            {passagesList.map((p, pi) => (
+                              <div key={p.id ?? pi} className="flex flex-col gap-2 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]"
+                                    style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                                  >
+                                    Passage {pi + 1}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={p.title ?? ""}
+                                    onChange={(e) => setPassageField(pi, "title", e.target.value)}
+                                    placeholder="Passage title (optional)"
+                                    className={rowInputClass}
+                                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removePassage(pi)}
+                                    className="inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-2 text-[12px] font-medium transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                    style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                                <textarea
+                                  value={p.text ?? ""}
+                                  onChange={(e) => setPassageField(pi, "text", e.target.value)}
+                                  rows={5}
+                                  placeholder="Paste the reading passage text here…"
+                                  className={inputClass + " resize-y font-mono text-[12px]"}
+                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Sections + questions */}
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Sections &amp; questions
+                            </p>
+                            <button
+                              type="button"
+                              onClick={addSection}
+                              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                              style={{ background: "var(--brand)" }}
+                            >
+                              <Plus size={12} /> Add section
+                            </button>
+                          </div>
+
+                          {contentSections.length === 0 && (
+                            <p className="rounded-xl border border-dashed bg-white px-4 py-5 text-center text-[12.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                              No sections yet — add a section to start authoring questions.
+                            </p>
+                          )}
+
+                          {contentSections.map((s, si) => (
+                            <div key={s.id ?? si} className="flex flex-col gap-2.5 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+                              {/* Section header */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]"
+                                  style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                                >
+                                  Section {si + 1}
+                                </span>
+                                <select
+                                  value={s.type ?? "short-answer"}
+                                  onChange={(e) => changeSectionType(si, e.target.value)}
+                                  className="rounded-full border bg-white px-3 py-2 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                >
+                                  {QUESTION_TYPE_OPTIONS.map((o) => (
+                                    <option key={o.value} value={o.value}>
+                                      {o.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                {testForm.skill === "reading" && passagesList.length > 0 && (
+                                  <select
+                                    value={s.passageId ?? passagesList[0]?.id ?? ""}
+                                    onChange={(e) => setSectionField(si, "passageId", e.target.value)}
+                                    className="rounded-full border bg-white px-3 py-2 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                  >
+                                    {passagesList.map((p, pi) => (
+                                      <option key={p.id ?? pi} value={p.id ?? pi}>
+                                        {p.title?.trim() ? p.title : `Passage ${pi + 1}`}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                                <span className="flex-1" />
+                                <button
+                                  type="button"
+                                  onClick={() => removeSection(si)}
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-2 text-[12px] font-medium transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                  style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                >
+                                  <Trash2 size={12} /> Remove
+                                </button>
+                              </div>
+
+                              <textarea
+                                value={s.instructions ?? ""}
+                                onChange={(e) => setSectionField(si, "instructions", e.target.value)}
+                                rows={2}
+                                placeholder="Instructions shown above the questions (optional)"
+                                className={inputClass + " resize-y font-mono text-[12px]"}
+                                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                              />
+
+                              <textarea
+                                value={s.passage ?? ""}
+                                onChange={(e) => setSectionField(si, "passage", e.target.value)}
+                                rows={3}
+                                placeholder={
+                                  testForm.skill === "reading"
+                                    ? "Extra text for this section (optional — the passage text lives in Reading passages above)"
+                                    : "Section text — e.g. the map, form or notes shown with the questions (optional)"
+                                }
+                                className={inputClass + " resize-y font-mono text-[12px]"}
+                                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                              />
+
+                              {/* Questions */}
+                              <div className="flex flex-col gap-2">
+                                {s.questions?.map((q, qi) => {
+                                  const hasOpts = detectHasOptions(q);
+                                  const qnum = (sectionStartNums[si] ?? 1) + qi;
+                                  const st = questionStatus(q);
+                                  const stMeta =
+                                    st === "key"
+                                      ? { label: "Key", color: "#0FA968", bg: "rgba(15,169,104,0.12)" }
+                                      : st === "ai"
+                                        ? { label: "AI", color: "#E08A17", bg: "rgba(224,138,23,0.12)" }
+                                        : { label: "Missing", color: "#C0392B", bg: "rgba(192,57,43,0.10)" };
+                                  return (
+                                    <div key={q.qid ?? qi} className="flex flex-col gap-2 rounded-lg border p-2.5" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                                      {/* Question top row */}
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span
+                                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-bold"
+                                          style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                                        >
+                                          {qnum}
+                                        </span>
+                                        <select
+                                          value={q.type ?? s.type ?? "short-answer"}
+                                          onChange={(e) => changeQuestionType(si, qi, e.target.value)}
+                                          className="rounded-full border bg-white px-2.5 py-1.5 text-[11.5px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                        >
+                                          {QUESTION_TYPE_OPTIONS.map((o) => (
+                                            <option key={o.value} value={o.value}>
+                                              {o.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        <span className="rounded-full px-2 py-[3px] font-mono text-[10px] font-bold uppercase tracking-[0.06em]" style={{ background: stMeta.bg, color: stMeta.color }}>
+                                          {stMeta.label}
+                                        </span>
+                                        {q.qid && (
+                                          <span className="font-mono text-[10.5px]" style={{ color: "var(--body)" }}>
+                                            {q.qid}
+                                          </span>
+                                        )}
+                                        <span className="flex-1" />
+                                        <button
+                                          type="button"
+                                          onClick={() => moveQuestion(si, qi, -1)}
+                                          disabled={qi === 0}
+                                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                        >
+                                          <ChevronUp size={13} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => moveQuestion(si, qi, 1)}
+                                          disabled={qi === (s.questions?.length ?? 0) - 1}
+                                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                        >
+                                          <ChevronDown size={13} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => removeQuestion(si, qi)}
+                                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                          style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
+
+                                      <textarea
+                                        value={q.prompt ?? ""}
+                                        onChange={(e) => setQuestionField(si, qi, "prompt", e.target.value)}
+                                        rows={2}
+                                        placeholder={`Question ${qnum} — type the question here…`}
+                                        className={inputClass + " resize-y font-mono text-[12px]"}
+                                        style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                      />
+
+                                      {hasOpts ? (
+                                        <div className="flex flex-col gap-1.5">
+                                          {(q.options ?? []).map((opt, oi) => {
+                                            const isCorrect = q.correctOption === oi;
+                                            return (
+                                              <div key={oi} className="flex items-center gap-2">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setCorrectOption(si, qi, oi)}
+                                                  title="Mark as the correct answer"
+                                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors"
+                                                  style={{
+                                                    borderColor: isCorrect ? "var(--brand)" : "var(--line)",
+                                                    background: isCorrect ? "var(--brand)" : "white",
+                                                  }}
+                                                >
+                                                  {isCorrect && <Check size={11} className="text-white" />}
+                                                </button>
+                                                <input
+                                                  type="text"
+                                                  value={opt ?? ""}
+                                                  onChange={(e) => setOptionValue(si, qi, oi, e.target.value)}
+                                                  placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                                                  className={rowInputClass}
+                                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                                />
+                                                <button
+                                                  type="button"
+                                                  onClick={() => moveOption(si, qi, oi, -1)}
+                                                  disabled={oi === 0}
+                                                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                                  style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                                >
+                                                  <ChevronUp size={13} />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => moveOption(si, qi, oi, 1)}
+                                                  disabled={oi === (q.options?.length ?? 0) - 1}
+                                                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                                  style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                                >
+                                                  <ChevronDown size={13} />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => removeOption(si, qi, oi)}
+                                                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                                  style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                                >
+                                                  <X size={12} />
+                                                </button>
+                                              </div>
+                                            );
+                                          })}
+                                          <button
+                                            type="button"
+                                            onClick={() => addOption(si, qi)}
+                                            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-[11.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                            style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                          >
+                                            <Plus size={11} /> Add option
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col gap-1.5">
+                                          <input
+                                            type="text"
+                                            value={q.answer ?? ""}
+                                            onChange={(e) => setQuestionField(si, qi, "answer", e.target.value)}
+                                            placeholder="Correct answer"
+                                            className={rowInputClass}
+                                            style={{ borderColor: q.answer?.trim() ? "#0FA968" : "var(--line)", color: "var(--ink)" }}
+                                          />
+                                          <input
+                                            type="text"
+                                            value={q.wordHint ?? ""}
+                                            onChange={(e) => setQuestionField(si, qi, "wordHint", e.target.value)}
+                                            placeholder="Word hint shown to students (optional)"
+                                            className={rowInputClass}
+                                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+
+                                <button
+                                  type="button"
+                                  onClick={() => addQuestion(si)}
+                                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-[12px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                  style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                >
+                                  <Plus size={12} /> Add question
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {contentSections.length > 0 && (
