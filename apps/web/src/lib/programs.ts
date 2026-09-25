@@ -9,7 +9,6 @@ export type Program = {
   price?: string;
   image?: string;
   hasDb?: boolean;
-  href?: string;
 };
 
 export const programs: Program[] = [
@@ -71,7 +70,6 @@ export const programs: Program[] = [
     badgeColor: "var(--mint-ink)",
     upcoming: true,
     image: "/programs/ielts-band-score-machine.svg",
-    href: "/ielts-band-score-machine",
   },
 ];
 
