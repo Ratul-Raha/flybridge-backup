@@ -32,6 +32,7 @@ type Course = {
   published: boolean;
   featured: boolean;
   upcoming: boolean;
+  certificateEnabled?: boolean;
   enrollmentCount?: number;
   wishlistCount?: number;
   modules: Module[];
