@@ -12,7 +12,7 @@ Current features and flows of the FlyBridge platform (web app in `apps/web`, Nex
 | Email | Resend (transactional + automation emails) |
 | Media | Cloudinary (uploads) |
 | AI | Groq (default LLM provider), Grok (x.ai) wired as placeholder, streaming chat |
-| Analytics | Google Analytics 4 (gtag via `@next/third-parties`) |
+| Analytics | Google Analytics 4 — gtag tag via `@next/third-parties`, GA4 Data API for the admin traffic dashboard |
 
 **Roles:** `user` (default), `moderator`, `admin` (assigned via the admin dashboard or a promote script).
 **Subscriptions:** `free` (default), `paid` (role field only — no payment processor for subscriptions yet).
@@ -126,6 +126,7 @@ Current features and flows of the FlyBridge platform (web app in `apps/web`, Nex
 
 ### Admin dashboard (`/dashboard/admin`)
 - **Users** (`/dashboard/admin/users`) — search, stats, change roles/subscriptions, per-user download tracking.
+- **Analytics** (`/dashboard/admin/analytics`) — live traffic density read from the GA4 Data API (active users, page views, events over a 5/15/30/60-minute window, peak/avg concurrency, pages, events, sources, devices, countries, plus today's hourly shape). Auto-refreshes every 30s via `GET /api/admin/analytics/traffic?minutes=30`.
 - **Events** (`/dashboard/admin/events`) — event log of all fired events.
 - **Reports** (`/api/admin/reports/[report]`) — prebuilt analytics reports (registrations, users, etc.).
 - **Automations** (`/dashboard/admin/automations`) — visual automation builder, run history.
@@ -169,6 +170,6 @@ Emitted by the app and logged to the event log:
 
 - **Payments (Stripe):** paid items create a `pending` Order (`gateway: "stripe"`, `gatewayRef` = checkout session id) and redirect the buyer to Stripe-hosted Checkout (`POST /api/orders` → `paymentUrl`). Fulfilment happens on webhook `checkout.session.completed` (`/api/webhooks/stripe`) which calls `fulfillOrder()` (enrollment/registration + `order.fulfilled` event); `/payment/success?order=…` reconciles synchronously against Stripe as a fallback, so purchases complete even before webhooks are configured. Keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` (placeholders in `.env.example`). Currency follows the item (BDT).
 - **Uploads:** `/api/uploads` (Cloudinary) + `/api/uploads/delete` for images/files (avatars, seminar images, resource files).
-- **Google Analytics:** GA4 tag loaded site-wide via `NEXT_PUBLIC_GA_MEASUREMENT_ID`; automatic pageview tracking.
+- **Google Analytics:** GA4 tag loaded site-wide via `NEXT_PUBLIC_GA_MEASUREMENT_ID`; automatic pageview tracking. The tag only *sends* data, so the admin traffic dashboard reads it back through the GA4 Data API (`lib/analytics/ga.ts`, `lib/analytics/traffic.ts`) using a service account with the `Viewer` role on the property. Keys: `GA4_PROPERTY_ID` (numeric property id), `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` — or `GA4_SERVICE_ACCOUNT_JSON` / `GOOGLE_APPLICATION_CREDENTIALS`. The realtime endpoint is used for the live window (no ~24h reporting delay); results are memoised for 15s to protect property quota, and the page degrades to setup instructions when the vars are absent.
 - **Downloads tracking:** every resource file download by a signed-in user is recorded (visible in admin user detail).
 - **Admin CLI:** `pnpm --filter @flybridge/web promote <email> <role>` to set roles manually.

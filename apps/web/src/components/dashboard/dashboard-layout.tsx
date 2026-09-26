@@ -28,6 +28,7 @@ import {
   SlidersHorizontal,
   Newspaper,
   Tag,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -357,6 +358,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/orders",
             icon: ShoppingCart,
             active: pathname.startsWith("/dashboard/admin/orders"),
+          },
+          {
+            kind: "link",
+            label: "Analytics",
+            href: "/dashboard/admin/analytics",
+            icon: Activity,
+            active: pathname.startsWith("/dashboard/admin/analytics"),
           },
           {
             kind: "link",

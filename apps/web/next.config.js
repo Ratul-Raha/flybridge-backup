@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@flybridge/ui", "@flybridge/config"],
+  experimental: {
+    // The GA4 Data API client is a Node-only gRPC library — keep it out of the
+    // server bundle instead of pulling google-gax (and its package.json lookup)
+    // through webpack.
+    serverComponentsExternalPackages: ["@google-analytics/data"],
+  },
   compiler: {
     removeConsole: { exclude: ["error"] },
   },
