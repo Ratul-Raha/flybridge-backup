@@ -9,6 +9,7 @@ import { Resource } from "@/lib/models/resource";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
+import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
 import { resolvePrice } from "@/lib/discounts";
 import type { EventPayload } from "@/lib/events/types";
@@ -330,9 +331,12 @@ export async function fulfillOrder(
     phone: null,
   };
 
+  let purchasedContent: { id: string; title?: string } | null = null;
+
   if (item.itemType === "course") {
     const course = await Course.findById(item.itemId);
     if (!course) throw new Error("Course not found");
+    purchasedContent = { id: course.slug, title: course.title };
 
     const enrollment = await CourseEnrollment.findOneAndUpdate(
       { user: order.user, course: course._id },
@@ -450,4 +454,27 @@ export async function fulfillOrder(
   }
 
   await emitEvent("order.fulfilled", fulfilledPayload);
+
+  if (isMetaPurchaseEnabled()) {
+    try {
+      const attribution = order.attribution;
+      await sendMetaPurchase({
+        eventId: order._id.toString(),
+        orderId: order._id.toString(),
+        email: order.email,
+        phone: buyer.phone,
+        value: order.total,
+        currency: order.currency,
+        contentIds: [purchasedContent?.id ?? item.itemId],
+        contentName: purchasedContent?.title ?? item.title ?? undefined,
+        fbc: attribution?.fbc,
+        fbp: attribution?.fbp,
+        clientIp: attribution?.ip,
+        userAgent: attribution?.userAgent,
+      });
+    } catch (error) {
+      // Never let reporting break a paid order.
+      console.error("meta purchase report failed", error);
+    }
+  }
 }

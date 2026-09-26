@@ -34,6 +34,7 @@ import { ReviewsSection } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import { Countdown, ExamWindow, Reveal, SkillTabs, StickyOffer } from "@/components/ielts/interactive";
+import { LandingPixelEvents } from "@/components/ielts/landing-pixel-events";
 import { DbCoursePage } from "./db-course-page";
 
 const SLUG = "ielts-band-score-machine";
@@ -1015,15 +1016,17 @@ function ClosingSection({ details, offer }: { details: CourseDetails; offer: Off
                 </div>
               )}
               <div className="flex justify-center gap-2.5 flex-wrap">
-                {pricing.paymentMethods.map((name) => (
-                  <span
-                    key={name}
-                    className="rounded-xl px-5 py-2.5 text-[14px] font-extrabold bg-white"
-                    style={{ color: PAYMENT_COLORS[name] ?? "#334155" }}
-                  >
-                    {name}
-                  </span>
-                ))}
+                {pricing.paymentMethods
+                  .filter((name) => name !== "Stripe")
+                  .map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-xl px-5 py-2.5 text-[14px] font-extrabold bg-white"
+                      style={{ color: PAYMENT_COLORS[name] ?? "#334155" }}
+                    >
+                      {name}
+                    </span>
+                  ))}
               </div>
             </div>
           ) : null}
@@ -1189,6 +1192,12 @@ export default async function IeltsFullReadinessLandingPage() {
   return (
     <div className="ib-page ielts-landing pb-[88px]">
       <JsonLd data={courseLd} />
+      <LandingPixelEvents
+        contentId={SLUG}
+        contentName={details?.title ?? program.title}
+        value={parseAmount(details?.pricing?.price) ?? undefined}
+        currency="BDT"
+      />
       <Nav />
 
       <Hero

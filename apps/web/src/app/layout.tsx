@@ -4,6 +4,7 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/caveat";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { MetaPixel } from "@/components/meta-pixel";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
@@ -60,6 +61,7 @@ export default function RootLayout({
         </AuthProvider>
       </body>
       {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}
+      <MetaPixel />
     </html>
   );
 }

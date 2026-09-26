@@ -119,6 +119,18 @@ export async function POST(request: NextRequest) {
     });
 
     let paymentUrl: string | null = null;
+
+    if (order) {
+      const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
+      orderDoc.attribution = {
+        fbc: request.cookies.get("fbc")?.value || undefined,
+        fbp: request.cookies.get("fbp")?.value || undefined,
+        ip: clientIp(request) || undefined,
+        userAgent: request.headers.get("user-agent") || undefined,
+      };
+      await orderDoc.save();
+    }
+
     if (requiresPayment && order) {
       let cancelPath = "/dashboard";
       const item = order.items[0];

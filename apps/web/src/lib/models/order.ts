@@ -16,6 +16,16 @@ const orderItemSchema = new Schema(
   { _id: false }
 );
 
+const orderAttributionSchema = new Schema(
+  {
+    fbc: { type: String, trim: true },
+    fbp: { type: String, trim: true },
+    ip: { type: String, trim: true },
+    userAgent: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
 const orderSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
@@ -38,6 +48,9 @@ const orderSchema = new Schema(
     gatewayRef: { type: String, trim: true },
     merchantTransactionId: { type: String, trim: true },
     gatewayMode: { type: String, trim: true },
+    /** Meta click ids + request context, captured at order creation so the
+     *  Conversions API can match the server-side Purchase to the ad click. */
+    attribution: { type: orderAttributionSchema, default: undefined },
   },
   { timestamps: true }
 );

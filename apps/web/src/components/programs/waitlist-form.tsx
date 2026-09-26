@@ -6,6 +6,7 @@ import { CheckCircle2, Gift, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { BengaliText } from "@/components/bengali-text";
 import { WISHLIST_PENDING_KEY } from "@/lib/wishlist";
+import { trackMetaEvent } from "@/lib/meta-events";
 
 export function WaitlistForm({
   slug,
@@ -37,6 +38,10 @@ export function WaitlistForm({
       if (!res.ok) throw new Error(data.error ?? "Something went wrong");
       sessionStorage.removeItem(WISHLIST_PENDING_KEY);
       setDone(true);
+      trackMetaEvent("Lead", {
+        content_name: title,
+        content_category: "waitlist",
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
