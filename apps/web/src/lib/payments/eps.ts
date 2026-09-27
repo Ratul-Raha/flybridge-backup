@@ -182,6 +182,11 @@ export function cancelPathFor(itemType: OrderItemType, itemId: string): string {
   return "/dashboard";
 }
 
+/** Append callback params to a path that may or may not have a query already. */
+function withCallbackParams(path: string, params: string): string {
+  return `${path}${path.includes("?") ? "&" : "?"}${params}`;
+}
+
 export type EPSPaymentResult = {
   url: string;
   transactionId: string;
@@ -208,6 +213,15 @@ export async function createEPSPayment(opts: {
   const origin = opts.origin;
   const token = await getToken(c.environment);
 
+  // EPS has no server-to-server callback, so these three redirects are the only
+  // signal that the buyer came back. Each carries both ids: ours, and the
+  // merchantTransactionId EPS will append its own reference alongside, so the
+  // return can still be matched to the order if the query string is rewritten.
+  //
+  // Nothing in that query string is trusted — the return handlers re-verify
+  // with CheckMerchantTransactionStatus before anything is fulfilled.
+  const callback = `order=${orderId}&merchantTransactionId=${merchantTransactionId}`;
+
   const body: Record<string, unknown> = {
     merchantId: c.merchantId,
     storeId: c.storeId,
@@ -219,9 +233,12 @@ export async function createEPSPayment(opts: {
     totalAmount: order.total,
     ipAddress: opts.ipAddress ?? "0.0.0.0",
     version: "1",
-    successUrl: `${origin}/payment/success?order=${orderId}`,
-    failUrl: `${origin}/payment/success?order=${orderId}`,
-    cancelUrl: `${origin}${opts.cancelPath ?? cancelPathFor(item.itemType, item.itemId)}`,
+    successUrl: withCallbackParams(`${origin}/payment/success`, callback),
+    failUrl: withCallbackParams(`${origin}/payment/failed`, callback),
+    cancelUrl: withCallbackParams(
+      `${origin}${opts.cancelPath ?? cancelPathFor(item.itemType, item.itemId)}`,
+      callback
+    ),
     customerName: opts.customer.name,
     customerEmail: opts.customer.email,
     CustomerAddress: "Dhaka",
@@ -380,6 +397,22 @@ export async function reconcileEPSOrder(
   }
 
   if (result && /^success$/i.test(result.status)) {
+    // "Success" only says *a* transaction with this reference succeeded, not
+    // that it succeeded for the amount we asked for. Fulfilment on status
+    // alone is how a partial or mistyped payment unlocks a full-price course,
+    // so the collected amount has to match the order before access is granted.
+    //
+    // A mismatch is left pending rather than failed on purpose: the money did
+    // arrive, so it needs a human to refund or re-verify, and the sweep will
+    // keep re-checking in case EPS settles on the right figure.
+    const paid = Number.parseFloat(result.totalAmount);
+    if (Number.isFinite(paid) && Math.abs(paid - existing.total) > 0.01) {
+      console.error(
+        `eps amount mismatch on order ${existing._id}: collected ${paid}, expected ${existing.total} ${existing.currency}`
+      );
+      return { status: existing.status, ...base };
+    }
+
     const fresh = (await Order.findById(existing._id)) as HydratedOrder | null;
     if (fresh && fresh.status === "pending") {
       await fulfillOrder(fresh);

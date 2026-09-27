@@ -36,3 +36,23 @@ export async function reconcileOrder(
   }
   return reconcileStripeOrder(existing, viewer);
 }
+
+/**
+ * Resolve an order from the reference EPS puts in the callback query string.
+ *
+ * The return URLs already carry our own order id, but EPS appends its own
+ * transaction reference too, so this is the fallback that keeps the callback
+ * working if that query string is ever replaced rather than extended.
+ *
+ * Safe to call unauthenticated: it returns an id and nothing else, and
+ * `reconcileOrder` still enforces that the viewer owns the order.
+ */
+export async function findOrderIdByMerchantTransactionId(
+  merchantTransactionId: string
+): Promise<string | null> {
+  await connectDb();
+  const order = await Order.findOne({ merchantTransactionId })
+    .select("_id")
+    .lean();
+  return order ? order._id.toString() : null;
+}
