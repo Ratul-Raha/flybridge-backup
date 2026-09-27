@@ -6,6 +6,15 @@ const enrollmentSchema = new Schema(
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
     order: { type: Schema.Types.ObjectId, ref: "Order", index: true },
     status: { type: String, enum: ["active", "expired"], default: "active" },
+    /**
+     * Usage counters. These never gate content — they only decide whether the
+     * 3-day refund is still available. Crossing REFUND_LESSON_LIMIT lessons or
+     * REFUND_MOCK_LIMIT mock exams forfeits the refund for good.
+     */
+    lessonsPlayed: { type: Number, min: 0, default: 0 },
+    mockTestsPlayed: { type: Number, min: 0, default: 0 },
+    refundForfeitedAt: { type: Date, default: null },
+    refundForfeitedReason: { type: String, enum: ["lessons", "mock", "manual"], default: null },
   },
   { timestamps: true }
 );

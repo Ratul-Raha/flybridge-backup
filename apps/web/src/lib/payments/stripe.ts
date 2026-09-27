@@ -152,3 +152,54 @@ export async function reconcileStripeOrder(
 
   return { status: existing.status, ...base };
 }
+
+export type StripeRefundResult = {
+  ok: boolean;
+  refundId?: string;
+  error?: string;
+  /** False when the gateway cannot pay out on its own and a human must. */
+  automatic: boolean;
+};
+
+/**
+ * Refunds a paid Stripe order in full. The order stores the Checkout *session*
+ * id, so the payment intent has to be looked up before the refund can be made.
+ */
+export async function refundStripeOrder(
+  order: Pick<OrderDoc, "gateway" | "gatewayRef" | "gatewayMode" | "_id">
+): Promise<StripeRefundResult> {
+  if (order.gateway !== "stripe") {
+    return { ok: false, automatic: false, error: "Not a Stripe order" };
+  }
+  if (!order.gatewayRef) {
+    return { ok: false, automatic: false, error: "Order has no Stripe session reference" };
+  }
+
+  const mode = asStripeMode(order.gatewayMode) ?? (await currentStripeMode());
+  const stripe = await getStripe(mode);
+  if (!stripe) {
+    return { ok: false, automatic: false, error: "Stripe is not configured" };
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(order.gatewayRef);
+    const paymentIntent =
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id;
+
+    if (!paymentIntent) {
+      return { ok: false, automatic: false, error: "No payment intent on this session" };
+    }
+
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntent,
+      metadata: { orderId: order._id.toString() },
+    });
+    return { ok: true, automatic: true, refundId: refund.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Stripe refund failed";
+    console.error("stripe refund error", error);
+    return { ok: false, automatic: true, error: message };
+  }
+}

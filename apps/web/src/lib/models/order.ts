@@ -55,6 +55,9 @@ const orderSchema = new Schema(
       default: "pending",
       index: true,
     },
+    /** When the payment was confirmed and access granted. Starts the 3-day refund
+     *  window. Orders completed before this field existed fall back to updatedAt. */
+    completedAt: { type: Date, default: null },
     gateway: { type: String, trim: true },
     gatewayRef: { type: String, trim: true },
     merchantTransactionId: { type: String, trim: true },

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest } from "@/lib/models/mock-test";
+import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 import { MockTestPlayer } from "@/components/mock-tests/mock-test-player";
 
 export const metadata: Metadata = {
@@ -21,9 +22,6 @@ export default async function TestTakePage({ params, searchParams }: Props) {
   }
 
   const isStaff = session.role === "admin" || session.role === "moderator";
-  if (!isStaff) {
-    redirect("/dashboard");
-  }
 
   await connectDb();
   const test = await MockTest.findById(params.testId);
@@ -36,6 +34,24 @@ export default async function TestTakePage({ params, searchParams }: Props) {
         label="Back to mock tests"
       />
     );
+  }
+
+  // Students may sit any test their course enrollment or bundle unlocks.
+  if (!isStaff) {
+    if (test.status !== "published" || !session.userId) {
+      redirect("/dashboard/my-mock-tests");
+    }
+    const ownership = await resolveMockTestOwnership(session.userId);
+    if (!testIsOwned(ownership, test)) {
+      return (
+        <LockedScreen
+          title="This test is not part of your plan"
+          desc="Mock exams unlock with your course enrollment or mock exam pack. Check My Courses to see what you have access to."
+          href="/dashboard/my-mock-tests"
+          label="Back to my mock exams"
+        />
+      );
+    }
   }
 
   return <MockTestPlayer testId={params.testId} attemptId={searchParams.attempt} />;

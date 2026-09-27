@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { MockTest } from "@/lib/models/mock-test";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
 import { judgeMockTestAttempt } from "@/lib/ai/ielts-judge";
+import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 import { emitEvent } from "@/lib/events/emit";
 
 function isManager(session: { role: string } | null): boolean {
@@ -12,7 +13,12 @@ function isManager(session: { role: string } | null): boolean {
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!isManager(session) || !session?.userId) {
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const manager = isManager(session);
+  const userId = session.userId;
+  if (!userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -23,11 +29,21 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const test = await MockTest.findById(params.id);
     if (!test) return NextResponse.json({ error: "Test not found" }, { status: 404 });
 
+    if (!manager) {
+      if (test.status !== "published") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const ownership = await resolveMockTestOwnership(userId);
+      if (!testIsOwned(ownership, test)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const attemptId = typeof body.attemptId === "string" ? body.attemptId : "";
     const attempt = attemptId
       ? await MockTestAttempt.findById(attemptId)
       : null;
-    if (attempt && attempt.user.toString() !== session.userId) {
+    if (attempt && attempt.user.toString() !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -66,7 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const finished =
       attempt ??
       (await MockTestAttempt.create({
-        user: session.userId,
+        user: userId,
         test: test._id,
         bundle: test.bundle,
         status: "in_progress",
@@ -83,7 +99,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     await emitEvent("mock-test.submitted", {
       attemptId: finished._id.toString(),
       user: {
-        id: session.userId,
+        id: userId,
         name: session.name,
         email: session.email,
       },

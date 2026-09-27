@@ -5,6 +5,7 @@ import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { readSession } from "@/lib/auth/session";
 import { signMediaUrl, isS3Ref } from "@/lib/storage";
+import { recordLessonPlay } from "@/lib/refunds";
 import { LessonPlayer } from "@/components/programs/lesson-player";
 
 function videoPlaybackUrl(courseId: string, videoUrl?: string | null, flatIndex?: number): string {
@@ -128,6 +129,12 @@ export default async function LearnPage({ params, searchParams }: Props) {
 
   const raw = Number.parseInt(searchParams.lesson ?? "0", 10);
   const initialIndex = Number.isNaN(raw) ? 0 : Math.min(Math.max(raw, 0), Math.max(lessons.length - 1, 0));
+
+  // Opening a lesson counts as playing it. Past the limit this forfeits the
+  // 3-day refund — it never blocks the lesson itself.
+  if (enrolled && !isStaff && session.userId) {
+    await recordLessonPlay({ userId: session.userId, courseId, flatIndex: initialIndex });
+  }
 
   const signedModules = await Promise.all(
     (course.modules ?? []).map(async (m) => ({

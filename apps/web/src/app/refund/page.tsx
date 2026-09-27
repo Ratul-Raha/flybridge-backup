@@ -44,7 +44,7 @@ const snapshot = [
     icon: CreditCard,
     value: "Online",
     label: "Self-serve claim",
-    sub: "Claim refunds right from your course page.",
+    sub: "Claim from My Orders on your dashboard.",
   },
 ];
 
@@ -53,13 +53,13 @@ const process = [
     number: "01",
     icon: Swords,
     title: "Not your thing?",
-    desc: "Try the course risk-free. If it isn't right for you within the first 3 days, simply open the course page and tap Request refund.",
+    desc: "Try the course risk-free. If it isn't right for you within the first 3 days, open My Orders on your dashboard and tap Request refund.",
   },
   {
     number: "02",
     icon: CheckCircle2,
     title: "Automatic approval",
-    desc: "Your refund is approved instantly — no forms, no back-and-forth, and no support calls needed.",
+    desc: "Card refunds are sent back to your original payment method automatically. Mobile wallet payouts are approved by our team, usually within one working day.",
   },
   {
     number: "03",
@@ -80,7 +80,11 @@ const faqs = [
   },
   {
     q: "How do I request a refund?",
-    a: "Visit the course page you purchased, find the Request Refund button, and confirm. It's fully automatic — you don't need to email or call support.",
+    a: "Open My Orders in your dashboard, find the purchase, and tap Request refund. You'll see a live countdown of the time you have left, and your refund-safe lesson and mock exam usage on the same card.",
+  },
+  {
+    q: "Does using the course affect my refund?",
+    a: "Yes. Your first 5 lessons and your first mock exam are on us. If you play more than 5 lessons, or more than 1 mock exam, that purchase is no longer refundable — the option simply disappears from My Orders, and your course access stays as it is. Nothing is locked while you browse; the counters only decide refund eligibility.",
   },
   {
     q: "How long do refunds take?",
@@ -272,7 +276,8 @@ export default function RefundPage() {
                     {[
                       { k: "Coverage", v: "All paid courses, automatically." },
                       { k: "Eligibility", v: "Any purchase, within 3 days of payment." },
-                      { k: "Approval", v: "Instant — no review, no questions." },
+                      { k: "Free usage", v: "First 5 lessons and 1 mock exam are on us." },
+                      { k: "Approval", v: "Card refunds are automatic; wallets are approved by us." },
                       { k: "Refund amount", v: "100%, never minus a fee." },
                     ].map((row) => (
                       <div
@@ -296,8 +301,13 @@ export default function RefundPage() {
                     Your refund window starts the moment payment is completed. Raise a
                     claim any time within those 3 days and you get 100% back.
                   </div>
-                  <ul className="mt-5 space-y-2.5">
-                    {["No forms to fill in", "No support ticket needed", "Refund to your original payment method"].map((t) => (
+                    <ul className="mt-5 space-y-2.5">
+                    {[
+                      "No forms to fill in",
+                      "Claim straight from My Orders",
+                      "Refund to your original payment method",
+                      "Play 5 lessons and 1 mock exam on us",
+                    ].map((t) => (
                       <li key={t} className="flex items-start gap-2.5 text-[13.5px] font-medium text-white">
                         <CheckCircle2 className="w-[17px] h-[17px] mt-[1px] shrink-0" style={{ color: "#7CF0BD" }} strokeWidth={2.4} />
                         {t}

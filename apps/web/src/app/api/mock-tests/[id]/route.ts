@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest, type MockTestDoc } from "@/lib/models/mock-test";
 import { Course } from "@/lib/models/course";
-import { countMockTestQuestions } from "@/lib/mock-tests";
+import { countMockTestQuestions, resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 
 function isManager(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -61,7 +61,12 @@ function sanitizeContent(
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!isManager(session)) {
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const manager = isManager(session);
+  const userId = session.userId;
+  if (!userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -75,6 +80,20 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
     });
 
     if (!test) return NextResponse.json({ test: null });
+
+    // Students reach tests through an active course enrollment or a bundle they
+    // bought. Staff keep the answer key; students never see it.
+    let owned = true;
+    if (!manager) {
+      if (test.status !== "published") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const ownership = await resolveMockTestOwnership(userId);
+      owned = testIsOwned(ownership, test);
+      if (!owned) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     const bundle = test.bundle;
 
@@ -108,9 +127,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
         status: test.status,
         durationMinutes: test.durationMinutes ?? 0,
         questionCount: test.questionCount ?? 0,
-        owned: false,
-        content: sanitizeContent(test.content, true),
-        answerKey: test.answerKey ?? "",
+        owned,
+        content: sanitizeContent(test.content, manager),
+        answerKey: manager ? (test.answerKey ?? "") : "",
         createdAt: test.createdAt,
         updatedAt: test.updatedAt,
       },

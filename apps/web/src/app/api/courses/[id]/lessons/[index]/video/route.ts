@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { recordLessonPlay } from "@/lib/refunds";
 import { isS3Ref, getS3ObjectRange } from "@/lib/storage";
 
 function parseIndex(raw: string): number {
@@ -46,6 +47,12 @@ export async function GET(
     const flatIndex = parseIndex(params.index);
     if (flatIndex < 0) {
       return NextResponse.json({ error: "Invalid lesson" }, { status: 400 });
+    }
+
+    // Backstop for the learn page counter: the very first request for a lesson
+    // counts as playing it. Range follow-ups are skipped so streaming stays cheap.
+    if (!isStaff && session.userId && !request.headers.get("range")) {
+      await recordLessonPlay({ userId: session.userId, courseId: course._id.toString(), flatIndex });
     }
 
     let lesson: { videoUrl?: string | null } | undefined;

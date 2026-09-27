@@ -28,10 +28,11 @@ export async function resolveMockTestOwnership(
 export function testIsOwned(
   ownership: MockTestOwnership,
   test: {
-    bundle: { toString(): string } | string;
+    bundle: { toString(): string } | string | null | undefined;
     course?: { toString(): string } | string | null;
   }
 ): boolean {
+  if (!test.bundle) return false;
   const bundleId =
     typeof test.bundle === "string" ? test.bundle : test.bundle.toString();
   if (ownership.bundles.has(bundleId)) return true;

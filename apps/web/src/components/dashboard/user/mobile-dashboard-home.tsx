@@ -14,6 +14,8 @@ import {
   GraduationCap,
   FileText,
   TrendingUp,
+  ShoppingCart,
+  ListChecks,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
@@ -146,6 +148,8 @@ export function MobileDashboardHome() {
     { label: "Scholarships", href: "/dashboard/scholarships", icon: GraduationCap, accent: "#DB8A2E", bg: "#FFF2E4" },
     { label: "Readiness", href: "/dashboard/readiness", icon: Target, accent: "#E0572E", bg: "#FCEDE9" },
     { label: "SOP", href: "/dashboard/sop-generator", icon: FileText, accent: "#0FA968", bg: "#E2F6EE" },
+    { label: "Mock Exams", href: "/dashboard/my-mock-tests", icon: ListChecks, accent: "#5B21B6", bg: "#F1EAFD" },
+    { label: "My Orders", href: "/dashboard/orders", icon: ShoppingCart, accent: "#0E7490", bg: "#E4F4F8" },
   ];
 
   const today = new Date().toLocaleDateString("en-US", {

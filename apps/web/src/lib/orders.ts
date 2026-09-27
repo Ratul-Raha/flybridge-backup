@@ -436,6 +436,7 @@ export async function fulfillOrder(
   }
 
   order.status = "completed";
+  order.completedAt = order.completedAt ?? new Date();
   await order.save();
 
   const fulfilledPayload: EventPayload = {

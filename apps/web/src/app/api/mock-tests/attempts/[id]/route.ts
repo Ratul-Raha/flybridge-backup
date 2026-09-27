@@ -9,7 +9,12 @@ function isManager(session: { role: string } | null): boolean {
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await readSession();
-  if (!isManager(session)) {
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const manager = isManager(session);
+  const userId = session.userId;
+  if (!userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -21,6 +26,11 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
     if (!attempt) {
       return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
+    }
+
+    // A student may only ever read their own attempt.
+    if (!manager && attempt.user.toString() !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const test =
