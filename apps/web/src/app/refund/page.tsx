@@ -104,8 +104,8 @@ const contactCards = [
   {
     icon: Mail,
     label: "Email support",
-    value: "hello@flybridgeedu.com",
-    href: "mailto:hello@flybridgeedu.com",
+    value: "support@flybridgeedu.com",
+    href: "mailto:support@flybridgeedu.com",
   },
   {
     icon: Phone,

@@ -863,7 +863,7 @@ function BookBand({ book }: { book: CourseBook }) {
 
 function RefundSection() {
   const facts = [
-    { value: "১ দিন", label: "রিফান্ড উইন্ডো" },
+    { value: "৩ দিন", label: "রিফান্ড উইন্ডো" },
     { value: "১০০%", label: "টাকা ফেরত" },
     { value: "৭–১৫", label: "কার্যদিবসে টাকা পাবেন" },
   ];
@@ -889,7 +889,7 @@ function RefundSection() {
                   className="font-display font-semibold leading-[1.4]"
                   style={{ fontSize: "clamp(26px,3.1vw,38px)", color: "var(--ib-ink)" }}
                 >
-                  <BengaliText>কোর্সটা ভালো না লাগলে ১ দিনে ১০০% টাকা ফেরত</BengaliText>
+                  <BengaliText>কোর্সটা ভালো না লাগলে ৩ দিনে ১০০% টাকা ফেরত</BengaliText>
                 </h2>
                 <p className="mt-4 text-[16px] leading-[1.9]" style={{ color: "var(--ib-body)" }}>
                   <BengaliText>

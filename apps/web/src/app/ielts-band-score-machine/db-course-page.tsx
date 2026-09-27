@@ -267,7 +267,7 @@ export function DbCoursePage({
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {[
                       { icon: Lock, label: "SSL এনক্রিপ্টেড" },
-                      { icon: ShieldCheck, label: "৩০ দিনের গ্যারান্টি" },
+                      { icon: ShieldCheck, label: "৩ দিনের রিফান্ড গ্যারান্টি" },
                       { icon: Zap, label: "তাৎক্ষণিক অ্যাক্সেস" },
                     ].map(({ icon: Icon, label }) => (
                       <div key={label} className="flex flex-col items-center gap-1.5">
