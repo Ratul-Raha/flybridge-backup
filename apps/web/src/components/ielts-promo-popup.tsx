@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   BookOpen,
+  Check,
   Monitor,
   FileText,
   Gift,
@@ -21,7 +22,7 @@ const IELTS_FEATURES = [
   {
     icon: Monitor,
     title: "১৫টি কম্পিউটার-বেসড মক টেস্ট",
-    desc: "রিডিং, রাইটিং আর লিসেনিং — পরীক্ষার হলে যেভাবে, ওয়েবসাইটেই ঠিক সেভাবে।",
+    desc: "রিডিং, রাইটিং আর লিসেনিং — পরীক্ষার হলে যেভাবে, ওয়েবসাইটেই ঠিক সেভাবে। ফোন, ট্যাব বা কম্পিউটার, যেকোনো ডিভাইসে।",
   },
   {
     icon: FileText,
@@ -145,8 +146,9 @@ export function IeltsPromoPopup() {
                 <span className="text-[#0F9D58]">Band Score Machine</span>
               </h2>
               <p className="mt-2.5 max-w-sm text-[13.5px] leading-relaxed text-[#4B5768]">
-                Target Band 7-এর সম্পূর্ণ সিস্টেম — শুরু থেকে শেষ,{" "}
-                <span className="font-semibold text-[#0B1F3A]">একই জায়গায়।</span>
+                ২৫টি ভিডিও মাস্টারক্লাস + ৫টি বোনাস ক্লাস, সাথে ১৫টি ফ্রি কম্পিউটার-বেসড মক টেস্ট, কুইজ,
+                প্র্যাকটিস, সম্পূর্ণ Companion PDF বই আর লাইভ ক্লাস —{" "}
+                <span className="font-semibold text-[#0B1F3A]">শুরু থেকে শেষ, একই জায়গায়।</span>
               </p>
             </div>
 
@@ -210,6 +212,21 @@ export function IeltsPromoPopup() {
                 <Gift className="h-3.5 w-3.5" />
                 কোর্সে কী আছে দেখো
               </a>
+            </div>
+
+            {/* Trust row */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+              {["৩ দিনের ১০০% রিফান্ড গ্যারান্টি", "লাইফটাইম অ্যাক্সেস", "যেকোনো ডিভাইসে মক টেস্ট"].map(
+                (t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-[#4B5768]"
+                  >
+                    <Check className="h-3 w-3 text-[#0F9D58]" strokeWidth={3} />
+                    {t}
+                  </span>
+                )
+              )}
             </div>
 
             {/* Intro offer — circular seal (mobile) */}
