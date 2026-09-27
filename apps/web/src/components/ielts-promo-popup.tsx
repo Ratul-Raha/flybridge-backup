@@ -15,7 +15,7 @@ import {
 const IELTS_FEATURES = [
   {
     icon: BookOpen,
-    title: "৩০টি ভিডিও মাস্টারক্লাস",
+    title: "২৫টি ভিডিও মাস্টারক্লাস",
     desc: "Speaking, Writing, Listening, Reading — ৪ স্কিলের সম্পূর্ণ সিস্টেম এক প্যাকেজে।",
   },
   {
@@ -26,7 +26,7 @@ const IELTS_FEATURES = [
   {
     icon: FileText,
     title: "Companion PDF বই",
-    desc: "প্রতিটা মডেল আনসার, Band 6 বনাম Band 8+ তুলনা — সব একসাথে।",
+    desc: "প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য আর Practice Test — ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, প্রস্তুতি যাচাই করুন।",
   },
   {
     icon: Users,
@@ -184,8 +184,8 @@ export function IeltsPromoPopup() {
             {/* Offer highlight */}
             <div className="mt-5 w-fit max-w-full rounded-xl bg-[#EAF9F1] px-4 py-3">
               <p className="text-[14.5px] font-extrabold leading-snug text-[#0B1F3A]">
-                Band 7-এর জন্য ৩০টা মাস্টারক্লাস{" "}
-                <span className="text-[#0F9D58]">একটাই সিস্টেমে</span>
+                Band 7-এর জন্য ২৫টা মাস্টারক্লাস{" "}
+                <span className="text-[#0F9D58]">+ ৫টা বোনাস ক্লাস একটাই সিস্টেমে</span>
               </p>
               <p className="mt-1 text-[11.5px] text-[#4B5768]">
                 ওয়েটলিস্টে জয়েন করলে থাকছে স্কলারশিপের সুযোগ

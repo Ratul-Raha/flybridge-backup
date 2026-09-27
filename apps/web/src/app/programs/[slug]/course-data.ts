@@ -714,26 +714,26 @@ export const courseDetails: Record<string, CourseDetails> = {
     titleAccent: "Interactive IELTS Course",
     subtitle: "Target Band 7",
     targetBand: { label: "TARGET", value: "Band 7", sub: "IELTS" },
-    desc: "Speaking, Writing, Listening ও Reading — চারটা স্কিলেই টার্গেট স্কোর পাওয়ার এক সম্পূর্ণ সিস্টেম। আপনার বর্তমান লেভেল যা-ই হোক, স্কোর বাড়াবে নিখুঁতভাবে।",
+    desc: "২৫টি ভিডিও মাস্টারক্লাস + ৫টি বোনাস ক্লাস, সাথে ১৫টি ফ্রি কম্পিউটার-বেসড মক টেস্ট, কুইজ, প্র্যাকটিস, সম্পূর্ণ Companion PDF বই আর লাইভ ক্লাস — Speaking, Writing, Listening ও Reading চারটা স্কিলেই টার্গেট স্কোর পাওয়ার এক সম্পূর্ণ সিস্টেম। আপনার বর্তমান লেভেল যা-ই হোক, স্কোর বাড়াবে নিখুঁতভাবে।",
     level: "Beginner to advanced",
     language: "বাংলা + English",
-    pace: "Self-paced · 30 masterclasses",
+    pace: "Self-paced · 25 masterclasses",
     access: "Lifetime access",
     price: "৳2,999",
     originalPrice: "৳5,999",
     savings: "BDT 3000",
     dealLabel: "Exclusive Launch Deal",
     dealNote: "শুধু এক মাসের জন্য — শেষ দিন ৩০ অক্টোবর, ২০২৬।",
-    chips: ["লাইফটাইম অ্যাক্সেস", "১৫টি ফ্রি মক টেস্ট", "নিজের গতিতে শিখুন"],
+    chips: ["সেলফ পেইসড", "১৫টি ফ্রি মক টেস্ট", "কুইজ ও প্র্যাকটিস", "ডিজিটাল বই", "লাইভ ক্লাস", "লাইফটাইম অ্যাক্সেস"],
     heroCta: { label: "Join the waitlist", href: "#waitlist" },
     heroStats: [
-      { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
+      { value: "২৫", label: "ভিডিও মাস্টারক্লাস" },
       { value: "Live", label: "নিয়মিত লাইভ সেমিনার" },
       { value: "০৫", label: "বোনাস ক্লাস" },
       { value: "১৫", label: "ওয়েবসাইটেই মক এক্সাম" },
     ],
     stats: [
-      { value: "৩০", label: "ভিডিও মাস্টারক্লাস" },
+      { value: "২৫", label: "ভিডিও মাস্টারক্লাস" },
       { value: "৪", label: "মডিউল" },
       { value: "৪০+", label: "প্র্যাকটিস টেস্ট" },
     ],
@@ -789,17 +789,17 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: Bot,
         title: "লাইভ সেমিনার ও সাপোর্ট",
-        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ওয়েবসাইটেই ডেস্কটপ-ভিত্তিক ১৫টা মক এক্সামের সুবিধা।",
+        desc: "নিয়মিত লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর ফোন, ট্যাব বা কম্পিউটার — যেকোনো ডিভাইসে ওয়েবসাইটেই ১৫টা মক এক্সামের সুবিধা।",
       },
       {
         icon: BookOpen,
         title: "Companion Book (PDF)",
-        desc: "প্রতিটা লেসনের মূল শিক্ষা, মডেল আনসার, Band 6 বনাম Band 7 তুলনা আর প্র্যাকটিস টেস্ট — সবকিছু একসাথে একটা সম্পূর্ণ companion PDF বইয়ে।",
+        desc: "২৫টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
       },
     ],
     book: {
       title: "IELTS Band Score Machine — Companion Book",
-      desc: "৩০টা ভিডিও মাস্টারক্লাসের পাশাপাশি একটা সম্পূর্ণ companion PDF বই — প্রতিটা লেসনের মূল শিক্ষা, প্রতিটা মডেল আনসার, Band 6 বনাম Band 7 তুলনা, আর প্রতিটা প্র্যাকটিস টেস্ট, সব একসাথে।",
+      desc: "২৫টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
       includedNote: "The complete companion book is included free with every enrollment.",
       image: "/programs/ielts-band-score-machine-book.svg",
     },
@@ -813,12 +813,12 @@ export const courseDetails: Record<string, CourseDetails> = {
     ],
     curriculum: {
       label: "কারিকুলাম",
-      title: "৩০টা লেসন, ৪টা মডিউল",
+      title: "২৫টা লেসন, ৪টা মডিউল",
       subtitle: "কোনো কনফিউশন নেই — প্রতিটা মডিউল আপনাকে ব্যান্ড ৮+ এর দিকে এগিয়ে নিয়ে যাবে",
       modules: [
         {
           title: "IELTS Speaking Mastery",
-          lessonCount: "৭টা লেসন",
+          lessonCount: "৬টা লেসন",
           items: [
             "Speaking Test আর Band Descriptors-এর সম্পূর্ণ ওভারভিউ",
             "Part 1: দ্রুত উত্তর দেওয়া আর উত্তর বাড়ানোর কৌশল",
@@ -830,7 +830,7 @@ export const courseDetails: Record<string, CourseDetails> = {
         },
         {
           title: "IELTS Writing Mastery",
-          lessonCount: "৭টা লেসন",
+          lessonCount: "৬টা লেসন",
           items: [
             "Task 1: Band Descriptors, Tone আর Overview লেখা",
             "Academic Task 1: Line Graph, Bar Chart, Table, Process",
@@ -842,7 +842,7 @@ export const courseDetails: Record<string, CourseDetails> = {
         },
         {
           title: "IELTS Listening Mastery",
-          lessonCount: "৭টা লেসন",
+          lessonCount: "৬টা লেসন",
           items: [
             "Listening Test-এর সম্পূর্ণ গঠন ও Question Type",
             "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ",
@@ -853,7 +853,7 @@ export const courseDetails: Record<string, CourseDetails> = {
         },
         {
           title: "IELTS Reading Mastery",
-          lessonCount: "৯টা লেসন",
+          lessonCount: "৭টা লেসন",
           items: [
             "Reading-এর ভিত্তি: সময় ভাগ, Skimming ও Scanning",
             "True/False/Not Given — কনফিউশন দূর করা",
@@ -878,9 +878,9 @@ export const courseDetails: Record<string, CourseDetails> = {
         { left: "দুই-একটা উদাহরণ বাক্য", right: "সম্পূর্ণ মডেল আনসার, শব্দসংখ্যা ও ব্যান্ড স্কোরসহ বিশ্লেষণ" },
         {
           left: "একটা মক টেস্ট, থাকলেও থাকতে পারে",
-          right: "ওয়েবসাইটেই ১৫টা ফুল-লেংথ মক টেস্ট (ডেস্কটপ)",
+          right: "ওয়েবসাইটেই ১৫টা ফুল-লেংথ মক টেস্ট, ফোন বা কম্পিউটার যেকোনো ডিভাইসে",
         },
-        { left: "শুধু সাধারণ ভিডিও ক্লাসে সীমাবদ্ধ", right: "৩০টি ভিডিও মাস্টারক্লাস + সম্পূর্ণ PDF বই" },
+        { left: "শুধু সাধারণ ভিডিও ক্লাসে সীমাবদ্ধ", right: "২৫টি ভিডিও মাস্টারক্লাস + ৫টি বোনাস ক্লাস + সম্পূর্ণ PDF বই" },
         { left: "গ্রামার-টিপস নির্ভর সেশন", right: "স্কিল-ভিত্তিক, আসল পরীক্ষা ও রিয়েল টেস্ট ফরম্যাটে সাজানো" },
       ],
     },
@@ -893,7 +893,6 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Part 2 Cue Card: ১ মিনিট প্রস্তুতি, ২ মিনিট বলা", duration: "12:30" },
           { title: "Part 3: Abstract Reasoning আর PREP Method", duration: "13:15" },
           { title: "দ্বিধা ও ভুল সংশোধন এড়ানোর উপায়", duration: "08:50" },
-          { title: "Speaking Mock Test: ফুল-লেংথ প্র্যাকটিস ও রিভিউ", duration: "16:30" },
           { title: "Capstone: ৩০টা সম্পূর্ণ মডেল আনসার", duration: "18:00" },
         ],
       },
@@ -905,7 +904,6 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "GT Task 1: Formal, Semi-Formal, Informal লেটার", duration: "12:40" },
           { title: "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং", duration: "13:50" },
           { title: "Task 2-এর Band 7 ভোকাবুলারি ও Cohesive Devices", duration: "11:35" },
-          { title: "Writing Mock Test: Task 1 + Task 2 সম্পূর্ণ রিভিউ", duration: "17:10" },
           { title: "Capstone: ৫ ধরনের Essay Structure Formula", duration: "16:20" },
         ],
       },
@@ -916,7 +914,6 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ", duration: "15:10" },
           { title: "Section 3 ও 4: Multiple Choice, Matching, লেকচার", duration: "14:25" },
           { title: "যেসব ফাঁদে সবাই পড়ে: Self-Correction, Distractor", duration: "10:55" },
-          { title: "Section 1-এর রিয়েল টাইম প্র্যাকটিস: নাম, নাম্বার ও তারিখ", duration: "13:00" },
           { title: "Full Listening Mock Test ও ব্যাখ্যাসহ রিভিউ", duration: "18:20" },
           { title: "Capstone: Word Limit ও ফাইনাল চেকিং সিস্টেম", duration: "12:30" },
         ],
@@ -929,8 +926,6 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Matching Headings ও Paragraph Features", duration: "12:50" },
           { title: "Gapped Text ও Exact Word Rule", duration: "11:30" },
           { title: "Multiple Choice ও Paraphrased ফাঁদ ধরা", duration: "12:10" },
-          { title: "Passage 1: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "18:40" },
-          { title: "Passage 2: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "17:25" },
           { title: "Full Reading Mock Test: সময় ধরে প্র্যাকটিস ও রিভিউ", duration: "19:15" },
           { title: "Capstone: সম্পূর্ণ Reading Masterclass", duration: "20:00" },
         ],
@@ -958,7 +953,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     ],
     certificate: {
       title: "Completion Certificate",
-      desc: "Earn a verified FlyBridge certificate when you complete all 30 masterclasses and the full-length practice tests.",
+      desc: "Earn a verified FlyBridge certificate when you complete all 25 masterclasses and the full-length practice tests.",
     },
     pricing: {
       title: "১লা অক্টোবরের আগেই সিট বুক করুন",
@@ -967,7 +962,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       note: "One-time payment · Lifetime access",
       ctaLabel: "Join the waitlist",
       ctaHref: "#waitlist",
-      includedLine: "৩০টা মাস্টারক্লাস · ১৫টা ফ্রি মক টেস্ট · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
+      includedLine: "২৫টা মাস্টারক্লাস + ৫টা বোনাস ক্লাস · ১৫টা ফ্রি মক টেস্ট · লাইভ সেমিনার · সম্পূর্ণ PDF বই",
       paymentLabel: "নিরাপদ পেমেন্ট, যেভাবে আপনার সুবিধা",
       paymentMethods: ["bKash", "Nagad", "Rocket", "Stripe"],
     },
@@ -978,7 +973,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       },
       {
         q: "এটা কি সেলফ-পেসড, নাকি নির্দিষ্ট সময়ে ক্লাস হয়?",
-        a: "৩০টা মূল মাস্টারক্লাস সেলফ-পেসড। লাইভ সেমিনার নির্দিষ্ট সময়ে হবে, কিন্তু রেকর্ড করা থাকবে।",
+        a: "২৫টা মূল মাস্টারক্লাস সেলফ-পেসড। লাইভ সেমিনার নির্দিষ্ট সময়ে হবে, কিন্তু রেকর্ড করা থাকবে।",
       },
       {
         q: "PDF বইটা কি সব প্ল্যানের সাথেই পাওয়া যাবে?",
@@ -994,8 +989,8 @@ export const courseDetails: Record<string, CourseDetails> = {
       },
     ],
     cta: {
-      title: "আপনার Target Band। একটাই সম্পূর্ণ সিস্টেম।",
-      desc: "লঞ্চ হচ্ছে ১লা অক্টোবর, ২০২৬ — ৩০টা মাস্টারক্লাস, লাইভ সেমিনার, ৫টা বোনাস ক্লাস আর সম্পূর্ণ PDF বই।",
+      title: "আপনার Target band স্কোর করার সম্পূর্ণ সমাধান",
+      desc: "লঞ্চ হচ্ছে ১লা অক্টোবর, ২০২৬ — ২৫টা ভিডিও মাস্টারক্লাস, ৫টা বোনাস ক্লাস, ১৫টা ফ্রি মক টেস্ট, লাইভ সেমিনার আর সম্পূর্ণ Companion PDF বই।",
     },
   },
 };
