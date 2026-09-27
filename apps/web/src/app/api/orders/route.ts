@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { createOrder } from "@/lib/orders";
+import { isMetaPurchaseEnabled } from "@/lib/meta-capi";
 import { DiscountError } from "@/lib/discounts";
 import { Course } from "@/lib/models/course";
 import {
@@ -64,8 +65,24 @@ export async function GET() {
         gateway: o.gateway ?? null,
         gatewayRef: o.gatewayRef ?? null,
         merchantTransactionId: o.merchantTransactionId ?? null,
+        meta: o.meta
+          ? {
+              reported: o.meta.reported ?? false,
+              reportedAt: o.meta.reportedAt ?? null,
+              error: o.meta.error ?? null,
+            }
+          : null,
         createdAt: o.createdAt,
       })),
+      // Server-side Purchase delivery, so the dashboard can prove Meta received
+      // the conversions rather than only logging that we tried.
+      metaReporting: {
+        pixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? null,
+        enabled: isMetaPurchaseEnabled(),
+        reported: orders.filter((o) => o.meta?.reported).length,
+        failed: orders.filter((o) => o.meta && !o.meta.reported).length,
+        untracked: orders.filter((o) => !o.meta).length,
+      },
     });
   } catch (error) {
     console.error("orders GET error", error);

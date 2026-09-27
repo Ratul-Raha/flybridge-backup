@@ -456,25 +456,74 @@ export async function fulfillOrder(
   await emitEvent("order.fulfilled", fulfilledPayload);
 
   if (isMetaPurchaseEnabled()) {
-    try {
-      const attribution = order.attribution;
-      await sendMetaPurchase({
-        eventId: order._id.toString(),
-        orderId: order._id.toString(),
-        email: order.email,
-        phone: buyer.phone,
-        value: order.total,
-        currency: order.currency,
-        contentIds: [purchasedContent?.id ?? item.itemId],
-        contentName: purchasedContent?.title ?? item.title ?? undefined,
-        fbc: attribution?.fbc,
-        fbp: attribution?.fbp,
-        clientIp: attribution?.ip,
-        userAgent: attribution?.userAgent,
-      });
-    } catch (error) {
-      // Never let reporting break a paid order.
-      console.error("meta purchase report failed", error);
-    }
+    await reportOrderPurchase(order, { phone: buyer.phone, content: purchasedContent });
   }
+}
+
+export type MetaReportResult = {
+  reported: boolean;
+  traceId?: string;
+  error?: string;
+};
+
+/**
+ * Sends the order's Purchase event and records the delivery outcome on the
+ * order itself, so a lost conversion is visible in admin instead of only in
+ * the logs. Never throws: reporting must not break a paid order.
+ *
+ * Meta dedupes on `event_id` (the order id), so calling this again for the same
+ * order is safe — that is what makes the admin retry possible.
+ */
+export async function reportOrderPurchase(
+  order: HydratedOrder,
+  opts: { phone?: string | null; content?: { id: string; title?: string } | null } = {}
+): Promise<MetaReportResult> {
+  const item = order.items[0];
+  if (!item) return { reported: false, error: "Order has no items" };
+  if (!isMetaPurchaseEnabled()) {
+    return { reported: false, error: "Meta Conversions API is not configured" };
+  }
+
+  // Courses are sent as the slug, which is what the browser pixel used, so the
+  // two sides agree on content_ids. Everything else goes out as the raw item id.
+  const content = opts.content ?? (await contentRef(item));
+  const attribution = order.attribution;
+
+  try {
+    const traceId = await sendMetaPurchase({
+      eventId: order._id.toString(),
+      orderId: order._id.toString(),
+      email: order.email,
+      phone: opts.phone,
+      value: order.total,
+      currency: order.currency,
+      contentIds: [content.id],
+      contentName: content.title,
+      fbc: attribution?.fbc,
+      fbp: attribution?.fbp,
+      clientIp: attribution?.ip,
+      userAgent: attribution?.userAgent,
+    });
+    order.meta = { reported: true, reportedAt: new Date(), traceId: traceId || undefined };
+    // Saved either way so admin can see reported *and* failed, not just silence.
+    await order.save();
+    return { reported: true, traceId: traceId || undefined };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const detail = message.slice(0, 300);
+    order.meta = { reported: false, reportedAt: new Date(), error: detail };
+    await order.save().catch(() => {});
+    console.error("meta purchase report failed", error);
+    return { reported: false, error: detail };
+  }
+}
+
+async function contentRef(
+  item: OrderDoc["items"][number]
+): Promise<{ id: string; title?: string }> {
+  if (item.itemType === "course") {
+    const course = await Course.findById(item.itemId).select("slug title").lean();
+    if (course) return { id: course.slug, title: course.title };
+  }
+  return { id: item.itemId, title: item.title ?? undefined };
 }

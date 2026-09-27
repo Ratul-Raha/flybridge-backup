@@ -26,6 +26,17 @@ const orderAttributionSchema = new Schema(
   { _id: false }
 );
 
+const orderMetaSchema = new Schema(
+  {
+    reported: { type: Boolean, default: false },
+    reportedAt: { type: Date },
+    /** Graph API trace id — what Meta support asks for when reconciling counts. */
+    traceId: { type: String, trim: true },
+    error: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
 const orderSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
@@ -51,6 +62,8 @@ const orderSchema = new Schema(
     /** Meta click ids + request context, captured at order creation so the
      *  Conversions API can match the server-side Purchase to the ad click. */
     attribution: { type: orderAttributionSchema, default: undefined },
+    /** Whether the server-side Purchase actually reached Meta, and what it said. */
+    meta: { type: orderMetaSchema, default: undefined },
   },
   { timestamps: true }
 );

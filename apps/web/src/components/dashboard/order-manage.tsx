@@ -20,6 +20,8 @@ import {
   Package,
   Trash2,
   Eye,
+  Radio,
+  RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
@@ -42,7 +44,20 @@ type Order = {
   discountLabel: string | null;
   status: string;
   gateway: string | null;
+  meta: {
+    reported: boolean;
+    reportedAt: string | null;
+    error: string | null;
+  } | null;
   createdAt: string;
+};
+
+type MetaReporting = {
+  pixelId: string | null;
+  enabled: boolean;
+  reported: number;
+  failed: number;
+  untracked: number;
 };
 
 type OrderStats = {
@@ -363,6 +378,133 @@ function TopItems({ items }: { items: OrderStats["topItems"] }) {
   );
 }
 
+function MetaReportingCard({ data }: { data: MetaReporting }) {
+  const total = data.reported + data.failed + data.untracked;
+  const tracked = data.reported + data.failed;
+  const okRate = tracked === 0 ? 0 : Math.round((data.reported / tracked) * 100);
+
+  const tiles = [
+    {
+      key: "reported",
+      label: "Reported to Meta",
+      value: data.reported,
+      color: "#10B981",
+      bg: "rgba(16,185,129,0.10)",
+    },
+    {
+      key: "failed",
+      label: "Rejected",
+      value: data.failed,
+      color: "#EF4444",
+      bg: "rgba(239,68,68,0.10)",
+    },
+    {
+      key: "untracked",
+      label: "Not reported",
+      value: data.untracked,
+      color: "#6B7280",
+      bg: "rgba(107,114,128,0.10)",
+    },
+  ];
+
+  return (
+    <div
+      className="rounded-lg border bg-white p-5"
+      style={{ borderColor: "var(--line)" }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+            Meta Conversions API
+          </h3>
+          <p className="text-[11.5px] mt-0.5" style={{ color: "var(--body)" }}>
+            Server-side Purchase delivery for{" "}
+            {data.pixelId ? `pixel ${data.pixelId}` : "the configured pixel"}
+          </p>
+        </div>
+        <Radio size={16} style={{ color: "var(--body)" }} />
+      </div>
+
+      {!data.enabled ? (
+        <div
+          className="rounded-lg p-3.5 text-[12px]"
+          style={{ background: "rgba(245,158,11,0.08)", color: "#92400E" }}
+        >
+          Not sending. Add <b>META_CAPI_TOKEN</b> to the environment — purchases are
+          completing but Meta has not been told about them.
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            {tiles.map((t) => (
+              <div key={t.key} className="rounded-lg p-3" style={{ background: t.bg }}>
+                <p
+                  className="text-[20px] font-semibold leading-none"
+                  style={{ color: t.color }}
+                >
+                  {t.value}
+                </p>
+                <p
+                  className="text-[10px] uppercase tracking-[0.1em] mt-1.5"
+                  style={{ color: "var(--body)" }}
+                >
+                  {t.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11.5px] mt-3" style={{ color: "var(--body)" }}>
+            {tracked === 0
+              ? "No paid orders yet to report."
+              : `${okRate}% of ${tracked} tracked orders reached Meta.`}
+            {data.untracked > 0 &&
+              ` ${data.untracked} of ${total} predate tracking or completed while the token was missing — use the retry button on the row to send it now.`}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MetaBadge({ meta, status }: { meta: Order["meta"]; status: string }) {
+  if (status !== "completed") return null;
+  if (!meta) {
+    return (
+      <span
+        className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+        style={{ background: "rgba(107,114,128,0.10)", color: "#6B7280" }}
+        title="No Conversions API report recorded for this order"
+      >
+        untracked
+      </span>
+    );
+  }
+  if (meta.reported) {
+    return (
+      <span
+        className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+        style={{ background: "rgba(16,185,129,0.10)", color: "#047857" }}
+        title={
+          meta.reportedAt
+            ? `Reported to Meta at ${new Date(meta.reportedAt).toLocaleString()}`
+            : "Reported to Meta"
+        }
+      >
+        reported
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+      style={{ background: "rgba(239,68,68,0.10)", color: "#991B1B" }}
+      title={meta.error ?? "Meta rejected the Purchase event"}
+    >
+      failed
+    </span>
+  );
+}
+
 function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
   if (!orders || orders.length === 0) return null;
   return (
@@ -426,6 +568,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
 export function OrderManage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats | null>(null);
+  const [metaReporting, setMetaReporting] = useState<MetaReporting | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -438,6 +581,7 @@ export function OrderManage() {
   const [page, setPage] = useState(1);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -450,6 +594,7 @@ export function OrderManage() {
       const ordersData = await ordersRes.json();
       if (!ordersRes.ok) throw new Error(ordersData.error ?? "Failed to load");
       setOrders(ordersData.orders ?? []);
+      setMetaReporting(ordersData.metaReporting ?? null);
       if (statsRes.ok) {
         const s = await statsRes.json();
         setStats(s);
@@ -477,6 +622,21 @@ export function OrderManage() {
       setError(e instanceof Error ? e.message : "Failed to update status");
     } finally {
       setUpdatingId(null);
+    }
+  }, [load]);
+
+  const retryMeta = useCallback(async (order: Order) => {
+    setRetryingId(order.id);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/retry-meta`, { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Meta report failed");
+      setError(null);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Meta report failed");
+    } finally {
+      setRetryingId(null);
     }
   }, [load]);
 
@@ -598,6 +758,9 @@ export function OrderManage() {
             {stats?.topItems && stats.topItems.length > 0 && <TopItems items={stats.topItems} />}
             {stats?.recentOrders && <RecentActivity orders={stats.recentOrders} />}
           </div>
+
+          {/* ── Meta Conversions API delivery ── */}
+          {metaReporting && <MetaReportingCard data={metaReporting} />}
 
           {/* ── Orders Table ── */}
           <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
@@ -759,6 +922,23 @@ export function OrderManage() {
                           </td>
                           <td className="px-5 py-3.5 whitespace-nowrap">
                             <div className="flex items-center gap-2">
+                              <MetaBadge meta={o.meta} status={o.status} />
+                              {o.status === "completed" && !o.meta?.reported && (
+                                <button
+                                  type="button"
+                                  onClick={() => retryMeta(o)}
+                                  disabled={retryingId === o.id}
+                                  title="Re-send this Purchase event to Meta"
+                                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors disabled:opacity-30 hover:bg-amber-50"
+                                  style={{ color: "var(--body)" }}
+                                >
+                                  {retryingId === o.id ? (
+                                    <Loader2 size={13} className="animate-spin" style={{ color: "var(--brand)" }} />
+                                  ) : (
+                                    <RefreshCw size={13} />
+                                  )}
+                                </button>
+                              )}
                               <select
                                 value={o.status}
                                 onChange={(e) => updateStatus(o.id, e.target.value)}

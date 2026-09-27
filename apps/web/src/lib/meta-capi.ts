@@ -42,9 +42,12 @@ export function isMetaPurchaseEnabled(): boolean {
  * Mobile banking (bKash/Nagad/Rocket) and card checkout both bounce the buyer
  * off-site, so a browser-only pixel loses most purchases. This runs from
  * fulfillOrder, the single funnel every gateway funnels through.
+ *
+ * Resolves with Meta's `fbtrace_id`, which is what Meta support asks for when
+ * reconciling reported against received event counts.
  */
-export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<void> {
-  if (!PIXEL_ID || !ACCESS_TOKEN) return;
+export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<string> {
+  if (!PIXEL_ID || !ACCESS_TOKEN) return "";
 
   const userData: Record<string, unknown> = {};
   if (input.email) userData.em = [md5(input.email)];
@@ -91,4 +94,27 @@ export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<void> 
     const detail = await res.text().catch(() => "");
     throw new Error(`Meta CAPI ${res.status}: ${detail.slice(0, 300)}`);
   }
+
+  // The Graph API answers 200 even when it rejects the payload — a wrong pixel
+  // id, a bad token or a malformed field comes back as `events_received: 0` with
+  // an `errors` array. Checking only the status code makes every one of those
+  // look like a success, and the purchase would be silently lost.
+  const body = (await res.json().catch(() => null)) as {
+    events_received?: number;
+    fbtrace_id?: string;
+    errors?: { message?: string; code?: number }[];
+  } | null;
+
+  if (body?.errors?.length) {
+    const detail = body.errors
+      .map((e) => `[${e.code ?? "?"}] ${e.message ?? "unknown"}`)
+      .join("; ");
+    throw new Error(`Meta CAPI rejected the event: ${detail.slice(0, 300)}`);
+  }
+
+  if (typeof body?.events_received === "number" && body.events_received === 0) {
+    throw new Error("Meta CAPI received 0 events (check the pixel id and access token)");
+  }
+
+  return body?.fbtrace_id ?? "";
 }
