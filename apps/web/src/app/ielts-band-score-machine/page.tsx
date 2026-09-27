@@ -70,6 +70,8 @@ type Offer = {
   price?: string;
   originalPrice?: string;
   savings?: string;
+  dealLabel?: string;
+  dealNote?: string;
   scholarshipPercent: number;
   showWaitlistForm: boolean;
   slug: string;
@@ -297,7 +299,27 @@ function OfferCard({
                   className="mb-2 rounded-md px-2.5 py-1 text-[12.5px] font-bold"
                   style={{ background: "var(--ib-mint)", color: "#052117" }}
                 >
-                  {offer.savings} off
+                  Save {offer.savings}
+                </span>
+              )}
+            </div>
+          )}
+
+          {offer.dealLabel && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-bold tracking-[0.04em]"
+                style={{
+                  border: dark ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--ib-line)",
+                  color: ink,
+                }}
+              >
+                <Flag className="h-[13px] w-[13px] shrink-0" strokeWidth={2.6} style={{ color: "var(--ib-brand-2)" }} />
+                {offer.dealLabel}
+              </span>
+              {offer.dealNote && (
+                <span className="text-[13px] font-medium leading-[1.6]" style={{ color: muted }}>
+                  <BengaliText>{offer.dealNote}</BengaliText>
                 </span>
               )}
             </div>
@@ -1141,6 +1163,8 @@ export default async function IeltsFullReadinessLandingPage() {
     price,
     originalPrice: details?.originalPrice,
     savings: details?.savings,
+    dealLabel: details?.dealLabel,
+    dealNote: details?.dealNote,
     scholarshipPercent,
     showWaitlistForm,
     slug: SLUG,

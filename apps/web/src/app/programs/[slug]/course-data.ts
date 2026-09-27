@@ -124,6 +124,8 @@ export type CourseDetails = {
   price?: string;
   originalPrice?: string;
   savings?: string;
+  dealLabel?: string;
+  dealNote?: string;
   access?: string;
   chips?: string[];
   rating?: RatingSummary;
@@ -718,8 +720,10 @@ export const courseDetails: Record<string, CourseDetails> = {
     pace: "Self-paced · 30 masterclasses",
     access: "Lifetime access",
     price: "৳2,999",
-    originalPrice: "৳3,999",
-    savings: "৳1,000",
+    originalPrice: "৳5,999",
+    savings: "BDT 3000",
+    dealLabel: "Exclusive Launch Deal",
+    dealNote: "শুধু এক মাসের জন্য — শেষ দিন ৩০ অক্টোবর, ২০২৬।",
     chips: ["লাইফটাইম অ্যাক্সেস", "১৫টি ফ্রি মক টেস্ট", "নিজের গতিতে শিখুন"],
     heroCta: { label: "Join the waitlist", href: "#waitlist" },
     heroStats: [
@@ -958,7 +962,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     },
     pricing: {
       title: "১লা অক্টোবরের আগেই সিট বুক করুন",
-      subtitle: "৳1,000 discount for a limited time",
+      subtitle: "Exclusive Launch Deal — Save BDT 3000, ends October 30, 2026",
       price: "৳2,999",
       note: "One-time payment · Lifetime access",
       ctaLabel: "Join the waitlist",
