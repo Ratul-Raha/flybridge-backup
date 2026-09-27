@@ -1,184 +1,203 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import {
-  CalendarCheck,
+  ArrowRight,
+  Check,
   CheckCircle2,
-  Clock,
   CreditCard,
+  FileText,
   HelpCircle,
   Mail,
   MapPin,
+  Minus,
   Phone,
   ShieldCheck,
-  Swords,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Refund Policy | FlyBridge Education Group",
   description:
-    "Every course comes with a 3-day, 100% money-back guarantee. Claim your refund online in minutes — no questions asked, no support ticket required.",
+    "A 3-day, 100% money-back guarantee on every FlyBridge course. Read the full policy: the refund window, your free lesson and mock exam allowance, how to claim, and how quickly you are paid.",
 };
 
-/* ───────────────────────── policy facts ───────────────────────── */
+/* ───────────────────────── policy content ───────────────────────── */
 
-const snapshot = [
+const keyTerms: { term: string; detail: string; emphasis?: boolean }[] = [
   {
-    icon: ShieldCheck,
-    value: "100%",
-    label: "Money back guarantee",
-    sub: "Every single course purchase is covered.",
+    term: "Guarantee",
+    detail: "100% of the amount you paid, returned to your original payment method.",
+    emphasis: true,
   },
   {
-    icon: CalendarCheck,
-    value: "3 days",
-    label: "Refund window",
-    sub: "Claim within 3 days of your purchase.",
+    term: "Refund window",
+    detail: "3 days, counted from the moment your payment completes.",
+    emphasis: true,
   },
   {
-    icon: Clock,
-    value: "7–15 days",
-    label: "To your account",
-    sub: "Refunds land back within 7–15 business days.",
+    term: "Eligible purchases",
+    detail: "Every paid course purchased on FlyBridge, whatever the payment method.",
   },
   {
-    icon: CreditCard,
-    value: "Online",
-    label: "Self-serve claim",
-    sub: "Claim from My Orders on your dashboard.",
+    term: "Your free usage",
+    detail: "The first 5 lessons and the first 1 mock exam are on us, on every purchase.",
   },
+  {
+    term: "Forfeiture",
+    detail:
+      "Crossing either limit — more than 5 lessons played, or more than 1 mock exam taken — makes that purchase non-refundable for good. Course access is unaffected.",
+  },
+  {
+    term: "How to claim",
+    detail: "Self-serve, from My Orders on your dashboard. No forms, no tickets, no calls.",
+  },
+  {
+    term: "Approval",
+    detail:
+      "Card refunds are sent back automatically. Mobile wallet payouts are approved by our team, usually within one working day.",
+  },
+  {
+    term: "Settlement",
+    detail: "7–15 business days, depending on your bank or payment provider.",
+  },
+  { term: "Fees", detail: "None. We never deduct a processing or admin fee from a refund." },
 ];
 
-const process = [
+const claimSteps = [
   {
     number: "01",
-    icon: Swords,
-    title: "Not your thing?",
-    desc: "Try the course risk-free. If it isn't right for you within the first 3 days, open My Orders on your dashboard and tap Request refund.",
+    title: "Open My Orders",
+    desc: "Sign in and open My Orders in your dashboard. Every completed purchase shows a live countdown of the time you have left, plus how much of your refund-safe usage is still unused.",
   },
   {
     number: "02",
-    icon: CheckCircle2,
-    title: "Automatic approval",
-    desc: "Card refunds are sent back to your original payment method automatically. Mobile wallet payouts are approved by our team, usually within one working day.",
+    title: "Request the refund",
+    desc: "Tap Request refund and confirm. Tell us why if you would like — it helps us improve, but it is never required. The window, the usage counters and the order status are all re-checked on our servers at that moment, so the decision never rests on the button being on screen.",
   },
   {
     number: "03",
-    icon: CreditCard,
-    title: "Money back",
-    desc: "The full amount is returned to your original payment method within 7–15 business days.",
+    title: "We refund you",
+    desc: "Card refunds go straight back to the original payment method. Mobile wallet payouts are approved by our team, usually within one working day, and sent by us. Once the money is on its way we close the order and remove your access to the course.",
   },
+];
+
+const covered = [
+  "Every paid course on FlyBridge",
+  "Any payment method — bKash, Nagad, Rocket or card",
+  "A full refund, with no fee deducted",
+  "A reason-free claim, submitted in under a minute",
+];
+
+const notCovered = [
+  "Free resources and courses marked as free",
+  "Requests raised more than 3 days after payment",
+  "Purchases once either usage limit is crossed",
+  "Duplicate or fraudulent payments",
 ];
 
 const faqs = [
   {
-    q: "Which purchases are covered?",
-    a: "Every paid course on FlyBridge is covered. Free resources and courses marked as free are not refundable since nothing is paid for them.",
-  },
-  {
     q: "How is the 3-day window calculated?",
-    a: "It starts from the moment your payment is completed. You have 3 full days to decide, and any claim raised within that window is approved in full.",
+    a: "It starts the moment your payment is completed and runs for 3 full days. Any claim raised inside that window is approved in full — the clock is the only deadline that matters, and it is shown to you live in My Orders.",
   },
   {
-    q: "How do I request a refund?",
-    a: "Open My Orders in your dashboard, find the purchase, and tap Request refund. You'll see a live countdown of the time you have left, and your refund-safe lesson and mock exam usage on the same card.",
+    q: "What exactly counts towards the free usage?",
+    a: "Your first 5 lessons and your first 1 mock exam, per purchase. A lesson counts once, the first time you open it, and a mock exam counts once, the first time you start a new sitting. Re-watching a lesson, scrubbing back, or resuming a mock you already started costs you nothing extra.",
   },
   {
     q: "Does using the course affect my refund?",
-    a: "Yes. Your first 5 lessons and your first mock exam are on us. If you play more than 5 lessons, or more than 1 mock exam, that purchase is no longer refundable — the option simply disappears from My Orders, and your course access stays as it is. Nothing is locked while you browse; the counters only decide refund eligibility.",
+    a: "Only up to the limit. Play within 5 lessons and 1 mock exam and your refund stays available. Cross either limit and the purchase is no longer refundable — the option simply disappears from My Orders. Nothing is ever locked: you keep full access to everything you paid for, we just stop being able to give the money back.",
+  },
+  {
+    q: "How do I request a refund?",
+    a: "Open My Orders in your dashboard, find the purchase, and tap Request refund. The claim goes straight to our team with the order, your usage snapshot and the time of your request attached.",
   },
   {
     q: "How long do refunds take?",
-    a: "Once approved, refunds reach your account within 7–15 business days. Exact timing depends on your bank or payment provider.",
+    a: "Card refunds are issued as soon as you claim. Mobile wallet payouts are approved by our team, usually within one working day. Either way the money reaches your account within 7–15 business days, depending on your bank or payment provider.",
   },
   {
     q: "Can I get a refund after 3 days?",
-    a: "The 3-day guarantee covers every purchase. After that window, refunds are reviewed case-by-case. Just contact us and we'll do our best to help.",
+    a: "The 3-day guarantee covers every purchase on its own. After that window we review requests case by case, so it is still worth writing to us — email support@flybridgeedu.com with your order number and we will tell you where you stand.",
   },
   {
-    q: "Do you keep any fees?",
-    a: "No. We refund 100% of the amount you paid — no processing fees, no hidden charges.",
+    q: "What happens to my course access?",
+    a: "Nothing changes while you are deciding. The moment a refund is processed we close the order and release your access to that course, so the two never overlap.",
   },
 ];
 
-const contactCards = [
-  {
-    icon: Mail,
-    label: "Email support",
-    value: "support@flybridgeedu.com",
-    href: "mailto:support@flybridgeedu.com",
-  },
-  {
-    icon: Phone,
-    label: "Call or WhatsApp",
-    value: "+1 (778) 676-8459",
-    href: "tel:+17786768459",
-  },
-  {
-    icon: MapPin,
-    label: "Head office",
-    value: "Toronto, Ontario, Canada",
-    href: "https://maps.google.com/?q=757+Gladstone+Avenue+Toronto",
-    external: true,
-  },
-];
+/* ───────────────────────── small parts ───────────────────────── */
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="font-mono text-[10.5px] font-medium uppercase mb-4"
+      style={{ color: "var(--body)", letterSpacing: "0.22em" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-xl border bg-white ${className}`}
+      style={{ borderColor: "var(--line)" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function RefundPage() {
   return (
     <>
       <Nav />
       <main>
-        {/* Hero */}
-        <section
-          className="relative px-[clamp(20px,4.5vw,56px)] pt-[clamp(130px,18vh,190px)] pb-[clamp(56px,7vw,88px)] overflow-hidden"
-          style={{ background: "linear-gradient(180deg, #FFFFFF 0%, var(--bg-soft) 100%)" }}
-        >
-          <div
-            className="pointer-events-none absolute -top-32 right-0 w-[520px] h-[520px] rounded-full blur-[120px]"
-            style={{ background: "rgba(20,181,126,0.12)" }}
-          />
-          <div className="relative max-w-[860px] mx-auto text-center">
+        {/* Header */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pt-[clamp(130px,18vh,190px)] pb-[clamp(48px,6vw,72px)]">
+          <div className="max-w-[880px] mx-auto">
             <div
-              className="inline-flex items-center gap-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] px-4 py-2 mb-7"
+              className="inline-flex items-center gap-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] px-4 py-2 mb-6"
               style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
             >
-              <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
-              MONEY-BACK GUARANTEE
+              <ShieldCheck className="w-[13px] h-[13px]" strokeWidth={2.2} />
+              REFUND POLICY
             </div>
             <h1
-              className="font-display font-semibold tracking-[-0.02em] leading-[1.08] text-balance"
-              style={{ fontSize: "clamp(36px,5.5vw,62px)", color: "var(--ink)" }}
+              className="font-display font-semibold tracking-[-0.025em] leading-[1.1] text-balance"
+              style={{ fontSize: "clamp(34px,4.6vw,54px)", color: "var(--ink)" }}
             >
-              Loved it or your money back,{" "}
-              <span style={{ color: "var(--brand-2)" }}>within 3 days.</span>
+              3 days, 100% of your money back.
             </h1>
-            <p className="mt-6 text-[17px] leading-[1.75] max-w-[620px] mx-auto" style={{ color: "var(--body)" }}>
-              Learning is a leap of faith — so we removed the risk. Every course on
-              FlyBridge carries a 3-day, 100% refund guarantee. Don&apos;t like it?
-              Claim your refund online. No questions, no calls, no hassle.
+            <p
+              className="mt-6 text-[16.5px] leading-[1.75] max-w-[640px]"
+              style={{ color: "var(--body)" }}
+            >
+              Learning is a leap of faith, so we removed the risk from it. Every course you buy
+              from FlyBridge can be refunded in full within 3 days of payment — claimed by you,
+              from your own dashboard, without a single form or phone call.
             </p>
 
-            {/* Snapshot stats */}
-            <div className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {snapshot.map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-xl border bg-white p-5 text-left transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_36px_-18px_rgba(18,32,67,0.18)]"
-                  style={{ borderColor: "var(--line)" }}
-                >
-                  <span
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center mb-4"
-                    style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+            <div
+              className="flex flex-wrap gap-x-10 gap-y-4 mt-9 pt-7"
+              style={{ borderTop: "1px solid var(--line)" }}
+            >
+              {[
+                { k: "Effective date", v: "September 2026" },
+                { k: "Entity", v: "FlyBridge Education Group Inc." },
+                { k: "Jurisdiction", v: "Ontario, Canada" },
+                { k: "Applies to", v: "All paid courses" },
+              ].map((m) => (
+                <div key={m.k}>
+                  <div
+                    className="font-mono text-[10px] font-medium uppercase"
+                    style={{ color: "var(--body)", letterSpacing: "0.16em" }}
                   >
-                    <s.icon className="w-[18px] h-[18px]" strokeWidth={2} />
-                  </span>
-                  <div className="font-display text-[24px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
-                    {s.value}
+                    {m.k}
                   </div>
-                  <div className="text-[13px] font-semibold mt-1.5" style={{ color: "var(--ink)" }}>
-                    {s.label}
-                  </div>
-                  <div className="text-[12.5px] leading-[1.5] mt-1" style={{ color: "var(--body)" }}>
-                    {s.sub}
+                  <div className="text-[14px] font-medium mt-[3px]" style={{ color: "var(--ink)" }}>
+                    {m.v}
                   </div>
                 </div>
               ))}
@@ -186,224 +205,407 @@ export default function RefundPage() {
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(64px,8vw,104px)]">
-          <div className="max-w-[1020px] mx-auto">
-            <div className="text-center mb-12">
-              <div
-                className="inline-flex items-center gap-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] px-4 py-2 mb-5"
-                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-              >
-                HOW IT WORKS
-              </div>
+        {/* The terms, at a glance */}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(40px,5vw,64px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div className="mb-7">
+              <SectionLabel>The terms, at a glance</SectionLabel>
               <h2
-                className="font-display font-semibold tracking-[-0.01em] text-balance"
-                style={{ fontSize: "clamp(28px,3.6vw,40px)", color: "var(--ink)" }}
+                className="font-display font-semibold tracking-[-0.015em]"
+                style={{ fontSize: "clamp(24px,3vw,32px)", color: "var(--ink)" }}
               >
-                Three steps. Zero friction.
+                Everything the guarantee covers.
               </h2>
-              <p className="mt-4 text-[15.5px] max-w-[520px] mx-auto" style={{ color: "var(--body)" }}>
-                Refunds on FlyBridge are automatic — they never depend on getting hold of support.
-              </p>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-5">
-              {process.map((step, i) => (
-                <div
-                  key={step.number}
-                  className="relative rounded-2xl border bg-white p-7"
-                  style={{ borderColor: "var(--line)" }}
-                >
-                  <div className="flex items-center justify-between mb-5">
-                    <span
-                      className="w-11 h-11 rounded-xl flex items-center justify-center"
-                      style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+            <Panel>
+              <dl>
+                {keyTerms.map((row, i) => (
+                  <div
+                    key={row.term}
+                    className="grid gap-x-10 gap-y-1.5 px-6 md:px-8 py-5 sm:grid-cols-[210px_minmax(0,1fr)]"
+                    style={
+                      i > 0
+                        ? { borderTop: "1px solid var(--line)" }
+                        : undefined
+                    }
+                  >
+                    <dt
+                      className="text-[13px] font-semibold sm:pt-[2px]"
+                      style={{ color: row.emphasis ? "var(--brand-2)" : "var(--ink)" }}
                     >
-                      <step.icon className="w-[20px] h-[20px]" strokeWidth={1.9} />
-                    </span>
-                    <span className="font-mono text-[13px] font-bold" style={{ color: "var(--brand-2)" }}>
-                      STEP {step.number}
-                    </span>
+                      {row.term}
+                    </dt>
+                    <dd className="text-[14.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                      {row.detail}
+                    </dd>
                   </div>
-                  <h3
-                    className="font-display text-[18px] font-semibold leading-[1.35]"
+                ))}
+              </dl>
+            </Panel>
+          </div>
+        </section>
+
+        {/* How to claim */}
+        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div className="mb-8">
+              <SectionLabel>How to claim</SectionLabel>
+              <h2
+                className="font-display font-semibold tracking-[-0.015em]"
+                style={{ fontSize: "clamp(24px,3vw,32px)", color: "var(--ink)" }}
+              >
+                Three steps, about a minute.
+              </h2>
+            </div>
+
+            <div className="grid gap-4">
+              {claimSteps.map((step) => (
+                <Panel key={step.number} className="p-6 md:p-7">
+                  <div className="flex gap-5 md:gap-7">
+                    <span
+                      className="font-mono text-[12.5px] font-semibold pt-[3px] shrink-0"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      {step.number}
+                    </span>
+                    <div className="min-w-0">
+                      <h3
+                        className="font-display text-[18px] font-semibold leading-[1.35]"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {step.title}
+                      </h3>
+                      <p
+                        className="mt-2 text-[14.5px] leading-[1.75] max-w-[680px]"
+                        style={{ color: "var(--body)" }}
+                      >
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Panel>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* The free usage allowance */}
+        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div className="mb-8">
+              <SectionLabel>Your allowance</SectionLabel>
+              <h2
+                className="font-display font-semibold tracking-[-0.015em]"
+                style={{ fontSize: "clamp(24px,3vw,32px)", color: "var(--ink)" }}
+              >
+                Try the course properly. We&apos;ll cover the first stretch.
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <Panel className="p-6 md:p-7">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-[18px] h-[18px] shrink-0" style={{ color: "var(--brand-2)" }} />
+                  <div className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Lessons on us
+                  </div>
+                </div>
+                <div className="mt-5 flex items-end gap-3">
+                  <span
+                    className="font-display text-[44px] font-semibold leading-none"
                     style={{ color: "var(--ink)" }}
                   >
-                    {step.title}
-                  </h3>
-                  <p className="mt-2.5 text-[14px] leading-[1.75]" style={{ color: "var(--body)" }}>
-                    {step.desc}
-                  </p>
-                  {i < process.length - 1 && (
-                    <span
-                      className="hidden sm:block absolute top-1/2 -right-4 w-3 h-3 rotate-45 -translate-y-1/2"
-                      style={{ background: "#fff", borderRight: "1.5px solid var(--line)", borderTop: "1.5px solid var(--line)" }}
-                      aria-hidden
-                    />
-                  )}
+                    5
+                  </span>
+                  <span className="text-[13.5px] pb-1" style={{ color: "var(--body)" }}>
+                    lessons per purchase
+                  </span>
                 </div>
-              ))}
+                <div className="mt-4 flex items-center gap-2">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span
+                      key={i}
+                      className="h-[6px] flex-1 rounded-full"
+                      style={{ background: "var(--brand-2)" }}
+                    />
+                  ))}
+                </div>
+                <p className="mt-4 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                  A lesson counts once, the first time you open it. Your sixth lesson makes that
+                  purchase non-refundable.
+                </p>
+              </Panel>
+
+              <Panel className="p-6 md:p-7">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-[18px] h-[18px] shrink-0" style={{ color: "var(--brand-2)" }} />
+                  <div className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Mock exams on us
+                  </div>
+                </div>
+                <div className="mt-5 flex items-end gap-3">
+                  <span
+                    className="font-display text-[44px] font-semibold leading-none"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    1
+                  </span>
+                  <span className="text-[13.5px] pb-1" style={{ color: "var(--body)" }}>
+                    full-length mock per purchase
+                  </span>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="h-[6px] flex-1 rounded-full" style={{ background: "var(--brand-2)" }} />
+                  <span className="h-[6px] flex-1 rounded-full" style={{ background: "var(--line)" }} />
+                </div>
+                <p className="mt-4 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                  A mock counts once, when you start a new sitting. Resuming the same mock is free.
+                </p>
+              </Panel>
             </div>
+
+            <Panel className="mt-4 p-6 md:p-7">
+              <div className="flex items-start gap-3.5">
+                <CheckCircle2
+                  className="w-[18px] h-[18px] mt-[3px] shrink-0"
+                  style={{ color: "var(--brand-2)" }}
+                />
+                <div>
+                  <div className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Nothing is ever locked
+                  </div>
+                  <p
+                    className="mt-1.5 text-[14px] leading-[1.75] max-w-[700px]"
+                    style={{ color: "var(--body)" }}
+                  >
+                    These counters only decide refund eligibility. You keep full access to every
+                    lesson, mock and resource for as long as you are enrolled — crossing a limit
+                    closes the refund option, nothing else.
+                  </p>
+                </div>
+              </div>
+            </Panel>
           </div>
         </section>
 
-        {/* Legend banner */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(64px,8vw,104px)]">
-          <div className="max-w-[1020px] mx-auto">
-            <div
-              className="relative overflow-hidden rounded-2xl p-[clamp(28px,4vw,48px)]"
-              style={{
-                background:
-                  "linear-gradient(135deg, #0B5E46 0%, #0E7A55 55%, #14B57E 120%)",
-              }}
-            >
-              <div
-                className="pointer-events-none absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2"
-                style={{ background: "rgba(255,255,255,0.12)" }}
-              />
-              <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] gap-10 lg:gap-16 items-center">
-                <div>
-                  <div className="font-mono text-[11.5px] font-medium tracking-[0.22em] uppercase mb-3" style={{ color: "rgba(255,255,255,0.8)" }}>
-                    GOOD TO KNOW
-                  </div>
-                  <h2
-                    className="font-display font-semibold text-white leading-[1.25]"
-                    style={{ fontSize: "clamp(26px,3.2vw,36px)" }}
-                  >
-                    The parts that matter most.
-                  </h2>
-                  <div className="mt-6 space-y-4">
-                    {[
-                      { k: "Coverage", v: "All paid courses, automatically." },
-                      { k: "Eligibility", v: "Any purchase, within 3 days of payment." },
-                      { k: "Free usage", v: "First 5 lessons and 1 mock exam are on us." },
-                      { k: "Approval", v: "Card refunds are automatic; wallets are approved by us." },
-                      { k: "Refund amount", v: "100%, never minus a fee." },
-                    ].map((row) => (
-                      <div
-                        key={row.k}
-                        className="flex items-baseline gap-4 pb-4"
-                        style={{ borderBottom: "1px solid rgba(255,255,255,0.16)" }}
-                      >
-                        <span className="text-[13px] font-bold text-white/90 w-[110px] shrink-0">{row.k}</span>
-                        <span className="text-[14px]" style={{ color: "rgba(255,255,255,0.85)" }}>{row.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* Eligibility */}
+        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div className="mb-8">
+              <SectionLabel>Eligibility</SectionLabel>
+              <h2
+                className="font-display font-semibold tracking-[-0.015em]"
+                style={{ fontSize: "clamp(24px,3vw,32px)", color: "var(--ink)" }}
+              >
+                What is and isn&apos;t covered.
+              </h2>
+            </div>
 
-                <div
-                  className="rounded-2xl p-7 backdrop-blur-[2px]"
-                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.22)" }}
-                >
-                  <div className="text-[15px] font-semibold text-white">The 3-day rule</div>
-                  <div className="mt-2 text-[13.5px] leading-[1.75]" style={{ color: "rgba(255,255,255,0.85)" }}>
-                    Your refund window starts the moment payment is completed. Raise a
-                    claim any time within those 3 days and you get 100% back.
-                  </div>
-                    <ul className="mt-5 space-y-2.5">
-                    {[
-                      "No forms to fill in",
-                      "Claim straight from My Orders",
-                      "Refund to your original payment method",
-                      "Play 5 lessons and 1 mock exam on us",
-                    ].map((t) => (
-                      <li key={t} className="flex items-start gap-2.5 text-[13.5px] font-medium text-white">
-                        <CheckCircle2 className="w-[17px] h-[17px] mt-[1px] shrink-0" style={{ color: "#7CF0BD" }} strokeWidth={2.4} />
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
+            <div className="grid md:grid-cols-2 gap-4">
+              <Panel className="p-6 md:p-7">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <Check className="w-[15px] h-[15px]" strokeWidth={3} style={{ color: "var(--brand-2)" }} />
+                  <span className="text-[13px] font-semibold uppercase" style={{ color: "var(--ink)", letterSpacing: "0.1em" }}>
+                    Covered
+                  </span>
                 </div>
-              </div>
+                <ul className="space-y-3.5">
+                  {covered.map((t) => (
+                    <li key={t} className="flex items-start gap-3">
+                      <span
+                        className="mt-[7px] w-[5px] h-[5px] rounded-full shrink-0"
+                        style={{ background: "var(--brand-2)" }}
+                      />
+                      <span className="text-[14px] leading-[1.65]" style={{ color: "var(--body)" }}>
+                        {t}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+
+              <Panel className="p-6 md:p-7">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <Minus className="w-[15px] h-[15px]" strokeWidth={3} style={{ color: "var(--body)" }} />
+                  <span className="text-[13px] font-semibold uppercase" style={{ color: "var(--ink)", letterSpacing: "0.1em" }}>
+                    Not covered
+                  </span>
+                </div>
+                <ul className="space-y-3.5">
+                  {notCovered.map((t) => (
+                    <li key={t} className="flex items-start gap-3">
+                      <span
+                        className="mt-[7px] w-[5px] h-[5px] rounded-full shrink-0"
+                        style={{ background: "var(--line)" }}
+                      />
+                      <span className="text-[14px] leading-[1.65]" style={{ color: "var(--body)" }}>
+                        {t}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
             </div>
           </div>
         </section>
 
         {/* FAQ */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(64px,8vw,104px)]">
-          <div className="max-w-[820px] mx-auto">
-            <div className="text-center mb-11">
-              <div
-                className="inline-flex items-center gap-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] px-4 py-2 mb-5"
-                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-              >
-                <HelpCircle className="w-[13px] h-[13px]" strokeWidth={2.2} />
-                FAQ
-              </div>
+        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div className="mb-8">
+              <SectionLabel>
+                <span className="inline-flex items-center gap-2">
+                  <HelpCircle className="w-[12px] h-[12px]" strokeWidth={2.4} />
+                  Questions
+                </span>
+              </SectionLabel>
               <h2
-                className="font-display font-semibold tracking-[-0.01em]"
-                style={{ fontSize: "clamp(26px,3.2vw,36px)", color: "var(--ink)" }}
+                className="font-display font-semibold tracking-[-0.015em]"
+                style={{ fontSize: "clamp(24px,3vw,32px)", color: "var(--ink)" }}
               >
-                Questions, answered.
+                The details people ask about.
               </h2>
             </div>
 
-            <div className="space-y-3.5">
-              {faqs.map((f) => (
+            <Panel>
+              {faqs.map((f, i) => (
                 <details
                   key={f.q}
-                  className="refund-faq rounded-xl border bg-white px-6 md:px-7 py-5"
-                  style={{ borderColor: "var(--line)" }}
+                  className="refund-faq px-6 md:px-8 py-5"
+                  style={i > 0 ? { borderTop: "1px solid var(--line)" } : undefined}
                 >
-                  <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
-                    <span className="font-display text-[15.5px] font-semibold leading-[1.4]" style={{ color: "var(--ink)" }}>
+                  <summary className="flex items-center justify-between gap-6 cursor-pointer list-none">
+                    <span
+                      className="font-display text-[15.5px] font-semibold leading-[1.45]"
+                      style={{ color: "var(--ink)" }}
+                    >
                       {f.q}
                     </span>
                     <span
-                      className="w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 transition-transform duration-200"
-                      style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                      className="refund-faq-icon w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 transition-all duration-200"
+                      style={{ border: "1px solid var(--line)", color: "var(--ink)" }}
                     >
-                      <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                      <svg className="w-[12px] h-[12px]" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 5V19M5 12H19"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </span>
                   </summary>
-                  <p className="mt-3.5 text-[14.5px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                  <p
+                    className="mt-3.5 text-[14.5px] leading-[1.75] max-w-[720px]"
+                    style={{ color: "var(--body)" }}
+                  >
                     {f.a}
                   </p>
                 </details>
               ))}
-            </div>
+            </Panel>
           </div>
         </section>
 
         {/* Contact */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[110px]">
-          <div className="max-w-[1020px] mx-auto text-center">
-            <h2
-              className="font-display font-semibold tracking-[-0.01em]"
-              style={{ fontSize: "clamp(26px,3.2vw,36px)", color: "var(--ink)" }}
+        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(64px,8vw,104px)] pt-[clamp(24px,3vw,40px)]">
+          <div className="max-w-[880px] mx-auto">
+            <div
+              className="rounded-2xl p-[clamp(28px,4vw,44px)] relative overflow-hidden"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(135deg, #0B5E46, #0E7A55 55%, #14B57E)",
+                backgroundSize: "36px 36px, 36px 36px, auto",
+              }}
             >
-              Still have a question?
-            </h2>
-            <p className="mt-4 text-[15.5px] max-w-[480px] mx-auto" style={{ color: "var(--body)" }}>
-              Refunds are automatic, but our team is always one message away for everything else.
-            </p>
-            <div className="mt-10 grid sm:grid-cols-3 gap-4">
-              {contactCards.map((c) => (
-                <a
-                  key={c.label}
-                  href={c.href}
-                  target={c.external ? "_blank" : undefined}
-                  rel={c.external ? "noopener noreferrer" : undefined}
-                  className="group rounded-xl border bg-white p-6 text-center transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_36px_-18px_rgba(18,32,67,0.2)]"
-                  style={{ borderColor: "var(--line)" }}
+              <div
+                className="absolute top-0 right-0 w-[280px] h-[280px] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"
+                style={{ background: "rgba(255,255,255,0.1)" }}
+              />
+              <div className="relative">
+                <div
+                  className="font-mono text-[11px] font-medium uppercase mb-3"
+                  style={{ color: "rgba(255,255,255,0.75)", letterSpacing: "0.2em" }}
                 >
-                  <span
-                    className="w-11 h-11 rounded-[12px] flex items-center justify-center mx-auto mb-4 transition-colors duration-300 group-hover:bg-[var(--brand)]"
-                    style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                  >
-                    <c.icon className="w-[19px] h-[19px]" strokeWidth={2} />
+                  Contact
+                </div>
+                <h2
+                  className="font-display text-[clamp(24px,3vw,32px)] font-semibold text-white tracking-[-0.02em] max-w-[540px]"
+                >
+                  Something not covered here?
+                </h2>
+                <p
+                  className="text-[14.5px] leading-[1.7] max-w-[520px] mt-3 mb-8"
+                  style={{ color: "rgba(255,255,255,0.85)" }}
+                >
+                  Send us your order number and we will tell you exactly where you stand — in plain
+                  language, usually the same day.
+                </p>
+                <div className="grid sm:grid-cols-3 gap-3.5">
+                  {[
+                    {
+                      icon: Mail,
+                      label: "Email",
+                      value: "support@flybridgeedu.com",
+                      href: "mailto:support@flybridgeedu.com",
+                    },
+                    {
+                      icon: Phone,
+                      label: "Phone",
+                      value: "+1 (778) 676-8459",
+                      href: "tel:+17786768459",
+                    },
+                    {
+                      icon: MapPin,
+                      label: "Location",
+                      value: "Toronto, Ontario, Canada",
+                      href: "https://maps.google.com/?q=757+Gladstone+Avenue+Toronto",
+                      external: true,
+                    },
+                  ].map((c) => (
+                    <a
+                      key={c.label}
+                      href={c.href}
+                      target={c.external ? "_blank" : undefined}
+                      rel={c.external ? "noopener noreferrer" : undefined}
+                      className="group rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-[2px] transition-all duration-300 hover:bg-white/15"
+                    >
+                      <div
+                        className="font-mono text-[9.5px] font-medium uppercase"
+                        style={{ color: "rgba(255,255,255,0.6)", letterSpacing: "0.2em" }}
+                      >
+                        {c.label}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 mt-[6px]">
+                        <span className="text-[13.5px] font-medium leading-snug" style={{ color: "#fff" }}>
+                          {c.value}
+                        </span>
+                        <c.icon
+                          className="w-[14px] h-[14px] shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"
+                          strokeWidth={2}
+                          style={{ color: "#fff" }}
+                        />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+                <div className="mt-7 flex items-center gap-2.5">
+                  <CreditCard className="w-[15px] h-[15px] shrink-0" style={{ color: "rgba(255,255,255,0.7)" }} />
+                  <span className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    Refunds always return to the original payment method. We never issue credit
+                    or store credit in place of cash.
                   </span>
-                  <div className="text-[12px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
-                    {c.label}
-                  </div>
-                  <div className="text-[15px] font-semibold mt-1.5" style={{ color: "var(--ink)" }}>
-                    {c.value}
-                  </div>
+                </div>
+                <a
+                  href="/dashboard/orders"
+                  className="inline-flex items-center gap-2 mt-6 text-[13.5px] font-semibold"
+                  style={{ color: "#fff" }}
+                >
+                  Go to My Orders
+                  <ArrowRight className="w-[15px] h-[15px]" strokeWidth={2.2} />
                 </a>
-              ))}
+              </div>
             </div>
           </div>
         </section>
@@ -411,8 +613,7 @@ export default function RefundPage() {
 
       <style>{`
         .refund-faq summary::-webkit-details-marker { display: none; }
-        .refund-faq[open] summary { margin-bottom: 0; }
-        .refund-faq[open] summary span:last-child { transform: rotate(45deg); }
+        .refund-faq[open] .refund-faq-icon { transform: rotate(45deg); }
       `}</style>
     </>
   );
