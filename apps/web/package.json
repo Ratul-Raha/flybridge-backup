@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "promote": "node scripts/promote-user.mjs",
     "gen-vapid": "node scripts/gen-vapid.mjs",
+    "ga4-oauth": "node scripts/ga4-oauth-login.mjs",
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {

@@ -33,24 +33,53 @@ the GA4 property.
 | File | Role |
 | --- | --- |
 | `lib/analytics/types.ts` | Shared response types (no `server-only`, so components can import them) |
-| `lib/analytics/ga.ts` | Data API client, service-account auth, config detection, 15s memo cache |
+| `lib/analytics/ga.ts` | Data API client, credential resolution, config detection, 15s memo cache |
 | `lib/analytics/traffic.ts` | Query layer — live window, per-minute series, breakdowns, today |
 | `app/api/admin/analytics/traffic/route.ts` | Admin-guarded endpoint, `?minutes=` clamped to 5/15/30/60 |
 | `components/dashboard/reports/analytics/` | Dashboard UI (see below) |
 | `app/dashboard/admin/analytics/page.tsx` | Admin-only page |
+| `scripts/ga4-oauth-login.mjs` | Mints an OAuth refresh token when no service-account key is available |
 
 ## Setup
 
-1. GA4 → Admin → Property settings → copy the **numeric Property ID** (not the
-   `G-XXXXXXXXXX` measurement id) → `GA4_PROPERTY_ID`.
-2. Google Cloud → enable the Analytics Data API → create a service account → download
+`GA4_PROPERTY_ID` is always required: GA4 → Admin → Property settings → copy the
+**numeric Property ID** (not the `G-XXXXXXXXXX` measurement id).
+
+Whichever credential route you use, the identity behind it needs the **Viewer** role
+on the property (GA4 → Admin → Property access management).
+
+### A. Service account (conventional)
+
+1. Google Cloud → enable the Analytics Data API → create a service account → download
    a JSON key.
-3. GA4 → Admin → Property access management → add the service account with `Viewer`.
-4. `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY` (keep the `\n` escapes).
+2. `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY` (keep the `\n` escapes).
    Alternatively `GA4_SERVICE_ACCOUNT_JSON` (whole JSON on one line) or
    `GOOGLE_APPLICATION_CREDENTIALS` (path to the key file, local dev only).
 
-Until these are set the page renders the missing variable names instead of an error.
+Long-lived key material, so it needs the usual hygiene: encrypted env vars only,
+never committed, rotate on any exposure.
+
+### B. OAuth login for your own account (no key)
+
+Use this when key creation isn't available — no IAM or key-management step, and the
+resulting secret is revocable rather than a key you have to delete.
+
+1. Google Cloud → APIs & Services → Credentials → **Create credentials → OAuth client
+   ID** → Application type **Desktop app**.
+2. `pnpm ga4-oauth <client_id> <client_secret>` → opens the consent screen and prints
+   `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REFRESH_TOKEN`.
+   Or collapse the whole `authorized_user` JSON into `GA4_OAUTH_JSON`.
+
+The account you sign in with needs **Viewer** on the property, granted to you rather
+than to a service account. The refresh token renews its own short-lived access token,
+so it works unattended on Vercel.
+
+Note the tradeoff: this authenticates as a *person*, so queries are attributed to your
+account rather than a machine identity. Fine for a single low-volume admin dashboard;
+prefer route A if you expect heavy automated querying.
+
+Until either route is configured the page renders the missing variable names instead
+of an error.
 
 ## Dashboard
 
@@ -72,7 +101,7 @@ Until these are set the page renders the missing variable names instead of an er
 - **Empty minutes.** GA omits minutes with no traffic, which would give the chart a
   ragged axis — the series is backfilled across the window.
 - **Privacy.** Page titles and referrer URLs are only ever read by the admin-only,
-  `Viewer`-scoped service account. Nothing is persisted locally; this is a read path,
+  `Viewer`-scoped identity. Nothing is persisted locally; this is a read path,
   not a second copy of anyone's browsing.
 - **Bundle.** `@google-analytics/data` is a Node gRPC library, so it is listed in
   `experimental.serverComponentsExternalPackages` and stays a server-side require
