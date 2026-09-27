@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
@@ -136,28 +135,29 @@ export async function generateMetadata(): Promise<Metadata> {
 const N = toBn(MOCK_TEST_COUNT);
 
 const COPY = {
-  heroSub: `কম্পিউটারে IELTS দেবেন? তাহলে প্র্যাকটিসও কম্পিউটারেই করুন। বুঝিয়ে শেখানো সেলফ-পেসড এক্সপ্লেইনার লেসন, সাথে ${N}টি ফ্রি কম্পিউটার-বেসড মক টেস্ট। সব এক কোর্সে, লাইফটাইম অ্যাক্সেসসহ।`,
+  heroSub: `প্রতিটি টপিক ভেঙে ভেঙে শেখানো সেলফ পেইসড এক্সপ্লেইনার লেসন, সাথে ${N}টি ফ্রী কম্পিউটার বেইজড মক টেস্ট, কুইজ, পর্যাকটিস, বই, সব, লাইভ ক্লাস।`,
   windowCaption: "আমাদের মক টেস্টের ডেমো সিমুলেশন",
+  heroChips: ["সেলফ পেইসড", `${N}টি মক টেস্ট`, "কুইজ ও প্র্যাকটিস", "ডিজিটাল বই", "লাইভ ক্লাস", "লাইফটাইম অ্যাক্সেস"],
 
   systemTitle: "শিখুন, প্র্যাকটিস করুন, নিজেকে যাচাই করুন",
-  systemDesc: "তিনটা কাজ এক জায়গায়। আলাদা কোর্স, আলাদা ফাইল আর আলাদা মক টেস্ট সাইট খুঁজে বেড়াতে হবে না।",
+  systemDesc: "আলাদা কোর্স, আলাদা ফাইল আর আলাদা মক টেস্ট সাইট খুঁজে বেড়াতে হবে না।",
 
-  mockTitle: `${N}টি ফুল মক টেস্ট, ঠিক পরীক্ষার স্ক্রিনের মতো`,
+  mockTitle: `${N}টি মক টেস্ট, ঠিক মূল আইইএলটিএস পরীক্ষার স্ক্রিনের মতো`,
   mockDesc:
-    "আমরা বানিয়েছি বিশ্বের সেরা কম্পিউটার-বেসড মক টেস্ট অভিজ্ঞতা, যাতে পরীক্ষার দিন স্ক্রিন দেখে চমকে না যান। টাইমার, নেভিগেশন, প্রশ্নের লেআউট, সব হাতের মুঠোয় আগেই চেনা হয়ে যাবে।",
+    "আমরা দিচ্ছি বিশ্বের সেরা কম্পিউটার-বেসড মক টেস্টের অভিজ্ঞতা , যাতে পরীক্ষার দিন স্ক্রিন দেখে চমকে না যান। টাইমার, নেভিগেশন, প্রশ্নের লেআউট, সব হাতের মুঠোয় আগেই চেনা হয়ে যাবে।",
   mockNote: "মক টেস্ট দিতে ডেস্কটপ বা ল্যাপটপ লাগবে।",
 
-  bookTitle: "সম্পূর্ণ কোর্সের একটি ডিজিটাল বই",
+  bookTitle: "সম্পূর্ণ কোর্সের একটি পিডিএফ বই",
   bookTicks: [
     "মডেল আনসার আর প্র্যাকটিস টেস্টসহ",
     "মোবাইল বা কম্পিউটার, যেখানে ইচ্ছা পড়ুন",
     "লাইফটাইম আপনার অ্যাকাউন্টে থাকবে",
   ],
 
-  closeTitle: "পরীক্ষার হলে স্ক্রিনটাও যেন চেনা লাগে।",
-  closeWaitlist: "শুধু যারা এখন ওয়েটলিস্টে জয়েন করবে, তারাই স্কলারশিপ প্রাইসে পাবে।",
+  closeTitle: "মূল পরীক্ষার সময় ক্রিনটাও যেন চেনা লাগে।",
+  closeWaitlist: "শুধুমাত্র যারা এখন ওয়েটলিস্টে জয়েন করবেন, তারাই ১৫% স্কলারশিপ পাবেন।",
   closeBuy: "একবার ভর্তি হলে লেসন আর মক টেস্ট সব আপনার, লাইফটাইম।",
-  closeIncluded: "প্যাকেজে যা যা পাচ্ছ",
+  closeIncluded: "প্যাকেজে যা যা পাচ্ছেন",
 };
 
 /* ───────────────────────── atoms ───────────────────────── */
@@ -420,64 +420,54 @@ function Hero({
   lessonCount: number;
   pricingNote?: string;
 }) {
-  const status =
-    offer.mode === "enrolled" ? "ভর্তি আছো" : offer.mode === "buy" ? "ভর্তি চলছে" : "ওয়েটলিস্ট খোলা";
-
   return (
     <section id="ielts-hero" style={{ background: "var(--ib-fog)" }}>
       <div className={`${wrap} pt-[104px] sm:pt-[124px] pb-14 lg:pb-20`}>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-12 lg:gap-16 items-start">
           <Reveal>
-            <a href="/" className="inline-block mb-6" aria-label="FlyBridge Education Group">
-              <Image
-                src="/transparent-logo-dark.png"
-                alt="FlyBridge Education Group"
-                width={113}
-                height={38}
-                className="w-auto h-[32px] object-contain"
-              />
-            </a>
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[14.5px] font-semibold" style={{ color: "var(--ib-ink)" }}>
-                <BengaliText>{title}</BengaliText>
-              </span>
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[13px] font-semibold bg-white"
-                style={{ border: "1px solid var(--ib-line)", color: "var(--ib-brand-2)" }}
-              >
-                <span
-                className="ib-dot w-[7px] h-[7px] rounded-full"
-                style={{ background: "var(--ib-brand)" }}
-              />
-                <BengaliText>{status}</BengaliText>
-              </span>
-            </div>
-
             <h1
-              className="font-display font-bold leading-[1.18] mt-5 max-w-[640px]"
-              style={{ fontSize: "clamp(34px,4.6vw,60px)", color: "var(--ib-ink)", letterSpacing: "-0.015em" }}
+              className="font-display font-bold leading-[1.14] max-w-[640px]"
+              style={{ fontSize: "clamp(32px,4.2vw,54px)", color: "var(--ib-ink)", letterSpacing: "-0.018em" }}
             >
               <BengaliText>{title}</BengaliText>
             </h1>
             {details?.titleAccent && (
-              <p
-                className="mt-5 pl-4 text-[16.5px] font-bold tracking-wide"
-                style={{ color: "var(--ib-brand-2)", borderLeft: "3px solid var(--ib-brand)" }}
+              <span
+                className="mt-5 inline-flex items-center rounded-full px-3.5 py-1.5 text-[14px] font-bold"
+                style={{ background: "var(--ib-mint)", color: "#052117" }}
               >
                 <BengaliText>{details.titleAccent}</BengaliText>
-              </p>
+              </span>
             )}
-            <p className="mt-5 text-[17px] leading-[1.9] max-w-[560px]" style={{ color: "var(--ib-body)" }}>
+            <p className="mt-5 text-[16.5px] leading-[1.85] max-w-[560px]" style={{ color: "var(--ib-body)" }}>
               <BengaliText>{COPY.heroSub}</BengaliText>
             </p>
 
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {COPY.heroChips.map((chip) => (
+                <li
+                  key={chip}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[13.5px] font-semibold"
+                  style={{ border: "1px solid var(--ib-line)", color: "var(--ib-ink)" }}
+                >
+                  <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                  <BengaliText>{chip}</BengaliText>
+                </li>
+              ))}
+            </ul>
+
             {offer.mode === "waitlist" && (
-              <div className="mt-6">
+              <div className="mt-7">
                 <Countdown target={LAUNCH_DATE} />
               </div>
             )}
 
-            <OfferCard offer={offer} note={pricingNote} className="mt-8 max-w-[520px]" />
+            <div
+              className="mt-8 max-w-[520px] rounded-2xl bg-white p-6"
+              style={{ border: "1px solid var(--ib-line)" }}
+            >
+              <OfferCard offer={offer} note={pricingNote} />
+            </div>
           </Reveal>
 
           <Reveal delay={0.15}>
@@ -518,7 +508,7 @@ function SystemSection({
       verb: "প্র্যাকটিস করুন",
       title: "মডিউল শেষে চ্যালেঞ্জ",
       text: hasBook
-        ? "প্রতিটি লেসনের সাথেই রয়েছে প্র্যাকটিস টেস্ট, বারবার টেস্ট দিন, প্রতিবার নতুন প্রশ্নে"
+        ? "প্রতিটি লেসনের সাথেই রয়েছে রিজেনারেটিভ কুইজ, প্রতিবার কুইজ দিন নতুন নতুন প্রশ্নে"
         : "যা শিখবেন, সাথে সাথে কাজে লাগান। প্রতিটা মডিউল শেষে একটা করে চ্যালেঞ্জ।",
       chip: hasBook ? "ডিজিটাল বইসহ" : "প্রতি মডিউলে একটা",
     },
@@ -750,15 +740,15 @@ function CurriculumSection({
 function HighlightsSection({ details, lessonCount }: { details: CourseDetails; lessonCount: number }) {
   // Fallback only states things that are always true for this course.
   const highlights = details.highlights ?? [
-    { title: `${toBn(lessonCount)}টি সেলফ-পেসড এক্সপ্লেইনার লেসন`, sub: "নিজের সময়মতো, নিজের গতিতে দেখো" },
+    { title: `${toBn(lessonCount)}টি সেলফ-পেসড এক্সপ্লেইনার লেসন`, sub: "নিজের সময়মতো, নিজের গতিতে দেখুন" },
     { title: `${N}টি ফ্রি কম্পিউটার-বেসড মক টেস্ট`, sub: "রিডিং, রাইটিং আর লিসেনিং" },
-    { title: "লাইফটাইম অ্যাক্সেস", sub: "যতবার ইচ্ছা, যখন ইচ্ছা ফিরে আসো" },
+    { title: "লাইফটাইম অ্যাক্সেস", sub: "আপনার সুবিধামত সময়ে কোর্স করুন" },
   ];
   return (
     <section className={sectionY} style={{ background: "#fff" }}>
       <div className={wrap}>
         <Reveal>
-          <Heading title="কোর্সে যা শিখবে" desc={details.highlightsDesc} />
+          <Heading title="কোর্সে যা শিখবেন" desc={details.highlightsDesc} />
         </Reveal>
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-9">
           {highlights.map((item, i) => (
@@ -808,7 +798,7 @@ function BookBand({ book }: { book: CourseBook }) {
               <BengaliText>{book.title}</BengaliText>
             </div>
             <div className="mt-auto text-[12.5px] font-semibold" style={{ color: "var(--ib-mint)" }}>
-              <BengaliText>ডিজিটাল প্র্যাকটিস বই</BengaliText>
+              <BengaliText>পিডিএফ বই</BengaliText>
             </div>
           </div>
         </div>
@@ -851,7 +841,7 @@ function BookBand({ book }: { book: CourseBook }) {
 
 function RefundSection() {
   const facts = [
-    { value: "৩ দিন", label: "রিফান্ড উইন্ডো" },
+    { value: "১ দিন", label: "রিফান্ড উইন্ডো" },
     { value: "১০০%", label: "টাকা ফেরত" },
     { value: "৭–১৫", label: "কার্যদিবসে টাকা পাবেন" },
   ];
@@ -877,12 +867,12 @@ function RefundSection() {
                   className="font-display font-semibold leading-[1.4]"
                   style={{ fontSize: "clamp(26px,3.1vw,38px)", color: "var(--ib-ink)" }}
                 >
-                  <BengaliText>কোর্সটা ভালো না লাগলে ৩ দিনে ১০০% টাকা ফেরত</BengaliText>
+                  <BengaliText>কোর্সটা ভালো না লাগলে ১ দিনে ১০০% টাকা ফেরত</BengaliText>
                 </h2>
                 <p className="mt-4 text-[16px] leading-[1.9]" style={{ color: "var(--ib-body)" }}>
                   <BengaliText>
                     কেনার ৩ দিনের মধ্যে যেকোনো কারণে কোর্সটা যদি আপনার পছন্দ না হয়, রিফান্ড দাবি করলেই
-                    পুরো টাকা ফেরত পাবেন। কোনো ঝামেলা নেই, কোনো প্রশ্ন নেই।
+                    পুরো টাকা ফেরত পাবেন। 
                   </BengaliText>
                 </p>
                 <div className="mt-7 grid grid-cols-3 gap-4">
@@ -927,13 +917,13 @@ function RefundSection() {
                 <div className="flex items-start gap-3">
                   <Check className="w-[18px] h-[18px] mt-[2px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
                   <p className="text-[15px] leading-[1.8]" style={{ color: "var(--ib-ink)" }}>
-                    <BengaliText>অনুমোদনের পর <span className="font-bold">১০০% টাকা</span> ফেরত পাবেন।</BengaliText>
+                    <BengaliText>এপ্রুভালের পর <span className="font-bold">১০০% টাকা</span> ফেরত পাবেন।</BengaliText>
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-[18px] h-[18px] mt-[2px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
                   <p className="text-[15px] leading-[1.8]" style={{ color: "var(--ib-ink)" }}>
-                    <BengaliText>টাকা ফেরত আসতে <span className="font-bold">৭–১৫ কার্যদিবস</span> লাগে।</BengaliText>
+                    <BengaliText>আপনার একাউন্টে রিফান্ড যেতে <span className="font-bold">৭–১৫ কার্যদিবস</span> লাগে।</BengaliText>
                   </p>
                 </div>
               </div>
@@ -1269,14 +1259,14 @@ export default async function IeltsFullReadinessLandingPage() {
           <Heading
             className="mx-auto [&_h2]:mx-auto [&_p]:mx-auto"
             title="এই কোর্সটা এখনো প্রস্তুত হচ্ছে"
-            desc="ভিডিও লেসন, রিসোর্স আর ফুল কারিকুলাম রেডি হলেই এখানে দেখতে পাবে। একটু পরে আবার দেখো।"
+            desc="ভিডিও লেসন, রিসোর্স আর ফুল কারিকুলাম রেডি হলেই এখানে দেখতে পাবেন।"
           />
           <Link
             href="/programs"
             className="ib-cta mt-8 inline-flex items-center gap-2.5 font-bold text-[15px] text-white rounded-full px-7 py-[14px]"
             style={{ background: "var(--ib-brand)" }}
           >
-            <BengaliText>প্রোগ্রামে ফিরে যাও</BengaliText>
+            <BengaliText>প্রোগ্রামে ফিরে যান</BengaliText>
             <ArrowRight className="w-[16px] h-[16px]" strokeWidth={2.4} />
           </Link>
         </section>
