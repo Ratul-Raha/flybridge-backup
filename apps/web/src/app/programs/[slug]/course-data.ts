@@ -739,14 +739,14 @@ export const courseDetails: Record<string, CourseDetails> = {
     ],
     problem: {
       title: "বেশিরভাগ IELTS কোর্স শুধু টিপস শেখায়, পরীক্ষাটা শেখায় না",
-      desc: '"বেশি প্র্যাকটিস করো", "ভালো ভোকাবুলারি ইউজ করো" — এইসব জেনারেল কথা তো সবাই বলে। কিন্তু আসল প্রশ্ন হলো — Band 6 আর Band 7-এর উত্তরের মধ্যে আসলে পার্থক্যটা কোথায়? পরীক্ষার পুরো ৪০টা প্রশ্ন একসাথে কেমন দেখতে হয়, সেটা কখনো দেখেছেন? বেশিরভাগ কোর্স ঠিক এই জায়গাতেই আটকে যায়। আর এই গ্যাপ দূর করতেই এসেছে IELTS Band Score Machine।',
+      desc: '"বেশি প্র্যাকটিস করো", "ভালো ভোকাবুলারি ইউজ করো" — এইসব জেনারেল কথা তো সবাই বলে। কিন্তু আসল প্রশ্ন হলো — Band 6 আর Band 7-এর উত্তরের মধ্যে আসলে পার্থক্যটা কোথায়? বেশিরভাগ কোর্স ঠিক এই জায়গাতেই আটকে যায়। আর এই গ্যাপ দূর করতেই এসেছে IELTS Band Score Machine।',
     },
     steps: {
       title: "একটা সিস্টেম। চারটা স্কিল। পরীক্ষা যেভাবে হয়, ঠিক সেভাবেই তৈরি।",
       cards: [
         {
           title: "১. আসল জিনিসটা দেখুন",
-          desc: "ভিডিওর মাধ্যমে রিয়েল টেস্ট ফরম্যাট, রিয়েল মডেল আনসার ও এক্সাম-লেভেলের মেটেরিয়াল — কোনো সহজ ফেইক এক্সাম্পল নয়।",
+          desc: "ভিডিওর মাধ্যমে রিয়েল টেস্ট ফরম্যাট, রিয়েল মডেল আনসার ও এক্সাম-লেভেলের মেটেরিয়াল।",
         },
         {
           title: "২. পার্থক্যটা বুঝুন",
@@ -794,12 +794,12 @@ export const courseDetails: Record<string, CourseDetails> = {
       {
         icon: BookOpen,
         title: "Companion Book (PDF)",
-        desc: "২৫টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
+        desc: "৩০টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
       },
     ],
     book: {
       title: "IELTS Band Score Machine — Companion Book",
-      desc: "২৫টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
+      desc: "৩০টি ভিডিও মাস্টারক্লাসের সঙ্গে পাচ্ছেন একটি সম্পূর্ণ Companion PDF—যেখানে প্রতিটি লেসনের গুরুত্বপূর্ণ বিষয়, Model Answer, Band 6 ও Band 7-এর পার্থক্য এবং Practice Test একসাথে দেওয়া আছে। ভিডিও দেখুন, PDF দিয়ে রিভিশন করুন, আর নিজের প্রস্তুতি যাচাই করুন।",
       includedNote: "The complete companion book is included free with every enrollment.",
       image: "/programs/ielts-band-score-machine-book.svg",
     },
@@ -808,63 +808,70 @@ export const courseDetails: Record<string, CourseDetails> = {
       { title: "Writing Task 1 ও Task 2-এর Band 7 স্ট্রাকচার নিজে লিখতে পারবেন" },
       { title: "Listening-এর প্রতিটা সেকশনে ফাঁদ চিনে সঠিক উত্তর ধরতে পারবেন" },
       { title: "Reading-এ সময় ভাগ করে True/False/Not Given সহ সব প্রশ্নে দক্ষ হবেন" },
-      { title: "ওয়েবসাইটে একাধিক ফুল-লেংথ মক টেস্টে নিজের স্কোর যাচাই করতে পারবেন" },
+      { title: "ওয়েবসাইটে একাধিক মক টেস্টে নিজের স্কোর যাচাই করতে পারবেন" },
       { title: "পরীক্ষার দিনের জন্য IELTS Band Score Machine-এর প্রমাণিত ফ্রেমওয়ার্ক পাবেন" },
     ],
     curriculum: {
       label: "কারিকুলাম",
-      title: "২৫টা লেসন, ৪টা মডিউল",
+      title: "৩০টা লেসন, ৪টা মডিউল",
       subtitle: "কোনো কনফিউশন নেই — প্রতিটা মডিউল আপনাকে ব্যান্ড ৮+ এর দিকে এগিয়ে নিয়ে যাবে",
       modules: [
         {
           title: "IELTS Speaking Mastery",
-          lessonCount: "৬টা লেসন",
+          lessonCount: "৭টা লেসন",
           items: [
             "Speaking Test আর Band Descriptors-এর সম্পূর্ণ ওভারভিউ",
             "Part 1: দ্রুত উত্তর দেওয়া আর উত্তর বাড়ানোর কৌশল",
             "Part 2 Cue Card: ১ মিনিট প্রস্তুতি, ২ মিনিট বলা",
             "Part 3: Abstract Reasoning আর PREP Method",
             "দ্বিধা ও ভুল সংশোধন এড়ানোর উপায়",
+            "Speaking Mock Test: প্র্যাকটিস ও রিভিউ",
           ],
           capstone: "৩০টা সম্পূর্ণ মডেল আনসার",
         },
         {
           title: "IELTS Writing Mastery",
-          lessonCount: "৬টা লেসন",
+          lessonCount: "৭টা লেসন",
           items: [
             "Task 1: Band Descriptors, Tone আর Overview লেখা",
             "Academic Task 1: Line Graph, Bar Chart, Table, Process",
             "GT Task 1: Formal, Semi-Formal, Informal লেটার",
             "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং",
             "Task 2-এর Band 7 ভোকাবুলারি ও Cohesive Devices",
+            "Writing Mock Test: Task 1 + Task 2 সম্পূর্ণ রিভিউ",
           ],
           capstone: "৫ ধরনের Essay Structure Formula",
         },
         {
           title: "IELTS Listening Mastery",
-          lessonCount: "৬টা লেসন",
+          lessonCount: "৭টা লেসন",
           items: [
             "Listening Test-এর সম্পূর্ণ গঠন ও Question Type",
             "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ",
             "Section 3 ও 4: Multiple Choice, Matching, লেকচার",
             "যেসব ফাঁদে সবাই পড়ে: Self-Correction, Distractor",
+            "Section 1-এর রিয়েল টাইম প্র্যাকটিস: নাম, নাম্বার ও তারিখ",
+            "Full Listening Mock Test ও ব্যাখ্যাসহ রিভিউ",
           ],
           capstone: "Word Limit ও ফাইনাল চেকিং সিস্টেম",
         },
         {
           title: "IELTS Reading Mastery",
-          lessonCount: "৭টা লেসন",
+          lessonCount: "৯টা লেসন",
           items: [
             "Reading-এর ভিত্তি: সময় ভাগ, Skimming ও Scanning",
             "True/False/Not Given — কনফিউশন দূর করা",
             "Matching Headings ও Paragraph Features",
             "Gapped Text ও Exact Word Rule",
             "Multiple Choice ও Paraphrased ফাঁদ ধরা",
+            "Passage 1: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা",
+            "Passage 2: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা",
+            "Full Reading Mock Test: সময় ধরে প্র্যাকটিস ও রিভিউ",
           ],
           capstone: "সম্পূর্ণ Reading Masterclass",
         },
       ],
-      note: "Listening আর Speaking-এর প্রতিটা লেসনে একটা সম্পূর্ণ, বাস্তব প্র্যাকটিস টেস্ট আছে — শুধু একটা এক্সাম্পল না। কোর্স শেষ হওয়ার আগেই আপনি পরীক্ষার প্রতিটা অংশের জন্য একাধিক ফুল-লেংথ মক টেস্ট প্র্যাকটিস করে ফেলবেন।",
+      note: "Listening আর Speaking-এর প্রতিটা লেসনে একটা সম্পূর্ণ, বাস্তব প্র্যাকটিস টেস্ট আছে — শুধু একটা এক্সাম্পল না। কোর্স শেষ হওয়ার আগেই আপনি পরীক্ষার প্রতিটা অংশের জন্য একাধিক স্ক্রিন-বেইজড মক টেস্ট প্র্যাকটিস করে ফেলবেন।",
     },
     comparison: {
       title: 'এটা আরেকটা "টিপস অ্যান্ড ট্রিকস" কোর্স না',
@@ -878,7 +885,7 @@ export const courseDetails: Record<string, CourseDetails> = {
         { left: "দুই-একটা উদাহরণ বাক্য", right: "সম্পূর্ণ মডেল আনসার, শব্দসংখ্যা ও ব্যান্ড স্কোরসহ বিশ্লেষণ" },
         {
           left: "একটা মক টেস্ট, থাকলেও থাকতে পারে",
-          right: "ওয়েবসাইটেই ১৫টা ফুল-লেংথ মক টেস্ট, ফোন বা কম্পিউটার যেকোনো ডিভাইসে",
+          right: "ওয়েবসাইটেই ১৫টি স্ক্রিন-বেইজড মক টেস্ট",
         },
         { left: "শুধু সাধারণ ভিডিও ক্লাসে সীমাবদ্ধ", right: "২৫টি ভিডিও মাস্টারক্লাস + ৫টি বোনাস ক্লাস + সম্পূর্ণ PDF বই" },
         { left: "গ্রামার-টিপস নির্ভর সেশন", right: "স্কিল-ভিত্তিক, আসল পরীক্ষা ও রিয়েল টেস্ট ফরম্যাটে সাজানো" },
@@ -893,6 +900,7 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Part 2 Cue Card: ১ মিনিট প্রস্তুতি, ২ মিনিট বলা", duration: "12:30" },
           { title: "Part 3: Abstract Reasoning আর PREP Method", duration: "13:15" },
           { title: "দ্বিধা ও ভুল সংশোধন এড়ানোর উপায়", duration: "08:50" },
+          { title: "Speaking Mock Test: প্র্যাকটিস ও রিভিউ", duration: "16:30" },
           { title: "Capstone: ৩০টা সম্পূর্ণ মডেল আনসার", duration: "18:00" },
         ],
       },
@@ -904,6 +912,7 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "GT Task 1: Formal, Semi-Formal, Informal লেটার", duration: "12:40" },
           { title: "Task 2: ৫ মিনিটে প্ল্যান করা আর প্যারাগ্রাফিং", duration: "13:50" },
           { title: "Task 2-এর Band 7 ভোকাবুলারি ও Cohesive Devices", duration: "11:35" },
+          { title: "Writing Mock Test: Task 1 + Task 2 সম্পূর্ণ রিভিউ", duration: "17:10" },
           { title: "Capstone: ৫ ধরনের Essay Structure Formula", duration: "16:20" },
         ],
       },
@@ -914,6 +923,7 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Section 1 ও 2: ফর্ম, নাম্বার, নাম, ম্যাপ — রিয়েল টেস্টসহ", duration: "15:10" },
           { title: "Section 3 ও 4: Multiple Choice, Matching, লেকচার", duration: "14:25" },
           { title: "যেসব ফাঁদে সবাই পড়ে: Self-Correction, Distractor", duration: "10:55" },
+          { title: "Section 1-এর রিয়েল টাইম প্র্যাকটিস: নাম, নাম্বার ও তারিখ", duration: "13:00" },
           { title: "Full Listening Mock Test ও ব্যাখ্যাসহ রিভিউ", duration: "18:20" },
           { title: "Capstone: Word Limit ও ফাইনাল চেকিং সিস্টেম", duration: "12:30" },
         ],
@@ -926,6 +936,8 @@ export const courseDetails: Record<string, CourseDetails> = {
           { title: "Matching Headings ও Paragraph Features", duration: "12:50" },
           { title: "Gapped Text ও Exact Word Rule", duration: "11:30" },
           { title: "Multiple Choice ও Paraphrased ফাঁদ ধরা", duration: "12:10" },
+          { title: "Passage 1: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "18:40" },
+          { title: "Passage 2: সম্পূর্ণ প্র্যাকটিস ও ব্যাখ্যা", duration: "17:25" },
           { title: "Full Reading Mock Test: সময় ধরে প্র্যাকটিস ও রিভিউ", duration: "19:15" },
           { title: "Capstone: সম্পূর্ণ Reading Masterclass", duration: "20:00" },
         ],
@@ -945,15 +957,15 @@ export const courseDetails: Record<string, CourseDetails> = {
         size: "4.2 MB",
       },
       {
-        title: "Full-Length Practice Test Pack",
-        desc: "Multiple full-length mock tests for Listening, Reading and Writing with answer keys.",
+        title: "Practice Test Pack",
+        desc: "Multiple mock tests for Listening, Reading and Writing with answer keys.",
         pages: 96,
         size: "8.6 MB",
       },
     ],
     certificate: {
       title: "Completion Certificate",
-      desc: "Earn a verified FlyBridge certificate when you complete all 25 masterclasses and the full-length practice tests.",
+      desc: "Earn a verified FlyBridge certificate when you complete all 30 masterclasses and the practice tests.",
     },
     pricing: {
       title: "১লা অক্টোবরের আগেই সিট বুক করুন",
@@ -973,7 +985,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       },
       {
         q: "এটা কি সেলফ-পেসড, নাকি নির্দিষ্ট সময়ে ক্লাস হয়?",
-        a: "২৫টা মূল মাস্টারক্লাস সেলফ-পেসড। লাইভ সেমিনার নির্দিষ্ট সময়ে হবে, কিন্তু রেকর্ড করা থাকবে।",
+        a: "২৫টা মূল মাস্টারক্লাস সেলফ-পেসড। বোনাস লাইভ ক্লাসগুলো নির্দিষ্ট সময়ে লাইভ ক্লাস হিসেবে অনুষ্ঠিত হয়।",
       },
       {
         q: "PDF বইটা কি সব প্ল্যানের সাথেই পাওয়া যাবে?",
@@ -985,7 +997,7 @@ export const courseDetails: Record<string, CourseDetails> = {
       },
       {
         q: "আমার Band Score যদি এখন অনেক কম হয়?",
-        a: "প্রতিটা মডিউলের প্রথম লেসন একদম শুরু থেকে শুরু হয় — আগে থেকে কিছু জানা থাকতে হবে না।",
+        a: "আপনার বর্তমান ব্যান্ড স্কোর আপগ্রেড করার জন্য প্রতিটি লেসন ডিজাইন করা হয়েছে।",
       },
     ],
     cta: {
