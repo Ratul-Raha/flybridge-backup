@@ -62,6 +62,9 @@ export async function isAlreadyFulfilled(
     const enrollment = await CourseEnrollment.findOne({
       user: user.id,
       course: itemId,
+      // An enrollment a refund expired does not count as fulfilled — otherwise a
+      // refunded free course could never be enrolled in again.
+      status: "active",
     });
     return !!enrollment;
   }
@@ -98,10 +101,14 @@ export async function fulfillFreeItem(
     const enrollment = await CourseEnrollment.findOneAndUpdate(
       { user: user.id, course: course._id },
       {
-        $setOnInsert: {
-          user: user.id,
-          course: course._id,
+        $setOnInsert: { user: user.id, course: course._id },
+        $set: {
           status: "active",
+          lessonsPlayed: 0,
+          lessonsOpened: [],
+          mockTestsPlayed: 0,
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
         },
       },
       { upsert: true, new: true }
@@ -341,11 +348,20 @@ export async function fulfillOrder(
     const enrollment = await CourseEnrollment.findOneAndUpdate(
       { user: order.user, course: course._id },
       {
-        $setOnInsert: {
-          user: order.user,
-          course: course._id,
+        // Only the required keys live in $setOnInsert — overlapping paths across
+        // the two operators are a write error, and $set covers the insert too.
+        $setOnInsert: { user: order.user, course: course._id },
+        // A new purchase re-opens the refund window: reactivates an enrollment a
+        // previous refund expired, and clears the usage state so the old
+        // forfeit and the old lesson set cannot carry into this order.
+        $set: {
           order: order._id,
           status: "active",
+          lessonsPlayed: 0,
+          lessonsOpened: [],
+          mockTestsPlayed: 0,
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
         },
       },
       { upsert: true, new: true }

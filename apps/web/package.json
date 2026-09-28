@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "promote": "node scripts/promote-user.mjs",
     "gen-vapid": "node scripts/gen-vapid.mjs",
     "ga4-oauth": "node scripts/ga4-oauth-login.mjs",

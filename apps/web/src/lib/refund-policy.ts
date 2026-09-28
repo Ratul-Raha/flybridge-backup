@@ -74,6 +74,21 @@ export function mocksUntilForfeit(mockTestsPlayed: number): number {
 }
 
 /**
+ * The one place the usage limits are turned into a verdict. Both the write path
+ * (which stamps the forfeit on the enrollment) and the read path (which decides
+ * whether the button is still there) call this, so a claim can never be gated on
+ * a stale or missing flag. Lessons take precedence over mocks.
+ */
+export function forfeitReasonFor(
+  lessonsPlayed: number,
+  mockTestsPlayed: number
+): RefundForfeitReason | null {
+  if (lessonsPlayed > REFUND_LESSON_LIMIT) return "lessons";
+  if (mockTestsPlayed > REFUND_MOCK_LIMIT) return "mock";
+  return null;
+}
+
+/**
  * Single decision point for whether a completed order can still be refunded.
  * Precedence matters: money already on its way out beats an expired window.
  */
@@ -94,6 +109,12 @@ export function resolveRefundView(input: {
   const lessonsPlayed = input.lessonsPlayed ?? 0;
   const mockTestsPlayed = input.mockTestsPlayed ?? 0;
   const request = input.request ?? null;
+  /**
+   * Recomputed from the counters rather than read off the enrollment, so a row
+   * that predates the feature — or one a failed write left un-stamped — still
+   * cannot be claimed.
+   */
+  const derivedForfeit = forfeitReasonFor(lessonsPlayed, mockTestsPlayed);
 
   const base = {
     orderId: input.orderId,
@@ -108,13 +129,24 @@ export function resolveRefundView(input: {
     requestStatus: request?.status ?? null,
   };
 
-  const finish = (status: RefundStatus, message: string, canClaim: boolean, windowEndsAt: Date | null): RefundView => ({
+  /**
+   * `forfeitReason` is passed in rather than echoed, because the reason that
+   * decided the status is not always the one stored on the enrollment — a
+   * counter-derived verdict has to win over a stale flag.
+   */
+  const finish = (
+    status: RefundStatus,
+    message: string,
+    canClaim: boolean,
+    windowEndsAt: Date | null,
+    forfeitReason: RefundForfeitReason | null = null
+  ): RefundView => ({
     ...base,
     status,
     canClaim,
     windowEndsAt: windowEndsAt ? windowEndsAt.toISOString() : null,
-    forfeited: Boolean(input.forfeitedAt) || status === "forfeited",
-    forfeitReason: input.forfeitReason ?? null,
+    forfeited: forfeitReason !== null,
+    forfeitReason,
     message,
   });
 
@@ -136,9 +168,9 @@ export function resolveRefundView(input: {
     return finish(request.status as RefundStatus, message, false, null);
   }
 
-  if (input.forfeitedAt) {
-    const reason = input.forfeitReason ?? "manual";
-    return finish("forfeited", FORFEIT_REASON_TEXT[reason], false, null);
+  if (input.forfeitedAt || derivedForfeit) {
+    const reason = derivedForfeit ?? input.forfeitReason ?? "manual";
+    return finish("forfeited", FORFEIT_REASON_TEXT[reason], false, null, reason);
   }
 
   const endsAt = refundWindowEnds(input.completedAt);

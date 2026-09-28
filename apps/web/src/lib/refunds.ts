@@ -6,8 +6,7 @@ import { Course } from "@/lib/models/course";
 import { Order, type OrderDoc } from "@/lib/models/order";
 import { RefundRequest, type RefundRequestDoc } from "@/lib/models/refund-request";
 import {
-  REFUND_LESSON_LIMIT,
-  REFUND_MOCK_LIMIT,
+  forfeitReasonFor,
   resolveRefundView,
   type RefundForfeitReason,
   type RefundView,
@@ -23,7 +22,10 @@ export function orderCompletedAt(order: {
 
 type EnrollmentLike = Pick<
   CourseEnrollmentDoc,
-  "lessonsPlayed" | "mockTestsPlayed" | "refundForfeitedAt" | "refundForfeitedReason"
+  | "lessonsPlayed"
+  | "mockTestsPlayed"
+  | "refundForfeitedAt"
+  | "refundForfeitedReason"
 >;
 
 type EnrollmentDocument = CourseEnrollmentDoc & { save: () => Promise<unknown> };
@@ -38,12 +40,7 @@ async function applyUsageRules(
   lessonsPlayed: number,
   mockTestsPlayed: number
 ): Promise<void> {
-  const reason: RefundForfeitReason | null =
-    lessonsPlayed > REFUND_LESSON_LIMIT
-      ? "lessons"
-      : mockTestsPlayed > REFUND_MOCK_LIMIT
-        ? "mock"
-        : null;
+  const reason = forfeitReasonFor(lessonsPlayed, mockTestsPlayed);
 
   enrollment.lessonsPlayed = lessonsPlayed;
   enrollment.mockTestsPlayed = mockTestsPlayed;
@@ -57,9 +54,10 @@ async function applyUsageRules(
 }
 
 /**
- * Records that a student played the lesson at `flatIndex`. A high-water mark, so
- * re-watching or scrubbing back never inflates the count, and it is safe to call
- * on every page load and every video range request.
+ * Records that a student played the lesson at `flatIndex`. Counted per distinct
+ * lesson, so re-watching or scrubbing back never inflates the count and it is
+ * safe to call on every page load and every video range request. Skipping
+ * ahead to lesson 20 costs one lesson, not twenty.
  */
 export async function recordLessonPlay(input: {
   userId: string;
@@ -75,10 +73,19 @@ export async function recordLessonPlay(input: {
     });
     if (!enrollment) return;
 
-    const played = Math.max(enrollment.lessonsPlayed ?? 0, input.flatIndex + 1);
-    if (played === (enrollment.lessonsPlayed ?? 0)) return;
+    const opened = new Set(enrollment.lessonsOpened ?? []);
+    if (opened.has(input.flatIndex)) return;
 
-    await applyUsageRules(enrollment, played, enrollment.mockTestsPlayed ?? 0);
+    // Enrollments created before `lessonsOpened` existed carry a high-water
+    // mark with no list behind it. Seeding the set with the recorded count keeps
+    // the total from going backwards on the first play after deploy — the count
+    // only ever grows.
+    const recorded = Math.max(0, enrollment.lessonsPlayed ?? 0);
+    while (opened.size < recorded) opened.add(-1 - opened.size);
+
+    opened.add(input.flatIndex);
+    enrollment.lessonsOpened = [...opened];
+    await applyUsageRules(enrollment, opened.size, enrollment.mockTestsPlayed ?? 0);
   } catch (error) {
     // Usage tracking must never break lesson playback.
     console.error("recordLessonPlay failed", error);
@@ -163,7 +170,7 @@ export async function orderRowsForUser(userId: string): Promise<OrderRow[]> {
     courseIds.length
       ? CourseEnrollment.find({ user: userId, course: { $in: courseIds } }).lean()
       : Promise.resolve([]),
-    RefundRequest.find({ user: userId }).lean(),
+    RefundRequest.find({ user: userId }).sort({ createdAt: -1 }).lean(),
     courseIds.length ? Course.find({ _id: { $in: courseIds } }).select("slug").lean() : Promise.resolve([]),
   ]);
 

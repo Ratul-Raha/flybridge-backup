@@ -12,6 +12,13 @@ const enrollmentSchema = new Schema(
      * REFUND_MOCK_LIMIT mock exams forfeits the refund for good.
      */
     lessonsPlayed: { type: Number, min: 0, default: 0 },
+    /**
+     * Flat indices of the distinct lessons opened, so replaying or scrubbing
+     * never re-counts. `lessonsPlayed` is this set's size, which means jumping
+     * ahead in the sidebar costs one lesson rather than the whole backlog.
+     * Reset with the rest of the usage state when a new order is paid for.
+     */
+    lessonsOpened: { type: [Number], default: [] },
     mockTestsPlayed: { type: Number, min: 0, default: 0 },
     refundForfeitedAt: { type: Date, default: null },
     refundForfeitedReason: { type: String, enum: ["lessons", "mock", "manual"], default: null },
