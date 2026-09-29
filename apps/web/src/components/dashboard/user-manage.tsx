@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Award,
   BookOpen,
@@ -46,6 +46,12 @@ type UserRow = {
   certificateDownloaded: boolean;
   readiness: number | null;
   readinessRuns: number;
+};
+
+type Recipient = {
+  id: string;
+  name: string;
+  email: string;
 };
 
 type Stats = {
@@ -129,6 +135,9 @@ const GRID_COLS = "lg:grid-cols-[44px_minmax(0,1.4fr)_140px_100px_92px_96px_120p
 const ROW_COLS = "grid-cols-[28px_minmax(0,1fr)_auto] lg:grid-cols-[44px_minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_88px]";
 
 const PAGE_SIZES = [10, 20, 50];
+
+/** Cap on 100-row pages walked when exporting a cross-page selection. */
+const MAX_EXPORT_PAGES = 20;
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   admin: { bg: "rgba(111,76,224,0.12)", fg: "#6B4CE0", label: "Admin" },
@@ -246,7 +255,10 @@ export function UserManage() {
   const [perPage, setPerPage] = useState(15);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [emailRecipients, setEmailRecipients] = useState<{ id: string; name: string; email: string }[] | null>(null);
+  const [allMatching, setAllMatching] = useState<Recipient[] | null>(null);
+  const [allMatchingTotal, setAllMatchingTotal] = useState(0);
+  const [selectingAll, setSelectingAll] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<Recipient[] | null>(null);
   const [bulkBusy, setBulkBusy] = useState<string | null>(null);
 
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -258,20 +270,25 @@ export function UserManage() {
 
   const debouncedQuery = useDebounced(query, 350);
 
+  const filterParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (debouncedQuery) params.set("q", debouncedQuery);
+    if (accountType) params.set("accountType", accountType);
+    if (subscription) params.set("subscription", subscription);
+    if (certificateDownloaded) params.set("certificateDownloaded", certificateDownloaded);
+    if (course) params.set("course", course);
+    if (seminar) params.set("seminar", seminar);
+    if (resource) params.set("resource", resource);
+    if (scoreMin) params.set("scoreMin", scoreMin);
+    if (sort && sort !== "newest") params.set("sort", sort);
+    return params;
+  }, [debouncedQuery, accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin, sort]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (debouncedQuery) params.set("q", debouncedQuery);
-      if (accountType) params.set("accountType", accountType);
-      if (subscription) params.set("subscription", subscription);
-      if (certificateDownloaded) params.set("certificateDownloaded", certificateDownloaded);
-      if (course) params.set("course", course);
-      if (seminar) params.set("seminar", seminar);
-      if (resource) params.set("resource", resource);
-      if (scoreMin) params.set("scoreMin", scoreMin);
-      if (sort && sort !== "newest") params.set("sort", sort);
+      const params = new URLSearchParams(filterParams);
       params.set("page", String(page));
       params.set("perPage", String(perPage));
       const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
@@ -289,16 +306,34 @@ export function UserManage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin, sort, page, perPage]);
+  }, [filterParams, page, perPage]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Any change to the visible list drops the current selection.
-  useEffect(() => {
+  const clearSelection = useCallback(() => {
     setSelected(new Set());
-  }, [debouncedQuery, accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin, sort, page, perPage]);
+    setAllMatching(null);
+    setAllMatchingTotal(0);
+  }, []);
+
+  // Changing the filters invalidates a "select all matching" selection.
+  const filterKey = filterParams.toString();
+  const filterKeyRef = useRef(filterKey);
+  useEffect(() => {
+    filterKeyRef.current = filterKey;
+    clearSelection();
+  }, [filterKey, clearSelection]);
+
+  // Paging keeps an all-matching selection intact, but drops hand-picked rows.
+  const allMatchingRef = useRef(false);
+  useEffect(() => {
+    allMatchingRef.current = allMatching !== null;
+  }, [allMatching]);
+  useEffect(() => {
+    if (!allMatchingRef.current) setSelected(new Set());
+  }, [page, perPage]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
@@ -310,28 +345,77 @@ export function UserManage() {
   }, []);
 
   const allOnPage = users.length > 0 && users.every((u) => selected.has(u.id));
+  const someOnPage = users.some((u) => selected.has(u.id));
+  const allSelected = allMatching !== null || allOnPage;
 
-  const toggleSelectPage = useCallback(() => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (users.every((u) => next.has(u.id))) users.forEach((u) => next.delete(u.id));
-      else users.forEach((u) => next.add(u.id));
-      return next;
-    });
-  }, [users]);
+  const headerCheckRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (headerCheckRef.current) {
+      headerCheckRef.current.indeterminate = someOnPage && !allSelected;
+    }
+  }, [someOnPage, allSelected]);
+
+  const selectAllMatching = useCallback(async () => {
+    setSelectingAll(true);
+    const key = filterParams.toString();
+    try {
+      const params = new URLSearchParams(filterParams);
+      params.set("idsOnly", "1");
+      const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to select users");
+      // The filters changed while this was in flight — the result is stale.
+      if (filterKeyRef.current !== key) return;
+      const rows: Recipient[] = (data.users ?? []).map((u: Recipient) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+      }));
+      if (rows.length === 0) {
+        alert("No users match the current filters.");
+        return;
+      }
+      setAllMatching(rows);
+      setAllMatchingTotal(data.total ?? rows.length);
+      setSelected(new Set(rows.map((r) => r.id)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to select users");
+    } finally {
+      setSelectingAll(false);
+    }
+  }, [filterParams]);
+
+  const toggleSelectAll = useCallback(() => {
+    if (allMatching !== null || allOnPage) {
+      clearSelection();
+      return;
+    }
+    void selectAllMatching();
+  }, [allMatching, allOnPage, clearSelection, selectAllMatching]);
+
+  // Recipient details for every id in the selection — covers rows that are
+  // selected across pages and are therefore not loaded in `users`.
+  const recipientIndex = useMemo(() => {
+    const map = new Map<string, Recipient>();
+    for (const r of allMatching ?? []) map.set(r.id, r);
+    for (const u of users) map.set(u.id, { id: u.id, name: u.name, email: u.email });
+    return map;
+  }, [allMatching, users]);
 
   const openEmailFor = useCallback(
     (ids: string[]) => {
-      const recips = users
-        .filter((u) => ids.includes(u.id))
-        .map((u) => ({ id: u.id, name: u.name, email: u.email }));
+      const recips: Recipient[] = [];
+      for (const id of ids) {
+        const r = recipientIndex.get(id);
+        if (r) recips.push(r);
+      }
       if (recips.length === 0) {
         alert("Select one or more users from the list before sending an email.");
         return;
       }
       setEmailRecipients(recips);
     },
-    [users]
+    [recipientIndex]
   );
 
   const runBulk = useCallback(
@@ -348,7 +432,7 @@ export function UserManage() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Bulk update failed");
-        setSelected(new Set());
+        clearSelection();
         await load();
       } catch (e) {
         alert(e instanceof Error ? e.message : "Bulk update failed");
@@ -356,7 +440,7 @@ export function UserManage() {
         setBulkBusy(null);
       }
     },
-    [isAdmin, selected, load]
+    [isAdmin, selected, clearSelection, load]
   );
 
   const bulkDelete = useCallback(async () => {
@@ -375,7 +459,7 @@ export function UserManage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
-      setSelected(new Set());
+      clearSelection();
       if (page > 1 && users.length === count) setPage(page - 1);
       else await load();
     } catch (e) {
@@ -383,10 +467,51 @@ export function UserManage() {
     } finally {
       setBulkBusy(null);
     }
-  }, [isAdmin, selected, page, users.length, load]);
+  }, [isAdmin, selected, clearSelection, page, users.length, load]);
 
-  const exportCsv = useCallback(() => {
-    const rows = users.filter((u) => selected.has(u.id));
+  const fetchAllRows = useCallback(async (): Promise<UserRow[]> => {
+    const size = 100;
+    const pages = Math.min(MAX_EXPORT_PAGES, Math.max(1, Math.ceil(pagination.total / size)));
+    const rows: UserRow[] = [];
+    for (let p = 1; p <= pages; p++) {
+      const params = new URLSearchParams(filterParams);
+      params.set("page", String(p));
+      params.set("perPage", String(size));
+      const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load users");
+      rows.push(...((data.users ?? []) as UserRow[]));
+    }
+    return rows;
+  }, [filterParams, pagination.total]);
+
+  const exportCsv = useCallback(async () => {
+    if (selected.size === 0) return;
+    let rows = users.filter((u) => selected.has(u.id));
+
+    // A cross-page selection contains rows that are not loaded right now.
+    if (rows.length < selected.size) {
+      const missing = selected.size - rows.length;
+      const capped = pagination.total > MAX_EXPORT_PAGES * 100;
+      if (
+        !window.confirm(
+          `${missing} of the selected users are not on this page. Load the full result set to export a complete CSV?${capped ? "\n\nOnly the first 2,000 matching users can be loaded." : ""}`
+        )
+      ) {
+        return;
+      }
+      setBulkBusy("Exporting");
+      try {
+        const all = await fetchAllRows();
+        rows = all.filter((u) => selected.has(u.id));
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Export failed");
+        return;
+      } finally {
+        setBulkBusy(null);
+      }
+    }
+
     if (rows.length === 0) return;
     const esc = (v: string | null | undefined) => `"${(v ?? "").replace(/"/g, '""')}"`;
     const csv = [
@@ -415,7 +540,7 @@ export function UserManage() {
     a.download = `flybridge-users-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [users, selected]);
+  }, [users, selected, pagination.total, fetchAllRows]);
 
   const openDetail = useCallback(async (id: string) => {
     setDetailId(id);
@@ -751,6 +876,43 @@ export function UserManage() {
         </div>
       </div>
 
+      {/* Select-all banner */}
+      {allMatching && (
+        <div
+          className="rounded-lg border px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2"
+          style={{ borderColor: "rgba(15,169,104,0.35)", background: "rgba(15,169,104,0.06)" }}
+        >
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+            style={{ background: "#0FA968" }}
+          >
+            <Check size={15} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+              {selected.size === allMatchingTotal
+                ? `All ${allMatchingTotal.toLocaleString()} users matching the current filters are selected.`
+                : `${selected.size.toLocaleString()} of ${allMatchingTotal.toLocaleString()} matching users selected.`}
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--body)" }}>
+              {allMatchingTotal > allMatching.length
+                ? `Bulk actions are limited to ${allMatching.length.toLocaleString()} recipients — narrow the filters to target the rest.`
+                : "Bulk actions apply to every selected user, not just the current page."}
+            </p>
+          </div>
+          <span className="flex-1" />
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-[7px] text-[12px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)]"
+            style={{ borderColor: "var(--line)", color: "var(--body)" }}
+          >
+            <X size={12} />
+            Clear selection
+          </button>
+        </div>
+      )}
+
       {/* Bulk actions */}
       {selected.size > 0 && (
         <div
@@ -765,11 +927,11 @@ export function UserManage() {
               <Check size={15} />
             </span>
             <span className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-              {selected.size} selected
+              {selected.size.toLocaleString()} selected
             </span>
             <button
               type="button"
-              onClick={() => setSelected(new Set())}
+              onClick={clearSelection}
               className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold transition-colors duration-150 hover:bg-[rgba(47,95,224,0.1)]"
               style={{ color: "var(--body)" }}
             >
@@ -821,7 +983,7 @@ export function UserManage() {
               className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             >
-              <FileDown size={14} />
+              {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
               Export CSV
             </button>
             {isAdmin && (
@@ -852,11 +1014,18 @@ export function UserManage() {
             >
               <div className="flex items-center">
                 <input
+                  ref={headerCheckRef}
                   type="checkbox"
-                  checked={allOnPage}
-                  onChange={toggleSelectPage}
-                  aria-label="Select all users on this page"
-                  className="w-4 h-4 cursor-pointer"
+                  checked={allSelected}
+                  disabled={selectingAll || users.length === 0}
+                  onChange={toggleSelectAll}
+                  title={
+                    pagination.total > users.length
+                      ? `Select all ${pagination.total.toLocaleString()} users matching the current filters`
+                      : "Select all users"
+                  }
+                  aria-label="Select all users matching the current filters"
+                  className="w-4 h-4 cursor-pointer disabled:cursor-wait disabled:opacity-60"
                   style={{ accentColor: "var(--brand)" }}
                 />
               </div>

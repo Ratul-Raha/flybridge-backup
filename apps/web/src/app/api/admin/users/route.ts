@@ -8,14 +8,10 @@ import { SeminarRegistration } from "@/lib/models/seminar";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ReadinessRun } from "@/lib/models/readiness-run";
 import { CourseProgress } from "@/lib/models/course-progress";
-import { ACCOUNT_TYPES, SUBSCRIPTION_TYPES } from "@/lib/roles";
+import { buildUserFilter, userSortKey } from "@/lib/admin/user-filter";
 
-const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
-  newest: { createdAt: -1 },
-  oldest: { createdAt: 1 },
-  name: { name: 1 },
-  "name-desc": { name: -1 },
-};
+/** Upper bound for "select all matching" — matches the bulk action limits. */
+const MAX_SELECT = 1000;
 
 export async function GET(request: NextRequest) {
   const session = await readSession();
@@ -27,93 +23,34 @@ export async function GET(request: NextRequest) {
     await connectDb();
 
     const searchParams = request.nextUrl.searchParams;
-    const q = (searchParams.get("q") ?? "").trim().toLowerCase();
-    const accountType = searchParams.get("accountType") ?? "";
-    const subscription = searchParams.get("subscription") ?? "";
-    const certDownloaded = searchParams.get("certificateDownloaded") ?? "";
-    const course = searchParams.get("course") ?? "";
-    const seminar = searchParams.get("seminar") ?? "";
-    const resource = searchParams.get("resource") ?? "";
-    const scoreMin = Number(searchParams.get("scoreMin"));
     const sort = searchParams.get("sort") ?? "newest";
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const perPage = Math.min(100, Math.max(1, Number(searchParams.get("perPage")) || 15));
 
-    const filter: Record<string, unknown> = {};
-    if (q) {
-      filter.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
-        { phone: { $regex: q, $options: "i" } },
-      ];
-    }
-    if (accountType && (ACCOUNT_TYPES as string[]).includes(accountType)) filter.accountType = accountType;
-    if (subscription && (SUBSCRIPTION_TYPES as string[]).includes(subscription)) filter.subscription = subscription;
+    const filter = await buildUserFilter(searchParams);
 
-    // Engagement filters are computed as user-id sets, then intersected
-    // ($in) / subtracted ($nin) against the rest of the User query.
-    const include = new Set<string>();
-    const exclude = new Set<string>();
-    let haveInclude = false;
-    const addInclude = (ids: string[]) => {
-      if (ids.length === 0) {
-        include.clear();
-        haveInclude = true;
-        return;
-      }
-      const set = new Set(ids);
-      if (!haveInclude) {
-        ids.forEach((id) => include.add(id));
-        haveInclude = true;
-      } else {
-        for (const id of [...include]) {
-          if (!set.has(id)) include.delete(id);
-        }
-      }
-    };
-    const addExclude = (ids: string[]) => ids.forEach((id) => exclude.add(id));
-
-    if (course === "any" || course === "none") {
-      const enrolled = (await CourseEnrollment.distinct("user").lean()).map(String);
-      (course === "any" ? addInclude : addExclude)(enrolled);
-    } else if (course) {
-      const enrolled = (await CourseEnrollment.distinct("user", { course }).lean()).map(String);
-      addInclude(enrolled);
+    // Lightweight mode used by the table's "select all" checkbox: resolves every
+    // user matching the current filters (not just the visible page) so bulk
+    // actions can target the whole result set.
+    if (searchParams.get("idsOnly") === "1") {
+      const total = await User.countDocuments(filter);
+      const matched = await User.find(filter, { name: 1, email: 1 })
+        .sort(userSortKey(sort))
+        .limit(MAX_SELECT)
+        .lean();
+      return NextResponse.json({
+        users: matched.map((u) => ({
+          id: u._id.toString(),
+          name: u.name,
+          email: u.email,
+        })),
+        total,
+        truncated: total > matched.length,
+        limit: MAX_SELECT,
+      });
     }
 
-    if (seminar === "any" || seminar === "none") {
-      const regs = (await SeminarRegistration.distinct("user").lean()).map(String);
-      (seminar === "any" ? addInclude : addExclude)(regs);
-    }
-
-    if (resource === "any" || resource === "none") {
-      const dls = (await ResourceDownload.distinct("user").lean()).map(String);
-      (resource === "any" ? addInclude : addExclude)(dls);
-    }
-
-    if (Number.isFinite(scoreMin) && scoreMin > 0) {
-      const scored = await ReadinessRun.aggregate<{ _id: unknown; score: number }>([
-        { $sort: { createdAt: -1 } },
-        { $group: { _id: "$user", score: { $first: "$score" } } },
-        { $match: { score: { $gte: scoreMin } } },
-      ]);
-      addInclude(scored.map((r) => (r._id as { toString(): string }).toString()));
-    }
-
-    if (certDownloaded === "yes" || certDownloaded === "only") {
-      const downloaded = await CourseProgress.find(
-        { certificateDownloadCount: { $gt: 0 } },
-        { user: 1 }
-      ).lean();
-      addInclude(downloaded.map((p) => p.user.toString()));
-    }
-
-    if (haveInclude) filter._id = { $in: [...include] };
-    if (exclude.size > 0) {
-      filter._id = { ...(filter._id ?? {}), $nin: [...exclude] };
-    }
-
-    const sortKey = SORT_MAP[sort] ?? SORT_MAP.newest;
+    const sortKey = userSortKey(sort);
 
     const total = await User.countDocuments(filter);
     const users = await User.find(filter)
