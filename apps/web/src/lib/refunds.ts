@@ -13,8 +13,10 @@ import { Order, type OrderDoc } from "@/lib/models/order";
 import { RefundRequest, type RefundRequestDoc } from "@/lib/models/refund-request";
 import {
   forfeitReasonFor,
+  normalizeRefundReason,
   resolveRefundView,
   type RefundForfeitReason,
+  type RefundReason,
   type RefundView,
 } from "@/lib/refund-policy";
 
@@ -391,6 +393,7 @@ export class RefundError extends Error {
 export async function claimRefund(input: {
   userId: string;
   orderId: string;
+  reasonCode?: string;
   reason?: string;
 }): Promise<RefundRequestDoc> {
   await connectDb();
@@ -447,6 +450,7 @@ export async function claimRefund(input: {
     amount: order.total ?? 0,
     currency: order.currency ?? "USD",
     gateway: order.gateway ?? null,
+    reasonCode: normalizeRefundReason(input.reasonCode) as RefundReason,
     reason: input.reason?.slice(0, 1000) ?? "",
     status: "pending" as const,
     lessonsPlayedAtClaim: usage.lessonsPlayed,

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Loader2, RotateCcw, X } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
 import {
+  refundReasonLabel,
   REFUND_BUNDLE_MOCK_LIMIT,
   REFUND_LESSON_LIMIT,
   REFUND_MOCK_LIMIT,
@@ -17,6 +18,8 @@ type RefundRow = {
   amount: number;
   currency: string;
   gateway: string;
+  /** Absent on claims made before the field existed. */
+  reasonCode?: string;
   reason: string;
   status: string;
   userName: string;
@@ -223,6 +226,16 @@ export function RefundManage({ rows }: { rows: RefundRow[] }) {
                 )}
               </div>
 
+              {row.reasonCode && row.reasonCode !== "prefer_not_to_say" && (
+                <p className="text-[12.5px] leading-[1.6]" style={{ color: "var(--ink)" }}>
+                  {refundReasonLabel(row.reasonCode)}
+                </p>
+              )}
+              {row.reasonCode === "prefer_not_to_say" && (
+                <p className="text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
+                  No reason given
+                </p>
+              )}
               {row.reason && (
                 <p className="text-[13px] leading-[1.6]" style={{ color: "var(--ink)" }}>
                   &ldquo;{row.reason}&rdquo;

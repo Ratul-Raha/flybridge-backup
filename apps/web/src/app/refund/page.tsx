@@ -86,7 +86,7 @@ const claimSteps = [
   {
     number: "02",
     title: "Request the refund",
-    desc: "Tap Request refund and confirm. Tell us why if you would like — it helps us improve, but it is never required. The window, the usage counters and the order status are all re-checked on our servers at that moment, so the decision never rests on the button being on screen.",
+    desc: "Tap Request refund, pick a reason, and confirm. The reason is a one-tap list, and it includes an “I would rather not say” option — nothing you pick affects your eligibility. The window, the usage counters and the order status are all re-checked on our servers at that moment, so the decision never rests on the button being on screen.",
   },
   {
     number: "03",
@@ -100,7 +100,7 @@ const covered = [
   "Every paid mock bundle on FlyBridge",
   "Any payment method — bKash, Nagad, Rocket or card",
   "A full refund, with no fee deducted",
-  "A reason-free claim, submitted in under a minute",
+  "A one-tap reason list that never affects your eligibility",
 ];
 
 const notCovered = [

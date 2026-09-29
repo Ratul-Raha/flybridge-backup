@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { RefundRequest } from "@/lib/models/refund-request";
 import { claimRefund, RefundError } from "@/lib/refunds";
+import { isRefundReason, refundReasonLabel } from "@/lib/refund-policy";
 
 function isStaff(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
           amount: r.amount ?? 0,
           currency: r.currency ?? "USD",
           gateway: r.gateway ?? null,
+          reasonCode: r.reasonCode ?? "",
+          reasonLabel: refundReasonLabel(r.reasonCode),
           reason: r.reason ?? "",
           status: r.status,
           lessonsPlayedAtClaim: r.lessonsPlayedAtClaim ?? 0,
@@ -66,6 +69,8 @@ export async function GET(request: NextRequest) {
         itemTitle: r.itemTitle ?? "",
         amount: r.amount ?? 0,
         currency: r.currency ?? "USD",
+        reasonCode: r.reasonCode ?? "",
+        reasonLabel: refundReasonLabel(r.reasonCode),
         reason: r.reason ?? "",
         status: r.status,
         adminNote: r.adminNote ?? "",
@@ -85,17 +90,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json().catch(() => ({} as { orderId?: string; reason?: string }));
+    const body = await request.json().catch(
+      () => ({} as { orderId?: string; reasonCode?: string; reason?: string })
+    );
     const orderId = typeof body?.orderId === "string" ? body.orderId.trim() : "";
+    const reasonCode = typeof body?.reasonCode === "string" ? body.reasonCode.trim() : "";
     const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
 
     if (!orderId) {
       return NextResponse.json({ error: "Which order?" }, { status: 400 });
     }
 
+    if (!isRefundReason(reasonCode)) {
+      return NextResponse.json({ error: "Please choose a reason for the refund." }, { status: 400 });
+    }
+
     const created = await claimRefund({
       userId: session.userId,
       orderId,
+      reasonCode,
       reason,
     });
 

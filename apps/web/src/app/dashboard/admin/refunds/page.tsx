@@ -32,6 +32,7 @@ export default async function AdminRefundsPage() {
         amount: r.amount ?? 0,
         currency: r.currency ?? "USD",
         gateway: r.gateway ?? "",
+        reasonCode: r.reasonCode ?? "",
         reason: r.reason ?? "",
         status: r.status,
         userName:

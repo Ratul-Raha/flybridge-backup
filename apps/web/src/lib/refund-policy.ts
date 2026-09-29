@@ -42,6 +42,58 @@ export const NOT_REFUNDABLE_REASON: Record<string, string> = {
 export const UNKNOWN_ITEM_REASON =
   "This item is not covered by the 3-day refund guarantee.";
 
+/**
+ * Why the student is asking for their money back. Collected so refunds can be
+ * grouped and spotted early — a spike in any one of these is a signal about the
+ * product, not just about a customer.
+ *
+ * `prefer_not_to_say` is a first-class option on purpose: the guarantee is
+ * claimable in under a minute and a student should never feel cornered into
+ * inventing a justification. It keeps the public promise honest while still
+ * giving staff a clean denominator.
+ */
+export const REFUND_REASONS = [
+  "not_as_expected",
+  "level_mismatch",
+  "quality_concerns",
+  "technical_issues",
+  "accidental_purchase",
+  "duplicate_purchase",
+  "no_longer_needed",
+  "other",
+  "prefer_not_to_say",
+] as const;
+
+export type RefundReason = (typeof REFUND_REASONS)[number];
+
+export const REFUND_REASON_LABELS: Record<RefundReason, string> = {
+  not_as_expected: "The course was not what I expected",
+  level_mismatch: "The level was too easy or too hard for me",
+  quality_concerns: "I had concerns about the content quality",
+  technical_issues: "Videos would not play, or I hit technical problems",
+  accidental_purchase: "I bought this by accident",
+  duplicate_purchase: "I ended up buying this more than once",
+  no_longer_needed: "I no longer need it",
+  other: "Something else",
+  prefer_not_to_say: "I would rather not say",
+};
+
+export const DEFAULT_REFUND_REASON: RefundReason = "prefer_not_to_say";
+
+export function isRefundReason(value: unknown): value is RefundReason {
+  return typeof value === "string" && (REFUND_REASONS as readonly string[]).includes(value);
+}
+
+export function normalizeRefundReason(value: unknown): RefundReason {
+  const raw = typeof value === "string" ? value.trim() : "";
+  return isRefundReason(raw) ? raw : DEFAULT_REFUND_REASON;
+}
+
+export function refundReasonLabel(value: unknown): string {
+  const raw = typeof value === "string" ? value.trim() : "";
+  return isRefundReason(raw) ? REFUND_REASON_LABELS[raw] : "No reason given";
+}
+
 export type RefundForfeitReason = "lessons" | "mock" | "manual";
 
 export type RefundStatus =

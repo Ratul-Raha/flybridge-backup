@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Clock, Loader2, RotateCcw, X } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
 import {
+  REFUND_REASONS,
+  REFUND_REASON_LABELS,
   REFUND_WINDOW_DAYS,
+  type RefundReason,
   type RefundStatus,
   type RefundView,
 } from "@/lib/refund-policy";
@@ -89,17 +92,19 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<OrderRow | null>(null);
+  const [reasonCode, setReasonCode] = useState<RefundReason | "">("");
   const [reason, setReason] = useState("");
 
   const claim = useCallback(
     async (row: OrderRow) => {
+      if (!reasonCode) return;
       setBusy(row.orderId);
       setError(null);
       try {
         const res = await fetch("/api/refunds", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: row.orderId, reason }),
+          body: JSON.stringify({ orderId: row.orderId, reasonCode, reason }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -107,6 +112,7 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
           return;
         }
         setConfirming(null);
+        setReasonCode("");
         setReason("");
         router.refresh();
       } catch {
@@ -115,7 +121,7 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
         setBusy(null);
       }
     },
-    [reason, router]
+    [reasonCode, reason, router]
   );
 
   if (rows.length === 0) {
@@ -169,6 +175,7 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
           busy={busy === row.orderId}
           onRequest={() => {
             setError(null);
+            setReasonCode("");
             setReason("");
             setConfirming(row);
           }}
@@ -209,20 +216,76 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
               refund is processed.
             </p>
 
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-              maxLength={1000}
-              placeholder="Tell us why (optional)"
-              className="w-full rounded-lg border px-3 py-2 text-[13.5px] outline-none resize-none"
-              style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
-            />
+            <fieldset className="flex flex-col gap-2">
+              <legend
+                className="font-mono text-[11px] uppercase tracking-[0.14em] mb-1"
+                style={{ color: "var(--body)" }}
+              >
+                What made you request the refund?
+              </legend>
+              <div className="flex flex-col gap-1 max-h-[208px] overflow-y-auto pr-1">
+                {REFUND_REASONS.map((code) => {
+                  const selected = reasonCode === code;
+                  return (
+                    <label
+                      key={code}
+                      className="flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors"
+                      style={{
+                        borderColor: selected ? "var(--brand)" : "var(--line)",
+                        background: selected ? "var(--brand-soft)" : "var(--bg-soft)",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="refund-reason"
+                        value={code}
+                        checked={selected}
+                        onChange={() => {
+                          setReasonCode(code);
+                          if (code !== "other") setReason("");
+                        }}
+                        className="sr-only"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
+                        style={{ borderColor: selected ? "var(--brand)" : "var(--line)" }}
+                      >
+                        {selected && (
+                          <span className="w-2 h-2 rounded-full" style={{ background: "var(--brand)" }} />
+                        )}
+                      </span>
+                      <span className="text-[13px] leading-snug" style={{ color: "var(--ink)" }}>
+                        {REFUND_REASON_LABELS[code]}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            <p className="text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
+              Your reason does not affect your eligibility. Every refund inside the window gets the
+              full amount back, and &ldquo;I would rather not say&rdquo; is a real answer.
+            </p>
+
+            {reasonCode === "other" && (
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                maxLength={1000}
+                autoFocus
+                placeholder="Tell us a little more (optional)"
+                className="w-full rounded-lg border px-3 py-2 text-[13.5px] outline-none resize-none"
+                style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
+              />
+            )}
 
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => claim(confirming)}
-                disabled={!!busy}
+                disabled={!!busy || !reasonCode}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-full text-white text-[14px] font-semibold px-5 py-[11px] disabled:opacity-60"
                 style={{ background: "var(--brand)" }}
               >

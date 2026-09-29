@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import { DEFAULT_REFUND_REASON, REFUND_REASONS } from "@/lib/refund-policy";
 
 export const REFUND_REQUEST_STATUSES = [
   "pending",
@@ -28,6 +29,14 @@ const refundRequestSchema = new Schema(
     amount: { type: Number, min: 0, default: 0 },
     currency: { type: String, default: "USD", trim: true },
     gateway: { type: String, trim: true },
+    /** The pick from the student's reason list, so refunds can be grouped. */
+    reasonCode: {
+      type: String,
+      enum: REFUND_REASONS,
+      default: DEFAULT_REFUND_REASON,
+      index: true,
+    },
+    /** Free-text follow-up the student typed. Kept raw, never a summary. */
     reason: { type: String, trim: true, maxlength: 1000 },
     status: {
       type: String,

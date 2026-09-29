@@ -2,19 +2,25 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  DEFAULT_REFUND_REASON,
   NOT_REFUNDABLE_REASON,
   REFUNDABLE_ITEM_TYPES,
   REFUND_BUNDLE_MOCK_LIMIT,
   REFUND_LESSON_LIMIT,
   REFUND_MOCK_LIMIT,
+  REFUND_REASONS,
+  REFUND_REASON_LABELS,
   REFUND_WINDOW_MS,
   UNKNOWN_ITEM_REASON,
   forfeitReasonFor,
+  isRefundReason,
   isRefundableItemType,
   lessonLimitFor,
   lessonsUntilForfeit,
   mockLimitFor,
   mocksUntilForfeit,
+  normalizeRefundReason,
+  refundReasonLabel,
   refundWindowEnds,
   resolveRefundView,
   type RefundForfeitReason,
@@ -351,6 +357,41 @@ describe("resolveRefundView — items outside the guarantee", () => {
     const v = view({ itemType: "seminar", request: null });
     assert.equal(v.status, "ineligible");
     assert.equal(v.canClaim, false);
+  });
+});
+
+describe("refund reasons", () => {
+  it("offers a way out that requires no justification", () => {
+    assert.ok(REFUND_REASONS.includes(DEFAULT_REFUND_REASON));
+    assert.equal(DEFAULT_REFUND_REASON, "prefer_not_to_say");
+  });
+
+  it("labels every reason it accepts", () => {
+    for (const code of REFUND_REASONS) {
+      assert.equal(typeof REFUND_REASON_LABELS[code], "string");
+      assert.ok(REFUND_REASON_LABELS[code].length > 0);
+    }
+  });
+
+  it("accepts only codes on the list", () => {
+    assert.equal(isRefundReason("technical_issues"), true);
+    assert.equal(isRefundReason("because_i_am_mad"), false);
+    assert.equal(isRefundReason(""), false);
+    assert.equal(isRefundReason(undefined), false);
+    assert.equal(isRefundReason(null), false);
+    assert.equal(isRefundReason(42), false);
+  });
+
+  it("falls back to the no-justification reason on anything unrecognised", () => {
+    assert.equal(normalizeRefundReason("  other  "), "other");
+    assert.equal(normalizeRefundReason("nonsense"), DEFAULT_REFUND_REASON);
+    assert.equal(normalizeRefundReason(undefined), DEFAULT_REFUND_REASON);
+  });
+
+  it("renders a label for legacy claims that have no code stored", () => {
+    assert.equal(refundReasonLabel("quality_concerns"), REFUND_REASON_LABELS.quality_concerns);
+    assert.equal(refundReasonLabel(""), "No reason given");
+    assert.equal(refundReasonLabel(undefined), "No reason given");
   });
 });
 
