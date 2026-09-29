@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { type DbCourse } from "@/components/programs/db-course-card";
 import { RelatedProgramCard, type RelatedProgram } from "@/components/programs/related-program-card";
-import { getProgram, programs } from "@/lib/programs";
+import { getProgram, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
 import { formatPriceText, cleanPrices } from "@/lib/pricing";
@@ -1606,8 +1606,8 @@ export default async function ProgramPage({ params }: Props) {
   const otherDbCourses = await getOtherDbCoursesCached(params.slug);
 
   const relatedPrograms: RelatedProgram[] = [
-    ...programs
-      .filter((p) => p.slug !== params.slug && !p.hasDb)
+    ...staticProgramsWithoutDbCourse(otherDbCourses)
+      .filter((p) => p.slug !== params.slug)
       .map((p) => ({
         slug: p.slug,
         title: p.title,

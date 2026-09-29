@@ -7,7 +7,7 @@ import { StoryAvatars } from "@/components/story-avatars";
 import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { TrackAccordion } from "@/components/programs/track-accordion";
-import { programs } from "@/lib/programs";
+import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 
@@ -80,8 +80,7 @@ const getPublishedCourses = unstable_cache(getPublishedCoursesUncached, ["publis
 export default async function ProgramsPage() {
   const dbCourses = await getPublishedCourses();
   const totalUsers = await getTotalUsers();
-  const hasDbCourses = dbCourses.length > 0;
-  const visiblePrograms = programs.filter((p) => !(p.hasDb && hasDbCourses));
+  const visiblePrograms = staticProgramsWithoutDbCourse(dbCourses);
   const programCount = visiblePrograms.length + dbCourses.length;
 
   return (

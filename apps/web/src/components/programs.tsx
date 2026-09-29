@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
-import { programs } from "@/lib/programs";
+import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { ProgramCard } from "./program-card";
 import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
 
@@ -50,7 +50,7 @@ const getDbCourses = unstable_cache(getDbCoursesUncached, ["db-courses"], {
 
 export async function Programs() {
   const dbCourses = await getDbCourses();
-  const hasDbCourses = dbCourses.length > 0;
+  const visiblePrograms = staticProgramsWithoutDbCourse(dbCourses);
 
   return (
     <section id="programs" className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
@@ -89,11 +89,9 @@ export async function Programs() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {programs
-          .filter((p) => !(p.hasDb && hasDbCourses))
-          .map((p) => (
-            <ProgramCard key={p.slug} p={p} />
-          ))}
+        {visiblePrograms.map((p) => (
+          <ProgramCard key={p.slug} p={p} />
+        ))}
         {dbCourses.map((c) => (
           <DbCourseCard key={c.id} course={c} />
         ))}

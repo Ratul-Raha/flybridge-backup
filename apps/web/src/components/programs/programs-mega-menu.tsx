@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { programs } from "@/lib/programs";
+import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { BengaliText } from "../bengali-text";
 
 type FetchedCourse = {
@@ -52,8 +52,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
 
   const items = useMemo<MenuItem[]>(() => {
     const db = courses ?? [];
-    const hasDb = db.length > 0;
-    const staticItems = hasDb ? programs.filter((p) => !p.hasDb) : programs;
+    const staticItems = staticProgramsWithoutDbCourse(db);
 
     const fromStatic: MenuItem[] = staticItems.map((p) => ({
       slug: p.slug,

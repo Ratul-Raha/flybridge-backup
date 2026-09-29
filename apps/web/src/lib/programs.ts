@@ -76,3 +76,13 @@ export const programs: Program[] = [
 export function getProgram(slug: string) {
   return programs.find((p) => p.slug === slug);
 }
+
+/**
+ * Static programs whose slug already exists as a database course.
+ * The database record is canonical, so the static entry must be dropped
+ * from any merged listing to avoid rendering the same course twice.
+ */
+export function staticProgramsWithoutDbCourse<T extends { slug: string }>(dbCourses: readonly T[]): Program[] {
+  const dbSlugs = new Set(dbCourses.map((c) => c.slug.toLowerCase()));
+  return programs.filter((p) => !dbSlugs.has(p.slug.toLowerCase()));
+}
