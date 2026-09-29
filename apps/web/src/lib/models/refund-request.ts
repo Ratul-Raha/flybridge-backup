@@ -1,5 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
-import { DEFAULT_REFUND_REASON, REFUND_REASONS } from "@/lib/refund-policy";
+import { REFUND_REASON_MAX_LENGTH, REFUND_REASONS } from "@/lib/refund-policy";
 
 export const REFUND_REQUEST_STATUSES = [
   "pending",
@@ -10,6 +10,14 @@ export const REFUND_REQUEST_STATUSES = [
 ] as const;
 
 export type RefundRequestStatus = (typeof REFUND_REQUEST_STATUSES)[number];
+
+/**
+ * What the collection will accept: the live list, `""` for a student who wrote
+ * the reason out, and `prefer_not_to_say`, which shipped for a few hours and
+ * still has rows behind it. Staff decisions re-save the whole document, so a
+ * stored value outside the enum would leave those claims impossible to decide.
+ */
+const STORED_REASON_CODES = [...REFUND_REASONS, "", "prefer_not_to_say"] as const;
 
 const refundRequestSchema = new Schema(
   {
@@ -29,15 +37,18 @@ const refundRequestSchema = new Schema(
     amount: { type: Number, min: 0, default: 0 },
     currency: { type: String, default: "USD", trim: true },
     gateway: { type: String, trim: true },
-    /** The pick from the student's reason list, so refunds can be grouped. */
+    /** The pick from the student's reason list, or "" when they wrote it out. */
     reasonCode: {
       type: String,
-      enum: REFUND_REASONS,
-      default: DEFAULT_REFUND_REASON,
+      enum: STORED_REASON_CODES,
+      default: "",
       index: true,
     },
-    /** Free-text follow-up the student typed. Kept raw, never a summary. */
-    reason: { type: String, trim: true, maxlength: 1000 },
+    /**
+     * The student's own words, kept raw and never summarised. Required by
+     * `resolveRefundReason` whenever `reasonCode` is empty.
+     */
+    reason: { type: String, trim: true, maxlength: REFUND_REASON_MAX_LENGTH },
     status: {
       type: String,
       enum: REFUND_REQUEST_STATUSES,

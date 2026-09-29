@@ -15,8 +15,8 @@ import {
   forfeitReasonFor,
   normalizeRefundReason,
   resolveRefundView,
+  REFUND_REASON_MAX_LENGTH,
   type RefundForfeitReason,
-  type RefundReason,
   type RefundView,
 } from "@/lib/refund-policy";
 
@@ -450,8 +450,8 @@ export async function claimRefund(input: {
     amount: order.total ?? 0,
     currency: order.currency ?? "USD",
     gateway: order.gateway ?? null,
-    reasonCode: normalizeRefundReason(input.reasonCode) as RefundReason,
-    reason: input.reason?.slice(0, 1000) ?? "",
+    reasonCode: normalizeRefundReason(input.reasonCode),
+    reason: input.reason?.trim().slice(0, REFUND_REASON_MAX_LENGTH) ?? "",
     status: "pending" as const,
     lessonsPlayedAtClaim: usage.lessonsPlayed,
     mockTestsPlayedAtClaim: usage.mockTestsPlayed,

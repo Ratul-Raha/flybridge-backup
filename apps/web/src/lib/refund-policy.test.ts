@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  DEFAULT_REFUND_REASON,
+  NO_REASON_CODE_LABEL,
   NOT_REFUNDABLE_REASON,
   REFUNDABLE_ITEM_TYPES,
   REFUND_BUNDLE_MOCK_LIMIT,
@@ -10,6 +10,7 @@ import {
   REFUND_MOCK_LIMIT,
   REFUND_REASONS,
   REFUND_REASON_LABELS,
+  REFUND_REASON_MAX_LENGTH,
   REFUND_WINDOW_MS,
   UNKNOWN_ITEM_REASON,
   forfeitReasonFor,
@@ -22,8 +23,10 @@ import {
   normalizeRefundReason,
   refundReasonLabel,
   refundWindowEnds,
+  resolveRefundReason,
   resolveRefundView,
   type RefundForfeitReason,
+  type RefundReason,
 } from "./refund-policy.ts";
 
 const NOW = new Date("2026-03-10T12:00:00.000Z");
@@ -361,9 +364,8 @@ describe("resolveRefundView — items outside the guarantee", () => {
 });
 
 describe("refund reasons", () => {
-  it("offers a way out that requires no justification", () => {
-    assert.ok(REFUND_REASONS.includes(DEFAULT_REFUND_REASON));
-    assert.equal(DEFAULT_REFUND_REASON, "prefer_not_to_say");
+  it("has no way to claim without giving a reason", () => {
+    assert.equal(REFUND_REASONS.includes("prefer_not_to_say" as RefundReason), false);
   });
 
   it("labels every reason it accepts", () => {
@@ -382,16 +384,43 @@ describe("refund reasons", () => {
     assert.equal(isRefundReason(42), false);
   });
 
-  it("falls back to the no-justification reason on anything unrecognised", () => {
+  it("stores no code when the student explained in their own words", () => {
     assert.equal(normalizeRefundReason("  other  "), "other");
-    assert.equal(normalizeRefundReason("nonsense"), DEFAULT_REFUND_REASON);
-    assert.equal(normalizeRefundReason(undefined), DEFAULT_REFUND_REASON);
+    assert.equal(normalizeRefundReason("nonsense"), "");
+    assert.equal(normalizeRefundReason(""), "");
+    assert.equal(normalizeRefundReason(undefined), "");
   });
 
   it("renders a label for legacy claims that have no code stored", () => {
     assert.equal(refundReasonLabel("quality_concerns"), REFUND_REASON_LABELS.quality_concerns);
-    assert.equal(refundReasonLabel(""), "No reason given");
-    assert.equal(refundReasonLabel(undefined), "No reason given");
+    assert.equal(refundReasonLabel(""), NO_REASON_CODE_LABEL);
+    assert.equal(refundReasonLabel(undefined), NO_REASON_CODE_LABEL);
+  });
+
+  it("takes a picked reason on its own", () => {
+    assert.deepEqual(resolveRefundReason({ reasonCode: "level_mismatch" }), {
+      reasonCode: "level_mismatch",
+      reason: "",
+    });
+  });
+
+  it("takes a written explanation on its own", () => {
+    assert.deepEqual(resolveRefundReason({ reason: "  Bought the wrong course  " }), {
+      reasonCode: "",
+      reason: "Bought the wrong course",
+    });
+  });
+
+  it("refuses a claim that carries neither", () => {
+    assert.equal(resolveRefundReason({}), null);
+    assert.equal(resolveRefundReason({ reasonCode: "", reason: "" }), null);
+    assert.equal(resolveRefundReason({ reasonCode: "", reason: "   " }), null);
+    assert.equal(resolveRefundReason({ reasonCode: "nonsense", reason: "" }), null);
+  });
+
+  it("trims an explanation down to the stored limit", () => {
+    const resolved = resolveRefundReason({ reason: "x".repeat(REFUND_REASON_MAX_LENGTH + 50) });
+    assert.equal(resolved?.reason.length, REFUND_REASON_MAX_LENGTH);
   });
 });
 

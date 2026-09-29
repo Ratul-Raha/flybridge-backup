@@ -86,7 +86,7 @@ const claimSteps = [
   {
     number: "02",
     title: "Request the refund",
-    desc: "Tap Request refund, pick a reason, and confirm. The reason is a one-tap list, and it includes an “I would rather not say” option — nothing you pick affects your eligibility. The window, the usage counters and the order status are all re-checked on our servers at that moment, so the decision never rests on the button being on screen.",
+    desc: "Tap Request refund, pick a reason, and confirm. If none of the reasons fit what happened, write it in your own words instead — that box is the reason, and a sentence is plenty. We ask because a spike in any one of them tells us what to fix, and nothing you tell us affects your eligibility. The window, the usage counters and the order status are all re-checked on our servers at that moment, so the decision never rests on the button being on screen.",
   },
   {
     number: "03",
@@ -100,7 +100,7 @@ const covered = [
   "Every paid mock bundle on FlyBridge",
   "Any payment method — bKash, Nagad, Rocket or card",
   "A full refund, with no fee deducted",
-  "A one-tap reason list that never affects your eligibility",
+  "A reason we can act on, in one tap or a sentence of your own",
 ];
 
 const notCovered = [

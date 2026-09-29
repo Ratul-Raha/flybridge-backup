@@ -8,7 +8,9 @@ import { formatMoney } from "@/lib/pricing";
 import {
   REFUND_REASONS,
   REFUND_REASON_LABELS,
+  REFUND_REASON_MAX_LENGTH,
   REFUND_WINDOW_DAYS,
+  resolveRefundReason,
   type RefundReason,
   type RefundStatus,
   type RefundView,
@@ -97,14 +99,20 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
 
   const claim = useCallback(
     async (row: OrderRow) => {
-      if (!reasonCode) return;
+      // The same rule the API applies, so an empty claim is caught here
+      // instead of coming back as an error.
+      const resolved = resolveRefundReason({ reasonCode, reason });
+      if (!resolved) {
+        setError("Pick a reason, or tell us what happened in a sentence of your own.");
+        return;
+      }
       setBusy(row.orderId);
       setError(null);
       try {
         const res = await fetch("/api/refunds", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: row.orderId, reasonCode, reason }),
+          body: JSON.stringify({ orderId: row.orderId, ...resolved }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -223,7 +231,7 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
               >
                 What made you request the refund?
               </legend>
-              <div className="flex flex-col gap-1 max-h-[208px] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-1 max-h-[168px] overflow-y-auto pr-1">
                 {REFUND_REASONS.map((code) => {
                   const selected = reasonCode === code;
                   return (
@@ -240,10 +248,7 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
                         name="refund-reason"
                         value={code}
                         checked={selected}
-                        onChange={() => {
-                          setReasonCode(code);
-                          if (code !== "other") setReason("");
-                        }}
+                        onChange={() => setReasonCode(code)}
                         className="sr-only"
                       />
                       <span
@@ -264,28 +269,36 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
               </div>
             </fieldset>
 
-            <p className="text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
-              Your reason does not affect your eligibility. Every refund inside the window gets the
-              full amount back, and &ldquo;I would rather not say&rdquo; is a real answer.
-            </p>
-
-            {reasonCode === "other" && (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="refund-reason-own-words"
+                className="font-mono text-[11px] uppercase tracking-[0.14em]"
+                style={{ color: reasonCode ? "var(--body)" : "var(--ink)" }}
+              >
+                {reasonCode ? "Anything else we should know (optional)" : "Tell us what happened"}
+              </label>
               <textarea
+                id="refund-reason-own-words"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={3}
-                maxLength={1000}
-                autoFocus
-                placeholder="Tell us a little more (optional)"
+                maxLength={REFUND_REASON_MAX_LENGTH}
+                required={!reasonCode}
+                placeholder="I bought the wrong course…"
                 className="w-full rounded-lg border px-3 py-2 text-[13.5px] outline-none resize-none"
                 style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
               />
-            )}
+              <p className="text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
+                {reasonCode
+                  ? "Your reason does not affect your eligibility. Every refund inside the window gets the full amount back."
+                  : "None of those fit? Then this box is the reason — a sentence is plenty. It still does not affect your eligibility."}
+              </p>
+            </div>
 
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => claim(confirming)}
-                disabled={!!busy || !reasonCode}
+                disabled={!!busy}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-full text-white text-[14px] font-semibold px-5 py-[11px] disabled:opacity-60"
                 style={{ background: "var(--brand)" }}
               >

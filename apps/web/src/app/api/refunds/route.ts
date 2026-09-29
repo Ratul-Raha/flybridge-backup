@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { RefundRequest } from "@/lib/models/refund-request";
 import { claimRefund, RefundError } from "@/lib/refunds";
-import { isRefundReason, refundReasonLabel } from "@/lib/refund-policy";
+import { refundReasonLabel, resolveRefundReason } from "@/lib/refund-policy";
 
 function isStaff(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -94,22 +94,26 @@ export async function POST(request: NextRequest) {
       () => ({} as { orderId?: string; reasonCode?: string; reason?: string })
     );
     const orderId = typeof body?.orderId === "string" ? body.orderId.trim() : "";
-    const reasonCode = typeof body?.reasonCode === "string" ? body.reasonCode.trim() : "";
-    const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
 
     if (!orderId) {
       return NextResponse.json({ error: "Which order?" }, { status: 400 });
     }
 
-    if (!isRefundReason(reasonCode)) {
-      return NextResponse.json({ error: "Please choose a reason for the refund." }, { status: 400 });
+    // Either a reason from the list or the student's own words — a claim that
+    // arrives with neither is turned away here rather than filed blank.
+    const reason = resolveRefundReason({ reasonCode: body?.reasonCode, reason: body?.reason });
+    if (!reason) {
+      return NextResponse.json(
+        { error: "Pick a reason, or tell us what happened in your own words." },
+        { status: 400 }
+      );
     }
 
     const created = await claimRefund({
       userId: session.userId,
       orderId,
-      reasonCode,
-      reason,
+      reasonCode: reason.reasonCode,
+      reason: reason.reason,
     });
 
     return NextResponse.json({

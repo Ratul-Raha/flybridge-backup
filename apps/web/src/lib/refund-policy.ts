@@ -47,10 +47,9 @@ export const UNKNOWN_ITEM_REASON =
  * grouped and spotted early — a spike in any one of these is a signal about the
  * product, not just about a customer.
  *
- * `prefer_not_to_say` is a first-class option on purpose: the guarantee is
- * claimable in under a minute and a student should never feel cornered into
- * inventing a justification. It keeps the public promise honest while still
- * giving staff a clean denominator.
+ * There is no "rather not say" escape hatch on the list. A student who finds
+ * none of these fits writes what happened in their own words instead, so staff
+ * always get something they can act on rather than a blank row.
  */
 export const REFUND_REASONS = [
   "not_as_expected",
@@ -61,10 +60,12 @@ export const REFUND_REASONS = [
   "duplicate_purchase",
   "no_longer_needed",
   "other",
-  "prefer_not_to_say",
 ] as const;
 
 export type RefundReason = (typeof REFUND_REASONS)[number];
+
+/** What staff see when a claim carries a written explanation instead of a code. */
+export const NO_REASON_CODE_LABEL = "Explained in their own words";
 
 export const REFUND_REASON_LABELS: Record<RefundReason, string> = {
   not_as_expected: "The course was not what I expected",
@@ -75,23 +76,40 @@ export const REFUND_REASON_LABELS: Record<RefundReason, string> = {
   duplicate_purchase: "I ended up buying this more than once",
   no_longer_needed: "I no longer need it",
   other: "Something else",
-  prefer_not_to_say: "I would rather not say",
 };
 
-export const DEFAULT_REFUND_REASON: RefundReason = "prefer_not_to_say";
+export const REFUND_REASON_MAX_LENGTH = 1000;
 
 export function isRefundReason(value: unknown): value is RefundReason {
   return typeof value === "string" && (REFUND_REASONS as readonly string[]).includes(value);
 }
 
-export function normalizeRefundReason(value: unknown): RefundReason {
+/** The stored code, or `""` when the student explained in their own words. */
+export function normalizeRefundReason(value: unknown): RefundReason | "" {
   const raw = typeof value === "string" ? value.trim() : "";
-  return isRefundReason(raw) ? raw : DEFAULT_REFUND_REASON;
+  return isRefundReason(raw) ? raw : "";
 }
 
 export function refundReasonLabel(value: unknown): string {
   const raw = typeof value === "string" ? value.trim() : "";
-  return isRefundReason(raw) ? REFUND_REASON_LABELS[raw] : "No reason given";
+  return isRefundReason(raw) ? REFUND_REASON_LABELS[raw] : NO_REASON_CODE_LABEL;
+}
+
+/**
+ * The one rule for a claim's reason: either a code from the list, or a written
+ * explanation — never neither. Returns `null` when a claim arrives with
+ * nothing, so the caller can turn that into a "tell us why" prompt instead of
+ * filing a blank reason. Shared by the claim form and the API so both agree.
+ */
+export function resolveRefundReason(input: {
+  reasonCode?: unknown;
+  reason?: unknown;
+}): { reasonCode: RefundReason | ""; reason: string } | null {
+  const reasonCode = normalizeRefundReason(input.reasonCode);
+  const written =
+    typeof input.reason === "string" ? input.reason.trim().slice(0, REFUND_REASON_MAX_LENGTH) : "";
+  if (!reasonCode && !written) return null;
+  return { reasonCode, reason: written };
 }
 
 export type RefundForfeitReason = "lessons" | "mock" | "manual";
