@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Clock, Loader2, RotateCcw, X } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
 import {
-  REFUND_LESSON_LIMIT,
-  REFUND_MOCK_LIMIT,
   REFUND_WINDOW_DAYS,
   type RefundStatus,
   type RefundView,
@@ -147,9 +145,11 @@ export function MyOrders({ rows }: { rows: OrderRow[] }) {
         <span className="font-semibold" style={{ color: "var(--ink)" }}>
           {`${REFUND_WINDOW_DAYS}-day refund guarantee.`}
         </span>{" "}
-        Claim a full refund from any completed purchase within {`${REFUND_WINDOW_DAYS} days`} of paying.
-        The claim option disappears once the window closes, or as soon as you play more than{" "}
-        {REFUND_LESSON_LIMIT} lessons or more than {REFUND_MOCK_LIMIT} mock exam.
+        Claim a full refund on any course or mock bundle you paid for within{" "}
+        {`${REFUND_WINDOW_DAYS} days`} of paying. The claim option disappears once the window
+        closes, or as soon as you cross that purchase&apos;s usage allowance — more than 5 lessons
+        or more than 1 mock exam on a course, or the first submitted mock on a bundle. Resources
+        and seminars are non-refundable.
       </div>
 
       {error && (
@@ -263,6 +263,7 @@ function OrderCard({
   const refundPill = REFUND_STATUS[row.refund.status];
   const lessonsLeft = row.refund.lessonsRemaining;
   const mocksLeft = row.refund.mocksRemaining;
+  const isBundle = row.refund.itemType === "mock-bundle";
 
   return (
     <div
@@ -351,10 +352,17 @@ function OrderCard({
           <span>
             {row.refund.forfeited ? (
               row.refund.message
+            ) : isBundle ? (
+              <>
+                {`Mocks submitted: ${row.refund.mockTestsPlayed}. `}
+                {row.refund.mockTestsPlayed === 0
+                  ? "Claim before you submit a mock and the refund stays available."
+                  : "Your mock has been used, so the refund has lapsed."}
+              </>
             ) : (
               <>
-                {`Refund-safe usage: ${row.refund.lessonsPlayed}/${REFUND_LESSON_LIMIT} lessons, `}
-                {`${row.refund.mockTestsPlayed}/${REFUND_MOCK_LIMIT} mock exam.`}{" "}
+                {`Refund-safe usage: ${row.refund.lessonsPlayed}/${row.refund.lessonLimit} lessons, `}
+                {`${row.refund.mockTestsPlayed}/${row.refund.mockLimit} mock exam.`}{" "}
                 {lessonsLeft > 0
                   ? `Play ${lessonsLeft} more lesson${lessonsLeft === 1 ? "" : "s"} and the refund stays available.`
                   : "Your next lesson forfeits the refund."}

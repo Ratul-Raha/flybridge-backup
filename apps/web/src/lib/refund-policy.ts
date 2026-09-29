@@ -3,9 +3,12 @@
  * share the numbers and the wording without pulling the database in.
  *
  * The rule set:
- *  - A purchase is refundable for REFUND_WINDOW_DAYS after the order completed.
- *  - A refund is forfeited forever once the student crosses either usage limit:
- *    REFUND_LESSON_LIMIT lessons played, or REFUND_MOCK_LIMIT mock exams taken.
+ *  - Only courses and mock bundles are covered. Resources and seminars are never
+ *    refundable, whatever the clock says.
+ *  - A covered purchase is refundable for REFUND_WINDOW_DAYS after it completed.
+ *  - A refund is forfeited forever once the student crosses the usage limit for
+ *    that item type: REFUND_LESSON_LIMIT lessons and REFUND_MOCK_LIMIT mocks on
+ *    a course, REFUND_BUNDLE_MOCK_LIMIT submitted mocks on a bundle.
  *  - These are counters, not locks. Nothing here stops anyone watching anything —
  *    it only decides whether the refund button is still there.
  */
@@ -16,8 +19,28 @@ export const REFUND_WINDOW_MS = REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 /** Lessons a student may play while keeping the refund alive. */
 export const REFUND_LESSON_LIMIT = 5;
 
-/** Mock exams a student may take while keeping the refund alive. */
+/** Mock exams a student may start while keeping a course refund alive. */
 export const REFUND_MOCK_LIMIT = 1;
+
+/**
+ * Mock exams a bundle holder may submit while keeping the refund alive. A
+ * bundle has no lessons, so a single submitted sitting ends it — the answers
+ * are the value, and once they are graded the mock has been used.
+ */
+export const REFUND_BUNDLE_MOCK_LIMIT = 0;
+
+/** The only item types the 3-day guarantee covers. */
+export const REFUNDABLE_ITEM_TYPES = ["course", "mock-bundle"] as const;
+export type RefundableItemType = (typeof REFUNDABLE_ITEM_TYPES)[number];
+
+/** Why an item type is outside the guarantee, for the customer-facing copy. */
+export const NOT_REFUNDABLE_REASON: Record<string, string> = {
+  resource: "Downloadable resources are non-refundable once purchased.",
+  seminar: "Seminar seats are non-refundable once booked.",
+};
+
+export const UNKNOWN_ITEM_REASON =
+  "This item is not covered by the 3-day refund guarantee.";
 
 export type RefundForfeitReason = "lessons" | "mock" | "manual";
 
@@ -32,8 +55,15 @@ export type RefundStatus =
   | "ineligible";
 
 export const FORFEIT_REASON_TEXT: Record<RefundForfeitReason, string> = {
-  lessons: `You played more than ${REFUND_LESSON_LIMIT} lessons, so the 3-day refund is no longer available.`,
-  mock: `You took more than ${REFUND_MOCK_LIMIT} mock exam, so the 3-day refund is no longer available.`,
+  lessons: `You played more than ${REFUND_LESSON_LIMIT} lessons, so the ${REFUND_WINDOW_DAYS}-day refund is no longer available.`,
+  mock: `You took more than ${REFUND_MOCK_LIMIT} mock exam, so the ${REFUND_WINDOW_DAYS}-day refund is no longer available.`,
+  manual: "The refund for this purchase was already claimed and closed.",
+};
+
+/** Bundle wording differs: a bundle has no lessons and one sitting ends it. */
+export const BUNDLE_FORFEIT_TEXT: Record<RefundForfeitReason, string> = {
+  lessons: "This purchase is no longer refundable.",
+  mock: `You submitted a mock exam, so the ${REFUND_WINDOW_DAYS}-day refund is no longer available.`,
   manual: "The refund for this purchase was already claimed and closed.",
 };
 
@@ -55,8 +85,27 @@ export type RefundView = {
   amount: number;
   currency: string;
   completedAt: string | null;
+  /** The item type the order was for, so the UI can label the right allowance. */
+  itemType: string;
+  /** The limits actually applied, which differ for a course and a bundle. */
+  lessonLimit: number;
+  mockLimit: number;
   message: string;
 };
+
+/** The mock limit that applies to a given item type. */
+export function mockLimitFor(itemType: string): number {
+  return itemType === "mock-bundle" ? REFUND_BUNDLE_MOCK_LIMIT : REFUND_MOCK_LIMIT;
+}
+
+/** The lesson limit that applies to a given item type. Bundles have none. */
+export function lessonLimitFor(itemType: string): number {
+  return itemType === "mock-bundle" ? 0 : REFUND_LESSON_LIMIT;
+}
+
+export function isRefundableItemType(itemType: string): boolean {
+  return (REFUNDABLE_ITEM_TYPES as readonly string[]).includes(itemType);
+}
 
 export function refundWindowEnds(completedAt?: Date | string | null): Date | null {
   if (!completedAt) return null;
@@ -65,12 +114,12 @@ export function refundWindowEnds(completedAt?: Date | string | null): Date | nul
   return new Date(start.getTime() + REFUND_WINDOW_MS);
 }
 
-export function lessonsUntilForfeit(lessonsPlayed: number): number {
-  return Math.max(0, REFUND_LESSON_LIMIT - lessonsPlayed);
+export function lessonsUntilForfeit(lessonsPlayed: number, limit = REFUND_LESSON_LIMIT): number {
+  return Math.max(0, limit - lessonsPlayed);
 }
 
-export function mocksUntilForfeit(mockTestsPlayed: number): number {
-  return Math.max(0, REFUND_MOCK_LIMIT - mockTestsPlayed);
+export function mocksUntilForfeit(mockTestsPlayed: number, limit = REFUND_MOCK_LIMIT): number {
+  return Math.max(0, limit - mockTestsPlayed);
 }
 
 /**
@@ -81,10 +130,13 @@ export function mocksUntilForfeit(mockTestsPlayed: number): number {
  */
 export function forfeitReasonFor(
   lessonsPlayed: number,
-  mockTestsPlayed: number
+  mockTestsPlayed: number,
+  limits: { lessonLimit?: number; mockLimit?: number } = {}
 ): RefundForfeitReason | null {
-  if (lessonsPlayed > REFUND_LESSON_LIMIT) return "lessons";
-  if (mockTestsPlayed > REFUND_MOCK_LIMIT) return "mock";
+  const lessonLimit = limits.lessonLimit ?? REFUND_LESSON_LIMIT;
+  const mockLimit = limits.mockLimit ?? REFUND_MOCK_LIMIT;
+  if (lessonsPlayed > lessonLimit) return "lessons";
+  if (mockTestsPlayed > mockLimit) return "mock";
   return null;
 }
 
@@ -95,6 +147,7 @@ export function forfeitReasonFor(
 export function resolveRefundView(input: {
   orderId: string;
   orderStatus: string;
+  itemType: string;
   amount: number;
   currency: string;
   completedAt: Date | string | null;
@@ -106,15 +159,23 @@ export function resolveRefundView(input: {
   now?: Date;
 }): RefundView {
   const now = input.now ?? new Date();
+  const itemType = input.itemType || "";
   const lessonsPlayed = input.lessonsPlayed ?? 0;
   const mockTestsPlayed = input.mockTestsPlayed ?? 0;
   const request = input.request ?? null;
+  const lessonLimit = lessonLimitFor(itemType);
+  const mockLimit = mockLimitFor(itemType);
+  const isBundle = itemType === "mock-bundle";
   /**
    * Recomputed from the counters rather than read off the enrollment, so a row
    * that predates the feature — or one a failed write left un-stamped — still
    * cannot be claimed.
    */
-  const derivedForfeit = forfeitReasonFor(lessonsPlayed, mockTestsPlayed);
+  const derivedForfeit = forfeitReasonFor(lessonsPlayed, mockTestsPlayed, {
+    lessonLimit,
+    mockLimit,
+  });
+  const forfeitText = isBundle ? BUNDLE_FORFEIT_TEXT : FORFEIT_REASON_TEXT;
 
   const base = {
     orderId: input.orderId,
@@ -123,10 +184,13 @@ export function resolveRefundView(input: {
     completedAt: input.completedAt ? new Date(input.completedAt).toISOString() : null,
     lessonsPlayed,
     mockTestsPlayed,
-    lessonsRemaining: lessonsUntilForfeit(lessonsPlayed),
-    mocksRemaining: mocksUntilForfeit(mockTestsPlayed),
+    lessonsRemaining: lessonsUntilForfeit(lessonsPlayed, lessonLimit),
+    mocksRemaining: mocksUntilForfeit(mockTestsPlayed, mockLimit),
     requestId: request?.id ?? null,
     requestStatus: request?.status ?? null,
+    itemType,
+    lessonLimit,
+    mockLimit,
   };
 
   /**
@@ -168,9 +232,23 @@ export function resolveRefundView(input: {
     return finish(request.status as RefundStatus, message, false, null);
   }
 
+  /**
+   * Resources and seminars sit outside the guarantee entirely. Checked after any
+   * live request so a claim already in flight still reports its real state, but
+   * ahead of the window so no new claim can ever be raised against them.
+   */
+  if (!isRefundableItemType(itemType)) {
+    return finish(
+      "ineligible",
+      NOT_REFUNDABLE_REASON[itemType] ?? UNKNOWN_ITEM_REASON,
+      false,
+      null
+    );
+  }
+
   if (input.forfeitedAt || derivedForfeit) {
     const reason = derivedForfeit ?? input.forfeitReason ?? "manual";
-    return finish("forfeited", FORFEIT_REASON_TEXT[reason], false, null, reason);
+    return finish("forfeited", forfeitText[reason], false, null, reason);
   }
 
   const endsAt = refundWindowEnds(input.completedAt);

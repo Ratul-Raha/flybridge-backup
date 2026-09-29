@@ -43,7 +43,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     });
 
     // Only a genuinely new sitting is counted, so resuming after a refresh does
-    // not burn the student's single refund-safe mock exam.
+    // not burn the student's single refund-safe mock exam. Bundle holders are
+    // counted on submit instead — see the grade route.
     let attempt = existing;
     if (!attempt) {
       attempt = await MockTestAttempt.create({

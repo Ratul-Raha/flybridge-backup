@@ -44,6 +44,7 @@ export default async function AdminRefundsPage() {
             : "",
         lessonsPlayed: r.lessonsPlayedAtClaim ?? 0,
         mockTestsPlayed: r.mockTestsPlayedAtClaim ?? 0,
+        itemType: r.itemType ?? "",
         adminNote: r.adminNote ?? "",
         failureReason: r.failureReason ?? "",
         createdAt: r.createdAt.toISOString(),

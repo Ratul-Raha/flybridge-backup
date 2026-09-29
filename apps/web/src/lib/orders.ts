@@ -81,6 +81,8 @@ export async function isAlreadyFulfilled(
     const enrollment = await MockTestEnrollment.findOne({
       user: user.id,
       bundle: itemId,
+      // An enrollment a refund expired does not count as fulfilled.
+      status: "active",
     });
     return !!enrollment;
   }
@@ -173,9 +175,11 @@ export async function fulfillFreeItem(
     const enrollment = await MockTestEnrollment.findOneAndUpdate(
       { user: user.id, bundle: bundle._id },
       {
-        $setOnInsert: {
-          user: user.id,
-          bundle: bundle._id,
+        $setOnInsert: { user: user.id, bundle: bundle._id },
+        $set: {
+          status: "active",
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
         },
       },
       { upsert: true, new: true }
@@ -431,10 +435,14 @@ export async function fulfillOrder(
     const enrollment = await MockTestEnrollment.findOneAndUpdate(
       { user: order.user, bundle: bundle._id },
       {
-        $setOnInsert: {
-          user: order.user,
-          bundle: bundle._id,
+        $setOnInsert: { user: order.user, bundle: bundle._id },
+        // A new purchase re-opens the window and reactivates an enrollment a
+        // previous refund expired, clearing the forfeit it stamped.
+        $set: {
           order: order._id,
+          status: "active",
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
         },
       },
       { upsert: true, new: true }

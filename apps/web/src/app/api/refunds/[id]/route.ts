@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order } from "@/lib/models/order";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { RefundRequest } from "@/lib/models/refund-request";
 import { refundStripeOrder } from "@/lib/payments/stripe";
 
@@ -13,16 +14,26 @@ function isStaff(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
 }
 
-/** Closes the order and takes the course away in the same step. */
-async function revokeAccess(orderId: string, enrollmentId: unknown) {
-  const order = await Order.findById(orderId);
+/** Closes the order and takes the purchased content away in the same step. */
+async function revokeAccess(refund: {
+  order: unknown;
+  enrollment?: unknown;
+  itemType?: string | null;
+}) {
+  const order = await Order.findById(refund.order);
   if (order) {
     order.status = "refunded";
     await order.save();
   }
-  if (enrollmentId) {
-    await CourseEnrollment.findByIdAndUpdate(enrollmentId, { status: "expired" });
+  if (!refund.enrollment) return;
+
+  // A bundle claim points at a MockTestEnrollment, not a CourseEnrollment, so
+  // expiring the wrong collection would leave the mocks unlocked.
+  if (refund.itemType === "mock-bundle") {
+    await MockTestEnrollment.findByIdAndUpdate(refund.enrollment, { status: "expired" });
+    return;
   }
+  await CourseEnrollment.findByIdAndUpdate(refund.enrollment, { status: "expired" });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
@@ -71,7 +82,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       refund.decidedBy = adminId as never;
       refund.decidedAt = refund.decidedAt ?? new Date();
       await refund.save();
-      await revokeAccess(refund.order.toString(), refund.enrollment);
+      await revokeAccess(refund);
       return NextResponse.json({ ok: true, status: refund.status });
     }
 
@@ -107,7 +118,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       refund.gatewayRefundId = result.refundId ?? null;
       refund.failureReason = null;
       await refund.save();
-      await revokeAccess(refund.order.toString(), refund.enrollment);
+      await revokeAccess(refund);
       return NextResponse.json({ ok: true, status: refund.status, automatic: true });
     }
 

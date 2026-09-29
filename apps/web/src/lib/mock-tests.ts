@@ -15,7 +15,8 @@ export async function resolveMockTestOwnership(
   await connectDb();
 
   const [enrollments, courseEnrollments] = await Promise.all([
-    MockTestEnrollment.find({ user: userId }).select("bundle").lean(),
+    // An expired enrollment is one a refund revoked — no access, no mocks.
+    MockTestEnrollment.find({ user: userId, status: "active" }).select("bundle").lean(),
     CourseEnrollment.find({ user: userId, status: "active" }).select("course").lean(),
   ]);
 

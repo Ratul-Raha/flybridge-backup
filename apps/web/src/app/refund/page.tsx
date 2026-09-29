@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import {
+  NOT_REFUNDABLE_REASON,
+  REFUND_BUNDLE_MOCK_LIMIT,
+  REFUND_LESSON_LIMIT,
+  REFUND_MOCK_LIMIT,
+  REFUND_WINDOW_DAYS,
+} from "@/lib/refund-policy";
+import {
   ArrowRight,
   Check,
   CheckCircle2,
@@ -10,6 +17,7 @@ import {
   Mail,
   MapPin,
   Minus,
+  Package,
   Phone,
   ShieldCheck,
 } from "lucide-react";
@@ -17,7 +25,7 @@ import {
 export const metadata: Metadata = {
   title: "Refund Policy | FlyBridge Education Group",
   description:
-    "A 3-day, 100% money-back guarantee on every FlyBridge course. Read the full policy: the refund window, your free lesson and mock exam allowance, how to claim, and how quickly you are paid.",
+    "A 3-day, 100% money-back guarantee on every FlyBridge course and mock bundle. Read the full policy: the refund window, your free lesson and mock exam allowance, why resources and seminars are non-refundable, how to claim, and how quickly you are paid.",
 };
 
 /* ───────────────────────── policy content ───────────────────────── */
@@ -30,21 +38,28 @@ const keyTerms: { term: string; detail: string; emphasis?: boolean }[] = [
   },
   {
     term: "Refund window",
-    detail: "3 days, counted from the moment your payment completes.",
+    detail: `${REFUND_WINDOW_DAYS} days, counted from the moment your payment completes.`,
     emphasis: true,
   },
   {
     term: "Eligible purchases",
-    detail: "Every paid course purchased on FlyBridge, whatever the payment method.",
+    detail: "Every paid course and every paid mock bundle on FlyBridge, whatever the payment method. Resources and seminars are not covered.",
   },
   {
-    term: "Your free usage",
-    detail: "The first 5 lessons and the first 1 mock exam are on us, on every purchase.",
+    term: "Your free usage on a course",
+    detail: `The first ${REFUND_LESSON_LIMIT} lessons and the first ${REFUND_MOCK_LIMIT} mock exam are on us, on every course.`,
+  },
+  {
+    term: "Your free usage on a bundle",
+    detail: "Browse any mock in the bundle freely. The moment you submit a sitting, the refund for that bundle is gone.",
   },
   {
     term: "Forfeiture",
-    detail:
-      "Crossing either limit — more than 5 lessons played, or more than 1 mock exam taken — makes that purchase non-refundable for good. Course access is unaffected.",
+    detail: `Crossing a limit — more than ${REFUND_LESSON_LIMIT} lessons or more than ${REFUND_MOCK_LIMIT} mock exam on a course, or the first submitted mock on a bundle — makes that purchase non-refundable for good. Access is unaffected.`,
+  },
+  {
+    term: "Not covered",
+    detail: `${NOT_REFUNDABLE_REASON.resource} ${NOT_REFUNDABLE_REASON.seminar}`,
   },
   {
     term: "How to claim",
@@ -76,21 +91,23 @@ const claimSteps = [
   {
     number: "03",
     title: "We refund you",
-    desc: "Card refunds go straight back to the original payment method. Mobile wallet payouts are approved by our team, usually within one working day, and sent by us. Once the money is on its way we close the order and remove your access to the course.",
+    desc: "Card refunds go straight back to the original payment method. Mobile wallet payouts are approved by our team, usually within one working day, and sent by us. Once the money is on its way we close the order and remove your access to the course or bundle.",
   },
 ];
 
 const covered = [
   "Every paid course on FlyBridge",
+  "Every paid mock bundle on FlyBridge",
   "Any payment method — bKash, Nagad, Rocket or card",
   "A full refund, with no fee deducted",
   "A reason-free claim, submitted in under a minute",
 ];
 
 const notCovered = [
+  "Downloadable resources and seminar seats — never refundable",
   "Free resources and courses marked as free",
   "Requests raised more than 3 days after payment",
-  "Purchases once either usage limit is crossed",
+  "Purchases once that purchase's usage limit is crossed",
   "Duplicate or fraudulent payments",
 ];
 
@@ -101,11 +118,19 @@ const faqs = [
   },
   {
     q: "What exactly counts towards the free usage?",
-    a: "Your first 5 lessons and your first 1 mock exam, per purchase. A lesson counts once, the first time you open it, and a mock exam counts once, the first time you start a new sitting. Re-watching a lesson, scrubbing back, or resuming a mock you already started costs you nothing extra.",
+    a: `On a course, your first ${REFUND_LESSON_LIMIT} lessons and your first ${REFUND_MOCK_LIMIT} mock exam, per purchase. A lesson counts once, the first time you open it, and a mock exam counts once, the first time you start a new sitting. Re-watching a lesson, scrubbing back, or resuming a mock you already started costs you nothing extra.`,
+  },
+  {
+    q: "What counts towards the free usage on a mock bundle?",
+    a: `Only a submitted sitting. You can open, browse and close as many mocks in a bundle as you like and your refund stays available, because a bundle is a collection rather than a single piece of content. The refund is forfeited the moment you submit the answers to your first sitting — the allowance is ${REFUND_BUNDLE_MOCK_LIMIT} submitted mocks. If you abandon a sitting without submitting, it does not count.`,
   },
   {
     q: "Does using the course affect my refund?",
-    a: "Only up to the limit. Play within 5 lessons and 1 mock exam and your refund stays available. Cross either limit and the purchase is no longer refundable — the option simply disappears from My Orders. Nothing is ever locked: you keep full access to everything you paid for, we just stop being able to give the money back.",
+    a: `Only up to the limit. Play within ${REFUND_LESSON_LIMIT} lessons and ${REFUND_MOCK_LIMIT} mock exam and your refund stays available. Cross either limit and the purchase is no longer refundable — the option simply disappears from My Orders. Nothing is ever locked: you keep full access to everything you paid for, we just stop being able to give the money back.`,
+  },
+  {
+    q: "Can I get a refund on resources or seminars?",
+    a: `No. ${NOT_REFUNDABLE_REASON.resource} ${NOT_REFUNDABLE_REASON.seminar} A resource is a file you keep the moment it downloads, and a seminar is a seat booked with a date and a seat-holder, so neither can be returned once sold. Neither ever appears as claimable in My Orders.`,
   },
   {
     q: "How do I request a refund?",
@@ -117,11 +142,11 @@ const faqs = [
   },
   {
     q: "Can I get a refund after 3 days?",
-    a: "The 3-day guarantee covers every purchase on its own. After that window we review requests case by case, so it is still worth writing to us — email support@flybridgeedu.com with your order number and we will tell you where you stand.",
+    a: "The 3-day guarantee covers every course and bundle on its own. After that window we review requests case by case, so it is still worth writing to us — email support@flybridgeedu.com with your order number and we will tell you where you stand.",
   },
   {
-    q: "What happens to my course access?",
-    a: "Nothing changes while you are deciding. The moment a refund is processed we close the order and release your access to that course, so the two never overlap.",
+    q: "What happens to my access?",
+    a: "Nothing changes while you are deciding. The moment a refund is processed we close the order and release your access to that course or bundle, so the two never overlap.",
   },
 ];
 
@@ -174,9 +199,9 @@ export default function RefundPage() {
               className="mt-6 text-[16.5px] leading-[1.75] max-w-[640px]"
               style={{ color: "var(--body)" }}
             >
-              Learning is a leap of faith, so we removed the risk from it. Every course you buy
-              from FlyBridge can be refunded in full within 3 days of payment — claimed by you,
-              from your own dashboard, without a single form or phone call.
+              Learning is a leap of faith, so we removed the risk from it. Every course and mock
+              bundle you buy from FlyBridge can be refunded in full within 3 days of payment —
+              claimed by you, from your own dashboard, without a single form or phone call.
             </p>
 
             <div
@@ -187,7 +212,7 @@ export default function RefundPage() {
                 { k: "Effective date", v: "September 2026" },
                 { k: "Entity", v: "FlyBridge Education Group Inc." },
                 { k: "Jurisdiction", v: "Ontario, Canada" },
-                { k: "Applies to", v: "All paid courses" },
+                { k: "Applies to", v: "All paid courses and mock bundles" },
               ].map((m) => (
                 <div key={m.k}>
                   <div
@@ -316,14 +341,14 @@ export default function RefundPage() {
                     className="font-display text-[44px] font-semibold leading-none"
                     style={{ color: "var(--ink)" }}
                   >
-                    5
+                    {REFUND_LESSON_LIMIT}
                   </span>
                   <span className="text-[13.5px] pb-1" style={{ color: "var(--body)" }}>
-                    lessons per purchase
+                    lessons per course
                   </span>
                 </div>
                 <div className="mt-4 flex items-center gap-2">
-                  {[0, 1, 2, 3, 4].map((i) => (
+                  {Array.from({ length: REFUND_LESSON_LIMIT }, (_, i) => (
                     <span
                       key={i}
                       className="h-[6px] flex-1 rounded-full"
@@ -332,8 +357,8 @@ export default function RefundPage() {
                   ))}
                 </div>
                 <p className="mt-4 text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                  A lesson counts once, the first time you open it. Your sixth lesson makes that
-                  purchase non-refundable.
+                  A lesson counts once, the first time you open it. One more lesson beyond these{" "}
+                  {REFUND_LESSON_LIMIT} makes the course non-refundable.
                 </p>
               </Panel>
 
@@ -349,10 +374,10 @@ export default function RefundPage() {
                     className="font-display text-[44px] font-semibold leading-none"
                     style={{ color: "var(--ink)" }}
                   >
-                    1
+                    {REFUND_MOCK_LIMIT}
                   </span>
                   <span className="text-[13.5px] pb-1" style={{ color: "var(--body)" }}>
-                    full-length mock per purchase
+                    full-length mock per course
                   </span>
                 </div>
                 <div className="mt-4 flex items-center gap-2">
@@ -364,6 +389,31 @@ export default function RefundPage() {
                 </p>
               </Panel>
             </div>
+
+            <Panel className="mt-4 p-6 md:p-7">
+              <div className="flex items-start gap-3.5">
+                <Package
+                  className="w-[18px] h-[18px] mt-[3px] shrink-0"
+                  style={{ color: "var(--brand-2)" }}
+                />
+                <div>
+                  <div className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Mock bundles work differently
+                  </div>
+                  <p
+                    className="mt-1.5 text-[14px] leading-[1.75] max-w-[700px]"
+                    style={{ color: "var(--body)" }}
+                  >
+                    A bundle is a collection of mocks rather than one piece of content, so there is
+                    no sensible free sample of it. Open and browse as many of the mocks as you like —
+                    the refund is only forfeited when you{" "}
+                    <strong style={{ color: "var(--ink)" }}>submit the answers to a sitting</strong>
+                    . A sitting you abandon without submitting costs you nothing. Once one has been
+                    graded, that bundle is no longer refundable.
+                  </p>
+                </div>
+              </div>
+            </Panel>
 
             <Panel className="mt-4 p-6 md:p-7">
               <div className="flex items-start gap-3.5">

@@ -5,6 +5,7 @@ import { MockTest } from "@/lib/models/mock-test";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
 import { judgeMockTestAttempt } from "@/lib/ai/ielts-judge";
 import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
+import { recordBundleMockSubmission } from "@/lib/refunds";
 import { emitEvent } from "@/lib/events/emit";
 
 function isManager(session: { role: string } | null): boolean {
@@ -88,6 +89,18 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         status: "in_progress",
         startedAt: new Date(),
       }));
+
+    /**
+     * A bundle holder forfeits their 3-day refund by submitting a sitting, so
+     * the stamp has to happen here — on submit, not on open. Course holders are
+     * counted when they start a sitting, which `recordMockTestPlay` already did.
+     */
+    if (test.bundle) {
+      await recordBundleMockSubmission({
+        userId,
+        bundleId: test.bundle.toString(),
+      });
+    }
 
     finished.answers = answers;
     finished.result = result;

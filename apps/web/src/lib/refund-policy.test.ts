@@ -2,11 +2,18 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  NOT_REFUNDABLE_REASON,
+  REFUNDABLE_ITEM_TYPES,
+  REFUND_BUNDLE_MOCK_LIMIT,
   REFUND_LESSON_LIMIT,
   REFUND_MOCK_LIMIT,
   REFUND_WINDOW_MS,
+  UNKNOWN_ITEM_REASON,
   forfeitReasonFor,
+  isRefundableItemType,
+  lessonLimitFor,
   lessonsUntilForfeit,
+  mockLimitFor,
   mocksUntilForfeit,
   refundWindowEnds,
   resolveRefundView,
@@ -20,6 +27,7 @@ function view(over: Partial<Parameters<typeof resolveRefundView>[0]> = {}) {
   return resolveRefundView({
     orderId: "order-1",
     orderStatus: "completed",
+    itemType: "course",
     amount: 5999,
     currency: "BDT",
     completedAt: COMPLETED_AT,
@@ -218,6 +226,131 @@ describe("resolveRefundView — echoed fields", () => {
   it("falls back to a safe currency", () => {
     const v = view({ currency: "" });
     assert.equal(v.currency, "USD");
+  });
+});
+
+describe("limits per item type", () => {
+  it("gives a course the lesson and mock allowance", () => {
+    assert.equal(lessonLimitFor("course"), REFUND_LESSON_LIMIT);
+    assert.equal(mockLimitFor("course"), REFUND_MOCK_LIMIT);
+  });
+
+  it("gives a bundle no lessons and no free sitting", () => {
+    assert.equal(lessonLimitFor("mock-bundle"), 0);
+    assert.equal(mockLimitFor("mock-bundle"), REFUND_BUNDLE_MOCK_LIMIT);
+    assert.equal(REFUND_BUNDLE_MOCK_LIMIT, 0);
+  });
+
+  it("reports the limits that actually applied", () => {
+    const v = view();
+    assert.equal(v.itemType, "course");
+    assert.equal(v.lessonLimit, REFUND_LESSON_LIMIT);
+    assert.equal(v.mockLimit, REFUND_MOCK_LIMIT);
+  });
+});
+
+describe("resolveRefundView — mock bundles", () => {
+  it("is claimable inside the window with nothing submitted", () => {
+    const v = view({ itemType: "mock-bundle" });
+    assert.equal(v.status, "refundable");
+    assert.equal(v.canClaim, true);
+    assert.equal(v.mocksRemaining, 0);
+  });
+
+  /**
+   * The bundle rule: one submitted sitting ends the refund. Counted on submit,
+   * so an abandoned in_progress attempt never reaches this.
+   */
+  it("forfeits on the first submitted mock", () => {
+    const v = view({ itemType: "mock-bundle", mockTestsPlayed: 1 });
+    assert.equal(v.status, "forfeited");
+    assert.equal(v.canClaim, false);
+    assert.equal(v.forfeitReason, "mock");
+  });
+
+  it("forfeits even with no stamp on the enrollment", () => {
+    const v = view({ itemType: "mock-bundle", mockTestsPlayed: 1, forfeitedAt: null });
+    assert.equal(v.status, "forfeited");
+  });
+
+  it("uses the bundle wording, not the course wording", () => {
+    const v = view({ itemType: "mock-bundle", mockTestsPlayed: 1 });
+    assert.match(v.message, /submitted a mock exam/i);
+    assert.doesNotMatch(v.message, /played more than/i);
+  });
+
+  it("is not tripped by a course-style lesson count", () => {
+    // A bundle has no lessons, so the lesson limit of 0 must not fire on 0.
+    const v = view({ itemType: "mock-bundle" });
+    assert.equal(v.forfeited, false);
+  });
+
+  it("still expires the window even with nothing submitted", () => {
+    const v = view({
+      itemType: "mock-bundle",
+      now: new Date(COMPLETED_AT.getTime() + REFUND_WINDOW_MS + 1),
+    });
+    assert.equal(v.status, "expired");
+  });
+});
+
+describe("resolveRefundView — items outside the guarantee", () => {
+  it("refuses a resource with its own reason", () => {
+    const v = view({ itemType: "resource" });
+    assert.equal(v.status, "ineligible");
+    assert.equal(v.canClaim, false);
+    assert.equal(v.message, NOT_REFUNDABLE_REASON.resource);
+  });
+
+  it("refuses a seminar with its own reason", () => {
+    const v = view({ itemType: "seminar" });
+    assert.equal(v.status, "ineligible");
+    assert.equal(v.canClaim, false);
+    assert.equal(v.message, NOT_REFUNDABLE_REASON.seminar);
+  });
+
+  it("covers only courses and bundles", () => {
+    assert.deepEqual([...REFUNDABLE_ITEM_TYPES], ["course", "mock-bundle"]);
+    assert.equal(isRefundableItemType("course"), true);
+    assert.equal(isRefundableItemType("mock-bundle"), true);
+    assert.equal(isRefundableItemType("resource"), false);
+    assert.equal(isRefundableItemType("seminar"), false);
+  });
+
+  /** Nothing was consumed, so the usage counters must not be the reason. */
+  it("is ineligible with a pristine usage record", () => {
+    const v = view({ itemType: "resource", lessonsPlayed: 0, mockTestsPlayed: 0 });
+    assert.equal(v.status, "ineligible");
+    assert.equal(v.forfeited, false);
+  });
+
+  it("falls back for an unknown item type", () => {
+    const v = view({ itemType: "mystery-box" });
+    assert.equal(v.status, "ineligible");
+    assert.equal(v.message, UNKNOWN_ITEM_REASON);
+  });
+
+  it("still reports a refunded order as refunded", () => {
+    const v = view({ itemType: "resource", orderStatus: "refunded" });
+    assert.equal(v.status, "refunded");
+  });
+
+  /**
+   * A claim raised under the old, wider policy is already in flight, so it has
+   * to keep reporting its real state rather than flip to ineligible. This does
+   * not re-open a claim: the write path passes no request, so a new one is
+   * rejected by the ineligible branch below.
+   */
+  it("still reports a legacy in-flight claim on a non-refundable item", () => {
+    const v = view({ itemType: "resource", request: { id: "r1", status: "pending" } });
+    assert.equal(v.status, "pending");
+    assert.equal(v.canClaim, false);
+  });
+
+  it("lets a fresh claim attempt on a non-refundable item be rejected", () => {
+    const v = view({ itemType: "seminar", request: null });
+    assert.equal(v.status, "ineligible");
+    assert.equal(v.canClaim, false);
   });
 });
 

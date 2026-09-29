@@ -4,7 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Loader2, RotateCcw, X } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
-import { REFUND_LESSON_LIMIT, REFUND_MOCK_LIMIT } from "@/lib/refund-policy";
+import {
+  REFUND_BUNDLE_MOCK_LIMIT,
+  REFUND_LESSON_LIMIT,
+  REFUND_MOCK_LIMIT,
+} from "@/lib/refund-policy";
 
 type RefundRow = {
   id: string;
@@ -19,6 +23,8 @@ type RefundRow = {
   userEmail: string;
   lessonsPlayed: number;
   mockTestsPlayed: number;
+  /** Absent on claims made before the field existed — those are courses. */
+  itemType?: string;
   adminNote: string;
   failureReason: string;
   createdAt: string;
@@ -129,8 +135,14 @@ export function RefundManage({ rows }: { rows: RefundRow[] }) {
             fg: "#475569",
             bg: "rgba(100,116,139,0.12)",
           };
-          const overLessons = row.lessonsPlayed > REFUND_LESSON_LIMIT;
-          const overMocks = row.mockTestsPlayed > REFUND_MOCK_LIMIT;
+          const isBundle = row.itemType === "mock-bundle";
+          // Claims made before the itemType field existed have no type, and
+          // they can only ever be courses, so the course limits are the fallback.
+          const lessonLimit = isBundle ? 0 : REFUND_LESSON_LIMIT;
+          const mockLimit = isBundle ? REFUND_BUNDLE_MOCK_LIMIT : REFUND_MOCK_LIMIT;
+          const overLessons = !isBundle && row.lessonsPlayed > lessonLimit;
+          const overMocks = row.mockTestsPlayed > mockLimit;
+          const withinAllowance = !overLessons && !overMocks;
 
           return (
             <div
@@ -179,23 +191,34 @@ export function RefundManage({ rows }: { rows: RefundRow[] }) {
                 className="flex items-center gap-3 flex-wrap rounded-lg px-3.5 py-2.5 text-[12.5px]"
                 style={{ background: "var(--bg-soft)", color: "var(--body)" }}
               >
-                <span>
-                  Lessons at claim: {row.lessonsPlayed}/{REFUND_LESSON_LIMIT}
-                </span>
-                <span>
-                  Mocks at claim: {row.mockTestsPlayed}/{REFUND_MOCK_LIMIT}
-                </span>
+                {isBundle ? (
+                  <>
+                    <span>Mocks submitted at claim: {row.mockTestsPlayed}</span>
+                    <span>Bundle allowance: claim before any mock is submitted</span>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      Lessons at claim: {row.lessonsPlayed}/{lessonLimit}
+                    </span>
+                    <span>
+                      Mocks at claim: {row.mockTestsPlayed}/{mockLimit}
+                    </span>
+                  </>
+                )}
                 {overLessons && (
                   <span style={{ color: "#9A3412" }}>
-                    Forfeited: more than {REFUND_LESSON_LIMIT} lessons played
+                    Forfeited: more than {lessonLimit} lessons played
                   </span>
                 )}
                 {overMocks && (
                   <span style={{ color: "#9A3412" }}>
-                    Forfeited: more than {REFUND_MOCK_LIMIT} mock exam played
+                    {isBundle
+                      ? "Forfeited: a mock exam was submitted"
+                      : `Forfeited: more than ${mockLimit} mock exam played`}
                   </span>
                 )}
-                {!overLessons && !overMocks && (
+                {withinAllowance && (
                   <span style={{ color: "#065F46" }}>Within the usage allowance</span>
                 )}
               </div>
