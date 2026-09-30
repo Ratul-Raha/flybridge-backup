@@ -30,6 +30,7 @@ import {
   Newspaper,
   Tag,
   Activity,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -366,6 +367,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/users",
             icon: Users,
             active: pathname.startsWith("/dashboard/admin/users"),
+          },
+          {
+            kind: "link",
+            label: "Roles & Permissions",
+            href: "/dashboard/admin/roles",
+            icon: ShieldCheck,
+            active: pathname.startsWith("/dashboard/admin/roles"),
           },
           {
             kind: "link",
