@@ -75,6 +75,15 @@ export function formatMoney(amount: number, code: string): string {
   return symbol ? `${symbol}${value}` : `${value} ${currency}`;
 }
 
+/** Reads a formatted label like "৳5,999" or "$29.99" back into a number. */
+export function parseMoneyLabel(text?: string | null): number | null {
+  if (!text) return null;
+  const cleaned = text.replace(/[^\d.]/g, "");
+  if (!cleaned) return null;
+  const value = Number(cleaned);
+  return Number.isFinite(value) ? value : null;
+}
+
 export function formatPriceText(p: PriceInput): string {
   const entries = priceEntries(p).filter((e) => e.amount > 0);
   if (entries.length === 0) return "Free";

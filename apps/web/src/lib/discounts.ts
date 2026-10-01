@@ -210,3 +210,48 @@ async function selfOrderId(userId: string, itemId: string): Promise<string | und
     .lean();
   return order?._id?.toString();
 }
+
+/**
+ * Public listing price: the best active, code-less discount for an item,
+ * ignoring audience and usage caps so every visitor sees the same promo price.
+ * Used by marketing surfaces (home/programs listings, nav menu), never for checkout.
+ */
+export function listingPrice(
+  rules: DiscountDoc[],
+  product: Pick<Product, "itemType" | "itemId">,
+  amount: number,
+  currency: string,
+): ResolvedPrice {
+  const now = new Date();
+  const candidates: DiscountCandidate[] = [];
+
+  for (const d of rules) {
+    if (!d.active || d.code) continue;
+    if (!inWindow(d, now)) continue;
+    if (d.appliesTo !== "all" && d.appliesTo !== product.itemType) continue;
+    if (
+      d.scope === "selected" &&
+      !(d.courseIds ?? []).some((id) => id.toString() === product.itemId)
+    ) {
+      continue;
+    }
+    if (typeof d.minSubtotal === "number" && d.minSubtotal > 0 && amount < d.minSubtotal) {
+      continue;
+    }
+    candidates.push({
+      id: d._id.toString(),
+      label: d.name,
+      type: d.type as "percent" | "fixed",
+      value: d.value,
+      currency: d.currency ?? "USD",
+    });
+  }
+
+  return priceFrom(candidates, amount, currency);
+}
+
+/** Active discounts fetched once so a whole listing can be priced in memory. */
+export async function getPublicDiscountRules(): Promise<DiscountDoc[]> {
+  await connectDb();
+  return Discount.find({ active: true }).lean();
+}

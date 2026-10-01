@@ -5,6 +5,7 @@ import { Course, isCourseCategory, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
+import { getPublicDiscountRules, listingPrice } from "@/lib/discounts";
 import { emitEvent } from "@/lib/events/emit";
 
 export const dynamic = "force-dynamic";
@@ -132,11 +133,26 @@ export async function GET(request: NextRequest) {
       { $group: { _id: "$course", count: { $sum: 1 } } },
     ]);
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
+    const discountRules = await getPublicDiscountRules();
     const sorted = courses
       .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
       .sort((a, b) => b.count - a.count);
+    const listing = sorted.map(({ doc, count }) => {
+      const dto = toDto(doc, count);
+      const baseBdt = dto.prices?.BDT;
+      if (typeof baseBdt === "number" && baseBdt > 0) {
+        const priced = listingPrice(
+          discountRules,
+          { itemType: "course", itemId: dto.id },
+          baseBdt,
+          "BDT"
+        );
+        if (priced.discount > 0) dto.prices = { ...dto.prices, BDT: priced.total };
+      }
+      return dto;
+    });
     return NextResponse.json(
-      { courses: sorted.map(({ doc, count }) => toDto(doc, count)) },
+      { courses: listing },
       { headers: { "Cache-Control": CACHE_CONTROL } }
     );
   } catch (error) {
