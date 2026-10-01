@@ -97,27 +97,42 @@ function looksLikePayload(value: unknown): value is EPSIPNPayload {
  * Throws EPSIPNError for anything malformed or undecryptable.
  */
 export function decryptEPSIPN(data: string, secret: string): EPSIPNPayload {
+  return decryptEPSIPNWithSecrets(data, [secret]);
+}
+
+/**
+ * Try each candidate secret in turn and return the first payload that decrypts
+ * to a believable shape. Callers that hold more than one secret — because the
+ * gateway mode may have been toggled between the payment and the IPN — pass
+ * them all; ordering only affects speed, not the result.
+ */
+export function decryptEPSIPNWithSecrets(
+  data: string,
+  secrets: readonly string[]
+): EPSIPNPayload {
   const { iv, cipherText } = splitData(data.trim());
 
-  for (const derive of KEY_DERIVATIONS) {
-    let plain: Buffer;
-    try {
-      const decipher = crypto.createDecipheriv("aes-256-cbc", derive(secret), iv);
-      plain = Buffer.concat([decipher.update(cipherText), decipher.final()]);
-    } catch {
-      // Wrong key for this derivation — bad padding almost always. Try the next.
-      continue;
-    }
+  for (const secret of secrets) {
+    for (const derive of KEY_DERIVATIONS) {
+      let plain: Buffer;
+      try {
+        const decipher = crypto.createDecipheriv("aes-256-cbc", derive(secret), iv);
+        plain = Buffer.concat([decipher.update(cipherText), decipher.final()]);
+      } catch {
+        // Wrong key for this derivation — bad padding almost always. Try the next.
+        continue;
+      }
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(plain.toString("utf8"));
-    } catch {
-      // Right key, wrong derivation order can still land on garbage bytes.
-      continue;
-    }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(plain.toString("utf8"));
+      } catch {
+        // Right key, wrong derivation order can still land on garbage bytes.
+        continue;
+      }
 
-    if (looksLikePayload(parsed)) return parsed;
+      if (looksLikePayload(parsed)) return parsed;
+    }
   }
 
   throw new EPSIPNError("Could not decrypt IPN payload with the configured secret");

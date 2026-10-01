@@ -5,10 +5,10 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reconcileEPSOrder } from "@/lib/payments/eps";
 import {
   EPSIPNError,
-  decryptEPSIPN,
+  decryptEPSIPNWithSecrets,
   type EPSIPNPayload,
 } from "@/lib/payments/eps-ipn-crypto";
-import { currentEPSIPNSecret } from "@/lib/payments/eps-ipn";
+import { currentEPSIPNSecrets } from "@/lib/payments/eps-ipn";
 import type { HydratedOrder } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const secret = currentEPSIPNSecret();
-  if (!secret) {
-    console.error("eps ipn: EPS_IPN_SECRET is not configured");
+  const secrets = await currentEPSIPNSecrets();
+  if (secrets.length === 0) {
+    console.error("eps ipn: no IPN secret is configured for the current mode");
     return NextResponse.json(
       { status: "ERROR", message: "Decryption failed or internal error" },
       { status: 500 }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json().catch(() => null)) as { Data?: unknown } | null;
     const data = typeof body?.Data === "string" ? body.Data : "";
     if (!data) throw new EPSIPNError("Malformed IPN payload: missing Data");
-    payload = decryptEPSIPN(data, secret);
+    payload = decryptEPSIPNWithSecrets(data, secrets);
   } catch (error) {
     // Nothing decrypted means nothing to trust. Report it so EPS stops retrying
     // and we keep the evidence in the logs.

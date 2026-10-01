@@ -135,7 +135,7 @@ User clicks Buy/Enroll
 - **Auth:** `POST /v1/Auth/GetToken` with `x-hash: HMACSHA512(username, hashKey)`; JWT cached in memory
 - **Initialize:** `POST /v1/EPSEngine/InitializeEPS` with `x-hash: HMACSHA512(merchantTransactionId, hashKey)` + `Authorization: Bearer <token>`
 - **Verify:** `GET /v1/EPSEngine/CheckMerchantTransactionStatus` (by `merchantTransactionId` or `EPSTransactionId`)
-- **Callbacks:** EPS sends no server-to-server webhook — the only signal is the buyer's browser coming back to `successUrl`/`failUrl`/`cancelUrl`. Each carries `order` + `merchantTransactionId`; the pages re-verify with `CheckMerchantTransactionStatus` before anything is fulfilled, and the query string is never trusted on its own.
+- **Callbacks:** the buyer's browser returns to `successUrl`/`failUrl`/`cancelUrl` carrying `order` + `merchantTransactionId`; the pages re-verify with `CheckMerchantTransactionStatus` before anything is fulfilled, and the query string is never trusted on its own. An EPS **IPN** is also supported at `POST /api/webhooks/eps` (AES-256-CBC, key from the merchant panel) and is treated the same way — a trigger that only identifies the order, never evidence. If webhooks are not configured the browser return and the sweep still cover every order.
 - **Callback routes:** success → `/payment/success`, fail → `/payment/failed` (its own page, so a decline doesn't render the "confirming your payment" copy), cancel → the product's checkout page.
 - **Amount check:** a `Success` status is not enough to fulfil — the collected `TotalAmount` must match the order total, otherwise the order stays `pending` for a human to refund or re-verify.
 - **Sweep:** `/api/cron/payments` (every 5 min, `vercel.json`) reconciles pending orders older than 15 min, which is what covers a buyer who closes the tab or loses connection on the way back.
@@ -144,15 +144,22 @@ User clicks Buy/Enroll
 
 | Variable | Purpose |
 |---|---|
-| `STRIPE_SECRET_KEY` | Server-side Stripe secret key (`sk_...`) |
+| `STRIPE_SECRET_KEY` | **Live** Stripe secret key (`sk_live_…`), used when Stripe mode is `live` |
+| `STRIPE_TEST_SECRET_KEY` | Optional test key (`sk_test_…`), used when Stripe mode is `test`; falls back to `STRIPE_SECRET_KEY` |
+| `STRIPE_MODE` | `test` (default) or `live` — seed value for Stripe mode |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client-side key (not currently used) |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_...`) |
-| `EPS_USERNAME` | EPS merchant username (`Epsdemo@gmail.com` in sandbox) |
-| `EPS_PASSWORD` | EPS merchant password |
-| `EPS_HASH_KEY` | EPS HMAC-SHA512 signing key (base64) |
-| `EPS_MERCHANT_ID` | EPS merchant ID (UUID) |
-| `EPS_STORE_ID` | EPS store ID (UUID) |
-| `EPS_ENV` | `sandbox` (default) or `production` |
+| `STRIPE_WEBHOOK_SECRET` | **Live** webhook signing secret (`whsec_…`) |
+| `STRIPE_WEBHOOK_SECRET_TEST` | Optional test webhook secret; the webhook route tries every configured one |
+| `EPS_PRODUCTION_USERNAME` / `_PASSWORD` / `_HASH_KEY` / `_MERCHANT_ID` / `_STORE_ID` | Live EPS merchant credentials. Generic `EPS_USERNAME` etc. are accepted as aliases for these |
+| `EPS_SANDBOX_USERNAME` / `_PASSWORD` / `_HASH_KEY` / `_MERCHANT_ID` / `_STORE_ID` | Optional sandbox overrides; when unset the public EPS sandbox demo account is used. Sandbox never reads the production credentials |
+| `EPS_ENV` | `sandbox` (default) or `production` — seed value for EPS mode |
+| `EPS_PRODUCTION_IPN_SECRET` / `EPS_SANDBOX_IPN_SECRET` | Per-environment IPN decryption key. The one for the active mode is tried first; the other is kept as a fallback because the mode is not carried on the wire |
+| `EPS_IPN_SECRET` | Single-environment IPN key fallback |
+
+Both modes above are only **seed values**. The `gateways` document in Mongo
+(`PaymentSettings`) overrides them once an admin saves on the Payment Settings
+page, and `Order.gatewayMode` snapshots the mode onto each order so later
+reconciliation and refunds use the environment the order was started in.
 
 ---
 

@@ -1,21 +1,21 @@
 import "server-only";
 
+import { loadPaymentSettings } from "@/lib/payments/settings";
+import { ipnSecretCandidates } from "@/lib/payments/eps-ipn-secret";
+
 /**
- * Resolves the EPS IPN decryption key.
+ * Resolves the EPS IPN decryption keys for the current gateway mode.
  *
  * This is the only part of the IPN path that touches credentials, so this is
  * the only part that needs the `server-only` guard. The decryption itself is
- * pure crypto and lives in ./eps-ipn-crypto so it can be unit-tested.
+ * pure crypto and lives in ./eps-ipn-crypto, and the ordering logic in
+ * ./eps-ipn-secret, so both stay unit-tested.
  *
- * The IPN Secret Key from the EPS merchant panel is distinct from
- * EPS_*_HASH_KEY (which signs the outbound x-hash header).
+ * Returns candidates rather than a single key: the mode an IPN was sent under
+ * is not on the wire, so an IPN that arrives after the admin toggle has been
+ * flipped still has to decrypt.
  */
-export function currentEPSIPNSecret(): string | null {
-  const secret =
-    process.env.EPS_IPN_SECRET ??
-    process.env[`EPS_PRODUCTION_IPN_SECRET`] ??
-    process.env[`EPS_SANDBOX_IPN_SECRET`] ??
-    "";
-  const trimmed = secret.trim();
-  return trimmed && !trimmed.includes("placeholder") ? trimmed : null;
+export async function currentEPSIPNSecrets(): Promise<string[]> {
+  const { epsMode } = await loadPaymentSettings();
+  return ipnSecretCandidates(process.env, epsMode);
 }
