@@ -201,7 +201,7 @@ export function IeltsPromoPopup() {
                 onClick={close}
                 className="group inline-flex items-center gap-2 rounded-full bg-[#0F9D58] px-6 py-2.5 text-white transition-colors hover:bg-[#0C8A4C]"
               >
-                <span className="text-[13.5px] font-bold">এখনই ভর্তি হন</span>
+                <span className="text-[13.5px] font-bold">Enroll Now</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
               <a

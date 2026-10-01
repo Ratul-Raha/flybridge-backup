@@ -20,7 +20,6 @@ import {
   Monitor,
   Pencil,
   Play,
-  Star,
 } from "lucide-react";
 import {
   courseDetails,
@@ -29,7 +28,6 @@ import {
   type CurriculumSection,
 } from "../programs/[slug]/course-data";
 import { BengaliText } from "@/components/bengali-text";
-import { ReviewsSection } from "@/components/programs/reviews-section";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import { Countdown, ExamWindow, Reveal, SkillTabs, StickyOffer } from "@/components/ielts/interactive";
@@ -139,7 +137,6 @@ const N = toBn(MOCK_TEST_COUNT);
 const COPY = {
   heroSub: `প্রতিটি টপিক ভেঙে ভেঙে শেখানো সেলফ পেইসড এক্সপ্লেইনার লেসন, সাথে ${N}টি ফ্রী কম্পিউটার বেইজড মক টেস্ট, কুইজ, প্র্যাকটিস, বই, লাইভ ক্লাস।`,
   windowCaption: "আমাদের মক টেস্টের ডেমো সিমুলেশন",
-  heroChips: ["সেলফ পেইসড", `${N}টি মক টেস্ট`, "কুইজ ও প্র্যাকটিস", "ডিজিটাল বই", "লাইভ ক্লাস", "লাইফটাইম অ্যাক্সেস"],
 
   systemTitle: "শিখুন, প্র্যাকটিস করুন, নিজেকে যাচাই করুন",
   systemDesc: "আলাদা কোর্স, আলাদা ফাইল আর আলাদা মক টেস্ট সাইট খুঁজে বেড়াতে হবে না।",
@@ -166,23 +163,6 @@ const COPY = {
 
 const wrap = "max-w-[1240px] mx-auto px-[clamp(20px,4.5vw,56px)]";
 const sectionY = "py-[clamp(64px,8vw,104px)]";
-
-/** Partial fills are exact: 4.6 shows 4.6 stars, not 5. */
-function Stars({ value, size = 15 }: { value: number; size?: number }) {
-  const pct = (Math.max(0, Math.min(5, value)) / 5) * 100;
-  const row = (color: string, fill: string) =>
-    Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} className="shrink-0" style={{ width: size, height: size, color, fill }} strokeWidth={1.5} />
-    ));
-  return (
-    <span className="relative inline-flex" role="img" aria-label={`${value} / 5`}>
-      <span className="inline-flex gap-[2px]">{row("#B9C5D6", "transparent")}</span>
-      <span className="absolute inset-y-0 left-0 inline-flex gap-[2px] overflow-hidden" style={{ width: `${pct}%` }}>
-        {row("#F2A900", "#F2A900")}
-      </span>
-    </span>
-  );
-}
 
 function Heading({
   title,
@@ -245,11 +225,13 @@ function OfferCard({
   note,
   dark = false,
   className = "",
+  compact = false,
 }: {
   offer: Offer;
   note?: string;
   dark?: boolean;
   className?: string;
+  compact?: boolean;
 }) {
   const isWaitlist = offer.mode === "waitlist";
   const isEnrolled = offer.mode === "enrolled";
@@ -272,6 +254,102 @@ function OfferCard({
             <BengaliText>যেখানে থেমেছিলেন, সেখান থেকেই আবার শুরু করুন।</BengaliText>
           </p>
           <Cta offer={offer} tone={dark ? "dark" : "light"} full />
+        </div>
+      ) : compact ? (
+        <div>
+          <div className="flex items-end justify-between gap-x-4 gap-y-2 flex-wrap">
+            <div>
+              <div className="text-[12px] font-bold tracking-[0.08em] uppercase" style={{ color: muted }}>
+                <BengaliText>কোর্স ফি</BengaliText>
+              </div>
+              <div className="mt-1 flex items-baseline gap-x-2.5 gap-y-1 flex-wrap">
+                <span
+                  className="font-display font-bold leading-none tabular-nums"
+                  style={{ fontSize: "clamp(32px,4.2vw,44px)", color: ink }}
+                >
+                  <BengaliText>{headline}</BengaliText>
+                </span>
+                {offer.originalPrice && (
+                  <s className="text-[15px] font-medium" style={{ color: muted }}>
+                    {offer.originalPrice}
+                  </s>
+                )}
+              </div>
+            </div>
+            {offer.savings && (
+              <span
+                className="mb-1 rounded-md px-2.5 py-1 text-[12px] font-bold whitespace-nowrap"
+                style={{ background: "var(--ib-mint)", color: "#052117" }}
+              >
+                Save {offer.savings}
+              </span>
+            )}
+          </div>
+
+          {offer.dealLabel && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-bold tracking-[0.04em]"
+                style={{
+                  border: dark ? "1px solid rgba(255,255,255,0.24)" : "1px solid var(--ib-line)",
+                  color: ink,
+                }}
+              >
+                <Flag className="h-[12px] w-[12px] shrink-0" strokeWidth={2.6} style={{ color: "var(--ib-brand-2)" }} />
+                {offer.dealLabel}
+              </span>
+              {offer.dealNote && (
+                <span className="text-[12.5px] font-medium leading-[1.6]" style={{ color: muted }}>
+                  <BengaliText>{offer.dealNote}</BengaliText>
+                </span>
+              )}
+            </div>
+          )}
+
+          {hasScholarship ? (
+            <p className="mt-3 flex items-start gap-2 text-[13px] leading-[1.7]" style={{ color: body }}>
+              <Gift className="mt-[2px] h-[14px] w-[14px] shrink-0" strokeWidth={2.2} style={{ color: "var(--ib-brand-2)" }} />
+              <span>
+                <span className="font-bold" style={{ color: dark ? "#A9F5D5" : "var(--ib-brand-2)" }}>
+                  <BengaliText>{`${toBn(offer.scholarshipPercent)}% ওয়েটলিস্ট স্কলারশিপ — ওয়েটলিস্টে জয়েন করলেই`}</BengaliText>
+                </span>
+              </span>
+            </p>
+          ) : offer.price ? (
+            <p className="mt-2.5 text-[13px]" style={{ color: muted }}>
+              <BengaliText>লাইফটাইম অ্যাক্সেসসহ এককালীন ফি।</BengaliText>
+            </p>
+          ) : null}
+
+          {note && (
+            <p className="mt-2.5 text-[13px] leading-[1.7]" style={{ color: body }}>
+              <BengaliText>{note}</BengaliText>
+            </p>
+          )}
+
+          <div className="mt-4">
+            {isWaitlist && offer.showWaitlistForm ? (
+              <WaitlistForm slug={offer.slug} title={offer.title} discountPercent={offer.scholarshipPercent} />
+            ) : (
+              <Cta offer={offer} tone={dark ? "dark" : "light"} full />
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-4" style={{ borderTop: `1px solid ${line}` }}>
+            {[
+              "লাইফটাইম অ্যাক্সেস",
+              `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`,
+            ].map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: body }}>
+                <Check
+                  className="h-[13px] w-[13px] shrink-0"
+                  strokeWidth={3}
+                  style={{ color: dark ? "#7CF0BD" : "var(--ib-brand)" }}
+                />
+                <BengaliText>{t}</BengaliText>
+              </span>
+            ))}
+          </div>
         </div>
       ) : (
         <div>
@@ -384,7 +462,6 @@ function TrustStrip({
   details?: CourseDetails;
   lessonCount: number;
 }) {
-  const rating = details?.rating;
   const stats = details?.heroStats?.length
     ? details.heroStats
     : [
@@ -396,19 +473,6 @@ function TrustStrip({
   return (
     <Reveal>
     <div className="mt-14 lg:mt-16 pt-10" style={{ borderTop: "1px solid var(--ib-line)" }}>
-      {rating && (
-        <a href="#reviews" className="flex items-center gap-3 mb-9">
-          <span className="font-display text-[30px] font-semibold leading-none tabular-nums" style={{ color: "var(--ib-ink)" }}>
-            {toBn(rating.average)}
-          </span>
-          <span className="flex flex-col gap-1">
-            <Stars value={rating.average} />
-            <span className="text-[13px] underline underline-offset-2" style={{ color: "var(--ib-muted)" }}>
-              <BengaliText>{`${toBn(rating.count)} জন লিখেছে`}</BengaliText>
-            </span>
-          </span>
-        </a>
-      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
         {stats.map((s) => (
           <div key={s.label} className="relative pl-5" style={{ borderLeft: "3px solid var(--ib-brand)" }}>
@@ -426,6 +490,90 @@ function TrustStrip({
       </div>
     </div>
     </Reveal>
+  );
+}
+
+/**
+ * Hero offer — a dark ticket band instead of a stacked card: price on one side,
+ * action on the other, separated by a dashed perforation. One focal point, no box.
+ */
+function HeroOfferBand({ offer, note }: { offer: Offer; note?: string }) {
+  const perks = ["লাইফটাইম অ্যাক্সেস", `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`];
+  const finePrint = offer.dealNote ?? note;
+
+  return (
+    <div className="mt-9 max-w-[560px]">
+      <div
+        className="relative flex flex-col sm:flex-row rounded-[20px]"
+        style={{ background: "var(--ib-navy)", boxShadow: "0 36px 64px -38px rgba(10,20,40,0.75)" }}
+      >
+        <div className="sm:w-[45%] px-6 py-6">
+          <div className="flex items-center gap-2">
+            <span className="ib-dot h-[7px] w-[7px] rounded-full" style={{ background: "var(--ib-mint)" }} />
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "#A9F5D5" }}>
+              {offer.dealLabel ?? "Launch Offer"}
+            </span>
+          </div>
+          <div className="mt-4 flex items-end gap-2.5 flex-wrap">
+            <span className="font-display text-[clamp(34px,4vw,42px)] font-bold leading-[0.95] tracking-[-0.02em] text-white tabular-nums">
+              <BengaliText>{offer.price}</BengaliText>
+            </span>
+            {offer.originalPrice && (
+              <s className="mb-1 text-[15px] font-medium" style={{ color: "#8FA0B8" }}>
+                {offer.originalPrice}
+              </s>
+            )}
+          </div>
+          <div className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-2">
+            {offer.savings && (
+              <span
+                className="rounded-full px-3 py-1 text-[11.5px] font-extrabold"
+                style={{ background: "var(--ib-mint)", color: "#052117" }}
+              >
+                Save {offer.savings}
+              </span>
+            )}
+            <span className="text-[12px] font-medium" style={{ color: "#8FA0B8" }}>
+              <BengaliText>এককালীন পেমেন্ট</BengaliText>
+            </span>
+          </div>
+        </div>
+
+        <div
+          className="relative hidden sm:block w-px shrink-0"
+          style={{ borderLeft: "1.5px dashed rgba(255,255,255,0.22)" }}
+        >
+          <span className="absolute -top-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
+          <span className="absolute -bottom-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
+        </div>
+
+        <div
+          className="relative sm:hidden h-px"
+          style={{ borderTop: "1.5px dashed rgba(255,255,255,0.22)" }}
+        >
+          <span className="absolute -top-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
+          <span className="absolute -top-[10px] -right-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
+        </div>
+
+        <div className="flex-1 px-6 py-6 flex flex-col justify-center gap-4">
+          <Cta offer={offer} tone="dark" full />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {perks.map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: "#C9D5E5" }}>
+                <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-mint)" }} />
+                <BengaliText>{t}</BengaliText>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {finePrint && (
+        <p className="mt-3 text-[12.5px] leading-[1.7]" style={{ color: "var(--ib-muted)" }}>
+          <BengaliText>{finePrint}</BengaliText>
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -447,36 +595,28 @@ function Hero({
       <div className={`${wrap} pt-[104px] sm:pt-[124px] pb-14 lg:pb-20`}>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-12 lg:gap-16 items-start">
           <Reveal>
-            <h1
-              className="font-display font-bold leading-[1.14] max-w-[640px]"
-              style={{ fontSize: "clamp(32px,4.2vw,54px)", color: "var(--ib-ink)", letterSpacing: "-0.018em" }}
-            >
-              <BengaliText>{title}</BengaliText>
-            </h1>
-            {details?.titleAccent && (
-              <span
-                className="mt-5 inline-flex items-center rounded-full px-3.5 py-1.5 text-[14px] font-bold"
-                style={{ background: "var(--ib-mint)", color: "#052117" }}
-              >
-                <BengaliText>{details.titleAccent}</BengaliText>
+            <div className="inline-flex items-center gap-2.5">
+              <span className="ib-dot h-[8px] w-[8px] rounded-full" style={{ background: "var(--ib-brand)" }} />
+              <span className="text-[11.5px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--ib-brand-2)" }}>
+                IELTS Preparation
               </span>
-            )}
-            <p className="mt-5 text-[16.5px] leading-[1.85] max-w-[560px]" style={{ color: "var(--ib-body)" }}>
+            </div>
+
+            <h1 className="mt-5 font-display font-bold tracking-[-0.03em]" style={{ color: "var(--ib-ink)" }}>
+              <span className="block leading-[0.96]" style={{ fontSize: "clamp(38px,5.4vw,72px)" }}>
+                Target Band 7
+              </span>
+              <span
+                className="mt-3 block font-semibold leading-[1.25]"
+                style={{ fontSize: "clamp(19px,2.1vw,26px)", color: "var(--ib-brand-2)" }}
+              >
+                <BengaliText>{title}</BengaliText>
+              </span>
+            </h1>
+
+            <p className="mt-5 max-w-[520px] text-[16.5px] leading-[1.85]" style={{ color: "var(--ib-body)" }}>
               <BengaliText>{COPY.heroSub}</BengaliText>
             </p>
-
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {COPY.heroChips.map((chip) => (
-                <li
-                  key={chip}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[13.5px] font-semibold"
-                  style={{ border: "1px solid var(--ib-line)", color: "var(--ib-ink)" }}
-                >
-                  <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
-                  <BengaliText>{chip}</BengaliText>
-                </li>
-              ))}
-            </ul>
 
             {offer.mode === "waitlist" && (
               <div className="mt-7">
@@ -484,17 +624,32 @@ function Hero({
               </div>
             )}
 
-            <div
-              className="mt-8 max-w-[520px] rounded-2xl bg-white p-6"
-              style={{ border: "1px solid var(--ib-line)" }}
-            >
-              <OfferCard offer={offer} note={pricingNote} />
-            </div>
+            {offer.mode === "buy" && offer.price ? (
+              <HeroOfferBand offer={offer} note={pricingNote} />
+            ) : (
+              <div
+                className="mt-8 max-w-[520px] rounded-2xl bg-white p-5"
+                style={{ border: "1px solid var(--ib-line)" }}
+              >
+                <OfferCard offer={offer} note={pricingNote} compact />
+              </div>
+            )}
           </Reveal>
 
           <Reveal delay={0.15}>
-            <ExamWindow />
-            <p className="mt-5 text-[13.5px] leading-[1.75] max-w-[500px]" style={{ color: "var(--ib-muted)" }}>
+            <div className="relative">
+              <ExamWindow />
+              <div
+                className="absolute -top-4 -right-2 sm:-right-4 z-10 inline-flex items-center gap-2 rounded-full bg-[#0B1F3A] px-4 py-2"
+                style={{ boxShadow: "0 14px 30px -14px rgba(11,31,58,0.6)" }}
+              >
+                <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "var(--ib-mint)" }} />
+                <span className="text-[12px] font-bold tracking-[0.06em] uppercase" style={{ color: "#A9F5D5" }}>
+                  Target Band 7
+                </span>
+              </div>
+            </div>
+            <p className="mt-6 text-[13.5px] leading-[1.75] max-w-[500px]" style={{ color: "var(--ib-muted)" }}>
               <BengaliText>{COPY.windowCaption}</BengaliText>
             </p>
           </Reveal>
@@ -1116,10 +1271,9 @@ export default async function IeltsFullReadinessLandingPage() {
 
   const liveCourse = program.hasDb ? course : null;
 
-  const [enrolledDoc, liveReviews, userReviewDoc] = await Promise.all([
+  const [enrolledDoc, liveReviews] = await Promise.all([
     liveCourse && userId ? CourseEnrollment.exists({ user: userId, course: liveCourse._id, status: "active" }) : null,
     liveCourse ? getCourseReviewsCached(liveCourse._id.toString()) : [],
-    liveCourse && userId ? CourseReview.findOne({ course: liveCourse._id, user: userId }).lean() : null,
   ]);
 
   const cta: CourseCta | undefined = liveCourse
@@ -1156,7 +1310,7 @@ export default async function IeltsFullReadinessLandingPage() {
       mode === "enrolled"
         ? "ক্লাসে ফিরে যান"
         : mode === "buy"
-          ? "এখনই ভর্তি হন"
+          ? "Enroll Now"
           : scholarshipPercent > 0
             ? `ওয়েটলিস্টে জয়েন করে ${toBn(scholarshipPercent)}% স্কলারশিপ নিন`
             : "Join the waitlist",
@@ -1245,36 +1399,6 @@ export default async function IeltsFullReadinessLandingPage() {
           )}
 
           {details.book && <BookBand book={details.book} />}
-
-          <div style={{ background: "#fff" }}>
-            {liveCourse ? (
-              <Reveal>
-                <ReviewsSection
-                  courseId={liveCourse._id.toString()}
-                  reviews={liveReviewItems}
-                  totalReviews={liveReviewItems.length}
-                  averageRating={liveCourse.averageRating ?? 0}
-                  userReview={userReviewDoc ? { id: userReviewDoc._id.toString(), rating: userReviewDoc.rating, text: userReviewDoc.text } : null}
-                />
-              </Reveal>
-            ) : details.reviews?.length ? (
-              <Reveal>
-                <ReviewsSection
-                  reviews={details.reviews.map((review, i) => ({
-                    id: `${review.name}-${i}`,
-                    userName: review.name,
-                    rating: review.rating,
-                    text: review.text,
-                    date: review.date,
-                    helpful: review.helpful,
-                    verified: review.verified,
-                  }))}
-                  totalReviews={details.reviews.length}
-                  averageRating={details.rating?.average ?? 0}
-                />
-              </Reveal>
-            ) : null}
-          </div>
 
           {!isEnrolled && <RefundSection />}
 
