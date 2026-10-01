@@ -17,6 +17,7 @@ export type DbCourse = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
+  originalPrice?: string;
   image: string | null;
   level: string;
   upcoming: boolean;
@@ -104,11 +105,21 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
             >
               INTRO OFFER
             </div>
-            <div
-              className="font-display font-bold leading-none mt-[4px]"
-              style={{ fontSize: "23px", color: "var(--ink)" }}
-            >
-              {bdtPrice != null ? formatMoney(bdtPrice, "BDT") : `${course.currency} ${course.price.toLocaleString()}`}
+            <div className="mt-[4px] flex items-baseline gap-2">
+              <div
+                className="font-display font-bold leading-none"
+                style={{ fontSize: "23px", color: "var(--ink)" }}
+              >
+                {bdtPrice != null ? formatMoney(bdtPrice, "BDT") : `${course.currency} ${course.price.toLocaleString()}`}
+              </div>
+              {course.originalPrice && (
+                <span
+                  className="text-[13px] font-medium leading-none line-through"
+                  style={{ color: "var(--body)", opacity: 0.6 }}
+                >
+                  {course.originalPrice}
+                </span>
+              )}
             </div>
           </>
         )}

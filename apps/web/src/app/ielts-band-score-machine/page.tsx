@@ -1201,7 +1201,9 @@ export default async function IeltsFullReadinessLandingPage() {
         : undefined,
   };
   const isEnrolled = mode === "enrolled";
-  const stickyPrice = mode !== "enrolled" && offer.price ? { label: "কোর্স ফি", value: offer.price } : null;
+  const stickyPrice = mode !== "enrolled" && offer.price
+    ? { label: "কোর্স ফি", value: offer.price, originalValue: offer.originalPrice }
+    : null;
 
   return (
     <div className="ib-page ielts-landing pb-[88px]">
@@ -1301,6 +1303,7 @@ export default async function IeltsFullReadinessLandingPage() {
         label={offer.label}
         price={stickyPrice?.value}
         priceLabel={stickyPrice?.label}
+        originalPrice={stickyPrice?.originalValue}
         arrow={mode !== "enrolled"}
       />
 

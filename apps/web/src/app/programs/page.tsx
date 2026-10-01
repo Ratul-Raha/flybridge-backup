@@ -11,6 +11,7 @@ import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { cleanPrices } from "@/lib/pricing";
+import { courseDetails } from "./[slug]/course-data";
 
 export const revalidate = 60;
 
@@ -60,6 +61,7 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
         price: c.price ?? 0,
         currency: c.currency ?? "USD",
         prices: cleanPrices(c.prices),
+        originalPrice: courseDetails[c.slug]?.originalPrice,
         image: c.image ?? null,
         level: c.level ?? "",
         upcoming: c.upcoming ?? false,

@@ -17,6 +17,7 @@ type Props = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
+  originalPrice?: string;
   level: string;
   language: string;
   pace: string;
@@ -225,8 +226,16 @@ export function CheckoutForm({ course }: { course: Props }) {
           <div className="space-y-3 rounded-xl border border-line bg-white p-4">
             <div className="flex items-center justify-between text-[14px]">
               <span style={{ color: "var(--body)" }}>Subtotal</span>
-              <span style={{ color: "var(--ink)" }}>
+              <span className="flex items-baseline gap-2" style={{ color: "var(--ink)" }}>
                 {formatMoney(pricing?.subtotal ?? baseAmount, displayCurrency)}
+                {course.originalPrice && (
+                  <span
+                    className="text-[12px] font-medium line-through"
+                    style={{ color: "var(--body)", opacity: 0.6 }}
+                  >
+                    {course.originalPrice}
+                  </span>
+                )}
               </span>
             </div>
             {hasDiscount && (
@@ -243,7 +252,17 @@ export function CheckoutForm({ course }: { course: Props }) {
               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             >
               <span>Total</span>
-              <span>{formatMoney(pricing?.total ?? baseAmount, displayCurrency)}</span>
+              <span className="flex items-baseline gap-2">
+                {formatMoney(pricing?.total ?? baseAmount, displayCurrency)}
+                {course.originalPrice && (
+                  <span
+                    className="text-[12px] font-medium line-through"
+                    style={{ color: "var(--body)", opacity: 0.55 }}
+                  >
+                    {course.originalPrice}
+                  </span>
+                )}
+              </span>
             </div>
 
             <div className="flex items-center gap-2 pt-1">

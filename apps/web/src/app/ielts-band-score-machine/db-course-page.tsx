@@ -9,11 +9,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nav } from "@/components/nav";
 import { BookOpen, Check, Lock, ShieldCheck, Zap } from "lucide-react";
-import { priceTextFor, cleanPrices } from "@/lib/pricing";
+import { cleanPrices, formatMoney } from "@/lib/pricing";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
 import { BengaliText } from "@/components/bengali-text";
 import { ReviewsSection, type ReviewItem } from "@/components/programs/reviews-section";
+import { courseDetails } from "../programs/[slug]/course-data";
 
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
 const toBn = (v: number | string) => String(v).replace(/\d/g, (d) => BN_DIGITS.charAt(Number(d)));
@@ -96,12 +97,15 @@ export function DbCoursePage({
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
     prices: cleanPrices(course.prices),
+    originalPrice: courseDetails[course.slug]?.originalPrice,
     level: course.level ?? "",
     language: course.language ?? "",
     pace: course.pace ?? "",
     upcoming: course.upcoming === true,
   };
-  const priceText = isFree ? "ফ্রি" : priceTextFor(checkoutCourse, "BDT");
+  const priceText = isFree ? "ফ্রি" : formatMoney(checkoutCourse.prices?.BDT ?? 0, "BDT");
+  const bdtAmount = checkoutCourse.prices?.BDT ?? (checkoutCourse.currency === "BDT" ? checkoutCourse.price : 0);
+  const displayPrice = isFree ? "ফ্রি" : (bdtAmount > 0 ? formatMoney(bdtAmount, "BDT") : priceText);
 
   return (
     <div className="checkout-page">
@@ -292,8 +296,16 @@ export function DbCoursePage({
                   <div className="py-4 space-y-2.5 border-b" style={{ borderColor: "var(--line)" }}>
                     <div className="flex items-center justify-between text-[14px]">
                       <span style={{ color: "var(--body)" }}>সাবটোটাল</span>
-                      <span className="font-medium" style={{ color: "var(--ink)" }}>
-                        {priceText}
+                      <span className="flex items-baseline gap-2 font-medium" style={{ color: "var(--ink)" }}>
+                        <span>{displayPrice}</span>
+                        {checkoutCourse.originalPrice && (
+                          <span
+                            className="text-[12px] font-medium line-through"
+                            style={{ color: "var(--body)", opacity: 0.6 }}
+                          >
+                            {checkoutCourse.originalPrice}
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[14px]">
@@ -308,11 +320,21 @@ export function DbCoursePage({
                     <span className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
                       মোট
                     </span>
-                    <span
-                      className="text-[22px] font-bold leading-none"
-                      style={{ color: "var(--ink)" }}
-                    >
-                      {priceText}
+                    <span className="flex items-baseline gap-2">
+                      <span
+                        className="text-[22px] font-bold leading-none"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        {displayPrice}
+                      </span>
+                      {checkoutCourse.originalPrice && (
+                        <span
+                          className="text-[13px] font-medium line-through"
+                          style={{ color: "var(--body)", opacity: 0.6 }}
+                        >
+                          {checkoutCourse.originalPrice}
+                        </span>
+                      )}
                     </span>
                   </div>
 
@@ -359,10 +381,10 @@ export function DbCoursePage({
                 <div className="px-6 pb-6">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {[
-                      { icon: Lock, label: "SSL এনক্রিপ্টেড" },
-                      { icon: ShieldCheck, label: "৩ দিনের রিফান্ড গ্যারান্টি" },
-                      { icon: Zap, label: "তাৎক্ষণিক অ্যাক্সেস" },
-                    ].map(({ icon: Icon, label }) => (
+                      { icon: Lock, label: "SSL এনক্রিপ্টেড", href: undefined },
+                      { icon: ShieldCheck, label: "৩ দিনের রিফান্ড গ্যারান্টি", href: "/refund" },
+                      { icon: Zap, label: "তাৎক্ষণিক অ্যাক্সেস", href: undefined },
+                    ].map(({ icon: Icon, label, href }) => (
                       <div key={label} className="flex flex-col items-center gap-1.5">
                         <span
                           className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -370,12 +392,22 @@ export function DbCoursePage({
                         >
                           <Icon className="w-4 h-4" />
                         </span>
-                        <span
-                          className="text-[12px] font-medium leading-tight"
-                          style={{ color: "var(--body)" }}
-                        >
-                          <BengaliText>{label}</BengaliText>
-                        </span>
+                        {href ? (
+                          <a
+                            href={href}
+                            className="text-[12px] font-medium leading-tight underline underline-offset-2 hover:text-brand-2 transition-colors"
+                            style={{ color: "var(--body)" }}
+                          >
+                            <BengaliText>{label}</BengaliText>
+                          </a>
+                        ) : (
+                          <span
+                            className="text-[12px] font-medium leading-tight"
+                            style={{ color: "var(--body)" }}
+                          >
+                            <BengaliText>{label}</BengaliText>
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

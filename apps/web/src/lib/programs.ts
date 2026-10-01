@@ -7,6 +7,7 @@ export type Program = {
   badgeColor: string;
   upcoming?: boolean;
   price?: string;
+  originalPrice?: string;
   image?: string;
   hasDb?: boolean;
 };
@@ -20,6 +21,7 @@ export const programs: Program[] = [
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
     price: "$29.99",
+    originalPrice: "$99.99",
     image: "/watermark.webp",
   },
   {

@@ -16,6 +16,7 @@ type Course = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
+  originalPrice?: string;
   upcoming: boolean;
 };
 
@@ -322,8 +323,18 @@ export function CheckoutPanel({
               <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                 Total
               </span>
-              <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                {money(total)}
+              <span className="flex items-baseline gap-2">
+                <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
+                  {money(total)}
+                </span>
+                {course.originalPrice && (
+                  <span
+                    className="text-[13px] font-medium line-through"
+                    style={{ color: "var(--body)", opacity: 0.6 }}
+                  >
+                    {course.originalPrice}
+                  </span>
+                )}
               </span>
             </div>
 

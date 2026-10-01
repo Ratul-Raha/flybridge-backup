@@ -88,11 +88,21 @@ export function ProgramCard({ p }: { p: Program }) {
         >
           INTRO OFFER
         </div>
-        <div
-          className="font-display font-bold leading-none mt-[4px]"
-          style={{ fontSize: "23px", color: "var(--ink)" }}
-        >
-          {p.price}
+        <div className="mt-[4px] flex items-baseline gap-2">
+          <div
+            className="font-display font-bold leading-none"
+            style={{ fontSize: "23px", color: "var(--ink)" }}
+          >
+            {p.price}
+          </div>
+          {p.originalPrice && (
+            <span
+              className="text-[13px] font-medium leading-none line-through"
+              style={{ color: "var(--body)", opacity: 0.6 }}
+            >
+              {p.originalPrice}
+            </span>
+          )}
         </div>
       </div>
       {p.upcoming ? (

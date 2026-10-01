@@ -54,6 +54,7 @@ export default async function CheckoutPage({ params }: Props) {
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
     prices: cleanPrices(course.prices),
+    originalPrice: details?.originalPrice,
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",

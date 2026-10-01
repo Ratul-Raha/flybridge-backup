@@ -9,6 +9,7 @@ export type RelatedProgramLanding = {
   badgeColor: string;
   bg: string;
   sub: string;
+  originalSub?: string;
   image?: string | null;
 };
 
@@ -54,8 +55,13 @@ export function RelatedProgramCardLanding({ p }: { p: RelatedProgramLanding }) {
         >
           <BengaliText>{p.title}</BengaliText>
         </span>
-        <span className="mt-1.5 block truncate text-[12.5px]" style={{ color: "var(--body)" }}>
+        <span className="mt-1.5 flex items-baseline gap-1.5 truncate text-[12.5px]" style={{ color: "var(--body)" }}>
           <BengaliText>{p.sub}</BengaliText>
+          {p.originalSub && (
+            <span className="line-through" style={{ opacity: 0.6 }}>
+              <BengaliText>{p.originalSub}</BengaliText>
+            </span>
+          )}
         </span>
         <span
           className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold"

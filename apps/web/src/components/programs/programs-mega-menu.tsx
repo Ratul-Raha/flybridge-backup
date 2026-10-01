@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { courseDetails } from "@/app/programs/[slug]/course-data";
 import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
 
@@ -26,6 +27,7 @@ type MenuItem = {
   price: number | string | null;
   currency?: string;
   prices?: { BDT?: number } | null;
+  originalPrice?: string;
   upcoming: boolean;
   image: string | null;
   tileBg: string;
@@ -64,6 +66,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
       title: p.title,
       badge: p.badge,
       price: p.price ?? null,
+      originalPrice: p.originalPrice,
       upcoming: !!p.upcoming,
       image: p.image ?? null,
       tileBg: p.bg,
@@ -77,6 +80,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
       price: c.price,
       currency: c.currency || "USD",
       prices: c.prices,
+      originalPrice: courseDetails[c.slug]?.originalPrice,
       upcoming: !!c.upcoming,
       image: c.image,
       tileBg: DbTile.bg,
@@ -101,11 +105,21 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
     }
     if (item.prices?.BDT != null) {
       return (
-        <span
-          className="font-display font-semibold whitespace-nowrap"
-          style={{ fontSize: 14, color: "var(--ink)" }}
-        >
-          {formatMoney(item.prices.BDT, "BDT")}
+        <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+          <span
+            className="font-display font-semibold"
+            style={{ fontSize: 14, color: "var(--ink)" }}
+          >
+            {formatMoney(item.prices.BDT, "BDT")}
+          </span>
+          {item.originalPrice && (
+            <span
+              className="font-display font-medium line-through"
+              style={{ fontSize: 11, color: "var(--body)", opacity: 0.6 }}
+            >
+              {item.originalPrice}
+            </span>
+          )}
         </span>
       );
     }
@@ -115,11 +129,41 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
           ? `${item.currency} ${item.price.toLocaleString()}`
           : item.price;
       return (
-        <span
-          className="font-display font-semibold whitespace-nowrap"
-          style={{ fontSize: 14, color: "var(--ink)" }}
-        >
-          {label}
+        <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+          <span
+            className="font-display font-semibold"
+            style={{ fontSize: 14, color: "var(--ink)" }}
+          >
+            {label}
+          </span>
+          {item.originalPrice && (
+            <span
+              className="font-display font-medium line-through"
+              style={{ fontSize: 11, color: "var(--body)", opacity: 0.6 }}
+            >
+              {item.originalPrice}
+            </span>
+          )}
+        </span>
+      );
+    }
+    if (typeof item.price === "string") {
+      return (
+        <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+          <span
+            className="font-display font-semibold"
+            style={{ fontSize: 14, color: "var(--ink)" }}
+          >
+            {item.price}
+          </span>
+          {item.originalPrice && (
+            <span
+              className="font-display font-medium line-through"
+              style={{ fontSize: 11, color: "var(--body)", opacity: 0.6 }}
+            >
+              {item.originalPrice}
+            </span>
+          )}
         </span>
       );
     }

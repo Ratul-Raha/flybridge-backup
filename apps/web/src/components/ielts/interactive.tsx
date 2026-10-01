@@ -490,12 +490,14 @@ export function StickyOffer({
   label,
   priceLabel,
   price,
+  originalPrice,
   arrow = true,
 }: {
   href: string;
   label: string;
   priceLabel?: string;
   price?: string;
+  originalPrice?: string;
   arrow?: boolean;
 }) {
   const [heroIn, setHeroIn] = useState(true);
@@ -547,7 +549,17 @@ export function StickyOffer({
                 {priceLabel}
               </div>
             )}
-            <div className="text-[18px] font-bold text-white tabular-nums">{price}</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[18px] font-bold text-white tabular-nums">{price}</span>
+              {originalPrice && (
+                <span
+                  className="text-[12px] font-medium line-through tabular-nums"
+                  style={{ color: "#9FB0C7", opacity: 0.7 }}
+                >
+                  {originalPrice}
+                </span>
+              )}
+            </div>
           </div>
         )}
         <Link

@@ -1133,6 +1133,7 @@ function DbCoursePage({
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
     prices: cleanPrices(course.prices),
+    originalPrice: courseDetails[course.slug]?.originalPrice,
     level: course.level ?? "",
     language: course.language ?? "",
     pace: course.pace ?? "",
@@ -1657,6 +1658,7 @@ export default async function ProgramPage({ params }: Props) {
         bg: p.bg,
         image: p.image ?? null,
         sub: p.upcoming ? "Coming soon" : (p.price ?? "Explore course"),
+        originalSub: p.upcoming ? undefined : p.originalPrice,
       })),
     ...otherDbCourses.map((c) => ({
       slug: c.slug,
@@ -1670,6 +1672,7 @@ export default async function ProgramPage({ params }: Props) {
         : c.price > 0
           ? `${c.currency} ${c.price.toLocaleString()}`
           : c.subtitle || c.description || "Explore course",
+      originalSub: c.upcoming ? undefined : c.originalPrice,
     })),
   ].slice(0, 6);
 

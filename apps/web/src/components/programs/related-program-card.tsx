@@ -9,6 +9,7 @@ export type RelatedProgram = {
   badgeColor: string;
   bg: string;
   sub: string;
+  originalSub?: string;
   image?: string | null;
 };
 
@@ -48,8 +49,18 @@ export function RelatedProgramCard({ p }: { p: RelatedProgram }) {
         >
           <BengaliText>{p.title}</BengaliText>
         </span>
-        <span className="block text-[11px] mt-[3px] truncate" style={{ color: "var(--body)" }}>
-          {p.sub}
+        <span className="mt-[3px] flex items-baseline gap-1.5 truncate">
+          <span className="text-[11px]" style={{ color: "var(--body)" }}>
+            {p.sub}
+          </span>
+          {p.originalSub && (
+            <span
+              className="text-[11px] line-through"
+              style={{ color: "var(--body)", opacity: 0.6 }}
+            >
+              {p.originalSub}
+            </span>
+          )}
         </span>
       </span>
 
