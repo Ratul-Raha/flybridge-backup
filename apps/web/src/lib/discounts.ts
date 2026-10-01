@@ -5,6 +5,14 @@ import { Discount, type DiscountDoc } from "@/lib/models/discount";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { Order } from "@/lib/models/order";
 import type { Product } from "@/lib/products";
+import {
+  appliesInCurrency,
+  priceFrom,
+  type DiscountCandidate,
+  type PricedDiscount,
+} from "@/lib/discount-math";
+
+export type ResolvedPrice = PricedDiscount;
 
 export class DiscountError extends Error {
   status = 400;
@@ -18,39 +26,6 @@ export type DiscountUser = {
   id: string;
   email: string;
 };
-
-export type ResolvedPrice = {
-  subtotal: number;
-  discount: number;
-  total: number;
-  discountId?: string;
-  code?: string;
-  label?: string;
-};
-
-type Candidate = {
-  id?: string;
-  label: string;
-  type: "percent" | "fixed";
-  value: number;
-  currency?: string;
-  code?: string;
-};
-
-function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
-function savingsFor(candidate: Candidate, amount: number, currency: string): number | null {
-  if (candidate.type === "fixed") {
-    if ((candidate.currency ?? "USD").toUpperCase() !== currency.toUpperCase()) {
-      return null;
-    }
-    return roundMoney(Math.min(candidate.value, amount));
-  }
-  const raw = (amount * candidate.value) / 100;
-  return roundMoney(Math.min(raw, amount));
-}
 
 function inWindow(d: DiscountDoc, now: Date): boolean {
   if (d.startsAt && d.startsAt.getTime() > now.getTime()) return false;
@@ -135,7 +110,7 @@ async function toCandidate(
   now: Date,
   excludeOrderId?: string,
   requireCode = false
-): Promise<Candidate | null> {
+): Promise<DiscountCandidate | null> {
   if (!d.active) return null;
   if (requireCode && !d.code) return null;
   if (!requireCode && d.code) return null;
@@ -165,7 +140,14 @@ export async function resolvePrice(input: {
 
   const { user, product, amount, currency } = input;
   const now = new Date();
-  const candidates: Candidate[] = [];
+  const candidates: DiscountCandidate[] = [];
+
+  // The order this price belongs to must never count against its own usage caps.
+  // A checkout preview that counted a still-pending order would drop the
+  // discount the shopper already holds the moment they came back from the
+  // payment gateway, and report their code as unusable.
+  const excludeOrderId =
+    input.excludeOrderId ?? (await selfOrderId(user.id, product.itemId));
 
   const isCourse = product.itemType === "course";
 
@@ -192,7 +174,7 @@ export async function resolvePrice(input: {
     if (typeof d.minSubtotal === "number" && d.minSubtotal > 0 && amount < d.minSubtotal) {
       continue;
     }
-    const candidate = await toCandidate(d, user, product, now, input.excludeOrderId);
+    const candidate = await toCandidate(d, user, product, now, excludeOrderId);
     if (candidate) candidates.push(candidate);
   }
 
@@ -203,28 +185,29 @@ export async function resolvePrice(input: {
     if (typeof doc.minSubtotal === "number" && doc.minSubtotal > 0 && amount < doc.minSubtotal) {
       throw new DiscountError("This promo code requires a higher order subtotal.");
     }
-    const candidate = await toCandidate(doc, user, product, now, input.excludeOrderId, true);
+    const candidate = await toCandidate(doc, user, product, now, excludeOrderId, true);
     if (!candidate) throw new DiscountError("This promo code can't be applied to your order.");
+    // A fixed amount written in another currency is worth nothing here. Saying so
+    // beats accepting the code and quietly charging the full price.
+    if (!appliesInCurrency(candidate, currency)) {
+      throw new DiscountError(
+        `This promo code is worth ${candidate.currency}, but this checkout is in ${currency}.`
+      );
+    }
     candidates.push(candidate);
   }
 
-  const subtotal = roundMoney(amount);
-  let best: { candidate: Candidate; savings: number } | null = null;
-  for (const candidate of candidates) {
-    const savings = savingsFor(candidate, subtotal, currency);
-    if (savings === null || savings <= 0) continue;
-    if (!best || savings > best.savings || (savings === best.savings && candidate.code)) {
-      best = { candidate, savings };
-    }
-  }
+  return priceFrom(candidates, amount, currency);
+}
 
-  const discount = best ? roundMoney(Math.min(best.savings, subtotal)) : 0;
-  return {
-    subtotal,
-    discount,
-    total: roundMoney(subtotal - discount),
-    discountId: best?.candidate.id,
-    code: best?.candidate.code,
-    label: best?.candidate.label,
-  };
+/** The caller's own still-open order for this item, if there is one. */
+async function selfOrderId(userId: string, itemId: string): Promise<string | undefined> {
+  const order = await Order.findOne({
+    user: userId,
+    "items.itemId": itemId,
+    status: { $in: ["pending", "completed"] },
+  })
+    .select("_id")
+    .lean();
+  return order?._id?.toString();
 }

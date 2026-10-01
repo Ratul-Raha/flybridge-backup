@@ -137,7 +137,13 @@ export function PromoSummary({
           onChange={(e) => {
             const value = e.target.value.toUpperCase();
             setPromoCode(value);
-            codeChangeRef.current?.(value.trim() || null);
+            // Only an empty field retracts the code. Reporting every keystroke
+            // would hand the parent a half-typed code it never validated, and
+            // the order would be created with it.
+            if (!value.trim()) {
+              setAppliedCode(null);
+              codeChangeRef.current?.(null);
+            }
           }}
           placeholder="Promo code"
           className="w-full rounded-xl border bg-white px-3.5 py-2 text-[13px] uppercase outline-none transition-colors placeholder:text-body/50 focus:border-brand-2 focus:ring-2 focus:ring-brand-2/15"
