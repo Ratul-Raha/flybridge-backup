@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpen, Star, Users } from "lucide-react";
+import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
 
 export type DbCourse = {
@@ -15,6 +16,7 @@ export type DbCourse = {
   description: string;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
   image: string | null;
   level: string;
   upcoming: boolean;
@@ -26,7 +28,8 @@ export type DbCourse = {
 export function DbCourseCard({ course }: { course: DbCourse }) {
   const [imgError, setImgError] = useState(false);
   const lessonCount = course.modules.reduce((n, m) => n + m.lessons.length, 0);
-  const isFree = course.price <= 0;
+  const bdtPrice = course.prices?.BDT;
+  const isFree = (bdtPrice ?? course.price ?? 0) <= 0;
 
   const badge = (
     <span
@@ -105,7 +108,7 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
               className="font-display font-bold leading-none mt-[4px]"
               style={{ fontSize: "23px", color: "var(--ink)" }}
             >
-              {course.currency} {course.price.toLocaleString()}
+              {bdtPrice != null ? formatMoney(bdtPrice, "BDT") : `${course.currency} ${course.price.toLocaleString()}`}
             </div>
           </>
         )}

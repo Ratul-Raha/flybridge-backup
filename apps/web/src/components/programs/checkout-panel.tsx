@@ -29,9 +29,9 @@ type Pricing = {
 };
 
 /**
- * The full checkout grid. Both the price summary and the payment options live in
- * the same client tree so the discount shown in the summary is the amount the
- * gateway will charge, and the picker stays directly under the subtotal card.
+ * The full checkout grid. The price summary and the "Pay Now" button live in
+ * the same client tree so the discount shown in the summary matches the
+ * amount the gateway will charge. Pricing is always in BDT.
  */
 export function CheckoutPanel({
   course,
@@ -46,7 +46,8 @@ export function CheckoutPanel({
 }) {
   const router = useRouter();
   const { user } = useAuth();
-  const isFree = course.price <= 0;
+  const baseAmount = course.prices?.BDT ?? course.price ?? 0;
+  const isFree = baseAmount <= 0;
   const isUpcoming = course.upcoming;
   const canPay = !isFree && !isUpcoming;
 
@@ -70,8 +71,6 @@ export function CheckoutPanel({
     }
   }, [user]);
 
-  const baseAmount = course.prices?.BDT ?? course.price ?? 0;
-
   const fetchPricing = useCallback(
     async (code?: string) => {
       if (!user) return null;
@@ -89,7 +88,7 @@ export function CheckoutPanel({
       if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
       return data as Pricing;
     },
-    [user, course.courseId]
+    [user, course.courseId],
   );
 
   useEffect(() => {
@@ -175,15 +174,12 @@ export function CheckoutPanel({
   const labelClass = "block text-[13px] font-medium mb-1.5";
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
-  // Pricing is always in BDT now.
-  const activePricing = pricing;
-  const displayCurrency = activePricing?.currency ?? "BDT";
-  const subtotal = activePricing?.subtotal ?? baseAmount;
-  const discount = activePricing?.discount ?? 0;
-  const total = activePricing?.total ?? baseAmount;
+  const displayCurrency = pricing?.currency ?? "BDT";
+  const subtotal = pricing?.subtotal ?? baseAmount;
+  const discount = pricing?.discount ?? 0;
+  const total = pricing?.total ?? baseAmount;
 
-  const money = (amount: number) =>
-    isFree ? "Free" : formatMoney(amount, displayCurrency);
+  const money = (amount: number) => (isFree ? "Free" : formatMoney(amount, displayCurrency));
 
   return (
     <form
@@ -229,8 +225,7 @@ export function CheckoutPanel({
             </div>
             <div>
               <label className={labelClass} style={{ color: "var(--ink)" }}>
-                Phone{" "}
-                <span className="font-normal opacity-50">(optional)</span>
+                Phone <span className="font-normal opacity-50">(optional)</span>
               </label>
               <input
                 type="tel"
@@ -257,7 +252,6 @@ export function CheckoutPanel({
               Coming soon
             </div>
           ) : null}
-
         </div>
       </div>
 
@@ -272,10 +266,7 @@ export function CheckoutPanel({
               Order summary
             </p>
 
-            <div
-              className="flex gap-4 pb-5 border-b"
-              style={{ borderColor: "var(--line)" }}
-            >
+            <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
               <div
                 className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
                 style={{ background: "var(--brand-soft)" }}
@@ -318,7 +309,7 @@ export function CheckoutPanel({
                   className="flex items-center justify-between text-[13.5px]"
                   style={{ color: "#1E8E5A" }}
                 >
-                  <span>{activePricing?.label ?? "Discount"}</span>
+                  <span>{pricing?.label ?? "Discount"}</span>
                   <span className="font-medium">-{money(discount)}</span>
                 </div>
               )}
@@ -331,10 +322,7 @@ export function CheckoutPanel({
               <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                 Total
               </span>
-              <span
-                className="text-[22px] font-bold leading-none"
-                style={{ color: "var(--ink)" }}
-              >
+              <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
                 {money(total)}
               </span>
             </div>
@@ -404,11 +392,7 @@ export function CheckoutPanel({
               }}
             >
               {submitting && <Loader2 size={16} className="animate-spin" />}
-              {submitting
-                ? "Redirecting to payment…"
-                : isFree
-                  ? "Get it for free"
-                  : "Pay Now"}
+              {submitting ? "Redirecting to payment…" : isFree ? "Get it for free" : "Pay Now"}
             </button>
           </div>
         )}
@@ -464,13 +448,13 @@ export function CheckoutPanel({
                   <ShieldCheck className="w-4 h-4" />
                 </span>
                 <a
-                  href="/refund-policy"
+                  href="/refund"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] font-medium underline hover:text-brand-2 transition-colors"
                   style={{ color: "var(--body)" }}
                 >
-                  3 Days Refund
+                  3-Day Refund Policy
                 </a>
               </div>
               <div className="flex flex-col items-center gap-2">

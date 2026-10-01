@@ -5,11 +5,14 @@ import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { type DbCourse } from "@/components/programs/db-course-card";
-import { RelatedProgramCard, type RelatedProgram } from "@/components/programs/related-program-card";
+import {
+  RelatedProgramCard,
+  type RelatedProgram,
+} from "@/components/programs/related-program-card";
 import { getProgram, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
-import { formatPriceText, cleanPrices } from "@/lib/pricing";
+import { priceTextFor, cleanPrices } from "@/lib/pricing";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
@@ -77,7 +80,7 @@ const getReviewsCached = unstable_cache(
     })) as ReviewItem[];
   },
   ["program-course-reviews"],
-  { revalidate: 60 }
+  { revalidate: 60 },
 );
 
 const getOtherDbCoursesCached = unstable_cache(
@@ -91,9 +94,7 @@ const getOtherDbCoursesCached = unstable_cache(
         .sort({ createdAt: -1 })
         .limit(4),
     ]);
-    const enrollMap = new Map(
-      otherEnrollCounts.map((r) => [r._id.toString(), r.count as number])
-    );
+    const enrollMap = new Map(otherEnrollCounts.map((r) => [r._id.toString(), r.count as number]));
     return dbCourses.map((c) => {
       const courseId = c._id.toString();
       return {
@@ -118,7 +119,7 @@ const getOtherDbCoursesCached = unstable_cache(
     });
   },
   ["program-other-courses"],
-  { revalidate: 60 }
+  { revalidate: 60 },
 );
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -703,7 +704,10 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
                 color: "var(--brand-2)",
               }}
             >
-              <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+              <span
+                className="w-[6px] h-[6px] rounded-full"
+                style={{ background: "var(--brand-2)" }}
+              />
               <span className="font-mono text-[10.5px] font-semibold tracking-[0.28em] uppercase">
                 <BengaliText>{curriculum.label}</BengaliText>
               </span>
@@ -725,7 +729,10 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
             <div
               key={m.title}
               className="rounded-2xl p-6 md:p-8"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
             >
               <div className="flex items-center gap-3 mb-5">
                 <span
@@ -770,7 +777,10 @@ function DarkCurriculum({ curriculum }: { curriculum: CurriculumSection }) {
         {curriculum.note && (
           <div
             className="mt-9 rounded-2xl px-6 md:px-8 py-6"
-            style={{ background: "rgba(20,181,126,0.06)", border: "1px solid rgba(20,181,126,0.25)" }}
+            style={{
+              background: "rgba(20,181,126,0.06)",
+              border: "1px solid rgba(20,181,126,0.25)",
+            }}
           >
             <p className="text-[14.5px] leading-[1.7]" style={{ color: "#C4D0DE" }}>
               <BengaliText>{curriculum.note}</BengaliText>
@@ -801,12 +811,18 @@ function ComparisonSection({ comparison }: { comparison: ComparisonSection }) {
               className="px-5 md:px-8 py-6"
               style={{ background: "var(--bg-soft)", borderRight: "1px solid var(--line)" }}
             >
-              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--body)" }}>
+              <span
+                className="text-[13px] font-bold tracking-[0.3px]"
+                style={{ color: "var(--body)" }}
+              >
                 <BengaliText>{comparison.leftLabel}</BengaliText>
               </span>
             </div>
             <div className="px-5 md:px-8 py-6" style={{ background: "rgba(20,181,126,0.10)" }}>
-              <span className="text-[13px] font-bold tracking-[0.3px]" style={{ color: "var(--brand-2)" }}>
+              <span
+                className="text-[13px] font-bold tracking-[0.3px]"
+                style={{ color: "var(--brand-2)" }}
+              >
                 <BengaliText>{comparison.rightLabel}</BengaliText>
               </span>
             </div>
@@ -859,7 +875,10 @@ function PricingSection({ pricing }: { pricing: PricingSection }) {
 
         <div
           className="mt-10 mx-auto max-w-[420px] rounded-3xl px-8 py-11"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(20,181,126,0.32)" }}
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(20,181,126,0.32)",
+          }}
         >
           <div
             className="font-display font-semibold text-white"
@@ -985,7 +1004,10 @@ function RefundPolicySection() {
                   <div
                     key={f.label}
                     className="rounded-xl px-3 py-4 text-center"
-                    style={{ background: "var(--brand-soft)", border: "1px solid rgba(20,181,126,0.25)" }}
+                    style={{
+                      background: "var(--brand-soft)",
+                      border: "1px solid rgba(20,181,126,0.25)",
+                    }}
                   >
                     <div
                       className="font-display text-[clamp(20px,2.4vw,28px)] font-bold leading-none"
@@ -993,7 +1015,10 @@ function RefundPolicySection() {
                     >
                       <BengaliText>{f.value}</BengaliText>
                     </div>
-                    <div className="mt-2 text-[12.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
+                    <div
+                      className="mt-2 text-[12.5px] leading-[1.5]"
+                      style={{ color: "var(--body)" }}
+                    >
                       <BengaliText>{f.label}</BengaliText>
                     </div>
                   </div>
@@ -1293,7 +1318,14 @@ function DbCoursePage({
                       style={{ background: "var(--brand-soft)" }}
                     >
                       {checkoutCourse.image ? (
-                        <Image src={checkoutCourse.image} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
+                        <Image
+                          src={checkoutCourse.image}
+                          alt=""
+                          width={128}
+                          height={128}
+                          sizes="64px"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <BookOpen size={20} className="text-white/50" />
                       )}
@@ -1316,9 +1348,7 @@ function DbCoursePage({
                     <div className="flex items-center justify-between text-[13.5px]">
                       <span style={{ color: "var(--body)" }}>Subtotal</span>
                       <span className="font-medium" style={{ color: "var(--ink)" }}>
-                        {isFree
-                          ? "Free"
-                          : formatPriceText(checkoutCourse)}
+                        {isFree ? "Free" : priceTextFor(checkoutCourse, "BDT")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[13.5px]">
@@ -1338,14 +1368,12 @@ function DbCoursePage({
                       className="text-[22px] font-bold leading-none"
                       style={{ color: "var(--ink)" }}
                     >
-                      {isFree
-                        ? "Free"
-                        : formatPriceText(checkoutCourse)}
+                      {isFree ? "Free" : priceTextFor(checkoutCourse, "BDT")}
                     </span>
                   </div>
 
-                  {checkoutCourse.upcoming && (
-                    checkoutCourse.waitlistEnabled ? (
+                  {checkoutCourse.upcoming &&
+                    (checkoutCourse.waitlistEnabled ? (
                       <div className="mt-5" id="waitlist">
                         <WaitlistForm
                           slug={checkoutCourse.slug}
@@ -1360,8 +1388,7 @@ function DbCoursePage({
                       >
                         This course is coming soon — join the waitlist to be notified.
                       </div>
-                    )
-                  )}
+                    ))}
                 </div>
 
                 {/* What's included */}
@@ -1397,10 +1424,10 @@ function DbCoursePage({
                 <div className="px-6 pb-6">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {[
-                      { icon: Lock, label: "SSL Encrypted" },
-                      { icon: ShieldCheck, label: "30-day guarantee" },
-                      { icon: Zap, label: "Instant access" },
-                    ].map(({ icon: Icon, label }) => (
+                      { icon: Lock, label: "SSL Encrypted", href: undefined },
+                      { icon: ShieldCheck, label: "3-day refund policy", href: "/refund" },
+                      { icon: Zap, label: "Instant access", href: undefined },
+                    ].map(({ icon: Icon, label, href }) => (
                       <div key={label} className="flex flex-col items-center gap-1.5">
                         <span
                           className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -1408,12 +1435,22 @@ function DbCoursePage({
                         >
                           <Icon className="w-4 h-4" />
                         </span>
-                        <span
-                          className="text-[10.5px] font-medium leading-tight"
-                          style={{ color: "var(--body)" }}
-                        >
-                          {label}
-                        </span>
+                        {href ? (
+                          <a
+                            href={href}
+                            className="text-[10.5px] font-medium leading-tight underline underline-offset-2"
+                            style={{ color: "var(--body)" }}
+                          >
+                            {label}
+                          </a>
+                        ) : (
+                          <span
+                            className="text-[10.5px] font-medium leading-tight"
+                            style={{ color: "var(--body)" }}
+                          >
+                            {label}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1488,7 +1525,11 @@ function DbCoursePage({
                 ) : (
                   <span
                     className="inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium rounded-lg border px-4 py-2"
-                    style={{ color: "var(--body)", borderColor: "var(--line)", cursor: "not-allowed" }}
+                    style={{
+                      color: "var(--body)",
+                      borderColor: "var(--line)",
+                      cursor: "not-allowed",
+                    }}
                   >
                     <Lock size={13} />
                     Enroll to download
@@ -1615,7 +1656,7 @@ export default async function ProgramPage({ params }: Props) {
         badgeColor: p.badgeColor,
         bg: p.bg,
         image: p.image ?? null,
-        sub: p.upcoming ? "Coming soon" : p.price ?? "Explore course",
+        sub: p.upcoming ? "Coming soon" : (p.price ?? "Explore course"),
       })),
     ...otherDbCourses.map((c) => ({
       slug: c.slug,
@@ -1668,210 +1709,216 @@ export default async function ProgramPage({ params }: Props) {
           <section className="px-[clamp(20px,4.5vw,56px)] pb-[90px] max-w-[1320px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10 lg:gap-12 items-start">
               <div className="space-y-12 min-w-0">
-              {/* Facilities */}
-              {!details.heroStats?.length && (
-                <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                  {details.stats.map((stat) => (
-                    <div key={stat.label} className="flex items-baseline gap-2.5">
-                      <span
-                        className="font-mono text-[22px] font-medium leading-none"
-                        style={{ color: "var(--ink)" }}
-                      >
-                        {stat.value}
-                      </span>
-                      <span className="text-[13px]" style={{ color: "var(--body)" }}>
-                        {stat.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Problem */}
-              {details.problem && <ProblemSection problem={details.problem} />}
-
-              {/* What's included */}
-              <div>
-                <SectionHeading
-                  eyebrow="WHAT'S INCLUDED"
-                  title="Everything in this program"
-                  desc={
-                    details.featuresDesc ??
-                    "From the first video to your approval — every resource is part of the same package."
-                  }
-                />
-                <div className="rounded-lg border border-line bg-white overflow-hidden">
-                  {(details.features ?? BLUEPRINT_FEATURES).map(
-                    ({ icon: Icon, title, desc }, i) => (
-                      <div
-                        key={title}
-                        className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                      >
+                {/* Facilities */}
+                {!details.heroStats?.length && (
+                  <div className="border-y border-line py-6 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                    {details.stats.map((stat) => (
+                      <div key={stat.label} className="flex items-baseline gap-2.5">
                         <span
-                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                          className="font-mono text-[22px] font-medium leading-none"
+                          style={{ color: "var(--ink)" }}
                         >
-                          <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                          {stat.value}
                         </span>
-                        <div>
-                          <h3
-                            className="text-[14.5px] font-semibold leading-[1.3]"
-                            style={{ color: "var(--ink)" }}
-                          >
-                            {title}
-                          </h3>
-                          <p
-                            className="text-[13px] mt-[5px] leading-[1.55]"
-                            style={{ color: "var(--body)" }}
-                          >
-                            {desc}
-                          </p>
-                        </div>
+                        <span className="text-[13px]" style={{ color: "var(--body)" }}>
+                          {stat.label}
+                        </span>
                       </div>
-                    ),
-                  )}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                )}
 
-              {/* Steps */}
-              {details.steps && <StepsSection steps={details.steps} />}
+                {/* Problem */}
+                {details.problem && <ProblemSection problem={details.problem} />}
 
-              {/* Course book */}
-              {details.book && (
+                {/* What's included */}
                 <div>
                   <SectionHeading
-                    eyebrow="COURSE BOOK"
-                    title="The book is included in this program"
-                    desc={details.book.desc}
-                  />
-                  <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
-                      <Image
-                        src={details.book.image}
-                        alt={details.book.title}
-                        width={440}
-                        height={586}
-                        sizes="220px"
-                        className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
-                        style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
-                      />
-                      <div className="flex flex-col gap-3">
-                        <span
-                          className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
-                          style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                        >
-                          INCLUDED WITH COURSE
-                        </span>
-                        <h3
-                          className="font-display text-[17px] font-semibold leading-snug"
-                          style={{ color: "var(--ink)" }}
-                        >
-                          {details.book.title}
-                        </h3>
-                        <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                          {details.book.includedNote}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Outcomes */}
-              <div>
-                <SectionHeading
-                  eyebrow="WHAT YOU WILL LEARN"
-                  title="Course outcomes"
-                  desc="By the end of this course you will be able to:"
-                />
-                <div className="rounded-lg border border-line bg-white overflow-hidden">
-                  {details.outcomes.map((o, i) => (
-                    <div
-                      key={o.title}
-                      className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
-                    >
-                      <span
-                        className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-                      </span>
-                      <div>
-                        <div
-                          className="text-[14px] font-medium leading-[1.5]"
-                          style={{ color: "var(--ink)" }}
-                        >
-                          {o.title}
-                        </div>
-                        {o.desc && (
-                          <div
-                            className="text-[13px] mt-[3px] leading-[1.6]"
-                            style={{ color: "var(--body)" }}
-                          >
-                            {o.desc}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Curriculum (simple highlights) */}
-              {!details.curriculum && (
-                <div id="curriculum">
-                  <SectionHeading
-                    eyebrow="CURRICULUM"
-                    title="What is inside"
+                    eyebrow="WHAT'S INCLUDED"
+                    title="Everything in this program"
                     desc={
-                      details.highlightsDesc ??
-                      "Everything you need to prepare with confidence, in one place."
+                      details.featuresDesc ??
+                      "From the first video to your approval — every resource is part of the same package."
                     }
                   />
                   <div className="rounded-lg border border-line bg-white overflow-hidden">
-                    {(
-                      details.highlights ?? [
-                        {
-                          title: "10 Videos",
-                          sub: "Step-by-step video lessons, at your own pace",
-                        },
-                        {
-                          title: "Frequent Live Q&A session",
-                          sub: "Ask questions directly and get expert answers",
-                        },
-                        {
-                          title: "Resources",
-                          sub: "Templates, checklists & practical tools included",
-                        },
-                      ]
-                    ).map((item, i) => (
+                    {(details.features ?? BLUEPRINT_FEATURES).map(
+                      ({ icon: Icon, title, desc }, i) => (
+                        <div
+                          key={title}
+                          className={`flex items-start gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                        >
+                          <span
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                          >
+                            <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                          </span>
+                          <div>
+                            <h3
+                              className="text-[14.5px] font-semibold leading-[1.3]"
+                              style={{ color: "var(--ink)" }}
+                            >
+                              {title}
+                            </h3>
+                            <p
+                              className="text-[13px] mt-[5px] leading-[1.55]"
+                              style={{ color: "var(--body)" }}
+                            >
+                              {desc}
+                            </p>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+
+                {/* Steps */}
+                {details.steps && <StepsSection steps={details.steps} />}
+
+                {/* Course book */}
+                {details.book && (
+                  <div>
+                    <SectionHeading
+                      eyebrow="COURSE BOOK"
+                      title="The book is included in this program"
+                      desc={details.book.desc}
+                    />
+                    <div className="rounded-lg border border-line bg-white overflow-hidden">
+                      <div className="grid sm:grid-cols-[220px_1fr] gap-6 p-6 items-center">
+                        <Image
+                          src={details.book.image}
+                          alt={details.book.title}
+                          width={440}
+                          height={586}
+                          sizes="220px"
+                          className="w-full max-w-[220px] mx-auto rounded-lg aspect-[3/4] object-cover"
+                          style={{ boxShadow: "0 22px 44px -20px rgba(18,32,67,0.45)" }}
+                        />
+                        <div className="flex flex-col gap-3">
+                          <span
+                            className="w-fit font-mono text-[10px] font-bold tracking-[0.3em] px-2.5 py-1 rounded-full"
+                            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                          >
+                            INCLUDED WITH COURSE
+                          </span>
+                          <h3
+                            className="font-display text-[17px] font-semibold leading-snug"
+                            style={{ color: "var(--ink)" }}
+                          >
+                            {details.book.title}
+                          </h3>
+                          <p
+                            className="text-[13.5px] leading-[1.7]"
+                            style={{ color: "var(--body)" }}
+                          >
+                            {details.book.includedNote}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Outcomes */}
+                <div>
+                  <SectionHeading
+                    eyebrow="WHAT YOU WILL LEARN"
+                    title="Course outcomes"
+                    desc="By the end of this course you will be able to:"
+                  />
+                  <div className="rounded-lg border border-line bg-white overflow-hidden">
+                    {details.outcomes.map((o, i) => (
                       <div
-                        key={item.title}
-                        className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                        key={o.title}
+                        className={`flex items-start gap-3 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
                       >
                         <span
-                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
+                          className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
                           style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
                         >
                           <Check className="w-[12px] h-[12px]" strokeWidth={3} />
                         </span>
                         <div>
                           <div
-                            className="text-[14.5px] font-medium leading-[1.3]"
+                            className="text-[14px] font-medium leading-[1.5]"
                             style={{ color: "var(--ink)" }}
                           >
-                            {item.title}
+                            {o.title}
                           </div>
-                          <div className="text-[12.5px] mt-[2px]" style={{ color: "var(--body)" }}>
-                            {item.sub}
-                          </div>
+                          {o.desc && (
+                            <div
+                              className="text-[13px] mt-[3px] leading-[1.6]"
+                              style={{ color: "var(--body)" }}
+                            >
+                              {o.desc}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Curriculum (simple highlights) */}
+                {!details.curriculum && (
+                  <div id="curriculum">
+                    <SectionHeading
+                      eyebrow="CURRICULUM"
+                      title="What is inside"
+                      desc={
+                        details.highlightsDesc ??
+                        "Everything you need to prepare with confidence, in one place."
+                      }
+                    />
+                    <div className="rounded-lg border border-line bg-white overflow-hidden">
+                      {(
+                        details.highlights ?? [
+                          {
+                            title: "10 Videos",
+                            sub: "Step-by-step video lessons, at your own pace",
+                          },
+                          {
+                            title: "Frequent Live Q&A session",
+                            sub: "Ask questions directly and get expert answers",
+                          },
+                          {
+                            title: "Resources",
+                            sub: "Templates, checklists & practical tools included",
+                          },
+                        ]
+                      ).map((item, i) => (
+                        <div
+                          key={item.title}
+                          className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? "border-t border-line" : ""}`}
+                        >
+                          <span
+                            className="w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                          >
+                            <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+                          </span>
+                          <div>
+                            <div
+                              className="text-[14.5px] font-medium leading-[1.3]"
+                              style={{ color: "var(--ink)" }}
+                            >
+                              {item.title}
+                            </div>
+                            <div
+                              className="text-[12.5px] mt-[2px]"
+                              style={{ color: "var(--body)" }}
+                            >
+                              {item.sub}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Sidebar — other programs */}
               <aside className="lg:sticky lg:top-[100px] flex flex-col gap-5">

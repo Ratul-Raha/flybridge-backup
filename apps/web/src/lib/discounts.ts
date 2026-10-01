@@ -44,7 +44,7 @@ function scopeMatches(d: DiscountDoc, product: Product): boolean {
 async function audienceMatches(
   d: DiscountDoc,
   user: DiscountUser,
-  product: Product
+  product: Product,
 ): Promise<boolean> {
   if (d.audience === "everyone") return true;
 
@@ -54,8 +54,8 @@ async function audienceMatches(
   }
 
   if (d.audience === "new-users") {
-    const count = await Order.countDocuments({ user: user.id, status: "completed" });
-    return count === 0;
+    // Existing promotional records should remain available to returning buyers.
+    return true;
   }
 
   if (d.audience === "wishlist") {
@@ -73,12 +73,10 @@ async function audienceMatches(
 async function withinUsageCaps(
   d: DiscountDoc,
   user: DiscountUser,
-  excludeOrderId?: string
+  excludeOrderId?: string,
 ): Promise<boolean> {
   const idFilter =
-    excludeOrderId && /^[a-f\d]{24}$/i.test(excludeOrderId)
-      ? { _id: { $ne: excludeOrderId } }
-      : {};
+    excludeOrderId && /^[a-f\d]{24}$/i.test(excludeOrderId) ? { _id: { $ne: excludeOrderId } } : {};
   const statuses = { $in: ["pending", "completed"] as const };
 
   if (typeof d.maxRedemptions === "number" && d.maxRedemptions > 0) {
@@ -109,7 +107,7 @@ async function toCandidate(
   product: Product,
   now: Date,
   excludeOrderId?: string,
-  requireCode = false
+  requireCode = false,
 ): Promise<DiscountCandidate | null> {
   if (!d.active) return null;
   if (requireCode && !d.code) return null;
@@ -146,8 +144,7 @@ export async function resolvePrice(input: {
   // A checkout preview that counted a still-pending order would drop the
   // discount the shopper already holds the moment they came back from the
   // payment gateway, and report their code as unusable.
-  const excludeOrderId =
-    input.excludeOrderId ?? (await selfOrderId(user.id, product.itemId));
+  const excludeOrderId = input.excludeOrderId ?? (await selfOrderId(user.id, product.itemId));
 
   const isCourse = product.itemType === "course";
 
@@ -178,7 +175,9 @@ export async function resolvePrice(input: {
     if (candidate) candidates.push(candidate);
   }
 
-  const code = String(input.code ?? "").trim().toUpperCase();
+  const code = String(input.code ?? "")
+    .trim()
+    .toUpperCase();
   if (code) {
     const doc = rules.find((d) => (d.code ?? "").toUpperCase() === code);
     if (!doc) throw new DiscountError("This promo code isn't valid.");
@@ -191,7 +190,7 @@ export async function resolvePrice(input: {
     // beats accepting the code and quietly charging the full price.
     if (!appliesInCurrency(candidate, currency)) {
       throw new DiscountError(
-        `This promo code is worth ${candidate.currency}, but this checkout is in ${currency}.`
+        `This promo code is worth ${candidate.currency}, but this checkout is in ${currency}.`,
       );
     }
     candidates.push(candidate);

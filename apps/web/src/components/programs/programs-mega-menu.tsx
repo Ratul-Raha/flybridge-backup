@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
 
 type FetchedCourse = {
@@ -13,6 +14,7 @@ type FetchedCourse = {
   subtitle: string;
   price: number;
   currency: string;
+  prices?: { BDT?: number } | null;
   image: string | null;
   upcoming: boolean;
 };
@@ -23,6 +25,7 @@ type MenuItem = {
   badge: string;
   price: number | string | null;
   currency?: string;
+  prices?: { BDT?: number } | null;
   upcoming: boolean;
   image: string | null;
   tileBg: string;
@@ -52,7 +55,9 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
 
   const items = useMemo<MenuItem[]>(() => {
     const db = courses ?? [];
-    const staticItems = staticProgramsWithoutDbCourse(db);
+    // DB-backed courses are canonical. Never show their stale static copy while
+    // the API is loading or when the API has returned the current record.
+    const staticItems = staticProgramsWithoutDbCourse(db).filter((p) => !p.hasDb);
 
     const fromStatic: MenuItem[] = staticItems.map((p) => ({
       slug: p.slug,
@@ -71,6 +76,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
       badge: c.badge || "COURSE",
       price: c.price,
       currency: c.currency || "USD",
+      prices: c.prices,
       upcoming: !!c.upcoming,
       image: c.image,
       tileBg: DbTile.bg,
@@ -93,7 +99,17 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
         </span>
       );
     }
-    if (item.price != null) {
+    if (item.prices?.BDT != null) {
+      return (
+        <span
+          className="font-display font-semibold whitespace-nowrap"
+          style={{ fontSize: 14, color: "var(--ink)" }}
+        >
+          {formatMoney(item.prices.BDT, "BDT")}
+        </span>
+      );
+    }
+    if (item.price != null && item.currency === "BDT") {
       const label =
         typeof item.price === "number"
           ? `${item.currency} ${item.price.toLocaleString()}`
@@ -123,7 +139,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
         animation: "programs-mega-in 0.22s cubic-bezier(0.16,1,0.3,1) both",
       }}
     >
-<style>{`
+      <style>{`
         @keyframes programs-mega-in {
           from { opacity: 0; transform: translate(-50%, 12px) scale(0.98); }
           to { opacity: 1; transform: translate(-50%, 0) scale(1); }
@@ -137,7 +153,10 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
           <div className="font-display font-semibold text-[15px]" style={{ color: "var(--ink)" }}>
             Programs &amp; courses
           </div>
-          <div className="font-mono text-[10px] tracking-[0.2em] uppercase mt-[2px]" style={{ color: "var(--body)" }}>
+          <div
+            className="font-mono text-[10px] tracking-[0.2em] uppercase mt-[2px]"
+            style={{ color: "var(--body)" }}
+          >
             {courses === null ? "Loading…" : `${total} programs`}
           </div>
         </div>
@@ -154,7 +173,10 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
 
       <div className="p-3 grid sm:grid-cols-2 gap-1 max-h-[420px] overflow-y-auto">
         {failed ? (
-          <div className="sm:col-span-2 px-4 py-8 text-center text-[12.5px]" style={{ color: "var(--body)" }}>
+          <div
+            className="sm:col-span-2 px-4 py-8 text-center text-[12.5px]"
+            style={{ color: "var(--body)" }}
+          >
             Couldn&apos;t load programs.{" "}
             <a href="/programs" className="font-medium" style={{ color: "var(--brand-2)" }}>
               Browse them here
@@ -163,10 +185,19 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
         ) : items.length === 0 ? (
           [0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
-              <span className="w-11 h-11 rounded-xl shrink-0" style={{ background: "var(--line)" }} />
+              <span
+                className="w-11 h-11 rounded-xl shrink-0"
+                style={{ background: "var(--line)" }}
+              />
               <span className="flex-1 flex flex-col gap-1.5">
-                <span className="h-[10px] rounded-full w-[70%]" style={{ background: "var(--line)" }} />
-                <span className="h-[8px] rounded-full w-[40%]" style={{ background: "var(--line)" }} />
+                <span
+                  className="h-[10px] rounded-full w-[70%]"
+                  style={{ background: "var(--line)" }}
+                />
+                <span
+                  className="h-[8px] rounded-full w-[40%]"
+                  style={{ background: "var(--line)" }}
+                />
               </span>
             </div>
           ))
@@ -183,7 +214,14 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
                 style={{ background: item.tileBg }}
               >
                 {item.image ? (
-                  <Image src={item.image} alt="" width={88} height={88} sizes="44px" className="w-full h-full object-cover" />
+                  <Image
+                    src={item.image}
+                    alt=""
+                    width={88}
+                    height={88}
+                    sizes="44px"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span
                     className="font-mono text-[11px] font-bold tracking-[0.12em] uppercase"
@@ -199,7 +237,10 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
                 )}
               </span>
               <span className="flex-1 min-w-0">
-                <span className="block truncate text-[13.5px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                <span
+                  className="block truncate text-[13.5px] font-semibold leading-snug"
+                  style={{ color: "var(--ink)" }}
+                >
                   <BengaliText>{item.title}</BengaliText>
                 </span>
                 <span

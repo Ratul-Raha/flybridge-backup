@@ -10,6 +10,7 @@ import { TrackAccordion } from "@/components/programs/track-accordion";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { cleanPrices } from "@/lib/pricing";
 
 export const revalidate = 60;
 
@@ -58,6 +59,7 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
         description: c.description ?? "",
         price: c.price ?? 0,
         currency: c.currency ?? "USD",
+        prices: cleanPrices(c.prices),
         image: c.image ?? null,
         level: c.level ?? "",
         upcoming: c.upcoming ?? false,

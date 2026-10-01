@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { formatMoney } from "@/lib/pricing";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 
@@ -36,15 +35,13 @@ type Pricing = {
 export function CheckoutForm({ course }: { course: Props }) {
   const router = useRouter();
   const { user } = useAuth();
-  const isFree = course.price <= 0;
+  const baseAmount = course.prices?.BDT ?? 0;
+  const isFree = baseAmount <= 0;
   const isUpcoming = course.upcoming;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [currency, setCurrency] = useState<PickableCurrency>(
-    defaultCheckoutCurrency(course.prices)
-  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,9 +59,6 @@ export function CheckoutForm({ course }: { course: Props }) {
     }
   }, [user]);
 
-  const baseAmount =
-    currency === "BDT" ? course.prices?.BDT ?? course.price : course.price;
-
   const fetchPricing = useCallback(
     async (code?: string) => {
       if (!user) return null;
@@ -74,7 +68,7 @@ export function CheckoutForm({ course }: { course: Props }) {
         body: JSON.stringify({
           itemType: "course",
           itemId: course.courseId,
-          currency,
+          currency: "BDT",
           code: code?.trim() || undefined,
         }),
       });
@@ -82,7 +76,7 @@ export function CheckoutForm({ course }: { course: Props }) {
       if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
       return data as Pricing;
     },
-    [user, currency, course.courseId]
+    [user, course.courseId],
   );
 
   useEffect(() => {
@@ -139,7 +133,7 @@ export function CheckoutForm({ course }: { course: Props }) {
         body: JSON.stringify({
           itemType: "course",
           itemId: course.courseId,
-          currency,
+          currency: "BDT",
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
@@ -165,17 +159,21 @@ export function CheckoutForm({ course }: { course: Props }) {
   const labelClass = "block text-[13px] font-medium mb-1.5";
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
-  const displayCurrency = pricing?.currency ?? currency;
+  const displayCurrency = pricing?.currency ?? "BDT";
   const hasDiscount = !!pricing && pricing.discount > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Contact */}
       <div>
-        <p className={sectionTitle} style={{ color: "var(--body)" }}>Contact information</p>
+        <p className={sectionTitle} style={{ color: "var(--body)" }}>
+          Contact information
+        </p>
         <div className="space-y-3">
           <div>
-            <label className={labelClass} style={{ color: "var(--ink)" }}>Full name</label>
+            <label className={labelClass} style={{ color: "var(--ink)" }}>
+              Full name
+            </label>
             <input
               type="text"
               required
@@ -187,7 +185,9 @@ export function CheckoutForm({ course }: { course: Props }) {
             />
           </div>
           <div>
-            <label className={labelClass} style={{ color: "var(--ink)" }}>Email address</label>
+            <label className={labelClass} style={{ color: "var(--ink)" }}>
+              Email address
+            </label>
             <input
               type="email"
               required
@@ -199,7 +199,9 @@ export function CheckoutForm({ course }: { course: Props }) {
             />
           </div>
           <div>
-            <label className={labelClass} style={{ color: "var(--ink)" }}>Phone <span className="font-normal opacity-50">(optional)</span></label>
+            <label className={labelClass} style={{ color: "var(--ink)" }}>
+              Phone <span className="font-normal opacity-50">(optional)</span>
+            </label>
             <input
               type="tel"
               value={phone}
@@ -212,22 +214,14 @@ export function CheckoutForm({ course }: { course: Props }) {
         </div>
       </div>
 
-      {/* Payment */}
-      {!isFree && !isUpcoming && (
-        <div>
-          <p className={sectionTitle} style={{ color: "var(--body)" }}>Payment method</p>
-          <PaymentMethodPicker
-            prices={course.prices}
-            value={currency}
-            onChange={setCurrency}
-          />
-        </div>
-      )}
+      {/* Payments are collected in BDT through the local gateway. */}
 
       {/* Order summary + promo */}
       {!isFree && !isUpcoming && (
         <div>
-          <p className={sectionTitle} style={{ color: "var(--body)" }}>Order summary</p>
+          <p className={sectionTitle} style={{ color: "var(--body)" }}>
+            Order summary
+          </p>
           <div className="space-y-3 rounded-xl border border-line bg-white p-4">
             <div className="flex items-center justify-between text-[14px]">
               <span style={{ color: "var(--body)" }}>Subtotal</span>
@@ -236,7 +230,10 @@ export function CheckoutForm({ course }: { course: Props }) {
               </span>
             </div>
             {hasDiscount && (
-              <div className="flex items-center justify-between text-[14px]" style={{ color: "#1E8E5A" }}>
+              <div
+                className="flex items-center justify-between text-[14px]"
+                style={{ color: "#1E8E5A" }}
+              >
                 <span>{pricing!.label ?? "Discount"}</span>
                 <span>-{formatMoney(pricing!.discount, displayCurrency)}</span>
               </div>
@@ -269,14 +266,18 @@ export function CheckoutForm({ course }: { course: Props }) {
               </button>
             </div>
             {promoError && (
-              <p className="text-[12.5px] font-medium" style={{ color: "#C0392B" }}>{promoError}</p>
+              <p className="text-[12.5px] font-medium" style={{ color: "#C0392B" }}>
+                {promoError}
+              </p>
             )}
           </div>
         </div>
       )}
 
       {error && (
-        <p className="text-[13px] font-medium" style={{ color: "#C0392B" }}>{error}</p>
+        <p className="text-[13px] font-medium" style={{ color: "#C0392B" }}>
+          {error}
+        </p>
       )}
 
       {isUpcoming ? (
@@ -291,26 +292,28 @@ export function CheckoutForm({ course }: { course: Props }) {
           type="submit"
           disabled={submitting}
           className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold text-white transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-60 cursor-pointer"
-          style={{ background: "var(--brand)", boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)" }}
+          style={{
+            background: "var(--brand)",
+            boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)",
+          }}
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          {submitting
-            ? "Redirecting to payment…"
-            : isFree
-              ? "Get it for free"
-              : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
+          {submitting ? "Redirecting to payment…" : isFree ? "Get it for free" : "Pay with EPS"}
         </button>
       )}
 
-      <div className="flex items-center justify-center gap-4 text-[11.5px] font-medium" style={{ color: "var(--body)", opacity: 0.7 }}>
+      <div
+        className="flex items-center justify-center gap-4 text-[11.5px] font-medium"
+        style={{ color: "var(--body)", opacity: 0.7 }}
+      >
         <span className="inline-flex items-center gap-1">
           <Lock className="w-3 h-3" />
           Secure checkout
         </span>
-        <span className="inline-flex items-center gap-1">
+        <a href="/refund" className="inline-flex items-center gap-1 underline underline-offset-2">
           <ShieldCheck className="w-3 h-3" />
-          30-day guarantee
-        </span>
+          3-day refund policy
+        </a>
       </div>
     </form>
   );
