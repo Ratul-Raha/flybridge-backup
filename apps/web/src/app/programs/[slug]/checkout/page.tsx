@@ -143,20 +143,6 @@ export default async function CheckoutPage({ params }: Props) {
                     {checkoutCourse.title}
                     {checkoutCourse.subtitle && <> {checkoutCourse.subtitle}</>}
                   </h1>
-                  {(checkoutCourse.level || checkoutCourse.language) && (
-                    <div
-                      className="mt-2 flex items-center gap-2 text-[12px] font-medium"
-                      style={{ color: "var(--body)" }}
-                    >
-                      {checkoutCourse.level && <span>{checkoutCourse.level}</span>}
-                      {checkoutCourse.language && (
-                        <>
-                          {checkoutCourse.level && <span>·</span>}
-                          <span>{checkoutCourse.language}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
                   {checkoutCourse.description && (
                     <p
                       className="mt-2 text-[13px] leading-[1.6] line-clamp-2"

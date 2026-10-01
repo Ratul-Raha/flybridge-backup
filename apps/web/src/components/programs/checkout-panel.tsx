@@ -4,12 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
-import {
-  PaymentMethodPicker,
-  defaultCheckoutCurrency,
-  type PickableCurrency,
-} from "@/components/payment/payment-method-picker";
-import { formatMoney, priceFor } from "@/lib/pricing";
+import { formatMoney } from "@/lib/pricing";
 import { BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
 
 type Course = {
@@ -58,9 +53,6 @@ export function CheckoutPanel({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [currency, setCurrency] = useState<PickableCurrency>(
-    defaultCheckoutCurrency(course.prices)
-  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +70,7 @@ export function CheckoutPanel({
     }
   }, [user]);
 
-  const baseAmount = priceFor(course, currency) ?? course.price ?? 0;
+  const baseAmount = course.prices?.BDT ?? course.price ?? 0;
 
   const fetchPricing = useCallback(
     async (code?: string) => {
@@ -89,7 +81,7 @@ export function CheckoutPanel({
         body: JSON.stringify({
           itemType: "course",
           itemId: course.courseId,
-          currency,
+          currency: "BDT",
           code: code?.trim() || undefined,
         }),
       });
@@ -97,7 +89,7 @@ export function CheckoutPanel({
       if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
       return data as Pricing;
     },
-    [user, currency, course.courseId]
+    [user, course.courseId]
   );
 
   useEffect(() => {
@@ -157,7 +149,7 @@ export function CheckoutPanel({
         body: JSON.stringify({
           itemType: "course",
           itemId: course.courseId,
-          currency,
+          currency: "BDT",
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
@@ -183,16 +175,12 @@ export function CheckoutPanel({
   const labelClass = "block text-[13px] font-medium mb-1.5";
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
-  // Pricing is only valid for the currency it was resolved in.
-  const activePricing = pricing && pricing.currency === currency ? pricing : null;
-  const displayCurrency = activePricing?.currency ?? currency;
+  // Pricing is always in BDT now.
+  const activePricing = pricing;
+  const displayCurrency = activePricing?.currency ?? "BDT";
   const subtotal = activePricing?.subtotal ?? baseAmount;
   const discount = activePricing?.discount ?? 0;
   const total = activePricing?.total ?? baseAmount;
-  const payable = activePricing && activePricing.total > 0 ? activePricing.total : null;
-  const pickerPrices = payable
-    ? { ...(course.prices ?? {}), [currency]: payable }
-    : course.prices;
 
   const money = (amount: number) =>
     isFree ? "Free" : formatMoney(amount, displayCurrency);
@@ -268,38 +256,8 @@ export function CheckoutPanel({
             >
               Coming soon
             </div>
-          ) : (
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-6 w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold text-white transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-60 cursor-pointer"
-              style={{
-                background: "var(--brand)",
-                boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)",
-              }}
-            >
-              {submitting && <Loader2 size={16} className="animate-spin" />}
-              {submitting
-                ? "Redirecting to payment…"
-                : isFree
-                  ? "Get it for free"
-                  : `Pay ${money(total)}`}
-            </button>
-          )}
+          ) : null}
 
-          <div
-            className="mt-5 flex items-center justify-center gap-4 text-[11.5px] font-medium"
-            style={{ color: "var(--body)", opacity: 0.7 }}
-          >
-            <span className="inline-flex items-center gap-1">
-              <Lock className="w-3 h-3" />
-              Secure checkout
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              30-day guarantee
-            </span>
-          </div>
         </div>
       </div>
 
@@ -436,14 +394,22 @@ export function CheckoutPanel({
             className="rounded-lg border border-line bg-white p-6"
             style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
           >
-            <p className={sectionTitle} style={{ color: "var(--body)" }}>
-              Payment method
-            </p>
-            <PaymentMethodPicker
-              prices={pickerPrices}
-              value={currency}
-              onChange={setCurrency}
-            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold text-white transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-60 cursor-pointer"
+              style={{
+                background: "var(--brand)",
+                boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)",
+              }}
+            >
+              {submitting && <Loader2 size={16} className="animate-spin" />}
+              {submitting
+                ? "Redirecting to payment…"
+                : isFree
+                  ? "Get it for free"
+                  : "Pay Now"}
+            </button>
           </div>
         )}
 
@@ -477,27 +443,29 @@ export function CheckoutPanel({
             ))}
           </ul>
 
-          <div className="mt-6 pt-5 border-t grid grid-cols-3 gap-2 text-center" style={{ borderColor: "var(--line)" }}>
-            {[
-              { icon: Lock, label: "SSL Encrypted" },
-              { icon: ShieldCheck, label: "30-day guarantee" },
-              { icon: Zap, label: "Instant access" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5">
-                <span
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <Icon className="w-4 h-4" />
-                </span>
-                <span
-                  className="text-[10.5px] font-medium leading-tight"
+          <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
+            <div className="flex items-center justify-center gap-4 text-center">
+              <span className="inline-flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                SSL Encrypted
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                <a
+                  href="/refund-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-brand-2 transition-colors"
                   style={{ color: "var(--body)" }}
                 >
-                  {label}
-                </span>
-              </div>
-            ))}
+                  3 Days Refund
+                </a>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Zap className="w-3 h-3" />
+                Instant access
+              </span>
+            </div>
           </div>
         </div>
       </aside>
