@@ -5,18 +5,11 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
-import { formatPriceText, cleanPrices } from "@/lib/pricing";
+import { cleanPrices } from "@/lib/pricing";
 import { Course } from "@/lib/models/course";
-import { CheckoutForm } from "@/components/programs/checkout-form";
+import { CheckoutPanel } from "@/components/programs/checkout-panel";
 import { courseDetails } from "../course-data";
-import {
-  BookOpen,
-  Check,
-  Clock,
-  Lock,
-  ShieldCheck,
-  Zap,
-} from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 type Props = { params: { slug: string } };
 
@@ -44,7 +37,6 @@ export default async function CheckoutPage({ params }: Props) {
   if (!course) notFound();
 
   const courseId = course._id.toString();
-  const isFree = (course.price ?? 0) <= 0;
   const moduleCount = (course.modules ?? []).length;
   const lessonCount = (course.modules ?? []).reduce(
     (n: number, m: any) => n + (m.lessons?.length ?? 0),
@@ -105,10 +97,11 @@ export default async function CheckoutPage({ params }: Props) {
 
       {/* Main checkout grid */}
       <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
-          {/* Left — product + form */}
-          <div className="space-y-8">
-            {/* Product card */}
+        <CheckoutPanel
+          course={checkoutCourse}
+          moduleCount={moduleCount}
+          lessonCount={lessonCount}
+          product={
             <div className="rounded-lg border border-line bg-white overflow-hidden">
               <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                 <div
@@ -175,166 +168,8 @@ export default async function CheckoutPage({ params }: Props) {
                 </div>
               </div>
             </div>
-
-            {/* Checkout form */}
-            <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
-              <CheckoutForm course={checkoutCourse} />
-            </div>
-          </div>
-
-          {/* Right — order summary (sticky) */}
-          <aside className="lg:sticky lg:top-24">
-            <div
-              className="rounded-lg border border-line bg-white overflow-hidden"
-              style={{
-                boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)",
-              }}
-            >
-              <div className="p-6">
-                <p
-                  className="text-[12px] font-semibold uppercase tracking-[0.08em] mb-5"
-                  style={{ color: "var(--body)" }}
-                >
-                  Order summary
-                </p>
-
-                {/* Line item */}
-                <div
-                  className="flex gap-4 pb-5 border-b"
-                  style={{ borderColor: "var(--line)" }}
-                >
-                  <div
-                    className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
-                    style={{ background: "var(--brand-soft)" }}
-                  >
-                    {checkoutCourse.image ? (
-                      <Image src={checkoutCourse.image} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
-                    ) : (
-                      <BookOpen size={20} className="text-white/50" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-[14px] font-semibold leading-snug"
-                      style={{ color: "var(--ink)" }}
-                    >
-                      {checkoutCourse.title}
-                    </p>
-                    <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
-                      {checkoutCourse.badge}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Price breakdown */}
-                <div
-                  className="py-4 space-y-2.5 border-b"
-                  style={{ borderColor: "var(--line)" }}
-                >
-                  <div className="flex items-center justify-between text-[13.5px]">
-                    <span style={{ color: "var(--body)" }}>Subtotal</span>
-                    <span className="font-medium" style={{ color: "var(--ink)" }}>
-                      {isFree
-                        ? "Free"
-                        : formatPriceText(checkoutCourse)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[13.5px]">
-                    <span style={{ color: "var(--body)" }}>Tax</span>
-                    <span className="font-medium" style={{ color: "var(--ink)" }}>
-                      0.00
-                    </span>
-                  </div>
-                </div>
-
-                {/* Total */}
-                <div className="flex items-center justify-between pt-4">
-                  <span
-                    className="text-[14px] font-semibold"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    Total
-                  </span>
-                  <span
-                    className="text-[22px] font-bold leading-none"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {isFree
-                      ? "Free"
-                      : formatPriceText(checkoutCourse)}
-                  </span>
-                </div>
-
-                {checkoutCourse.upcoming && (
-                  <div
-                    className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
-                    style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
-                  >
-                    This course is coming soon — join the waitlist to be notified.
-                  </div>
-                )}
-              </div>
-
-              {/* What's included */}
-              <div
-                className="px-6 pb-6 pt-5 border-t"
-                style={{ borderColor: "var(--line)" }}
-              >
-                <p
-                  className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3"
-                  style={{ color: "var(--body)" }}
-                >
-                  What&apos;s included
-                </p>
-                <ul className="space-y-2.5">
-                  {[
-                    "Instant access after enrollment",
-                    `${moduleCount} modules · ${lessonCount} lessons`,
-                    "Lifetime access — learn at your own pace",
-                    "Certificate of completion",
-                    "Live support from instructors",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-[13px]">
-                      <span
-                        className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Check className="w-[10px] h-[10px]" strokeWidth={3} />
-                      </span>
-                      <span style={{ color: "var(--ink)" }}>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Trust badges */}
-              <div className="px-6 pb-6">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { icon: Lock, label: "SSL Encrypted" },
-                    { icon: ShieldCheck, label: "30-day guarantee" },
-                    { icon: Zap, label: "Instant access" },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex flex-col items-center gap-1.5">
-                      <span
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </span>
-                      <span
-                        className="text-[10.5px] font-medium leading-tight"
-                        style={{ color: "var(--body)" }}
-                      >
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
-        </div>
+          }
+        />
       </section>
 
       <style>{`
