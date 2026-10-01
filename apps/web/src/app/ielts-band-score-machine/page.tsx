@@ -21,6 +21,7 @@ import {
   Pencil,
   Play,
   Star,
+  Target,
 } from "lucide-react";
 import {
   courseDetails,
@@ -442,59 +443,161 @@ function Hero({
   lessonCount: number;
   pricingNote?: string;
 }) {
+  const targetBand = details?.targetBand;
   return (
-    <section id="ielts-hero" style={{ background: "var(--ib-fog)" }}>
-      <div className={`${wrap} pt-[104px] sm:pt-[124px] pb-14 lg:pb-20`}>
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-12 lg:gap-16 items-start">
+    <section
+      id="ielts-hero"
+      style={{
+        background:
+          "radial-gradient(900px 540px at 88% -10%, rgba(124,240,189,0.18), transparent 60%), radial-gradient(680px 480px at 6% 110%, rgba(31,92,138,0.10), transparent 60%), linear-gradient(180deg, var(--ib-fog) 0%, #FFFFFF 70%)",
+      }}
+    >
+      <div className={`${wrap} pt-[100px] sm:pt-[120px] pb-14 lg:pb-20`}>
+        {/* Eyebrow row */}
+        <Reveal>
+          <div className="flex items-center gap-2 mb-7">
+            <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "var(--ib-brand)" }} />
+            <span
+              className="font-mono text-[11.5px] font-bold tracking-[0.28em] uppercase"
+              style={{ color: "var(--ib-brand-2)" }}
+            >
+              <BengaliText>Interactive IELTS Course</BengaliText>
+            </span>
+          </div>
+        </Reveal>
+
+        {/* Title + Target Band */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-8 lg:gap-12 items-end">
           <Reveal>
             <h1
-              className="font-display font-bold leading-[1.14] max-w-[640px]"
-              style={{ fontSize: "clamp(32px,4.2vw,54px)", color: "var(--ib-ink)", letterSpacing: "-0.018em" }}
+              className="font-display font-bold leading-[1.08] max-w-[680px]"
+              style={{
+                fontSize: "clamp(34px,4.6vw,60px)",
+                color: "var(--ib-ink)",
+                letterSpacing: "-0.022em",
+              }}
             >
               <BengaliText>{title}</BengaliText>
             </h1>
-            {details?.titleAccent && (
+            <div className="mt-5 flex items-baseline gap-3 flex-wrap">
               <span
-                className="mt-5 inline-flex items-center rounded-full px-3.5 py-1.5 text-[14px] font-bold"
-                style={{ background: "var(--ib-mint)", color: "#052117" }}
+                className="font-display font-semibold leading-[1.15]"
+                style={{
+                  fontSize: "clamp(20px,2vw,26px)",
+                  color: "var(--ib-ink)",
+                }}
               >
-                <BengaliText>{details.titleAccent}</BengaliText>
+                <BengaliText>Target Band 7</BengaliText>
               </span>
-            )}
-            <p className="mt-5 text-[16.5px] leading-[1.85] max-w-[560px]" style={{ color: "var(--ib-body)" }}>
-              <BengaliText>{COPY.heroSub}</BengaliText>
-            </p>
+              <span className="font-mono text-[12px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--ib-muted)" }}>
+                · <BengaliText>complete system</BengaliText>
+              </span>
+            </div>
+          </Reveal>
 
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {COPY.heroChips.map((chip) => (
-                <li
-                  key={chip}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[13.5px] font-semibold"
-                  style={{ border: "1px solid var(--ib-line)", color: "var(--ib-ink)" }}
-                >
-                  <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
-                  <BengaliText>{chip}</BengaliText>
-                </li>
-              ))}
-            </ul>
+          {targetBand && (
+            <Reveal delay={0.1}>
+              <div
+                className="relative shrink-0"
+                style={{ width: "clamp(132px,16vw,168px)", height: "clamp(132px,16vw,168px)" }}
+              >
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
+                    border: "1.5px solid rgba(20,181,126,0.55)",
+                    boxShadow: "0 28px 54px -26px rgba(8,11,16,0.75)",
+                  }}
+                />
+                <div
+                  className="absolute inset-[9px] rounded-full"
+                  style={{ border: "1px solid rgba(20,181,126,0.28)" }}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span
+                    className="font-mono text-[10px] font-bold tracking-[0.28em]"
+                    style={{ color: "#8CA0B8" }}
+                  >
+                    <Target className="inline-block w-[12px] h-[12px] mr-1 -mt-[2px]" strokeWidth={2.4} />
+                    <BengaliText>{targetBand.label}</BengaliText>
+                  </span>
+                  <span className="font-display font-semibold leading-none mt-1 text-white" style={{ fontSize: "clamp(30px,3.4vw,40px)" }}>
+                    <BengaliText>{targetBand.value}</BengaliText>
+                  </span>
+                  <span
+                    className="mx-auto my-[7px] h-px w-8"
+                    style={{ background: "rgba(255,255,255,0.25)" }}
+                  />
+                  <span
+                    className="font-mono text-[10px] tracking-[0.2em]"
+                    style={{ color: "#8CA0B8" }}
+                  >
+                    <BengaliText>{targetBand.sub}</BengaliText>
+                  </span>
+                </div>
+              </div>
+            </Reveal>
+          )}
+        </div>
 
+        {/* Sub copy + chips */}
+        <Reveal delay={0.05}>
+          <p
+            className="mt-7 text-[16.5px] leading-[1.9] max-w-[640px]"
+            style={{ color: "var(--ib-body)" }}
+          >
+            <BengaliText>{COPY.heroSub}</BengaliText>
+          </p>
+
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {COPY.heroChips.map((chip) => (
+              <li
+                key={chip}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[13.5px] font-semibold"
+                style={{ border: "1px solid var(--ib-line)", color: "var(--ib-ink)" }}
+              >
+                <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                <BengaliText>{chip}</BengaliText>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        {/* Two columns: offer card + exam window demo */}
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-10 lg:gap-14 items-start">
+          <Reveal delay={0.1}>
             {offer.mode === "waitlist" && (
-              <div className="mt-7">
+              <div className="mb-6">
                 <Countdown target={LAUNCH_DATE} />
               </div>
             )}
-
             <div
-              className="mt-8 max-w-[520px] rounded-2xl bg-white p-6"
-              style={{ border: "1px solid var(--ib-line)" }}
+              className="rounded-2xl bg-white p-6"
+              style={{
+                border: "1px solid var(--ib-line)",
+                boxShadow: "0 30px 60px -36px rgba(12,26,51,0.28)",
+              }}
             >
               <OfferCard offer={offer} note={pricingNote} />
             </div>
           </Reveal>
 
-          <Reveal delay={0.15}>
-            <ExamWindow />
-            <p className="mt-5 text-[13.5px] leading-[1.75] max-w-[500px]" style={{ color: "var(--ib-muted)" }}>
+          <Reveal delay={0.2}>
+            <div
+              className="rounded-2xl p-3 lg:p-4"
+              style={{
+                background: "linear-gradient(160deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))",
+                border: "1px solid var(--ib-line)",
+                boxShadow: "0 36px 70px -34px rgba(12,26,51,0.22)",
+              }}
+            >
+              <ExamWindow />
+            </div>
+            <p
+              className="mt-4 text-[13px] leading-[1.7] max-w-[500px]"
+              style={{ color: "var(--ib-muted)" }}
+            >
               <BengaliText>{COPY.windowCaption}</BengaliText>
             </p>
           </Reveal>
