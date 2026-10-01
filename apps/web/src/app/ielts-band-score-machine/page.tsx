@@ -444,52 +444,107 @@ function Hero({
   pricingNote?: string;
 }) {
   const targetBand = details?.targetBand;
+  const rating = details?.rating;
   return (
     <section
       id="ielts-hero"
+      className="relative overflow-hidden"
       style={{
         background:
-          "radial-gradient(900px 540px at 88% -10%, rgba(124,240,189,0.18), transparent 60%), radial-gradient(680px 480px at 6% 110%, rgba(31,92,138,0.10), transparent 60%), linear-gradient(180deg, var(--ib-fog) 0%, #FFFFFF 70%)",
+          "radial-gradient(1100px 640px at 92% -12%, rgba(124,240,189,0.22), transparent 60%), radial-gradient(820px 560px at 4% 108%, rgba(31,92,138,0.12), transparent 62%), linear-gradient(180deg, #F4F8FB 0%, #FFFFFF 78%)",
       }}
     >
-      <div className={`${wrap} pt-[100px] sm:pt-[120px] pb-14 lg:pb-20`}>
+      {/* hairline grid + ambient blobs for depth */}
+      <div className="ib-hero-grid" aria-hidden />
+      <div className="ib-hero-blob ib-hero-blob-a" aria-hidden />
+      <div className="ib-hero-blob ib-hero-blob-b" aria-hidden />
+
+      <div className={`${wrap} relative pt-[100px] sm:pt-[120px] pb-16 lg:pb-24`}>
         {/* Eyebrow row */}
         <Reveal>
-          <div className="flex items-center gap-2 mb-7">
-            <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "var(--ib-brand)" }} />
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-8 lg:mb-10">
+            <div className="flex items-center gap-2.5">
+              <span
+                className="relative inline-flex w-[10px] h-[10px] rounded-full"
+                style={{ background: "var(--ib-brand)" }}
+              >
+                <span
+                  className="absolute inset-0 rounded-full ib-pulse-ring"
+                  style={{ background: "var(--ib-brand)", opacity: 0.35 }}
+                />
+              </span>
+              <span
+                className="font-mono text-[11.5px] font-bold tracking-[0.3em] uppercase"
+                style={{ color: "var(--ib-brand-2)" }}
+              >
+                <BengaliText>Interactive IELTS Course</BengaliText>
+              </span>
+            </div>
             <span
-              className="font-mono text-[11.5px] font-bold tracking-[0.28em] uppercase"
-              style={{ color: "var(--ib-brand-2)" }}
+              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-bold"
+              style={{
+                background: "rgba(20,133,90,0.08)",
+                color: "var(--ib-brand-2)",
+                border: "1px solid rgba(20,133,90,0.18)",
+              }}
             >
-              <BengaliText>Interactive IELTS Course</BengaliText>
+              <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--ib-brand)" }} />
+              <BengaliText>New batch · Limited seats</BengaliText>
             </span>
           </div>
         </Reveal>
 
-        {/* Title + Target Band */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-8 lg:gap-12 items-end">
+        {/* Title + Target Band row */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-10 lg:gap-16 items-end">
           <Reveal>
             <h1
-              className="font-display font-bold leading-[1.08] max-w-[680px]"
+              className="font-display font-bold leading-[1.02] tracking-[-0.028em] max-w-[760px]"
               style={{
-                fontSize: "clamp(34px,4.6vw,60px)",
+                fontSize: "clamp(40px,5.6vw,76px)",
                 color: "var(--ib-ink)",
-                letterSpacing: "-0.022em",
               }}
             >
-              <BengaliText>{title}</BengaliText>
-            </h1>
-            <div className="mt-5 flex items-baseline gap-3 flex-wrap">
-              <span
-                className="font-display font-semibold leading-[1.15]"
-                style={{
-                  fontSize: "clamp(20px,2vw,26px)",
-                  color: "var(--ib-ink)",
-                }}
-              >
-                <BengaliText>Target Band 7</BengaliText>
+              <span className="block">
+                <BengaliText>IELTS Band</BengaliText>
               </span>
-              <span className="font-mono text-[12px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--ib-muted)" }}>
+              <span className="block">
+                <BengaliText>Score </BengaliText>
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(92deg, var(--ib-brand) 0%, var(--ib-brand-2) 60%, #0C4D6B 110%)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  <BengaliText>Machine.</BengaliText>
+                </span>
+              </span>
+            </h1>
+
+            {/* Sub-line: Target Band 7 with mint marker */}
+            <div className="mt-7 flex items-center gap-3 flex-wrap">
+              <span className="relative inline-flex">
+                <span
+                  className="font-display font-semibold leading-[1.1]"
+                  style={{
+                    fontSize: "clamp(22px,2.2vw,30px)",
+                    color: "var(--ib-ink)",
+                  }}
+                >
+                  <BengaliText>Reach Target Band 7</BengaliText>
+                </span>
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 bottom-[6px] h-[10px] -z-[1] rounded-sm"
+                  style={{ background: "rgba(124,240,189,0.55)" }}
+                />
+              </span>
+              <span
+                className="font-mono text-[11.5px] font-semibold tracking-[0.22em] uppercase"
+                style={{ color: "var(--ib-muted)" }}
+              >
                 · <BengaliText>complete system</BengaliText>
               </span>
             </div>
@@ -498,39 +553,60 @@ function Hero({
           {targetBand && (
             <Reveal delay={0.1}>
               <div
-                className="relative shrink-0"
-                style={{ width: "clamp(132px,16vw,168px)", height: "clamp(132px,16vw,168px)" }}
+                className="relative shrink-0 ib-float-slow"
+                style={{ width: "clamp(150px,18vw,196px)", height: "clamp(150px,18vw,196px)" }}
               >
+                {/* soft outer glow */}
+                <div
+                  aria-hidden
+                  className="absolute -inset-6 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(124,240,189,0.32) 0%, rgba(124,240,189,0) 65%)",
+                  }}
+                />
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
                     background:
-                      "radial-gradient(circle at 32% 22%, #16335C 0%, #0B2545 55%, #080B10 100%)",
-                    border: "1.5px solid rgba(20,181,126,0.55)",
-                    boxShadow: "0 28px 54px -26px rgba(8,11,16,0.75)",
+                      "radial-gradient(circle at 32% 22%, #1B3D6E 0%, #0B2545 55%, #050810 100%)",
+                    border: "1.5px solid rgba(124,240,189,0.55)",
+                    boxShadow:
+                      "0 32px 60px -28px rgba(8,11,16,0.8), inset 0 1px 0 rgba(255,255,255,0.06)",
                   }}
                 />
                 <div
-                  className="absolute inset-[9px] rounded-full"
-                  style={{ border: "1px solid rgba(20,181,126,0.28)" }}
+                  className="absolute inset-[10px] rounded-full"
+                  style={{ border: "1px solid rgba(124,240,189,0.28)" }}
+                />
+                <div
+                  className="absolute inset-[18px] rounded-full"
+                  style={{ border: "1px dashed rgba(124,240,189,0.18)" }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   <span
-                    className="font-mono text-[10px] font-bold tracking-[0.28em]"
+                    className="font-mono text-[10px] font-bold tracking-[0.32em]"
                     style={{ color: "#8CA0B8" }}
                   >
-                    <Target className="inline-block w-[12px] h-[12px] mr-1 -mt-[2px]" strokeWidth={2.4} />
+                    <Target
+                      className="inline-block w-[12px] h-[12px] mr-1 -mt-[2px]"
+                      strokeWidth={2.4}
+                      style={{ color: "var(--ib-mint)" }}
+                    />
                     <BengaliText>{targetBand.label}</BengaliText>
                   </span>
-                  <span className="font-display font-semibold leading-none mt-1 text-white" style={{ fontSize: "clamp(30px,3.4vw,40px)" }}>
+                  <span
+                    className="font-display font-semibold leading-none mt-1.5 text-white"
+                    style={{ fontSize: "clamp(36px,4vw,52px)" }}
+                  >
                     <BengaliText>{targetBand.value}</BengaliText>
                   </span>
                   <span
-                    className="mx-auto my-[7px] h-px w-8"
-                    style={{ background: "rgba(255,255,255,0.25)" }}
+                    className="mx-auto my-[8px] h-px w-10"
+                    style={{ background: "rgba(124,240,189,0.4)" }}
                   />
                   <span
-                    className="font-mono text-[10px] tracking-[0.2em]"
+                    className="font-mono text-[10px] tracking-[0.24em]"
                     style={{ color: "#8CA0B8" }}
                   >
                     <BengaliText>{targetBand.sub}</BengaliText>
@@ -544,67 +620,203 @@ function Hero({
         {/* Sub copy + chips */}
         <Reveal delay={0.05}>
           <p
-            className="mt-7 text-[16.5px] leading-[1.9] max-w-[640px]"
+            className="mt-9 text-[17px] leading-[1.85] max-w-[680px]"
             style={{ color: "var(--ib-body)" }}
           >
             <BengaliText>{COPY.heroSub}</BengaliText>
           </p>
 
-          <ul className="mt-6 flex flex-wrap gap-2">
+          <ul className="mt-7 flex flex-wrap gap-2">
             {COPY.heroChips.map((chip) => (
               <li
                 key={chip}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[13.5px] font-semibold"
-                style={{ border: "1px solid var(--ib-line)", color: "var(--ib-ink)" }}
+                className="inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-4 py-2 text-[13.5px] font-semibold ib-chip"
+                style={{
+                  border: "1px solid var(--ib-line)",
+                  color: "var(--ib-ink)",
+                  boxShadow: "0 1px 0 rgba(12,26,51,0.04)",
+                }}
               >
-                <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+                <Check
+                  className="h-[13px] w-[13px] shrink-0"
+                  strokeWidth={3}
+                  style={{ color: "var(--ib-brand)" }}
+                />
                 <BengaliText>{chip}</BengaliText>
               </li>
             ))}
           </ul>
         </Reveal>
 
-        {/* Two columns: offer card + exam window demo */}
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-10 lg:gap-14 items-start">
+        {/* Two columns: offer + exam window demo */}
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] gap-8 lg:gap-12 items-stretch">
+          {/* LEFT: rating + offer card */}
           <Reveal delay={0.1}>
-            {offer.mode === "waitlist" && (
-              <div className="mb-6">
-                <Countdown target={LAUNCH_DATE} />
+            <div className="flex flex-col gap-5 lg:gap-6 h-full">
+              {rating && (
+                <a
+                  href="#reviews"
+                  className="inline-flex items-center gap-3 self-start"
+                  style={{ color: "var(--ib-ink)" }}
+                >
+                  <Stars value={rating.average} />
+                  <span className="font-display font-semibold text-[17px] leading-none tabular-nums">
+                    {toBn(rating.average)}
+                  </span>
+                  <span
+                    className="text-[13px] underline underline-offset-2"
+                    style={{ color: "var(--ib-muted)" }}
+                  >
+                    <BengaliText>{`${toBn(rating.count)} জনের রিভিউ`}</BengaliText>
+                  </span>
+                </a>
+              )}
+
+              {offer.mode === "waitlist" && (
+                <div>
+                  <Countdown target={LAUNCH_DATE} />
+                </div>
+              )}
+
+              <div
+                className="rounded-[20px] bg-white p-6 lg:p-7 flex-1"
+                style={{
+                  border: "1px solid var(--ib-line)",
+                  boxShadow:
+                    "0 32px 64px -32px rgba(12,26,51,0.28), 0 1px 0 rgba(12,26,51,0.04)",
+                }}
+              >
+                <OfferCard offer={offer} note={pricingNote} />
               </div>
-            )}
-            <div
-              className="rounded-2xl bg-white p-6"
-              style={{
-                border: "1px solid var(--ib-line)",
-                boxShadow: "0 30px 60px -36px rgba(12,26,51,0.28)",
-              }}
-            >
-              <OfferCard offer={offer} note={pricingNote} />
             </div>
           </Reveal>
 
+          {/* RIGHT: exam window demo */}
           <Reveal delay={0.2}>
-            <div
-              className="rounded-2xl p-3 lg:p-4"
-              style={{
-                background: "linear-gradient(160deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))",
-                border: "1px solid var(--ib-line)",
-                boxShadow: "0 36px 70px -34px rgba(12,26,51,0.22)",
-              }}
-            >
-              <ExamWindow />
+            <div className="flex flex-col gap-4 h-full">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="relative inline-flex w-[8px] h-[8px] rounded-full"
+                    style={{ background: "var(--ib-mint)" }}
+                  >
+                    <span
+                      className="absolute inset-0 rounded-full ib-pulse-ring"
+                      style={{ background: "var(--ib-mint)", opacity: 0.5 }}
+                    />
+                  </span>
+                  <span
+                    className="font-mono text-[11px] font-bold tracking-[0.22em] uppercase"
+                    style={{ color: "var(--ib-ink)" }}
+                  >
+                    <BengaliText>Live demo · মক টেস্ট</BengaliText>
+                  </span>
+                </div>
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-bold"
+                  style={{
+                    background: "var(--ib-navy)",
+                    color: "var(--ib-mint)",
+                    border: "1px solid rgba(124,240,189,0.35)",
+                  }}
+                >
+                  <BookOpen className="w-[12px] h-[12px]" strokeWidth={2.4} />
+                  <BengaliText>{`${N}টি মক টেস্ট প্যাকেজে`}</BengaliText>
+                </span>
+              </div>
+
+              <div
+                className="relative rounded-[20px] p-2.5 lg:p-3 flex-1"
+                style={{
+                  background:
+                    "linear-gradient(160deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4))",
+                  border: "1px solid var(--ib-line)",
+                  boxShadow:
+                    "0 40px 80px -36px rgba(12,26,51,0.32), 0 0 0 8px rgba(255,255,255,0.55)",
+                }}
+              >
+                {/* corner mint glow */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(124,240,189,0.30) 0%, transparent 70%)",
+                  }}
+                />
+                <ExamWindow />
+              </div>
+
+              <p
+                className="text-[13px] leading-[1.7] max-w-[500px]"
+                style={{ color: "var(--ib-muted)" }}
+              >
+                <BengaliText>{COPY.windowCaption}</BengaliText>
+              </p>
             </div>
-            <p
-              className="mt-4 text-[13px] leading-[1.7] max-w-[500px]"
-              style={{ color: "var(--ib-muted)" }}
-            >
-              <BengaliText>{COPY.windowCaption}</BengaliText>
-            </p>
           </Reveal>
         </div>
 
         <TrustStrip details={details} lessonCount={lessonCount} />
       </div>
+
+      <style>{`
+        .ib-hero-grid {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image:
+            linear-gradient(rgba(12,26,51,0.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(12,26,51,0.045) 1px, transparent 1px);
+          background-size: 48px 48px;
+          -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, rgba(0,0,0,0.85), transparent 78%);
+          mask-image: radial-gradient(120% 90% at 50% 0%, rgba(0,0,0,0.85), transparent 78%);
+        }
+        .ib-hero-blob {
+          position: absolute;
+          border-radius: 9999px;
+          filter: blur(80px);
+          pointer-events: none;
+        }
+        .ib-hero-blob-a {
+          width: 480px; height: 480px;
+          top: -160px; right: -80px;
+          background: rgba(124,240,189,0.28);
+        }
+        .ib-hero-blob-b {
+          width: 420px; height: 420px;
+          bottom: -180px; left: -120px;
+          background: rgba(31,92,138,0.18);
+        }
+        @keyframes ibHeroDrift {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(20px, -16px); }
+        }
+        .ib-float-slow {
+          animation: ibHeroDrift 6s ease-in-out infinite;
+        }
+        @keyframes ibPulseRing {
+          0% { transform: scale(1); opacity: 0.5; }
+          100% { transform: scale(2.6); opacity: 0; }
+        }
+        .ib-pulse-ring {
+          animation: ibPulseRing 2s ease-out infinite;
+        }
+        .ib-chip {
+          transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+        .ib-chip:hover {
+          transform: translateY(-1px);
+          border-color: rgba(20,133,90,0.4);
+          box-shadow: 0 8px 18px -10px rgba(20,133,90,0.4);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ib-float-slow,
+          .ib-pulse-ring { animation: none !important; }
+          .ib-chip { transition: none; }
+          .ib-chip:hover { transform: none; }
+        }
+      `}</style>
     </section>
   );
 }
