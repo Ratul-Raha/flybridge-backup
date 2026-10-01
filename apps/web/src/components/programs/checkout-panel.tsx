@@ -444,27 +444,46 @@ export function CheckoutPanel({
           </ul>
 
           <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
-            <div className="flex items-center justify-center gap-4 text-center">
-              <span className="inline-flex items-center gap-1">
-                <Lock className="w-3 h-3" />
-                SSL Encrypted
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" />
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <span
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                >
+                  <Lock className="w-4 h-4" />
+                </span>
+                <span className="text-[11px] font-medium" style={{ color: "var(--body)" }}>
+                  SSL Encrypted
+                </span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                </span>
                 <a
                   href="/refund-policy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-brand-2 transition-colors"
+                  className="text-[11px] font-medium underline hover:text-brand-2 transition-colors"
                   style={{ color: "var(--body)" }}
                 >
                   3 Days Refund
                 </a>
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Zap className="w-3 h-3" />
-                Instant access
-              </span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                >
+                  <Zap className="w-4 h-4" />
+                </span>
+                <span className="text-[11px] font-medium" style={{ color: "var(--body)" }}>
+                  Instant access
+                </span>
+              </div>
             </div>
           </div>
         </div>
