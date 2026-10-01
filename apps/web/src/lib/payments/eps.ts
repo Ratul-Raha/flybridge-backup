@@ -213,13 +213,14 @@ export async function createEPSPayment(opts: {
   const origin = opts.origin;
   const token = await getToken(c.environment);
 
-  // EPS has no server-to-server callback, so these three redirects are the only
-  // signal that the buyer came back. Each carries both ids: ours, and the
-  // merchantTransactionId EPS will append its own reference alongside, so the
-  // return can still be matched to the order if the query string is rewritten.
+  // These three redirects are what bring the buyer back. Each carries both
+  // ids: ours, and the merchantTransactionId EPS will append its own reference
+  // alongside, so the return can still be matched to the order if the query
+  // string is rewritten.
   //
-  // Nothing in that query string is trusted — the return handlers re-verify
-  // with CheckMerchantTransactionStatus before anything is fulfilled.
+  // Nothing in that query string is trusted — the return handlers and the IPN
+  // endpoint (/api/webhooks/eps) both re-verify with CheckMerchantTransactionStatus
+  // before anything is fulfilled.
   const callback = `order=${orderId}&merchantTransactionId=${merchantTransactionId}`;
 
   const body: Record<string, unknown> = {

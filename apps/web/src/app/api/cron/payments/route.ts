@@ -3,8 +3,9 @@ import { sweepPendingOrders } from "@/lib/payments/sweep";
 
 /**
  * Cron endpoint (see /vercel.json) that reconciles "stale" pending orders with
- * their payment gateway. EPS has no webhook/IPN, so a paid checkout that the
- * user abandoned before the success page would otherwise stay pending forever.
+ * their payment gateway. Backstop for payments the browser redirect never
+ * delivered — the buyer closed the tab or lost connection before EPS handed
+ * them back — and for any IPN that failed to arrive.
  *
  * @security Guarded by CRON_SECRET — header `x-cron-secret` or
  * `Authorization: Bearer <secret>`.

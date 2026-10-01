@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   SKILL_META,
   skillLabel,
@@ -49,7 +49,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [payNote, setPayNote] = useState(false);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
-    bundle.prices?.USD ? "USD" : "BDT"
+    defaultCheckoutCurrency(bundle.prices)
   );
 
   const anyOwned = tests.some((t) => t.owned);

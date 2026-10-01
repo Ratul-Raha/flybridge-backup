@@ -190,18 +190,18 @@ export function IeltsPromoPopup() {
                 <span className="text-[#0F9D58]">+ ৫টা বোনাস ক্লাস একটাই সিস্টেমে</span>
               </p>
               <p className="mt-1 text-[11.5px] text-[#4B5768]">
-                ওয়েটলিস্টে জয়েন করলে থাকছে স্কলারশিপের সুযোগ
+                লাইফটাইম অ্যাক্সেস · একবার ভর্তি হলে সব লেসন আপনার
               </p>
             </div>
 
             {/* CTA */}
             <div className="mt-4 flex items-center gap-3 flex-wrap">
               <a
-                href="#waitlist"
+                href="/programs/ielts-band-score-machine/checkout"
                 onClick={close}
                 className="group inline-flex items-center gap-2 rounded-full bg-[#0F9D58] px-6 py-2.5 text-white transition-colors hover:bg-[#0C8A4C]"
               >
-                <span className="text-[13.5px] font-bold">এখনই ওয়েটলিস্টে জয়েন করুন</span>
+                <span className="text-[13.5px] font-bold">এখনই ভর্তি হন</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
               <a

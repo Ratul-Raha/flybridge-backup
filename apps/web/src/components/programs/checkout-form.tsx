@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { formatMoney } from "@/lib/pricing";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 
@@ -43,7 +43,7 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [currency, setCurrency] = useState<PickableCurrency>(
-    course.prices?.USD ? "USD" : "BDT"
+    defaultCheckoutCurrency(course.prices)
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

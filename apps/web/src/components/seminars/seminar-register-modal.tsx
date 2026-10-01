@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { PromoSummary } from "@/components/checkout/promo-summary";
 
 export type SeminarLike = {
@@ -44,7 +44,7 @@ export function SeminarRegisterModal({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
-    seminar.prices?.USD ? "USD" : "BDT"
+    defaultCheckoutCurrency(seminar.prices)
   );
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const isPaid = seminar.type === "paid";

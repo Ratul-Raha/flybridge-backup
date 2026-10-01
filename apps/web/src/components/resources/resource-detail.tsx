@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PaymentMethodPicker, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   fileTypeMeta,
   formatFileSize,
@@ -40,7 +40,7 @@ export function ResourceDetail({
   const [error, setError] = useState<string | null>(null);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
-    r.prices?.USD ? "USD" : "BDT"
+    defaultCheckoutCurrency(r.prices)
   );
   const { user, loading } = useAuth();
   const router = useRouter();

@@ -19,6 +19,19 @@ type OptionDef = {
   pill: string;
 };
 
+/**
+ * EPS is the only live checkout path right now, so anything that has a BDT
+ * price is sold in BDT only. Both prices stay in the data — this just hides
+ * the USD/Stripe option. Set to false to bring Stripe back everywhere.
+ */
+const BDT_ONLY = true;
+
+export function defaultCheckoutCurrency(prices: PickerPrices): PickableCurrency {
+  const hasBdt = typeof prices?.BDT === "number" && prices.BDT > 0;
+  if (BDT_ONLY && hasBdt) return "BDT";
+  return typeof prices?.USD === "number" && prices.USD > 0 ? "USD" : "BDT";
+}
+
 const OPTIONS: OptionDef[] = [
   {
     code: "USD",
@@ -55,8 +68,11 @@ export function PaymentMethodPicker({
   const usd = typeof prices?.USD === "number" && prices.USD > 0 ? prices.USD : null;
   const bdt = typeof prices?.BDT === "number" && prices.BDT > 0 ? prices.BDT : null;
 
+  const bdtOnly = BDT_ONLY && bdt !== null;
+  const usdVisible = usd !== null && !bdtOnly;
+
   const pair: { code: PickableCurrency; amount: number }[] = [];
-  if (usd !== null) pair.push({ code: "USD", amount: usd });
+  if (usdVisible) pair.push({ code: "USD", amount: usd as number });
   if (bdt !== null) pair.push({ code: "BDT", amount: bdt });
 
   const amountFor = (code: PickableCurrency) => (code === "USD" ? usd : bdt);
@@ -86,7 +102,7 @@ export function PaymentMethodPicker({
 
       <div className="flex flex-col gap-3">
         {OPTIONS.filter((o) => {
-          if (o.code === "USD") return usd !== null;
+          if (o.code === "USD") return usdVisible;
           return bdt !== null;
         }).map((option) => {
           const selected = value === option.code;

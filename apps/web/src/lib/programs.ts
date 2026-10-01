@@ -68,8 +68,8 @@ export const programs: Program[] = [
     desc: "Speaking, Writing, Listening, Reading — one complete, exam-shaped system built to reach your target band.",
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",
-    upcoming: true,
     image: "/programs/ielts-band-score-machine.svg",
+    hasDb: true,
   },
 ];
 
