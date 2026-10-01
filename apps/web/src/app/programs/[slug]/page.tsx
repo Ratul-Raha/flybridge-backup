@@ -1564,6 +1564,8 @@ function DbCoursePage({
 export default async function ProgramPage({ params }: Props) {
   const program = getProgram(params.slug);
 
+  if (program?.hidden) notFound();
+
   await connectDb();
 
   const course = await Course.findOne({

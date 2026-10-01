@@ -10,6 +10,7 @@ export type Program = {
   originalPrice?: string;
   image?: string;
   hasDb?: boolean;
+  hidden?: boolean;
 };
 
 export const programs: Program[] = [
@@ -23,6 +24,7 @@ export const programs: Program[] = [
     price: "$29.99",
     originalPrice: "$99.99",
     image: "/watermark.webp",
+    hidden: true,
   },
   {
     slug: "obocheton-mone-ilish-level-01",
@@ -32,6 +34,7 @@ export const programs: Program[] = [
     bg: "var(--lav-bg)",
     badgeColor: "var(--lav-ink)",
     image: "/programs/english.jpg",
+    hidden: true,
   },
   {
     slug: "work-permit-prep-canada",
@@ -42,6 +45,7 @@ export const programs: Program[] = [
     badgeColor: "var(--mint-ink)",
     upcoming: true,
     image: "/programs/work-permit-blueprint.webp",
+    hidden: true,
   },
   {
     slug: "interview-readiness",
@@ -52,6 +56,7 @@ export const programs: Program[] = [
     badgeColor: "var(--peach-ink)",
     upcoming: true,
     image: "/programs/interview-blueprint.jpg",
+    hidden: true,
   },
   {
     slug: "easy-smart-spoken-english",
@@ -83,8 +88,9 @@ export function getProgram(slug: string) {
  * Static programs whose slug already exists as a database course.
  * The database record is canonical, so the static entry must be dropped
  * from any merged listing to avoid rendering the same course twice.
+ * Programs flagged with `hidden: true` are also excluded from listings.
  */
 export function staticProgramsWithoutDbCourse<T extends { slug: string }>(dbCourses: readonly T[]): Program[] {
   const dbSlugs = new Set(dbCourses.map((c) => c.slug.toLowerCase()));
-  return programs.filter((p) => !dbSlugs.has(p.slug.toLowerCase()));
+  return programs.filter((p) => !p.hidden && !dbSlugs.has(p.slug.toLowerCase()));
 }
