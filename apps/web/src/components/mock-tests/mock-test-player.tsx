@@ -208,6 +208,23 @@ export function MockTestPlayer({
     return pages;
   }, [test]);
 
+  const questionGroups = useMemo(() => {
+    if (test?.skill === "reading" && readingPages) {
+      return readingPages.map((p, i) => ({
+        key: `passage-${i}`,
+        label: p.title || `Passage ${i + 1}`,
+        pageIndex: i,
+        questions: p.sections.flatMap((s) => s.questions ?? []),
+      }));
+    }
+    return (test?.content?.sections ?? []).map((s, i) => ({
+      key: `section-${i}`,
+      label: s.type ? (TYPE_LABELS[s.type] ?? `Section ${i + 1}`) : `Section ${i + 1}`,
+      pageIndex: null,
+      questions: s.questions ?? [],
+    }));
+  }, [test, readingPages]);
+
   const loadTestData = useCallback(
     async (id: string) => {
       const res = await fetch(`/api/mock-tests/${testId}`, { cache: "no-store" });
@@ -1081,23 +1098,46 @@ export function MockTestPlayer({
                 </div>
               </div>
 
-              <div className="flex max-h-[120px] flex-wrap gap-1.5 overflow-y-auto pr-1">
-                {flattened.map((q, index) => {
-                  const a = isAnswered(answers[q.qid]);
+              <div className="flex max-h-[180px] flex-col gap-3 overflow-y-auto pr-1">
+                {questionGroups.map((group) => {
+                  if (group.questions.length === 0) return null;
                   return (
-                    <button
-                      key={q.qid}
-                      type="button"
-                      onClick={() => document.getElementById(`q-${q.qid}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg font-mono text-[12px] font-semibold transition-all duration-150 hover:scale-105"
-                      style={
-                        a
-                          ? { background: "var(--brand)", color: "#fff", boxShadow: "0 4px 12px -4px var(--brand)" }
-                          : { border: "1px solid var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
-                      }
-                    >
-                      {index + 1}
-                    </button>
+                    <div key={group.key} className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em]"
+                        style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+                      >
+                        {group.label}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.questions.map((q) => {
+                          const index = questionIndex[q.qid] ?? 0;
+                          const a = isAnswered(answers[q.qid]);
+                          return (
+                            <button
+                              key={q.qid}
+                              type="button"
+                              onClick={() => {
+                                if (group.pageIndex !== null && group.pageIndex !== pageIdx) {
+                                  goToPage(group.pageIndex);
+                                }
+                                window.setTimeout(() => {
+                                  document.getElementById(`q-${q.qid}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                }, group.pageIndex !== null && group.pageIndex !== pageIdx ? 150 : 0);
+                              }}
+                              className="flex h-9 w-9 items-center justify-center rounded-lg font-mono text-[12px] font-semibold transition-all duration-150 hover:scale-105"
+                              style={
+                                a
+                                  ? { background: "var(--brand)", color: "#fff", boxShadow: "0 4px 12px -4px var(--brand)" }
+                                  : { border: "1px solid var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
+                              }
+                            >
+                              {index}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>

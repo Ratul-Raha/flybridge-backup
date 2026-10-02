@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -253,7 +254,22 @@ function sectionPreview(s: ManagedSection): string {
 }
 
 export function MockTestManage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+
+  const queryBundleId = searchParams.get("bundle");
+  const queryTestId = searchParams.get("test");
+  const autoEditRef = useRef<string | null>(queryTestId);
+
+  useEffect(() => {
+    if (queryBundleId && queryTestId) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("bundle");
+      params.delete("test");
+      router.replace(`/dashboard/mock-tests${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
+    }
+  }, [queryBundleId, queryTestId, router, searchParams]);
 
   const [bundles, setBundles] = useState<BundleDto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -292,12 +308,16 @@ export function MockTestManage() {
   }, []);
 
   useEffect(() => {
-    loadBundles();
+    loadBundles().then(() => {
+      if (queryBundleId) {
+        setActiveBundleId(queryBundleId);
+      }
+    });
     fetch("/api/courses", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setCourses((d.courses ?? []).map((c: { id: string; title: string }) => ({ id: c.id, title: c.title }))))
       .catch(() => setCourses([]));
-  }, [loadBundles]);
+  }, [loadBundles, queryBundleId]);
 
   const loadTests = useCallback(async (bundleId: string) => {
     setActiveBundleId(bundleId);
@@ -305,16 +325,29 @@ export function MockTestManage() {
     try {
       const res = await fetch(`/api/mock-tests/bundles/${bundleId}`, { cache: "no-store" });
       const data = await res.json();
-      setTests(Array.isArray(data.tests) ? data.tests : []);
+      const loaded = Array.isArray(data.tests) ? (data.tests as TestListItem[]) : [];
+      setTests(loaded);
+      return loaded;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load tests");
+      return [];
     } finally {
       setTestsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    if (activeBundleId) loadTests(activeBundleId);
+    if (activeBundleId) {
+      loadTests(activeBundleId).then((loaded) => {
+        const targetId = autoEditRef.current;
+        if (targetId) {
+          autoEditRef.current = null;
+          const target = loaded.find((t) => t.id === targetId);
+          if (target) openTestEdit(target);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeBundleId, loadTests]);
 
   const openBundleCreate = () => {
@@ -1428,14 +1461,15 @@ export function MockTestManage() {
                           >
                             Preview
                           </Link>
-                          <button
-                            type="button"
-                            onClick={() => openTestEdit(t)}
+                          <Link
+                            href={`/dashboard/mock-tests?bundle=${t.bundle.id}&test=${t.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="shrink-0 text-[12.5px] font-medium border rounded-full px-4 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
                             style={{ color: "var(--ink)", borderColor: "var(--line)" }}
                           >
                             Edit
-                          </button>
+                          </Link>
                           <button
                             type="button"
                             onClick={() => deleteTest(t)}
