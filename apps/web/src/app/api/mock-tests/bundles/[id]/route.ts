@@ -22,6 +22,7 @@ type StaffTest = Omit<MockTestDoc, "bundle" | "course"> & {
 
 type TestDto = {
   id: string;
+  bundle: { id: string; title: string; slug: string; price: number; currency: string };
   course: { id: string; title: string; slug: string } | null;
   title: string;
   skill: string;
@@ -55,12 +56,20 @@ function toDto(b: MockTestBundleDoc, skills?: { reading: number; listening: numb
 
 async function toTestDto(
   test: StaffTest,
+  bundle: MockTestBundleDoc,
   ownership: MockTestOwnership | null,
   courseMap: Map<string, { id: string; title: string; slug: string }>
 ): Promise<TestDto> {
   const courseId = test.course ? test.course.toString() : undefined;
   return {
     id: test._id.toString(),
+    bundle: {
+      id: bundle._id.toString(),
+      title: bundle.title,
+      slug: bundle.slug,
+      price: bundle.price ?? 0,
+      currency: bundle.currency ?? "USD",
+    },
     course: courseId ? (courseMap.get(courseId) ?? null) : null,
     title: test.title,
     skill: test.skill,
@@ -108,7 +117,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       session && session.userId ? await resolveMockTestOwnership(session.userId) : null;
 
     const dtoTests = await Promise.all(
-      tests.map((t) => toTestDto(t, ownership, courseMap))
+      tests.map((t) => toTestDto(t, bundle, ownership, courseMap))
     );
 
     return NextResponse.json({ bundle: toDto(bundle), tests: dtoTests });
