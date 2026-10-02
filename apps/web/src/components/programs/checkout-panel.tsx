@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { formatMoney } from "@/lib/pricing";
-import { BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import { ArrowUpRight, BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
 
 type Course = {
   courseId: string;
@@ -16,7 +16,8 @@ type Course = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
-  originalPrice?: string;
+  /** The pre-discount BDT amount, as a number so the summary can subtract from it. */
+  originalPrice?: number;
   discountLabel?: string | null;
   upcoming: boolean;
 };
@@ -139,6 +140,15 @@ export function CheckoutPanel({
   // order it creates are always the same numbers.
   const total = baseAmount;
 
+  // The summary reads as an invoice: the full price, what the running discount
+  // takes off it, then what is left to pay. The discount is derived from the two
+  // amounts rather than sent separately, so the rows can never disagree. With no
+  // discount there is nothing to subtract, so the total stands alone rather than
+  // repeating itself under a second heading.
+  const originalAmount = course.originalPrice ?? total;
+  const discountAmount = Math.max(0, originalAmount - total);
+  const hasDiscount = discountAmount > 0;
+
   const money = (amount: number) => (isFree ? "Free" : formatMoney(amount, displayCurrency));
 
   return (
@@ -257,46 +267,51 @@ export function CheckoutPanel({
               </div>
             </div>
 
-            <div className="py-4 space-y-2.5">
-              <div className="flex items-center justify-between text-[13.5px]">
-                <span style={{ color: "var(--body)" }}>
-                  {course.discountLabel ?? "Total"}
-                </span>
-                <span className="flex items-baseline gap-2">
-                  <span className="font-medium" style={{ color: "var(--ink)" }}>
-                    {money(total)}
+            {hasDiscount && (
+              <div className="py-4 space-y-2.5">
+                <div className="flex items-center justify-between gap-4 text-[13.5px]">
+                  <span style={{ color: "var(--body)" }}>Course price</span>
+                  <span className="font-medium tabular-nums" style={{ color: "var(--ink)" }}>
+                    {money(originalAmount)}
                   </span>
-                  {course.originalPrice && (
-                    <span
-                      className="text-[12.5px] font-medium line-through"
-                      style={{ color: "var(--body)", opacity: 0.6 }}
-                    >
-                      {course.originalPrice}
-                    </span>
-                  )}
-                </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 text-[13.5px]">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span style={{ color: "var(--body)" }}>Discount</span>
+                    {course.discountLabel && (
+                      <span
+                        className="font-mono text-[10px] font-medium tracking-[0.08em]"
+                        style={{ color: "var(--brand-2)" }}
+                      >
+                        {course.discountLabel}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className="font-medium tabular-nums whitespace-nowrap"
+                    style={{ color: "var(--brand-2)" }}
+                  >
+                    &minus;{formatMoney(discountAmount, displayCurrency)}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             <div
-              className="flex items-center justify-between border-t pt-4"
+              className={`flex items-center justify-between gap-4 ${
+                hasDiscount ? "border-t pt-4" : "pt-5"
+              }`}
               style={{ borderColor: "var(--line)" }}
             >
               <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                 Total
               </span>
-              <span className="flex items-baseline gap-2">
-                <span className="text-[22px] font-bold leading-none" style={{ color: "var(--ink)" }}>
-                  {money(total)}
-                </span>
-                {course.originalPrice && (
-                  <span
-                    className="text-[13px] font-medium line-through"
-                    style={{ color: "var(--body)", opacity: 0.6 }}
-                  >
-                    {course.originalPrice}
-                  </span>
-                )}
+              <span
+                className="text-[22px] font-bold leading-none tabular-nums"
+                style={{ color: "var(--ink)" }}
+              >
+                {money(total)}
               </span>
             </div>
 
@@ -362,47 +377,71 @@ export function CheckoutPanel({
           </ul>
 
           <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="flex flex-col items-center gap-2">
-                <span
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <Lock className="w-4 h-4" />
-                </span>
-                <span className="text-[11px] font-medium" style={{ color: "var(--body)" }}>
-                  SSL Encrypted
-                </span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <span
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                </span>
-                <a
-                  href="/refund"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-medium underline hover:text-brand-2 transition-colors"
-                  style={{ color: "var(--body)" }}
-                >
-                  3-Day Refund Policy
-                </a>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <span
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <Zap className="w-4 h-4" />
-                </span>
-                <span className="text-[11px] font-medium" style={{ color: "var(--body)" }}>
-                  Instant access
-                </span>
-              </div>
-            </div>
+            <p
+              className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3.5"
+              style={{ color: "var(--body)" }}
+            >
+              Buying safely
+            </p>
+            <ul className="space-y-2.5">
+              {/* The refund row is the only outbound one, and it opens the exact
+                  section of the policy that says what is covered. */}
+              {[
+                {
+                  icon: Lock,
+                  label: "SSL encrypted, secure checkout",
+                  href: null,
+                },
+                {
+                  icon: ShieldCheck,
+                  label: "3-day refund, 100% of your money back",
+                  href: "/refund#terms",
+                },
+                {
+                  icon: Zap,
+                  label: "Instant access once payment clears",
+                  href: null,
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                const body = (
+                  <>
+                    <Icon
+                      className="w-[14px] h-[14px] shrink-0"
+                      strokeWidth={2.2}
+                      style={{ color: "var(--brand-2)" }}
+                    />
+                    <span className="flex-1 text-[12.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
+                      {item.label}
+                    </span>
+                    {item.href && (
+                      <ArrowUpRight
+                        className="w-[13px] h-[13px] shrink-0 opacity-60"
+                        strokeWidth={2.4}
+                        style={{ color: "var(--brand-2)" }}
+                      />
+                    )}
+                  </>
+                );
+
+                return (
+                  <li key={item.label} className="flex items-start gap-2.5">
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2.5 group -m-1 p-1 rounded transition-colors hover:bg-brand-soft/50"
+                      >
+                        {body}
+                      </a>
+                    ) : (
+                      <span className="flex items-start gap-2.5">{body}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </aside>

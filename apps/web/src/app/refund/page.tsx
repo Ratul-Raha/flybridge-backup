@@ -180,7 +180,10 @@ export default function RefundPage() {
       <Nav />
       <main>
         {/* Header */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pt-[clamp(130px,18vh,190px)] pb-[clamp(48px,6vw,72px)]">
+        <section
+          id="guarantee"
+          className="px-[clamp(20px,4.5vw,56px)] pt-[clamp(130px,18vh,190px)] pb-[clamp(48px,6vw,72px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div
               className="inline-flex items-center gap-2 rounded-full font-mono text-[11.5px] font-medium tracking-[0.4px] px-4 py-2 mb-6"
@@ -231,7 +234,10 @@ export default function RefundPage() {
         </section>
 
         {/* The terms, at a glance */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(40px,5vw,64px)]">
+        <section
+          id="terms"
+          className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(40px,5vw,64px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div className="mb-7">
               <SectionLabel>The terms, at a glance</SectionLabel>
@@ -272,7 +278,10 @@ export default function RefundPage() {
         </section>
 
         {/* How to claim */}
-        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+        <section
+          id="how-to-claim"
+          className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div className="mb-8">
               <SectionLabel>How to claim</SectionLabel>
@@ -316,7 +325,10 @@ export default function RefundPage() {
         </section>
 
         {/* The free usage allowance */}
-        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+        <section
+          id="allowance"
+          className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div className="mb-8">
               <SectionLabel>Your allowance</SectionLabel>
@@ -440,7 +452,10 @@ export default function RefundPage() {
         </section>
 
         {/* Eligibility */}
-        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+        <section
+          id="eligibility"
+          className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div className="mb-8">
               <SectionLabel>Eligibility</SectionLabel>
@@ -501,7 +516,10 @@ export default function RefundPage() {
         </section>
 
         {/* FAQ */}
-        <section className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)]">
+        <section
+          id="faq"
+          className="px-[clamp(20px,4.5vw,56px)] py-[clamp(40px,5vw,64px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div className="mb-8">
               <SectionLabel>
@@ -559,7 +577,10 @@ export default function RefundPage() {
         </section>
 
         {/* Contact */}
-        <section className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(64px,8vw,104px)] pt-[clamp(24px,3vw,40px)]">
+        <section
+          id="contact"
+          className="px-[clamp(20px,4.5vw,56px)] pb-[clamp(64px,8vw,104px)] pt-[clamp(24px,3vw,40px)] scroll-mt-[92px]"
+        >
           <div className="max-w-[880px] mx-auto">
             <div
               className="rounded-2xl p-[clamp(28px,4vw,44px)] relative overflow-hidden"

@@ -58,9 +58,14 @@ export default async function CheckoutPage({ params }: Props) {
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
     prices: pricing.prices,
-    originalPrice: pricing.configured
-      ? (pricing.originalPrice ?? undefined)
-      : (details?.originalPrice ?? undefined),
+    // The summary is arithmetic the buyer can check, so only a running discount
+    // gets an original to subtract from. A marketing-only strikethrough has no
+    // matching discount, and a summary whose rows do not add up is worse than
+    // no strikethrough at all.
+    originalPrice:
+      pricing.discounted && pricing.price !== null
+        ? pricing.price + pricing.savings
+        : undefined,
     discountLabel: pricing.discountLabel,
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
