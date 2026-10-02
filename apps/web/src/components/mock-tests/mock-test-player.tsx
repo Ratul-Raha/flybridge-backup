@@ -485,7 +485,7 @@ export function MockTestPlayer({
       </div>
     ) : null;
     return (
-      <div key={section.id ?? `s${si}`} className="mb-7">
+      <div key={section.id ?? `s${si}`} id={`part-${si}`} className="mb-7 scroll-mt-24">
         <div className="mb-3 flex flex-wrap items-center gap-2.5">
           {range && (
             <span
@@ -528,6 +528,29 @@ export function MockTestPlayer({
   const goToPage = (i: number) => {
     setPage(Math.max(0, Math.min(i, (readingPages?.length ?? 1) - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const scrollToQuestion = (qid: string, partPageIndex: number | null) => {
+    const scroll = () =>
+      document
+        .getElementById(`q-${qid}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (partPageIndex !== null && partPageIndex !== pageIdx) {
+      setPage(partPageIndex);
+      window.setTimeout(scroll, 200);
+    } else {
+      scroll();
+    }
+  };
+
+  const jumpToPart = (partIndex: number, partPageIndex: number | null) => {
+    if (partPageIndex !== null) {
+      goToPage(partPageIndex);
+    } else {
+      document
+        .getElementById(`part-${partIndex}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const beginTest = async () => {
@@ -909,7 +932,7 @@ export function MockTestPlayer({
         </div>
       </header>
 
-      <div className={`mx-auto px-5 pt-8 pb-24 ${readingPages ? "w-full max-w-[1500px]" : "max-w-[1000px]"}`}>
+      <div className={`w-full px-5 pt-8 ${isWriting ? "pb-24" : "pb-48"}`}>
         {error && (
           <p className="mb-6 rounded-xl border px-4 py-3 text-[12.5px]" style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.25)", background: "rgba(192,57,43,0.06)" }}>
             {error}
@@ -980,28 +1003,16 @@ export function MockTestPlayer({
         {!isWriting &&
           (readingPages ? (
             <>
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => goToPage(pageIdx - 1)}
-                  disabled={pageIdx === 0}
-                  className="rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+              <div className="mb-5 flex items-center gap-2.5">
+                <span
+                  className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.08em]"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
                 >
-                  ‹ Previous passage
-                </button>
-                <span className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                  Passage {pageIdx + 1} of {readingPages.length}
+                  Part {pageIdx + 1} of {readingPages.length}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => goToPage(pageIdx + 1)}
-                  disabled={pageIdx === readingPages.length - 1}
-                  className="rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  Next passage ›
-                </button>
+                <span className="text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
+                  {currentPage?.title || `Reading Passage ${pageIdx + 1}`}
+                </span>
               </div>
 
               {currentPage && (
@@ -1033,30 +1044,6 @@ export function MockTestPlayer({
                   </div>
                 </div>
               )}
-
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => goToPage(pageIdx - 1)}
-                  disabled={pageIdx === 0}
-                  className="rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  ‹ Previous passage
-                </button>
-                <span className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                  Passage {pageIdx + 1} of {readingPages.length}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => goToPage(pageIdx + 1)}
-                  disabled={pageIdx === readingPages.length - 1}
-                  className="rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  Next passage ›
-                </button>
-              </div>
             </>
           ) : test?.content?.sections?.length ? (
             test.content.sections.map((section, si) => renderSection(section, si))
@@ -1068,100 +1055,86 @@ export function MockTestPlayer({
             </div>
           ))}
 
-        {/* Question navigator */}
+        {/* Bottom navigation bar */}
         {!isWriting && flattened.length > 0 && (
           <div
-            className="sticky bottom-3 z-30 mt-8 overflow-hidden rounded-2xl border bg-white/95 shadow-[0_20px_50px_-20px_rgba(18,32,67,0.35)] backdrop-blur"
+            className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 shadow-[0_-12px_40px_-24px_rgba(18,32,67,0.35)] backdrop-blur"
             style={{ borderColor: "var(--line)" }}
           >
-            <div className="flex flex-col gap-3 px-5 pt-4 pb-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <FileText size={15} style={{ color: "var(--brand-2)" }} />
-                  <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                    Answer sheet
-                  </p>
-                  <span
-                    className="rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold"
-                    style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-                  >
-                    {Math.min(answeredCount, flattened.length)}/{flattened.length}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-[11px] font-medium" style={{ color: "var(--body)" }}>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-[4px]" style={{ background: "var(--brand)" }} /> Answered
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-[4px] border" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }} /> Not answered
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex max-h-[180px] flex-col gap-3 overflow-y-auto pr-1">
-                {questionGroups.map((group) => {
-                  if (group.questions.length === 0) return null;
-                  return (
-                    <div key={group.key} className="flex flex-wrap items-center gap-2">
-                      <span
-                        className="shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em]"
-                        style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-                      >
-                        {group.label}
+            <div className="flex items-stretch overflow-x-auto">
+              {questionGroups.map((group, gi) => {
+                if (group.questions.length === 0) return null;
+                const active = group.pageIndex !== null ? group.pageIndex === pageIdx : false;
+                return (
+                  <div key={group.key} className="flex shrink-0 items-stretch border-r" style={{ borderColor: "var(--line)" }}>
+                    <button
+                      type="button"
+                      onClick={() => jumpToPart(gi, group.pageIndex)}
+                      className="flex w-[76px] shrink-0 flex-col items-center justify-center gap-1 px-2 py-2.5 text-center transition-colors hover:bg-[var(--brand-soft)]"
+                      style={active ? { background: "var(--brand-soft)" } : undefined}
+                    >
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em]" style={{ color: active ? "var(--brand)" : "var(--body)" }}>
+                        Part {gi + 1}
                       </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {group.questions.map((q) => {
-                          const index = questionIndex[q.qid] ?? 0;
-                          const a = isAnswered(answers[q.qid]);
-                          return (
-                            <button
-                              key={q.qid}
-                              type="button"
-                              onClick={() => {
-                                if (group.pageIndex !== null && group.pageIndex !== pageIdx) {
-                                  goToPage(group.pageIndex);
-                                }
-                                window.setTimeout(() => {
-                                  document.getElementById(`q-${q.qid}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                                }, group.pageIndex !== null && group.pageIndex !== pageIdx ? 150 : 0);
-                              }}
-                              className="flex h-9 w-9 items-center justify-center rounded-lg font-mono text-[12px] font-semibold transition-all duration-150 hover:scale-105"
-                              style={
-                                a
-                                  ? { background: "var(--brand)", color: "#fff", boxShadow: "0 4px 12px -4px var(--brand)" }
-                                  : { border: "1px solid var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
-                              }
-                            >
-                              {index}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <span className="text-[10px] leading-none" style={{ color: "var(--body)" }}>
+                        {group.questions.length} Q
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-1 px-2 py-2">
+                      {group.questions.map((q) => {
+                        const index = questionIndex[q.qid] ?? 0;
+                        const a = isAnswered(answers[q.qid]);
+                        return (
+                          <button
+                            key={q.qid}
+                            type="button"
+                            onClick={() => scrollToQuestion(q.qid, group.pageIndex)}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-[12px] font-semibold transition-all duration-150 hover:scale-105"
+                            style={
+                              a
+                                ? { background: "var(--brand)", color: "#fff", boxShadow: "0 4px 12px -4px var(--brand)" }
+                                : { border: "1px solid var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
+                            }
+                          >
+                            {index}
+                          </button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
+            </div>
 
-              <div className="mt-1 flex flex-col-reverse items-stretch gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between gap-3 border-t px-4 py-2.5" style={{ borderColor: "var(--line)" }}>
+              <div className="flex items-center gap-4 text-[11px] font-medium" style={{ color: "var(--body)" }}>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-[4px]" style={{ background: "var(--brand)" }} /> Answered
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-[4px] border" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }} /> Not answered
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                  {Math.min(answeredCount, flattened.length)}/{flattened.length}
+                </span>
                 <button
                   type="button"
                   onClick={() => setClearConfirmOpen(true)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[12.5px] font-semibold transition-colors hover:bg-[var(--bg-soft)]"
-                  style={{ color: "var(--body)" }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-colors hover:bg-[var(--bg-soft)]"
+                  style={{ color: "var(--body)", borderColor: "var(--line)" }}
                 >
-                  <RotateCcw size={14} /> Clear answers
+                  <RotateCcw size={14} /> Clear
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmOpen(true)}
                   disabled={submitDisabled}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  style={{
-                    background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)",
-                    boxShadow: "0 10px 24px -10px var(--brand-2)",
-                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)" }}
                 >
-                  <Send size={15} /> Submit &amp; grade ({answeredCount}/{flattened.length})
+                  <Send size={14} /> Submit ({answeredCount}/{flattened.length})
                 </button>
               </div>
             </div>
@@ -1276,7 +1249,7 @@ export function MockTestPlayer({
       )}
 
       {lowTime && (
-        <div className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-[#C0392B] px-5 py-2.5 text-[12.5px] font-semibold text-white shadow-lg">
+        <div className="fixed bottom-32 left-1/2 z-40 -translate-x-1/2 rounded-full bg-[#C0392B] px-5 py-2.5 text-[12.5px] font-semibold text-white shadow-lg">
           Submitting automatically when time runs out
         </div>
       )}
