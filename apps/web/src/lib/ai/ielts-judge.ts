@@ -68,7 +68,9 @@ export function buildJudgePrompt(opts: {
           : "";
         const expected = isMulti
           ? multiLetters || q.answer?.trim() || "—"
-          : optText || q.answer?.trim() || "—";
+          : optIdx >= 0
+            ? `${String.fromCharCode(65 + optIdx)}${optText ? `. ${optText}` : ""}`
+            : q.answer?.trim() || "—";
         return `${q.qid}: ${expected}`;
       })
     )
@@ -77,12 +79,13 @@ export function buildJudgePrompt(opts: {
   const gradedLines = opts.sections
     .flatMap((s) =>
       (s.questions ?? []).map((q) => {
-        const raw = opts.answers[q.qid ?? ""];
-        const picked =
-          raw?.choice !== undefined && raw.choice >= 0
-            ? `[choice ${raw.choice}]`
-            : raw?.text?.trim() || "(no answer)";
-        return `${q.qid}: ${q.prompt ?? ""}`;
+        const optsList = Array.isArray(q.options) ? q.options : [];
+        const optionText = optsList.length
+          ? optsList
+              .map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`)
+              .join("; ")
+          : "";
+        return `${q.qid}: ${q.prompt ?? ""}${optionText ? `  [Options: ${optionText}]` : ""}`;
       })
     )
     .join("\n");
@@ -91,11 +94,16 @@ export function buildJudgePrompt(opts: {
     .flatMap((s) =>
       (s.questions ?? []).map((q) => {
         const raw = opts.answers[q.qid ?? ""];
+        const letterOf = (i: number) => String.fromCharCode(65 + i);
         const picked =
           Array.isArray(raw?.choices) && raw.choices.length > 0
-            ? `[choices ${raw.choices.join(",")}]`
+            ? raw.choices
+                .slice()
+                .sort((a, b) => a - b)
+                .map(letterOf)
+                .join(", ")
             : raw?.choice !== undefined && raw.choice >= 0
-              ? `[choice ${raw.choice}]`
+              ? letterOf(raw.choice)
               : (raw?.text ?? "").trim();
         return `${q.qid} → ${picked || "(no answer)"}`;
       })
@@ -142,6 +150,9 @@ export function buildJudgePrompt(opts: {
           "- Mark an answer correct only if it matches the answer key exactly or is a",
           "  clear semantic/technical equivalent (e.g. case, tense, article/number).",
           "- \"Not Given\" is only correct when the answer key says Not Given/NG.",
+          "- For multiple-choice questions, both the answer key and the candidate's",
+          "  answers use option letters (A, B, C, …): a single letter for one answer and",
+          "  a comma-separated list for multi-answer questions.",
           "- For a question whose answer key lists several letters (e.g. \"A, C\"), the",
           "  candidate must have selected exactly that set — no more, no fewer.",
           "- Convert the correct count to a band using standard IELTS raw-score",
