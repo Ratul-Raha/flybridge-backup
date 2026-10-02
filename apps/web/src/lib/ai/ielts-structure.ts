@@ -361,6 +361,23 @@ function normalizeKeyText(s: string): string {
     .replace(/\s+/g, " ");
 }
 
+/** Detects multi-answer keys like "A, C", "B / D" or "A and C". Returns the
+ *  0-based option indices when the key is a list of two or more single letters,
+ *  otherwise null (so words like "True" or "Hong Kong" are never misread). */
+function multiLetterIndices(s: string): number[] | null {
+  const normalized = s
+    .replace(/\b(?:and|or)\b/gi, ",")
+    .replace(/&/g, ",");
+  const tokens = normalized.split(/[^A-Za-z]+/).filter(Boolean);
+  if (tokens.length < 2) return null;
+  const idxs: number[] = [];
+  for (const t of tokens) {
+    if (!/^[A-Za-z]$/.test(t)) return null;
+    idxs.push(t.toUpperCase().charCodeAt(0) - 65);
+  }
+  return idxs.length > 1 ? idxs : null;
+}
+
 function applyAnswerKey(
   content: MockTestContentDoc,
   answerBlob?: string
@@ -403,6 +420,16 @@ function applyAnswerKey(
       if (!expected) continue;
 
       if (Array.isArray(q.options) && q.options.length > 1) {
+        const multi = multiLetterIndices(expected);
+        if (multi && multi.every((i) => i < q.options.length)) {
+          q.multiple = true;
+          q.correctOptions = Array.from(new Set(multi)).sort((a, b) => a - b);
+          q.correctOption = -1;
+          q.answer = q.correctOptions
+            .map((i) => String.fromCharCode(65 + i))
+            .join(", ");
+          continue;
+        }
         const byText = q.options.findIndex(
           (o) => normalizeKeyText(o) === normalizeKeyText(expected)
         );

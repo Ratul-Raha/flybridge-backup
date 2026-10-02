@@ -43,6 +43,54 @@ export function testIsOwned(
   return ownership.courses.has(courseId);
 }
 
+function multiLetterIndices(s: string): number[] | null {
+  const normalized = s
+    .replace(/\b(?:and|or)\b/gi, ",")
+    .replace(/&/g, ",");
+  const tokens = normalized.split(/[^A-Za-z]+/).filter(Boolean);
+  if (tokens.length < 2) return null;
+  const idxs: number[] = [];
+  for (const t of tokens) {
+    if (!/^[A-Za-z]$/.test(t)) return null;
+    idxs.push(t.toUpperCase().charCodeAt(0) - 65);
+  }
+  return idxs.length > 1 ? idxs : null;
+}
+
+/**
+ * Repairs choice-style questions whose answer key lists several letters
+ * (e.g. "A, C") but were never flagged as multi-select. Without this the
+ * player renders them as single-choice and students can only pick one option.
+ */
+export function normalizeMockTestAnswers(content: unknown): void {
+  if (!content || typeof content !== "object") return;
+  const sections = (content as { sections?: unknown }).sections;
+  if (!Array.isArray(sections)) return;
+  for (const s of sections) {
+    const sec = s as { questions?: unknown } | null;
+    if (!sec || !Array.isArray(sec.questions)) continue;
+    for (const q of sec.questions) {
+      const qu = q as {
+        options?: unknown;
+        answer?: unknown;
+        multiple?: boolean;
+        correctOptions?: number[];
+        correctOption?: number;
+      } | null;
+      if (!qu || qu.multiple === true) continue;
+      const opts = Array.isArray(qu.options) ? qu.options : [];
+      if (opts.length < 2) continue;
+      if (typeof qu.answer !== "string") continue;
+      const multi = multiLetterIndices(qu.answer);
+      if (multi && multi.every((i) => i < opts.length)) {
+        qu.multiple = true;
+        qu.correctOptions = Array.from(new Set(multi)).sort((a, b) => a - b);
+        qu.correctOption = -1;
+      }
+    }
+  }
+}
+
 export function countMockTestQuestions(content: unknown): number {
   if (!content || typeof content !== "object") return 0;
   const c = content as { sections?: unknown; passages?: unknown };

@@ -6,6 +6,7 @@ import { MockTest, type MockTestDoc } from "@/lib/models/mock-test";
 import { Course } from "@/lib/models/course";
 import {
   countMockTestQuestions,
+  normalizeMockTestAnswers,
   resolveMockTestOwnership,
   testIsOwned,
   type MockTestOwnership,
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
     const content = body.content && typeof body.content === "object" ? body.content : {};
+    normalizeMockTestAnswers(content);
     const questionCount = countMockTestQuestions(content) || 0;
 
     const test = await MockTest.create({

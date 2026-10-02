@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTest, type MockTestDoc } from "@/lib/models/mock-test";
 import { Course } from "@/lib/models/course";
-import { countMockTestQuestions, resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
+import { countMockTestQuestions, normalizeMockTestAnswers, resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 
 function isManager(session: { role: string } | null): boolean {
   return !!(session && (session.role === "admin" || session.role === "moderator"));
@@ -182,6 +182,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     if (body.content && typeof body.content === "object") {
+      normalizeMockTestAnswers(body.content);
       test.content = body.content as MockTestDoc["content"];
       test.questionCount = countMockTestQuestions(body.content);
     }
