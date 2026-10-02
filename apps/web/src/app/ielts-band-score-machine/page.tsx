@@ -473,94 +473,103 @@ function TrustStrip({
       ];
 
   return (
-    <Reveal>
-    <div className="mt-14 lg:mt-16 pt-10" style={{ borderTop: "1px solid var(--ib-line)" }}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
-        {stats.map((s) => (
-          <div key={s.label} className="relative pl-5" style={{ borderLeft: "3px solid var(--ib-brand)" }}>
-            <div className="text-[13px] leading-[1.55]" style={{ color: "var(--ib-muted)" }}>
-              <BengaliText>{s.label}</BengaliText>
-            </div>
+    <Reveal delay={0.2}>
+      <div
+        className="mt-14 lg:mt-20 grid grid-cols-2 lg:grid-cols-4 rounded-[20px] overflow-hidden"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {stats.map((s, i) => (
+          <div
+            key={s.label}
+            className="px-6 py-6 sm:px-8 sm:py-7"
+            style={{
+              borderLeft: i % 2 === 1 ? "1px solid rgba(255,255,255,0.1)" : undefined,
+              borderTop: i > 1 ? "1px solid rgba(255,255,255,0.1)" : undefined,
+            }}
+          >
             <div
-              className="mt-2.5 font-display text-[32px] font-semibold leading-none tabular-nums"
-              style={{ color: "var(--ib-ink)" }}
+              className="font-display text-[clamp(26px,3vw,36px)] font-bold leading-none tabular-nums"
+              style={{ color: "var(--ib-mint)" }}
             >
               {s.value}
+            </div>
+            <div className="mt-2.5 text-[13px] leading-[1.55]" style={{ color: "#9FB0C7" }}>
+              <BengaliText>{s.label}</BengaliText>
             </div>
           </div>
         ))}
       </div>
-    </div>
     </Reveal>
   );
 }
 
 /**
- * Hero offer. Box-less like the rest of the page's pricing: a hairline, one
- * price line, the CTA, then the perks. Nothing decorative competes with the
- * price, so the eye lands on the number and then the button.
+ * Hero offer for the "buy" state, built for the dark hero:
+ * price on top, one big CTA, perks underneath. No boxes.
  */
 function HeroOffer({ offer, note }: { offer: Offer; note?: string }) {
-  const perks = ["লাইফটাইম অ্যাক্সেস", `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`];
+  const perks = ["লাইফটাইম অ্যাক্সেস", `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`, "৩ দিনে ১০০% রিফান্ড"];
   const finePrint = offer.dealNote ?? note;
 
   return (
-    <div className="mt-8 max-w-[500px]">
-      <div className="pt-5" style={{ borderTop: "1px solid var(--ib-line)" }}>
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+    <div className="mt-9 max-w-[520px]">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        <span
+          className="font-display font-bold leading-none tracking-[-0.02em] tabular-nums text-white"
+          style={{ fontSize: "clamp(40px,5vw,56px)" }}
+        >
+          <BengaliText>{offer.price}</BengaliText>
+        </span>
+        <div className="flex items-center gap-2.5 pb-1.5">
           {offer.originalPrice && (
-            <s className="text-[14px] font-medium" style={{ color: "var(--ib-muted)" }}>
+            <s className="text-[16px] font-medium" style={{ color: "#8FA0B8" }}>
               <BengaliText>{offer.originalPrice}</BengaliText>
             </s>
           )}
-          <span
-            className="font-display font-bold leading-none tracking-[-0.02em] tabular-nums"
-            style={{ fontSize: "clamp(28px,3.1vw,34px)", color: "var(--ib-ink)" }}
-          >
-            <BengaliText>{offer.price}</BengaliText>
-          </span>
           {offer.savings && (
-            <span className="text-[12.5px] font-bold" style={{ color: "var(--ib-brand-2)" }}>
+            <span
+              className="rounded-md px-2.5 py-1 text-[12px] font-bold whitespace-nowrap"
+              style={{ background: "var(--ib-mint)", color: "#052117" }}
+            >
               <BengaliText>{`Save ${offer.savings}`}</BengaliText>
             </span>
           )}
         </div>
-        <p className="mt-2 text-[12.5px]" style={{ color: "var(--ib-muted)" }}>
-          <BengaliText>এককালীন পেমেন্ট</BengaliText>
-        </p>
       </div>
+      <p className="mt-2 text-[13px]" style={{ color: "#8FA0B8" }}>
+        <BengaliText>এককালীন পেমেন্ট, কোনো লুকানো চার্জ নেই</BengaliText>
+      </p>
 
       {offer.dealLabel && (
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <Flag className="h-[13px] w-[13px] shrink-0" strokeWidth={2.6} style={{ color: "var(--ib-brand-2)" }} />
-          <span
-            className="text-[11.5px] font-bold uppercase tracking-[0.12em]"
-            style={{ color: "var(--ib-brand-2)" }}
-          >
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
+          style={{ border: "1px solid rgba(124,240,189,0.35)", background: "rgba(124,240,189,0.08)" }}
+        >
+          <Flag className="h-[13px] w-[13px] shrink-0" strokeWidth={2.6} style={{ color: "var(--ib-mint)" }} />
+          <span className="text-[11.5px] font-bold uppercase tracking-[0.12em]" style={{ color: "#A9F5D5" }}>
             <BengaliText>{offer.dealLabel}</BengaliText>
           </span>
         </div>
       )}
 
-      <div className="mt-5">
-        <Cta offer={offer} tone="light" full />
+      <div className="mt-6">
+        <Cta offer={offer} tone="dark" full />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
         {perks.map((t) => (
-          <span
-            key={t}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-medium"
-            style={{ color: "var(--ib-body)" }}
-          >
-            <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+          <li key={t} className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "#B7C4D6" }}>
+            <Check className="h-[14px] w-[14px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-mint)" }} />
             <BengaliText>{t}</BengaliText>
-          </span>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {finePrint && (
-        <p className="mt-3 text-[12.5px] leading-[1.7]" style={{ color: "var(--ib-muted)" }}>
+        <p className="mt-3 text-[12.5px] leading-[1.7]" style={{ color: "#8FA0B8" }}>
           <BengaliText>{finePrint}</BengaliText>
         </p>
       )}
@@ -582,38 +591,79 @@ function Hero({
   pricingNote?: string;
 }) {
   return (
-    <section id="ielts-hero" style={{ background: "var(--ib-fog)" }}>
-      <div className={`${wrap} pt-[104px] sm:pt-[124px] pb-14 lg:pb-20`}>
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-12 lg:gap-16 items-start">
+    <section
+      id="ielts-hero"
+      className="ib-dark relative overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(900px 500px at 85% 10%, rgba(124,240,189,0.14), transparent 60%)," +
+          "radial-gradient(700px 480px at 0% 100%, rgba(31,92,138,0.35), transparent 65%)," +
+          "var(--ib-navy)",
+      }}
+    >
+      {/* subtle grid texture */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+          maskImage: "radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%)",
+        }}
+      />
+
+      <div className={`${wrap} relative pt-[108px] sm:pt-[128px] pb-14 lg:pb-20`}>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] gap-14 lg:gap-16 items-center">
+          {/* ── left: message + offer ── */}
           <Reveal>
-            <div className="flex items-center gap-3">
-              <span className="h-px w-7 shrink-0" style={{ background: "var(--ib-brand)" }} />
-              <span
-                className="text-[11px] font-bold uppercase tracking-[0.18em]"
-                style={{ color: "var(--ib-brand-2)" }}
-              >
+            <div
+              className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <span className="ib-dot h-[7px] w-[7px] rounded-full" style={{ background: "var(--ib-mint)" }} />
+              <span className="text-[11.5px] font-bold uppercase tracking-[0.16em]" style={{ color: "#A9F5D5" }}>
                 IELTS Preparation
               </span>
             </div>
 
-            <h1 className="mt-4 font-display font-bold tracking-[-0.02em]" style={{ color: "var(--ib-ink)" }}>
-              <span className="block leading-[1.04]" style={{ fontSize: "clamp(32px,4.2vw,52px)" }}>
-                Target Band 7
+            <h1 className="mt-6 font-display font-bold tracking-[-0.025em] text-white">
+              <span className="block leading-[1.02]" style={{ fontSize: "clamp(40px,5.6vw,72px)" }}>
+                Target{" "}
+                <span className="relative inline-block" style={{ color: "var(--ib-mint)" }}>
+                  Band 7
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 220 12"
+                    preserveAspectRatio="none"
+                    className="absolute left-0 -bottom-2 h-[10px] w-full"
+                  >
+                    <path
+                      d="M2 8 C 50 2, 110 2, 218 7"
+                      fill="none"
+                      stroke="var(--ib-mint)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      opacity="0.55"
+                    />
+                  </svg>
+                </span>
               </span>
               <span
-                className="mt-2.5 block font-semibold leading-[1.35]"
-                style={{ fontSize: "clamp(17px,1.7vw,21px)", color: "var(--ib-brand-2)" }}
+                className="mt-5 block font-semibold leading-[1.45]"
+                style={{ fontSize: "clamp(18px,1.9vw,24px)", color: "#D5DFEC" }}
               >
                 <BengaliText>{title}</BengaliText>
               </span>
             </h1>
 
-            <p className="mt-4 max-w-[500px] text-[15.5px] leading-[1.75]" style={{ color: "var(--ib-body)" }}>
+            <p className="mt-5 max-w-[520px] text-[16px] leading-[1.85]" style={{ color: "#B7C4D6" }}>
               <BengaliText>{COPY.heroSub}</BengaliText>
             </p>
 
             {offer.mode === "waitlist" && (
-              <div className="mt-6">
+              <div className="mt-7">
                 <Countdown target={LAUNCH_DATE} />
               </div>
             )}
@@ -621,26 +671,57 @@ function Hero({
             {offer.mode === "buy" && offer.price ? (
               <HeroOffer offer={offer} note={pricingNote} />
             ) : (
-              <div className="mt-8 max-w-[500px] pt-5" style={{ borderTop: "1px solid var(--ib-line)" }}>
-                <OfferCard offer={offer} note={pricingNote} compact />
+              <div
+                className="mt-8 max-w-[520px] rounded-[20px] p-6"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <OfferCard offer={offer} note={pricingNote} compact dark />
               </div>
             )}
           </Reveal>
 
+          {/* ── right: demo simulator (kept) ── */}
           <Reveal delay={0.15}>
             <div className="relative">
-              <ExamWindow />
+              {/* glow behind the simulator */}
               <div
-                className="absolute -top-4 -right-2 sm:-right-4 z-10 inline-flex items-center gap-2 rounded-full bg-[#0B1F3A] px-4 py-2"
-                style={{ boxShadow: "0 14px 30px -14px rgba(11,31,58,0.6)" }}
+                aria-hidden
+                className="absolute -inset-6 -z-0 rounded-[40px] blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(60% 60% at 50% 50%, rgba(124,240,189,0.28), rgba(31,92,138,0.18) 60%, transparent 80%)",
+                }}
+              />
+              <div
+                className="relative z-[1] rounded-[22px] p-2"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  boxShadow: "0 40px 80px -30px rgba(0,0,0,0.65)",
+                }}
               >
-                <span className="ib-dot w-[7px] h-[7px] rounded-full" style={{ background: "var(--ib-mint)" }} />
-                <span className="text-[12px] font-bold tracking-[0.06em] uppercase" style={{ color: "#A9F5D5" }}>
-                  Target Band 7
+                <ExamWindow />
+              </div>
+
+              <div
+                className="absolute -top-4 -left-2 sm:-left-5 z-10 inline-flex items-center gap-2 rounded-full px-4 py-2"
+                style={{
+                  background: "var(--ib-mint)",
+                  boxShadow: "0 14px 30px -14px rgba(124,240,189,0.7)",
+                }}
+              >
+                <span className="ib-dot h-[7px] w-[7px] rounded-full" style={{ background: "#052117" }} />
+                <span className="text-[12px] font-bold tracking-[0.06em] uppercase" style={{ color: "#052117" }}>
+                  Live Demo
                 </span>
               </div>
             </div>
-            <p className="mt-6 text-[13.5px] leading-[1.75] max-w-[500px]" style={{ color: "var(--ib-muted)" }}>
+
+            <p className="mt-6 text-[13.5px] leading-[1.75] max-w-[520px]" style={{ color: "#8FA0B8" }}>
               <BengaliText>{COPY.windowCaption}</BengaliText>
             </p>
           </Reveal>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, Wand2, Copy, Check, ImagePlus, X, Upload } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { uploadToStorage } from "@/lib/upload-client";
@@ -53,6 +53,8 @@ type ManagedQuestion = {
   prompt?: string;
   options?: string[];
   correctOption?: number;
+  multiple?: boolean;
+  correctOptions?: number[];
   answer?: string;
   passageRef?: string;
   wordHint?: string;
@@ -76,6 +78,7 @@ type ManagedWritingContent = {
   passage?: string;
   sections?: ManagedSection[];
   audioUrl?: string;
+  audioPublicId?: string;
   videoUrl?: string;
   writingTask1?: string;
   writingTask2?: string;
@@ -131,6 +134,15 @@ function normalizeAnswerText(s: string): string {
     .replace(/\s+/g, " ");
 }
 
+/** Mirrors the correct-option indices into the answer text (e.g. "A, C") so the
+ *  answer key and the AI grader both see the same human-readable answer. */
+function syncMultiAnswer(q: ManagedQuestion): void {
+  const idxs = Array.isArray(q.correctOptions)
+    ? q.correctOptions.slice().sort((a, b) => a - b)
+    : [];
+  q.answer = idxs.map((i) => String.fromCharCode(65 + i)).join(", ");
+}
+
 /** Returns the answer-key tokenizer map — mirrors server applyAnswerKey. */
 function parseAnswerKeyNumbers(text: string): Map<number, string> {
   const map = new Map<number, string>();
@@ -165,9 +177,11 @@ function collectMissing(content: unknown): number[] {
     const sec = (s as { questions?: unknown }) ?? {};
     if (!Array.isArray(sec.questions)) continue;
     for (const q of sec.questions) {
-      const qu = (q as { type?: string; options?: string[]; correctOption?: number; answer?: string }) ?? {};
+      const qu = (q as { type?: string; options?: string[]; correctOption?: number; correctOptions?: number[]; multiple?: boolean; answer?: string }) ?? {};
       const answered = detectHasOptions(qu)
-        ? typeof qu.correctOption === "number" && qu.correctOption >= 0
+        ? qu.multiple
+          ? Array.isArray(qu.correctOptions) && qu.correctOptions.length > 0
+          : typeof qu.correctOption === "number" && qu.correctOption >= 0
         : typeof qu.answer === "string" && qu.answer.trim().length > 0;
       if (!answered) missing.push(n);
       n++;
@@ -202,6 +216,8 @@ function nextId(prefix: string, existing: (string | undefined)[]): string {
 /** Applies a question-type change: options + correct answer are kept in sync. */
 function applyQuestionType(q: ManagedQuestion, type: string): void {
   q.type = type;
+  q.multiple = false;
+  q.correctOptions = [];
   if (type === "true-false-ng") {
     q.options = ["True", "False", "Not Given"];
     if (typeof q.correctOption !== "number") q.correctOption = -1;
@@ -263,6 +279,7 @@ export function MockTestManage() {
   const [copiedToken, setCopiedToken] = useState<number | null>(null);
   const [uploadingTask, setUploadingTask] = useState<ManagedWritingTask | null>(null);
   const [copiedTask, setCopiedTask] = useState<ManagedWritingTask | null>(null);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
 
   const loadBundles = useCallback(async () => {
     try {
@@ -762,6 +779,32 @@ export function MockTestManage() {
     });
   }, []);
 
+  const uploadListeningAudio = async (file: File) => {
+    if (!file || uploadingAudio) return;
+    setUploadingAudio(true);
+    setUploadProgress(0);
+    try {
+      const uploaded = await uploadToStorage(file, "mock-tests", "file", (pct) =>
+        setUploadProgress(pct)
+      );
+      updateContent((c) => {
+        c.audioUrl = uploaded.ref;
+        c.audioPublicId = uploaded.key;
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Audio upload failed");
+    } finally {
+      setUploadingAudio(false);
+      setUploadProgress(null);
+    }
+  };
+
+  const removeListeningAudio = () =>
+    updateContent((c) => {
+      delete c.audioUrl;
+      delete c.audioPublicId;
+    });
+
   const passagesList = useMemo<ManagedPassage[]>(() => {
     const c = parsedContent;
     if (Array.isArray(c?.passages)) return c.passages as ManagedPassage[];
@@ -865,6 +908,8 @@ export function MockTestManage() {
         prompt: "",
         options: s.type === "true-false-ng" ? ["True", "False", "Not Given"] : [],
         correctOption: -1,
+        multiple: false,
+        correctOptions: [],
         answer: "",
       });
       renumberQids(c);
@@ -923,6 +968,12 @@ export function MockTestManage() {
           q.answer = "";
         } else if (q.correctOption > oi) q.correctOption--;
       }
+      if (Array.isArray(q.correctOptions)) {
+        q.correctOptions = q.correctOptions
+          .filter((i) => i !== oi)
+          .map((i) => (i > oi ? i - 1 : i));
+        syncMultiAnswer(q);
+      }
     });
 
   const moveOption = (si: number, qi: number, oi: number, dir: -1 | 1) =>
@@ -939,14 +990,56 @@ export function MockTestManage() {
         if (q.correctOption === oi) q.correctOption = j;
         else if (q.correctOption === j) q.correctOption = oi;
       }
+      if (Array.isArray(q.correctOptions)) {
+        q.correctOptions = q.correctOptions
+          .map((i) => (i === oi ? j : i === j ? oi : i))
+          .sort((a, b) => a - b);
+        syncMultiAnswer(q);
+      }
     });
 
   const setCorrectOption = (si: number, qi: number, oi: number) =>
     updateContent((c) => {
       const q = c.sections?.[si]?.questions?.[qi];
       if (!q) return;
+      q.multiple = false;
+      q.correctOptions = [];
       q.correctOption = oi;
       q.answer = q.options?.[oi] ?? "";
+    });
+
+  const toggleMultiple = (si: number, qi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (!q) return;
+      if (!q.multiple) {
+        // Entering multi-select keeps the single answer as the first selected one.
+        q.multiple = true;
+        q.correctOptions =
+          typeof q.correctOption === "number" && q.correctOption >= 0
+            ? [q.correctOption]
+            : [];
+        q.correctOption = -1;
+        syncMultiAnswer(q);
+      } else {
+        q.multiple = false;
+        q.correctOptions = [];
+        q.correctOption = -1;
+        q.answer = "";
+      }
+    });
+
+  const toggleCorrectOption = (si: number, qi: number, oi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (!q) return;
+      q.multiple = true;
+      const set = new Set(Array.isArray(q.correctOptions) ? q.correctOptions : []);
+      if (set.has(oi)) set.delete(oi);
+      else set.add(oi);
+      q.correctOptions = Array.from(set).sort((a, b) => a - b);
+      q.correctOption = -1;
+      syncMultiAnswer(q);
     });
 
   const setWritingTaskText = (task: ManagedWritingTask, text: string) => {
@@ -974,10 +1067,21 @@ export function MockTestManage() {
     (q: ManagedQuestion): "key" | "ai" | "missing" => {
       const opts = Array.isArray(q.options) ? q.options : [];
       if (detectHasOptions(q)) {
-        const ci = typeof q.correctOption === "number" ? q.correctOption : -1;
-        const expected = ci >= 0 ? opts[ci] : "";
         const qnum = q.qid ? parseInt(String(q.qid).match(/\d+$/)?.[0] ?? "-1", 10) : -1;
         const keyVal = keyedNumbers.get(qnum);
+        if (q.multiple) {
+          const idxs = Array.isArray(q.correctOptions) ? q.correctOptions : [];
+          if (idxs.length === 0) return "missing";
+          const expected = idxs
+            .slice()
+            .sort((a, b) => a - b)
+            .map((i) => String.fromCharCode(65 + i))
+            .join(", ");
+          if (keyVal) return normalizeAnswerText(expected) === normalizeAnswerText(keyVal) ? "key" : "ai";
+          return "ai";
+        }
+        const ci = typeof q.correctOption === "number" ? q.correctOption : -1;
+        const expected = ci >= 0 ? opts[ci] : "";
         if (keyVal) return normalizeAnswerText(expected) === normalizeAnswerText(keyVal) ? "key" : "ai";
         return ci >= 0 ? "ai" : "missing";
       }
@@ -1505,7 +1609,7 @@ export function MockTestManage() {
                               Listening media (audio / video / YouTube URL)
                             </p>
                             <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                              Paste a direct audio/video URL or a YouTube link. Video takes priority when both are set.
+                              Upload an audio file or paste a URL / YouTube link. Video takes priority when both are set.
                             </p>
                           </div>
                           <div className="flex flex-col gap-2.5">
@@ -1526,19 +1630,55 @@ export function MockTestManage() {
                               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                             />
                           </div>
-                          {(parsedContent?.audioUrl || parsedContent?.videoUrl) && (
-                            <div className="flex flex-col gap-2">
-                              <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
-                                Playback preview
-                              </p>
-                              <div className="max-w-[520px]">
-                                <ListeningMediaPlayer
-                                  audioUrl={parsedContent?.audioUrl}
-                                  videoUrl={parsedContent?.videoUrl}
-                                />
-                              </div>
-                            </div>
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <label
+                              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-colors hover:border-brand-2 hover:text-brand-2 cursor-pointer"
+                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                            >
+                              {uploadingAudio ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                              {uploadingAudio ? (uploadProgress ? `Uploading ${uploadProgress}%` : "Uploading…") : "Upload audio file"}
+                              <input
+                                type="file"
+                                accept="audio/*,.mp3,.wav,.m4a,.aac"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) void uploadListeningAudio(f);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                            {parsedContent?.audioUrl && (
+                              <button
+                                type="button"
+                                onClick={removeListeningAudio}
+                                className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                              >
+                                <X size={13} /> Remove audio
+                              </button>
+                            )}
+                          </div>
+                          {parsedContent?.audioUrl?.startsWith("s3://") && !parsedContent?.videoUrl && (
+                            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                              Audio uploaded — it will play for students when the test starts (and cannot be paused).
+                            </p>
                           )}
+                          {(parsedContent?.audioUrl || parsedContent?.videoUrl) &&
+                            !(parsedContent?.audioUrl ?? "").startsWith("s3://") &&
+                            !(parsedContent?.videoUrl ?? "").startsWith("s3://") && (
+                              <div className="flex flex-col gap-2">
+                                <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+                                  Playback preview
+                                </p>
+                                <div className="max-w-[520px]">
+                                  <ListeningMediaPlayer
+                                    audioUrl={parsedContent?.audioUrl}
+                                    videoUrl={parsedContent?.videoUrl}
+                                  />
+                                </div>
+                              </div>
+                            )}
                         </div>
                       )}
 
@@ -1885,15 +2025,38 @@ export function MockTestManage() {
 
                                       {hasOpts ? (
                                         <div className="flex flex-col gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleMultiple(si, qi)}
+                                            className="inline-flex w-fit items-center gap-2 rounded-full px-2.5 py-1 text-[11.5px] font-medium transition-colors hover:bg-[var(--brand-soft)]"
+                                            style={{ color: "var(--body)" }}
+                                          >
+                                            <span
+                                              className="flex h-4 w-4 items-center justify-center rounded-[4px] border"
+                                              style={{
+                                                borderColor: q.multiple ? "var(--brand)" : "var(--line)",
+                                                background: q.multiple ? "var(--brand)" : "white",
+                                              }}
+                                            >
+                                              {q.multiple && <Check size={10} className="text-white" />}
+                                            </span>
+                                            Multiple correct answers
+                                          </button>
                                           {(q.options ?? []).map((opt, oi) => {
-                                            const isCorrect = q.correctOption === oi;
+                                            const isCorrect = q.multiple
+                                              ? (q.correctOptions ?? []).includes(oi)
+                                              : q.correctOption === oi;
                                             return (
                                               <div key={oi} className="flex items-center gap-2">
                                                 <button
                                                   type="button"
-                                                  onClick={() => setCorrectOption(si, qi, oi)}
-                                                  title="Mark as the correct answer"
-                                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors"
+                                                  onClick={() =>
+                                                    q.multiple
+                                                      ? toggleCorrectOption(si, qi, oi)
+                                                      : setCorrectOption(si, qi, oi)
+                                                  }
+                                                  title={q.multiple ? "Toggle as a correct answer" : "Mark as the correct answer"}
+                                                  className={`flex h-5 w-5 shrink-0 items-center justify-center border transition-colors ${q.multiple ? "rounded-[4px]" : "rounded-full"}`}
                                                   style={{
                                                     borderColor: isCorrect ? "var(--brand)" : "var(--line)",
                                                     background: isCorrect ? "var(--brand)" : "white",

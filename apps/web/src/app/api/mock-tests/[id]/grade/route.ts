@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const answers: Record<string, { choice?: number; text?: string } | undefined> =
+    const answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined> =
       body.answers && typeof body.answers === "object" ? body.answers : {};
 
     const result = await judgeMockTestAttempt({
@@ -73,6 +73,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           prompt: q.prompt,
           options: q.options,
           correctOption: q.correctOption ?? -1,
+          correctOptions: q.correctOptions ?? [],
+          multiple: q.multiple === true,
           answer: q.answer ?? "",
         })),
       })),

@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Ban,
+  Check,
   CheckCircle2,
   Clock,
   EyeOff,
@@ -23,7 +24,7 @@ import {
   type AnswerValue,
   type TestDetail,
 } from "@/lib/mock-test-ui";
-import { ListeningMediaPlayer } from "@/components/mock-tests/listening-media-player";
+import { ListeningTestPlayer } from "@/components/mock-tests/listening-test-player";
 
 type Phase = "loading" | "intro" | "ready" | "submitting" | "result" | "disqualified" | "error";
 
@@ -42,6 +43,7 @@ function fmtTime(totalSeconds: number): string {
 function isAnswered(a?: AnswerValue): boolean {
   return (
     (typeof a?.choice === "number" && a.choice >= 0) ||
+    (Array.isArray(a?.choices) && a.choices.length > 0) ||
     (typeof a?.text === "string" && a.text.trim().length > 0)
   );
 }
@@ -106,6 +108,7 @@ export function MockTestPlayer({
   const [attempt, setAttempt] = useState<string | null>(attemptId ?? null);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [result, setResult] = useState<JudgeResult | null>(null);
+  const [media, setMedia] = useState<{ audioUrl?: string; videoUrl?: string } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -213,6 +216,20 @@ export function MockTestPlayer({
       if (!data.test) throw new Error("Test not found");
       const t = data.test as TestDetail;
       setTest(t);
+      if (t.content?.hasAudio) {
+        try {
+          const mRes = await fetch(`/api/mock-tests/${testId}/media`, { cache: "no-store" });
+          const mData = await mRes.json().catch(() => ({}));
+          if (mRes.ok && mData && typeof mData === "object") {
+            setMedia({
+              audioUrl: typeof mData.audioUrl === "string" ? mData.audioUrl : undefined,
+              videoUrl: typeof mData.videoUrl === "string" ? mData.videoUrl : undefined,
+            });
+          }
+        } catch {
+          /* media stays null — the player falls back to a plain URL if any */
+        }
+      }
       if (t.durationMinutes > 0) {
         setSecondsLeft(t.durationMinutes * 60);
         setTimerActive(true);
@@ -316,6 +333,13 @@ export function MockTestPlayer({
   const setChoice = (qid: string, choice: number) =>
     setAnswers((prev) => ({ ...prev, [qid]: { choice, text: undefined } }));
 
+  const toggleChoice = (qid: string, oi: number) =>
+    setAnswers((prev) => {
+      const cur = Array.isArray(prev[qid]?.choices) ? prev[qid]!.choices! : [];
+      const next = cur.includes(oi) ? cur.filter((x) => x !== oi) : [...cur, oi].sort((a, b) => a - b);
+      return { ...prev, [qid]: { choices: next, text: undefined } };
+    });
+
   const setText = (key: string, value: string) =>
     setAnswers((prev) => ({ ...prev, [key]: { text: value, choice: undefined } }));
 
@@ -325,16 +349,23 @@ export function MockTestPlayer({
     const current = answers[q.qid];
     const answered = isAnswered(current);
     const num = questionIndex[q.qid] ?? qi + 1;
+    const isMulti = q.multiple === true;
+    const selectedChoices = isMulti && Array.isArray(current?.choices) ? current.choices : [];
 
     const body = hasOptions ? (
       <div className="mt-4 flex flex-col gap-2">
+        {isMulti && (
+          <p className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
+            Select all that apply.
+          </p>
+        )}
         {opts.map((opt, oi) => {
-          const selected = current?.choice === oi;
+          const selected = isMulti ? selectedChoices.includes(oi) : current?.choice === oi;
           return (
             <button
               key={oi}
               type="button"
-              onClick={() => setChoice(q.qid, oi)}
+              onClick={() => (isMulti ? toggleChoice(q.qid, oi) : setChoice(q.qid, oi))}
               aria-pressed={selected}
               className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all duration-150 hover:border-brand-2/50 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
               style={
@@ -357,10 +388,10 @@ export function MockTestPlayer({
                 {opt}
               </span>
               <span
-                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border"
+                className={`flex h-4 w-4 shrink-0 items-center justify-center border ${isMulti ? "rounded-[4px]" : "rounded-full"}`}
                 style={{ borderColor: selected ? "var(--brand)" : "var(--line)" }}
               >
-                {selected && <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />}
+                {selected && (isMulti ? <Check size={11} style={{ color: "var(--brand)" }} /> : <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />)}
               </span>
             </button>
           );
@@ -882,13 +913,16 @@ export function MockTestPlayer({
             <div className="flex items-center gap-3">
               <Headphones size={18} style={{ color: "var(--brand-2)" }} />
               <p className="text-[13px]" style={{ color: "var(--body)" }}>
-                Listening audio for this test is attached. Play it before answering.
+                Listening audio for this test plays once through. You can&apos;t pause or replay it.
               </p>
             </div>
-            <ListeningMediaPlayer
-              audioUrl={test?.content?.audioUrl}
-              videoUrl={test?.content?.videoUrl}
-            />
+            {media ? (
+              <ListeningTestPlayer audioUrl={media.audioUrl} videoUrl={media.videoUrl} />
+            ) : (
+              <div className="flex items-center gap-2 py-1 text-[12.5px]" style={{ color: "var(--body)" }}>
+                <Loader2 size={14} className="animate-spin" /> Preparing audio…
+              </div>
+            )}
           </div>
         )}
 

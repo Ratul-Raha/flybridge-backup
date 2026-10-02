@@ -38,11 +38,13 @@ export function buildJudgePrompt(opts: {
       prompt?: string | null;
       options?: string[] | null;
       correctOption?: number | null;
+      correctOptions?: number[] | null;
+      multiple?: boolean | null;
       answer?: string | null;
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; text?: string } | undefined>;
+  answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined>;
 }): { system: string; user: string } {
   const isWriting = opts.skill === "writing";
   const answerLines = opts.sections
@@ -56,7 +58,17 @@ export function buildJudgePrompt(opts: {
           typeof q.options[optIdx] === "string"
             ? q.options[optIdx]
             : "";
-        const expected = optText || q.answer?.trim() || "—";
+        const isMulti = q.multiple === true;
+        const multiLetters = Array.isArray(q.correctOptions)
+          ? q.correctOptions
+              .slice()
+              .sort((a, b) => a - b)
+              .map((i) => String.fromCharCode(65 + i))
+              .join(", ")
+          : "";
+        const expected = isMulti
+          ? multiLetters || q.answer?.trim() || "—"
+          : optText || q.answer?.trim() || "—";
         return `${q.qid}: ${expected}`;
       })
     )
@@ -80,9 +92,11 @@ export function buildJudgePrompt(opts: {
       (s.questions ?? []).map((q) => {
         const raw = opts.answers[q.qid ?? ""];
         const picked =
-          raw?.choice !== undefined && raw.choice >= 0
-            ? `[choice ${raw.choice}]`
-            : (raw?.text ?? "").trim();
+          Array.isArray(raw?.choices) && raw.choices.length > 0
+            ? `[choices ${raw.choices.join(",")}]`
+            : raw?.choice !== undefined && raw.choice >= 0
+              ? `[choice ${raw.choice}]`
+              : (raw?.text ?? "").trim();
         return `${q.qid} → ${picked || "(no answer)"}`;
       })
     )
@@ -128,6 +142,8 @@ export function buildJudgePrompt(opts: {
           "- Mark an answer correct only if it matches the answer key exactly or is a",
           "  clear semantic/technical equivalent (e.g. case, tense, article/number).",
           "- \"Not Given\" is only correct when the answer key says Not Given/NG.",
+          "- For a question whose answer key lists several letters (e.g. \"A, C\"), the",
+          "  candidate must have selected exactly that set — no more, no fewer.",
           "- Convert the correct count to a band using standard IELTS raw-score",
           "  guidelines (Reading: 30/40 → ~7.0, 23/40 → ~6.0; adjust for timing).",
           "- Band must be in 0.5 increments.",
@@ -217,11 +233,13 @@ export async function judgeMockTestAttempt(opts: {
       prompt?: string | null;
       options?: string[] | null;
       correctOption?: number | null;
+      correctOptions?: number[] | null;
+      multiple?: boolean | null;
       answer?: string | null;
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; text?: string } | undefined>;
+  answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined>;
 }): Promise<JudgeResult> {
   const provider = await getProvider();
 

@@ -28,9 +28,16 @@ function sanitizeContent(
           type: q.type,
           prompt: q.prompt,
           options: q.options,
+          multiple: q.multiple === true,
           passageRef: q.passageRef,
           wordHint: q.wordHint,
-          ...(includeAnswers ? { correctOption: q.correctOption ?? -1, answer: q.answer ?? "" } : {}),
+          ...(includeAnswers
+            ? {
+                correctOption: q.correctOption ?? -1,
+                correctOptions: q.correctOptions ?? [],
+                answer: q.answer ?? "",
+              }
+            : {}),
         })),
       }))
     : [];

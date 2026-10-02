@@ -13,6 +13,8 @@ const testQuestionSchema = new Schema(
     prompt: { type: String, trim: true },
     options: { type: [String], default: [] },
     correctOption: { type: Number, default: -1 },
+    multiple: { type: Boolean, default: false },
+    correctOptions: { type: [Number], default: [] },
     answer: { type: String, trim: true },
     passageRef: { type: String, trim: true },
     wordHint: { type: String, trim: true },

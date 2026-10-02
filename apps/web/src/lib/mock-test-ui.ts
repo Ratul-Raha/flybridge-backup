@@ -66,6 +66,7 @@ export type TestDetail = {
         type?: string;
         prompt?: string;
         options: string[];
+        multiple?: boolean;
         answer?: string;
         passageRef?: string;
         wordHint?: string;
@@ -91,7 +92,7 @@ export type AttemptListItem = {
   submittedAt: string | null;
 };
 
-export type AnswerValue = { choice?: number; text?: string };
+export type AnswerValue = { choice?: number; choices?: number[]; text?: string };
 
 export type AttemptDetail = {
   id: string;
