@@ -213,14 +213,14 @@ export function MockTestPlayer({
     if (test?.skill === "reading" && readingPages) {
       return readingPages.map((p, i) => ({
         key: `passage-${i}`,
-        label: p.title || `Passage ${i + 1}`,
+        label: `Passage ${i + 1}`,
         pageIndex: i,
         questions: p.sections.flatMap((s) => s.questions ?? []),
       }));
     }
     return (test?.content?.sections ?? []).map((s, i) => ({
       key: `section-${i}`,
-      label: s.type ? (TYPE_LABELS[s.type] ?? `Section ${i + 1}`) : `Section ${i + 1}`,
+      label: `Section ${i + 1}`,
       pageIndex: null,
       questions: s.questions ?? [],
     }));
@@ -1013,7 +1013,7 @@ export function MockTestPlayer({
                   className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.08em]"
                   style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
                 >
-                  Part {pageIdx + 1} of {readingPages.length}
+                  Passage {pageIdx + 1} of {readingPages.length}
                 </span>
                 <span className="text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
                   {currentPage?.title || `Reading Passage ${pageIdx + 1}`}
@@ -1080,7 +1080,7 @@ export function MockTestPlayer({
                     style={{ borderColor: "var(--line)", background: isActive ? "var(--brand-soft)" : "transparent" }}
                   >
                     <span className="font-mono text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: isActive ? "var(--brand)" : "var(--body)" }}>
-                      Part {gi + 1}
+                      {group.label}
                     </span>
                     <span className="text-[11px]" style={{ color: isActive ? "var(--brand)" : "var(--body)" }}>
                       {answeredInPart} of {group.questions.length}
