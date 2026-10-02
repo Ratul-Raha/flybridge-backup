@@ -40,6 +40,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { PushEnabler } from "@/components/notifications/push-enabler";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 import { OpsBotWidget } from "@/components/ops-bot/ops-bot-widget";
+import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   admin: { bg: "rgba(111,76,224,0.12)", fg: "#6B4CE0", label: "Administrator" },
@@ -731,7 +732,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="px-[clamp(20px,4vw,40px)] py-8">{children}</main>
+        <main className="px-[clamp(20px,4vw,40px)] py-8">
+          <PendingOrderBanner />
+          {children}
+        </main>
       </div>
 
       {user?.accountType === "admin" && <OpsBotWidget />}

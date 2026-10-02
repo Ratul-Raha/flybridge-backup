@@ -12,6 +12,8 @@ import { emitEvent } from "@/lib/events/emit";
 import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
 import { resolveCoursePrice } from "@/lib/course-discount";
+import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
+import { isEPSConfigured, createEPSPayment } from "@/lib/payments/eps";
 import type { EventPayload } from "@/lib/events/types";
 
 export type OrderUser = {
@@ -347,6 +349,82 @@ export async function createOrder(input: {
   });
 
   return { order, requiresPayment: true, duplicate: false };
+}
+
+/**
+ * Mints a fresh gateway session for an existing (pending) order and updates the
+ * order's gateway references in place. Used both when an order is first placed
+ * and when a buyer comes back to finish an abandoned checkout. Returns the URL
+ * the browser should be sent to; throws an `OrderError` when the gateway is not
+ * configured for the order's currency.
+ */
+export async function initiateOrderPayment(opts: {
+  order: OrderDoc & { save(): Promise<unknown> };
+  origin: string;
+  customer: OrderUser;
+  ipAddress?: string;
+}): Promise<{ url: string }> {
+  const order = opts.order;
+  const item = order.items[0];
+  if (!item) throw new OrderError("Order has no items", 400);
+
+  let cancelPath = "/dashboard";
+  if (item.itemType === "course") {
+    const c = await Course.findById(item.itemId)
+      .select("slug")
+      .lean<{ slug?: string } | null>();
+    if (c?.slug) cancelPath = `/programs/${c.slug}/checkout`;
+  } else if (item.itemType === "seminar") {
+    cancelPath = `/seminars/${item.itemId}`;
+  } else if (item.itemType === "resource") {
+    cancelPath = `/resources/${item.itemId}`;
+  } else if (item.itemType === "mock-bundle") {
+    cancelPath = `/mock-tests/${item.itemId}`;
+  }
+
+  const currency = (order.currency ?? "USD").toUpperCase();
+  let url: string;
+
+  if (currency === "BDT") {
+    if (!(await isEPSConfigured())) {
+      throw new OrderError(
+        "BDT payments are not set up yet. Please choose another method or try again later.",
+        503
+      );
+    }
+    const payment = await createEPSPayment({
+      order,
+      origin: opts.origin,
+      customer: {
+        name: opts.customer.name,
+        email: opts.customer.email,
+        phone: opts.customer.phone ?? null,
+      },
+      cancelPath,
+      ipAddress: opts.ipAddress,
+    });
+    order.gateway = "eps";
+    order.gatewayRef = payment.transactionId;
+    order.merchantTransactionId = payment.merchantTransactionId;
+    order.gatewayMode = payment.mode;
+    url = payment.url;
+  } else {
+    if (!(await isStripeConfigured())) {
+      throw new OrderError("Payments are not configured yet. Please try again later.", 503);
+    }
+    const checkout = await createCheckoutSession(order, {
+      origin: opts.origin,
+      email: opts.customer.email,
+      cancelPath,
+    });
+    order.gateway = "stripe";
+    order.gatewayRef = checkout.sessionId;
+    order.gatewayMode = checkout.mode;
+    url = checkout.url;
+  }
+
+  await order.save();
+  return { url };
 }
 
 export type HydratedOrder = OrderDoc & { save(): Promise<unknown> };

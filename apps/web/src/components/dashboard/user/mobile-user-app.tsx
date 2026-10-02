@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Avatar } from "@/components/dashboard/avatar";
+import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
 import { MobileDashboardHome } from "./mobile-dashboard-home";
 import { AllSeminars } from "./all-seminars";
 import { MySeminars } from "./my-seminars";
@@ -108,6 +109,7 @@ export function MobileUserApp({ children }: { children: ReactNode }) {
 
       {/* Screen content */}
       <main className="flex-1 px-5 pt-5 pb-28">
+        <PendingOrderBanner />
         {!owned ? (
           <div>{children}</div>
         ) : (

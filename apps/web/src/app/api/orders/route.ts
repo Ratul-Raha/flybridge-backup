@@ -3,17 +3,8 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
-import { createOrder, OrderError } from "@/lib/orders";
+import { createOrder, initiateOrderPayment, OrderError } from "@/lib/orders";
 import { isMetaPurchaseEnabled } from "@/lib/meta-capi";
-import { Course } from "@/lib/models/course";
-import {
-  isStripeConfigured,
-  createCheckoutSession,
-} from "@/lib/payments/stripe";
-import {
-  isEPSConfigured,
-  createEPSPayment,
-} from "@/lib/payments/eps";
 import { ORDER_ITEM_TYPES } from "@/lib/models/order";
 
 function isOrderItemType(value: unknown): value is OrderItemType {
@@ -147,64 +138,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (requiresPayment && order) {
-      let cancelPath = "/dashboard";
-      const item = order.items[0];
-      if (item?.itemType === "course") {
-        const c = await Course.findById(item.itemId)
-          .select("slug")
-          .lean<{ slug?: string } | null>();
-        if (c?.slug) cancelPath = `/programs/${c.slug}/checkout`;
-      } else if (item?.itemType === "seminar") {
-        cancelPath = `/seminars/${item.itemId}`;
-      } else if (item?.itemType === "resource") {
-        cancelPath = `/resources/${item.itemId}`;
-      } else if (item?.itemType === "mock-bundle") {
-        cancelPath = `/mock-tests/${item.itemId}`;
-      }
-
-      const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
-      const currency = (order.currency ?? "USD").toUpperCase();
-
-      if (currency === "BDT") {
-        if (!(await isEPSConfigured())) {
-          return NextResponse.json(
-            { error: "BDT payments are not set up yet. Please choose another method or try again later." },
-            { status: 503 }
-          );
-        }
-
-        const payment = await createEPSPayment({
-          order: order as OrderDoc,
-          origin: request.nextUrl.origin,
-          customer: { name: user.name, email: user.email, phone: user.phone },
-          cancelPath,
-          ipAddress: clientIp(request),
-        });
-        orderDoc.gateway = "eps";
-        orderDoc.gatewayRef = payment.transactionId;
-        orderDoc.merchantTransactionId = payment.merchantTransactionId;
-        orderDoc.gatewayMode = payment.mode;
-        await orderDoc.save();
-        paymentUrl = payment.url;
-      } else {
-        if (!(await isStripeConfigured())) {
-          return NextResponse.json(
-            { error: "Payments are not configured yet. Please try again later." },
-            { status: 503 }
-          );
-        }
-
-        const checkout = await createCheckoutSession(order as OrderDoc, {
-          origin: request.nextUrl.origin,
+      const { url } = await initiateOrderPayment({
+        order: order as OrderDoc & { save(): Promise<unknown> },
+        origin: request.nextUrl.origin,
+        customer: {
+          id: user._id.toString(),
+          name: user.name,
           email: user.email,
-          cancelPath,
-        });
-        orderDoc.gateway = "stripe";
-        orderDoc.gatewayRef = checkout.sessionId;
-        orderDoc.gatewayMode = checkout.mode;
-        await orderDoc.save();
-        paymentUrl = checkout.url;
-      }
+          phone: user.phone ?? null,
+        },
+        ipAddress: clientIp(request),
+      });
+      paymentUrl = url;
     }
 
     return NextResponse.json(
