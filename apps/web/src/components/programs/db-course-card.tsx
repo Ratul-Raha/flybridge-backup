@@ -6,6 +6,7 @@ import Image from "next/image";
 import { BookOpen, Star, Users } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
+import { DealCountdown } from "./deal-countdown";
 
 export type DbCourse = {
   id: string;
@@ -19,6 +20,7 @@ export type DbCourse = {
   prices?: { USD?: number; BDT?: number } | null;
   originalPrice?: string;
   discountLabel?: string | null;
+  discountEndsAt?: string | null;
   image: string | null;
   level: string;
   upcoming: boolean;
@@ -122,6 +124,7 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
                 </span>
               )}
             </div>
+            {course.discountEndsAt && <DealCountdown endsAt={course.discountEndsAt} />}
           </>
         )}
       </div>

@@ -43,6 +43,10 @@ export type PublicCoursePricing = {
    * course has never had one" (marketing copy may still show a strikethrough).
    */
   configured: boolean;
+  /** When the running deal stops, as an ISO string, or null if it never does. */
+  endsAt: string | null;
+  /** When the running deal started, as an ISO string, or null if it always has. */
+  startsAt: string | null;
   discounted: boolean;
 };
 
@@ -56,6 +60,11 @@ export type CoursePrice = {
   /** The name to show on the offer, when one was given. */
   label: string | null;
 };
+
+function isoOrNull(value: Date | string | number | null | undefined): string | null {
+  const time = typeof value === "number" ? value : toTime(value);
+  return time === null ? null : new Date(time).toISOString();
+}
 
 /** Whether anyone has ever set this discount up, even if it is switched off now. */
 function isConfigured(discount: CourseDiscount | null | undefined): boolean {
@@ -175,8 +184,8 @@ export function serializeCourseDiscount(
     active: discount?.active ?? false,
     name: discount?.name?.trim() ?? "",
     price: Number(discount?.price) || 0,
-    startsAt: startsAt === null ? null : new Date(startsAt).toISOString(),
-    endsAt: endsAt === null ? null : new Date(endsAt).toISOString(),
+    startsAt: isoOrNull(startsAt),
+    endsAt: isoOrNull(endsAt),
   };
 }
 
@@ -210,6 +219,8 @@ export function publicCoursePricing(
       discountLabel: null,
       savings: 0,
       configured,
+      endsAt: null,
+      startsAt: null,
       discounted: false,
     };
   }
@@ -221,6 +232,8 @@ export function publicCoursePricing(
     discountLabel: resolved.label,
     savings: resolved.savings,
     configured,
+    endsAt: isoOrNull(course.discount?.endsAt),
+    startsAt: isoOrNull(course.discount?.startsAt),
     discounted: true,
   };
 }

@@ -76,6 +76,51 @@ test("public pricing returns the discounted BDT price and the original for the s
   assert.equal(pricing.discounted, true);
 });
 
+test("a running discount reports the window a countdown needs", () => {
+  const pricing = publicCoursePricing(
+    {
+      prices: { BDT: 5999 },
+      discount: {
+        active: true,
+        name: "Launch Deal",
+        price: 2999,
+        startsAt: "2026-10-01T00:00:00.000Z",
+        endsAt: "2026-10-31T00:00:00.000Z",
+      },
+    },
+    now
+  );
+  assert.equal(pricing.endsAt, "2026-10-31T00:00:00.000Z");
+  assert.equal(pricing.startsAt, "2026-10-01T00:00:00.000Z");
+});
+
+test("an open-ended discount reports no end date for the countdown", () => {
+  const pricing = publicCoursePricing(
+    { prices: { BDT: 5999 }, discount: { active: true, price: 2999, endsAt: null } },
+    now
+  );
+  assert.equal(pricing.endsAt, null);
+  assert.equal(pricing.startsAt, null);
+});
+
+test("a discount that is not running reports no window, even if it has dates", () => {
+  const pricing = publicCoursePricing(
+    {
+      prices: { BDT: 5999 },
+      discount: {
+        active: false,
+        price: 2999,
+        startsAt: "2026-10-01T00:00:00.000Z",
+        endsAt: "2026-10-31T00:00:00.000Z",
+      },
+    },
+    now
+  );
+  assert.equal(pricing.discounted, false);
+  assert.equal(pricing.endsAt, null);
+  assert.equal(pricing.startsAt, null);
+});
+
 test("public pricing shows one price and no strikethrough when nothing is discounted", () => {
   const pricing = publicCoursePricing({ prices: { BDT: 5999 } }, now);
   assert.deepEqual(pricing.prices, { BDT: 5999 });

@@ -69,6 +69,7 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
           ? (pricing.originalPrice ?? undefined)
           : (courseDetails[c.slug]?.originalPrice ?? undefined),
           discountLabel: pricing.discountLabel,
+          discountEndsAt: pricing.endsAt,
           image: c.image ?? null,
           level: c.level ?? "",
           upcoming: c.upcoming ?? false,

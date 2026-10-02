@@ -34,6 +34,7 @@ const prices = cleanPrices(c.prices);
   // `originalPrice` is only set while a discount is actually running, so it is
   // also what says whether the discounted price is the one to show.
   const running = resolved?.originalPrice ?? null;
+  const discount = serializeCourseDiscount(c.discount);
 
   return {
     id: c._id.toString(),
@@ -49,9 +50,11 @@ const prices = cleanPrices(c.prices);
     price: c.price ?? 0,
     currency: c.currency ?? "USD",
     prices: running === null ? prices : { ...prices, BDT: resolved!.price },
-    discount: serializeCourseDiscount(c.discount),
+    discount,
     discountLabel: running === null ? null : resolved!.label,
     originalPrice: running === null ? null : formatMoney(running, "BDT"),
+    // The countdown needs an end date, and only while the deal is actually running.
+    discountEndsAt: running === null ? null : discount.endsAt,
     waitlistEnabled: c.waitlistEnabled ?? false,
     wishlistDiscountPercent: c.wishlistDiscountPercent ?? 0,
     image: c.image ?? null,

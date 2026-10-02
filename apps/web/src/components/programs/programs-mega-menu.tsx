@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
+import { DealCountdown } from "./deal-countdown";
 
 type FetchedCourse = {
   slug: string;
@@ -16,6 +17,8 @@ type FetchedCourse = {
   currency: string;
   prices?: { BDT?: number } | null;
   originalPrice?: string | null;
+  discountLabel?: string | null;
+  discountEndsAt?: string | null;
   image: string | null;
   upcoming: boolean;
 };
@@ -28,6 +31,8 @@ type MenuItem = {
   currency?: string;
   prices?: { BDT?: number } | null;
   originalPrice?: string;
+  discountLabel?: string | null;
+  discountEndsAt?: string | null;
   upcoming: boolean;
   image: string | null;
   tileBg: string;
@@ -83,6 +88,8 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
       // The API has already applied any running discount to these prices, and
       // leaves the original null once the discount is off or unconfigured.
       originalPrice: c.originalPrice ?? undefined,
+      discountLabel: c.discountLabel ?? null,
+      discountEndsAt: c.discountEndsAt ?? null,
       upcoming: !!c.upcoming,
       image: c.image,
       tileBg: DbTile.bg,
@@ -295,6 +302,17 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
                 >
                   {item.badge}
                 </span>
+                {item.discountLabel && (
+                  <span className="mt-[3px] flex items-center gap-1.5">
+                    <span
+                      className="min-w-0 truncate font-mono text-[10px] tracking-[0.06em]"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      {item.discountLabel}
+                    </span>
+                    {item.discountEndsAt && <DealCountdown endsAt={item.discountEndsAt} tone="menu" />}
+                  </span>
+                )}
               </span>
               <span className="shrink-0">{renderPrice(item)}</span>
             </a>
