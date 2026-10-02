@@ -253,23 +253,31 @@ function sectionPreview(s: ManagedSection): string {
   return "No instructions or questions yet";
 }
 
-export function MockTestManage() {
+export function MockTestManage({
+  focusBundleId,
+  focusTestId,
+}: {
+  focusBundleId?: string;
+  focusTestId?: string;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
   const queryBundleId = searchParams.get("bundle");
   const queryTestId = searchParams.get("test");
-  const autoEditRef = useRef<string | null>(queryTestId);
+  const isFocusedEdit = Boolean(focusBundleId && focusTestId);
+
+  const autoEditRef = useRef<string | null>(focusTestId ?? queryTestId);
 
   useEffect(() => {
-    if (queryBundleId && queryTestId) {
+    if (!isFocusedEdit && queryBundleId && queryTestId) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("bundle");
       params.delete("test");
       router.replace(`/dashboard/mock-tests${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
     }
-  }, [queryBundleId, queryTestId, router, searchParams]);
+  }, [isFocusedEdit, queryBundleId, queryTestId, router, searchParams]);
 
   const [bundles, setBundles] = useState<BundleDto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -309,7 +317,9 @@ export function MockTestManage() {
 
   useEffect(() => {
     loadBundles().then(() => {
-      if (queryBundleId) {
+      if (focusBundleId) {
+        setActiveBundleId(focusBundleId);
+      } else if (queryBundleId) {
         setActiveBundleId(queryBundleId);
       }
     });
@@ -317,7 +327,7 @@ export function MockTestManage() {
       .then((r) => r.json())
       .then((d) => setCourses((d.courses ?? []).map((c: { id: string; title: string }) => ({ id: c.id, title: c.title }))))
       .catch(() => setCourses([]));
-  }, [loadBundles, queryBundleId]);
+  }, [loadBundles, focusBundleId, queryBundleId]);
 
   const loadTests = useCallback(async (bundleId: string) => {
     setActiveBundleId(bundleId);
@@ -1130,363 +1140,7 @@ export function MockTestManage() {
     [keyedNumbers]
   );
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Mock Tests"
-        subtitle="Create practice packs, build tests with AI, and publish them for students."
-        action={
-          <button
-            type="button"
-            onClick={openBundleCreate}
-            className="rounded-full text-white text-[13.5px] font-medium px-6 py-[10px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
-            style={{ background: "var(--brand)" }}
-          >
-            + New pack
-          </button>
-        }
-      />
-
-      {error && (
-        <p className="text-[13px]" style={{ color: "#C0392B" }}>
-          {error}
-        </p>
-      )}
-
-      {/* Bundle form */}
-      {bundleFormOpen && (
-        <div className="rounded-[24px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
-          <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
-            {editingBundleId ? "Edit pack" : "New practice pack"}
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Title *
-              </label>
-              <input
-                type="text"
-                value={bundleForm.title}
-                onChange={(e) => setBundleForm({ ...bundleForm, title: e.target.value })}
-                placeholder="e.g. IELTS Academic Pack"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Slug
-              </label>
-              <input
-                type="text"
-                value={bundleForm.slug}
-                onChange={(e) => setBundleForm({ ...bundleForm, slug: e.target.value })}
-                placeholder="auto-generated from title"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Badge
-              </label>
-              <input
-                type="text"
-                value={bundleForm.badge}
-                onChange={(e) => setBundleForm({ ...bundleForm, badge: e.target.value })}
-                placeholder="e.g. Academic"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Description
-              </label>
-              <textarea
-                value={bundleForm.description}
-                onChange={(e) => setBundleForm({ ...bundleForm, description: e.target.value })}
-                placeholder="What students get with this pack"
-                rows={3}
-                className={inputClass + " resize-none"}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Price (USD)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={bundleForm.price}
-                onChange={(e) => setBundleForm({ ...bundleForm, price: e.target.value })}
-                placeholder="0 = free"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Price (BDT)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={bundleForm.bdtPrice}
-                onChange={(e) => setBundleForm({ ...bundleForm, bdtPrice: e.target.value })}
-                placeholder="optional, e.g. 3480"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Image URL
-              </label>
-              <input
-                type="text"
-                value={bundleForm.image}
-                onChange={(e) => setBundleForm({ ...bundleForm, image: e.target.value })}
-                placeholder="https://…"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            </div>
-
-            <div className="flex items-center gap-6 md:col-span-2">
-              <label className="flex items-center gap-2 text-[13px] font-medium cursor-pointer" style={{ color: "var(--ink)" }}>
-                <input
-                  type="checkbox"
-                  checked={bundleForm.featured}
-                  onChange={(e) => setBundleForm({ ...bundleForm, featured: e.target.checked })}
-                  className="h-4 w-4 accent-[var(--brand)]"
-                />
-                Feature on the public page
-              </label>
-              <label className="flex items-center gap-2 text-[13px] font-medium cursor-pointer" style={{ color: "var(--ink)" }}>
-                <input
-                  type="checkbox"
-                  checked={bundleForm.published}
-                  onChange={(e) => setBundleForm({ ...bundleForm, published: e.target.checked })}
-                  className="h-4 w-4 accent-[var(--brand)]"
-                />
-                Published (students can buy/see it)
-              </label>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mt-6">
-            <button
-              type="button"
-              onClick={saveBundle}
-              disabled={savingBundle}
-              className="flex items-center gap-2 rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60"
-              style={{ background: "var(--brand)" }}
-            >
-              {savingBundle && <Loader2 size={15} className="animate-spin" />}
-              {savingBundle ? "Saving…" : editingBundleId ? "Save changes" : "Create pack"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setBundleFormOpen(false);
-                setEditingBundleId(null);
-              }}
-              className="text-[13.5px] font-medium px-4 py-[11px]"
-              style={{ color: "var(--body)" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bundles list */}
-      <div className="flex flex-col gap-5">
-        {bundles.map((b) => (
-          <div key={b.id} className="overflow-hidden rounded-[24px] border bg-white" style={{ borderColor: "var(--line)" }}>
-            <div className="p-5">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span
-                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                  style={
-                    b.published
-                      ? { background: "var(--brand-soft)", color: "var(--brand)" }
-                      : { background: "var(--bg-soft)", color: "var(--body)" }
-                  }
-                >
-                  {b.published ? "Published" : "Draft"}
-                </span>
-                {b.badge && (
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }}>
-                    {b.badge}
-                  </span>
-                )}
-                <span
-                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                  style={{ background: "var(--bg-soft)", color: "var(--ink)" }}
-                >
-                  {b.testCount} {b.testCount === 1 ? "test" : "tests"}
-                </span>
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: "rgba(224,138,23,0.12)", color: "#E08A17" }}>
-                  {formatPriceText({ price: b.price, currency: b.currency, prices: b.prices })}
-                </span>
-                {b.featured && (
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
-                    ★ Featured
-                  </span>
-                )}
-              </div>
-
-              <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
-                {b.title}
-              </h3>
-              {b.description && (
-                <p className="text-[13px] mt-1 line-clamp-2" style={{ color: "var(--body)" }}>
-                  {b.description}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                {(["reading", "listening", "writing", "speaking"] as const).map((k) =>
-                  (b.skills?.[k] ?? 0) > 0 ? (
-                    <span
-                      key={k}
-                      className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-2.5 py-[4px]"
-                      style={{ background: SKILL_META[k].soft, color: SKILL_META[k].accent }}
-                    >
-                      {SKILL_META[k].label} {b.skills[k]}
-                    </span>
-                  ) : null
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => (activeBundleId === b.id ? setActiveBundleId(null) : loadTests(b.id))}
-                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-5 py-[8px] text-white transition-all duration-200 hover:opacity-90"
-                  style={{ background: "var(--brand)" }}
-                >
-                  {activeBundleId === b.id ? "Close tests" : "Manage tests"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => togglePublish(b, !b.published)}
-                  className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  {b.published ? "Unpublish" : "Publish"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openBundleEdit(b)}
-                  className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteBundle(b)}
-                  disabled={deletingBundleId === b.id}
-                  className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] transition-all duration-200 disabled:opacity-50"
-                  style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.3)" }}
-                >
-                  {deletingBundleId === b.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                  {deletingBundleId === b.id ? "Deleting…" : "Delete"}
-                </button>
-              </div>
-            </div>
-
-            {/* Tests for the active bundle */}
-            {activeBundleId === b.id && (
-              <div className="border-t" style={{ borderColor: "var(--line)" }}>
-                <div className="flex items-center justify-between gap-3 px-5 py-4">
-                  <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
-                    Tests in {b.title}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={openTestCreate}
-                    className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90"
-                    style={{ background: "var(--brand)" }}
-                  >
-                    <Plus size={13} /> New test
-                  </button>
-                </div>
-
-                {!testsLoaded ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 size={18} className="animate-spin" style={{ color: "var(--brand)" }} />
-                  </div>
-                ) : tests.length === 0 && !testFormOpen ? (
-                  <p className="px-5 pb-6 text-[13px]" style={{ color: "var(--body)" }}>
-                    No tests yet — click "New test" to create the first one.
-                  </p>
-                ) : (
-                  <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>
-                    {tests.map((t) => {
-                      const meta = SKILL_META[t.skill] ?? SKILL_META.reading;
-                      return (
-                        <div key={t.id} className="flex items-center gap-3 px-5 py-3.5">
-                          <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: meta.soft, color: meta.accent }}>
-                            {meta.label}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                              {t.title}
-                            </p>
-                            <p className="text-[11.5px] mt-0.5" style={{ color: "var(--body)" }}>
-                              {t.questionCount} questions · {t.durationMinutes} min ·{" "}
-                              <span style={{ color: t.status === "published" ? "#0FA968" : "var(--body)" }}>
-                                {t.status}
-                              </span>
-                            </p>
-                          </div>
-                          <Link
-                            href={`/dashboard/mock-tests/${t.id}/take`}
-                            className="shrink-0 text-[12.5px] font-medium border rounded-full px-4 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                            style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                          >
-                            Preview
-                          </Link>
-                          <Link
-                            href={`/dashboard/mock-tests?bundle=${t.bundle.id}&test=${t.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-[12.5px] font-medium border rounded-full px-4 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
-                            style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-                          >
-                            Edit
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => deleteTest(t)}
-                            disabled={deletingTestId === t.id}
-                            className="shrink-0 text-[12.5px] font-medium disabled:opacity-50"
-                            style={{ color: "#C0392B" }}
-                          >
-                            {deletingTestId === t.id ? "…" : "Delete"}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Test form */}
-                {testFormOpen && (
+  const renderTestForm = () => (
                   <div className="border-t px-5 py-5" style={{ borderColor: "var(--line)" }}>
                     <h4 className="font-display text-[15px] font-semibold mb-4" style={{ color: "var(--ink)" }}>
                       {editingTestId ? "Edit test" : "New test"}
@@ -2439,7 +2093,389 @@ export function MockTestManage() {
                       </button>
                     </div>
                   </div>
+  );
+
+  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (isFocusedEdit) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Link
+          href="/dashboard/mock-tests"
+          className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
+          style={{ color: "var(--brand)" }}
+        >
+          ← Back to mock tests
+        </Link>
+        {error && (
+          <p className="text-[13px]" style={{ color: "#C0392B" }}>{error}</p>
+        )}
+        {!testFormOpen ? (
+          <div className="flex justify-center py-16">
+            <Loader2 size={20} className="animate-spin" style={{ color: "var(--brand)" }} />
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-[24px] border bg-white" style={{ borderColor: "var(--line)" }}>
+            {renderTestForm()}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Mock Tests"
+        subtitle="Create practice packs, build tests with AI, and publish them for students."
+        action={
+          <button
+            type="button"
+            onClick={openBundleCreate}
+            className="rounded-full text-white text-[13.5px] font-medium px-6 py-[10px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+            style={{ background: "var(--brand)" }}
+          >
+            + New pack
+          </button>
+        }
+      />
+
+      {error && (
+        <p className="text-[13px]" style={{ color: "#C0392B" }}>
+          {error}
+        </p>
+      )}
+
+      {/* Bundle form */}
+      {bundleFormOpen && (
+        <div className="rounded-[24px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+          <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
+            {editingBundleId ? "Edit pack" : "New practice pack"}
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Title *
+              </label>
+              <input
+                type="text"
+                value={bundleForm.title}
+                onChange={(e) => setBundleForm({ ...bundleForm, title: e.target.value })}
+                placeholder="e.g. IELTS Academic Pack"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Slug
+              </label>
+              <input
+                type="text"
+                value={bundleForm.slug}
+                onChange={(e) => setBundleForm({ ...bundleForm, slug: e.target.value })}
+                placeholder="auto-generated from title"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Badge
+              </label>
+              <input
+                type="text"
+                value={bundleForm.badge}
+                onChange={(e) => setBundleForm({ ...bundleForm, badge: e.target.value })}
+                placeholder="e.g. Academic"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Description
+              </label>
+              <textarea
+                value={bundleForm.description}
+                onChange={(e) => setBundleForm({ ...bundleForm, description: e.target.value })}
+                placeholder="What students get with this pack"
+                rows={3}
+                className={inputClass + " resize-none"}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Price (USD)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bundleForm.price}
+                onChange={(e) => setBundleForm({ ...bundleForm, price: e.target.value })}
+                placeholder="0 = free"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Price (BDT)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={bundleForm.bdtPrice}
+                onChange={(e) => setBundleForm({ ...bundleForm, bdtPrice: e.target.value })}
+                placeholder="optional, e.g. 3480"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Image URL
+              </label>
+              <input
+                type="text"
+                value={bundleForm.image}
+                onChange={(e) => setBundleForm({ ...bundleForm, image: e.target.value })}
+                placeholder="https://…"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+            </div>
+
+            <div className="flex items-center gap-6 md:col-span-2">
+              <label className="flex items-center gap-2 text-[13px] font-medium cursor-pointer" style={{ color: "var(--ink)" }}>
+                <input
+                  type="checkbox"
+                  checked={bundleForm.featured}
+                  onChange={(e) => setBundleForm({ ...bundleForm, featured: e.target.checked })}
+                  className="h-4 w-4 accent-[var(--brand)]"
+                />
+                Feature on the public page
+              </label>
+              <label className="flex items-center gap-2 text-[13px] font-medium cursor-pointer" style={{ color: "var(--ink)" }}>
+                <input
+                  type="checkbox"
+                  checked={bundleForm.published}
+                  onChange={(e) => setBundleForm({ ...bundleForm, published: e.target.checked })}
+                  className="h-4 w-4 accent-[var(--brand)]"
+                />
+                Published (students can buy/see it)
+              </label>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-6">
+            <button
+              type="button"
+              onClick={saveBundle}
+              disabled={savingBundle}
+              className="flex items-center gap-2 rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60"
+              style={{ background: "var(--brand)" }}
+            >
+              {savingBundle && <Loader2 size={15} className="animate-spin" />}
+              {savingBundle ? "Saving…" : editingBundleId ? "Save changes" : "Create pack"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBundleFormOpen(false);
+                setEditingBundleId(null);
+              }}
+              className="text-[13.5px] font-medium px-4 py-[11px]"
+              style={{ color: "var(--body)" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bundles list */}
+      <div className="flex flex-col gap-5">
+        {bundles.map((b) => (
+          <div key={b.id} className="overflow-hidden rounded-[24px] border bg-white" style={{ borderColor: "var(--line)" }}>
+            <div className="p-5">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span
+                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
+                  style={
+                    b.published
+                      ? { background: "var(--brand-soft)", color: "var(--brand)" }
+                      : { background: "var(--bg-soft)", color: "var(--body)" }
+                  }
+                >
+                  {b.published ? "Published" : "Draft"}
+                </span>
+                {b.badge && (
+                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }}>
+                    {b.badge}
+                  </span>
                 )}
+                <span
+                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
+                  style={{ background: "var(--bg-soft)", color: "var(--ink)" }}
+                >
+                  {b.testCount} {b.testCount === 1 ? "test" : "tests"}
+                </span>
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: "rgba(224,138,23,0.12)", color: "#E08A17" }}>
+                  {formatPriceText({ price: b.price, currency: b.currency, prices: b.prices })}
+                </span>
+                {b.featured && (
+                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
+                    ★ Featured
+                  </span>
+                )}
+              </div>
+
+              <h3 className="font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+                {b.title}
+              </h3>
+              {b.description && (
+                <p className="text-[13px] mt-1 line-clamp-2" style={{ color: "var(--body)" }}>
+                  {b.description}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                {(["reading", "listening", "writing", "speaking"] as const).map((k) =>
+                  (b.skills?.[k] ?? 0) > 0 ? (
+                    <span
+                      key={k}
+                      className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-2.5 py-[4px]"
+                      style={{ background: SKILL_META[k].soft, color: SKILL_META[k].accent }}
+                    >
+                      {SKILL_META[k].label} {b.skills[k]}
+                    </span>
+                  ) : null
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => (activeBundleId === b.id ? setActiveBundleId(null) : loadTests(b.id))}
+                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold rounded-full px-5 py-[8px] text-white transition-all duration-200 hover:opacity-90"
+                  style={{ background: "var(--brand)" }}
+                >
+                  {activeBundleId === b.id ? "Close tests" : "Manage tests"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => togglePublish(b, !b.published)}
+                  className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                >
+                  {b.published ? "Unpublish" : "Publish"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openBundleEdit(b)}
+                  className="text-[13px] font-medium rounded-full border px-4 py-[8px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteBundle(b)}
+                  disabled={deletingBundleId === b.id}
+                  className="inline-flex items-center gap-1.5 text-[13px] font-medium rounded-full border px-4 py-[8px] transition-all duration-200 disabled:opacity-50"
+                  style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.3)" }}
+                >
+                  {deletingBundleId === b.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  {deletingBundleId === b.id ? "Deleting…" : "Delete"}
+                </button>
+              </div>
+            </div>
+
+            {/* Tests for the active bundle */}
+            {activeBundleId === b.id && (
+              <div className="border-t" style={{ borderColor: "var(--line)" }}>
+                <div className="flex items-center justify-between gap-3 px-5 py-4">
+                  <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                    Tests in {b.title}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openTestCreate}
+                    className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90"
+                    style={{ background: "var(--brand)" }}
+                  >
+                    <Plus size={13} /> New test
+                  </button>
+                </div>
+
+                {!testsLoaded ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 size={18} className="animate-spin" style={{ color: "var(--brand)" }} />
+                  </div>
+                ) : tests.length === 0 && !testFormOpen ? (
+                  <p className="px-5 pb-6 text-[13px]" style={{ color: "var(--body)" }}>
+                    No tests yet — click "New test" to create the first one.
+                  </p>
+                ) : (
+                  <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>
+                    {tests.map((t) => {
+                      const meta = SKILL_META[t.skill] ?? SKILL_META.reading;
+                      return (
+                        <div key={t.id} className="flex items-center gap-3 px-5 py-3.5">
+                          <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]" style={{ background: meta.soft, color: meta.accent }}>
+                            {meta.label}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                              {t.title}
+                            </p>
+                            <p className="text-[11.5px] mt-0.5" style={{ color: "var(--body)" }}>
+                              {t.questionCount} questions · {t.durationMinutes} min ·{" "}
+                              <span style={{ color: t.status === "published" ? "#0FA968" : "var(--body)" }}>
+                                {t.status}
+                              </span>
+                            </p>
+                          </div>
+                          <Link
+                            href={`/dashboard/mock-tests/${t.id}/take`}
+                            className="shrink-0 text-[12.5px] font-medium border rounded-full px-4 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                            style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                          >
+                            Preview
+                          </Link>
+                          <Link
+                            href={`/dashboard/mock-tests/${t.id}/edit`}
+                            className="shrink-0 text-[12.5px] font-medium border rounded-full px-4 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                            style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => deleteTest(t)}
+                            disabled={deletingTestId === t.id}
+                            className="shrink-0 text-[12.5px] font-medium disabled:opacity-50"
+                            style={{ color: "#C0392B" }}
+                          >
+                            {deletingTestId === t.id ? "…" : "Delete"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Test form */}
+                {testFormOpen && renderTestForm()}
               </div>
             )}
           </div>
