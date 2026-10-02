@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Headphones, Play } from "lucide-react";
+import { Headphones } from "lucide-react";
 import { isYouTubeUrl, youtubeEmbedSrc } from "@/lib/youtube";
 
 /**
  * The listening media shown to a student mid-test. Unlike the admin preview,
- * this is one-shot: once the audio starts it plays through to the end and the
- * student has no pause, seek or replay control — matching real IELTS listening.
+ * this is one-shot: audio starts automatically when the test begins and plays
+ * through to the end with no pause, seek or replay control — matching real
+ * IELTS listening.
  */
 export function ListeningTestPlayer({
   audioUrl,
@@ -20,11 +21,12 @@ export function ListeningTestPlayer({
   if (!preferred) return null;
 
   if (isYouTubeUrl(preferred)) {
+    const src = `${youtubeEmbedSrc(preferred)}&autoplay=1&controls=0&disablekb=1`;
     return (
       <iframe
-        src={youtubeEmbedSrc(preferred)}
+        src={src}
         title="Listening audio"
-        className="w-full rounded-lg bg-black"
+        className="pointer-events-none w-full rounded-lg bg-black"
         style={{ aspectRatio: "16 / 9", border: "0" }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
@@ -38,38 +40,69 @@ export function ListeningTestPlayer({
 
 function OneShotMedia({ src, isVideo }: { src: string; isVideo: boolean }) {
   const mediaRef = useRef<HTMLMediaElement | null>(null);
-  const [status, setStatus] = useState<"idle" | "playing" | "ended">("idle");
+  const [status, setStatus] = useState<"playing" | "ended">("playing");
   const [elapsed, setElapsed] = useState(0);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const el = mediaRef.current;
     if (!el) return;
+
     const onTime = () => setElapsed(el.currentTime);
     const onEnded = () => setStatus("ended");
     el.addEventListener("timeupdate", onTime);
     el.addEventListener("ended", onEnded);
+
+    const attempt = () => {
+      if (startedRef.current) return;
+      startedRef.current = true;
+      el.currentTime = 0;
+      void el.play().catch(() => {
+        startedRef.current = false;
+      });
+    };
+    attempt();
+
+    // Browsers can block autoplay without a recent user gesture. The mock
+    // already requires a click to begin, but as a safety net retry on any
+    // interaction so the audio never stays silent.
+    const onInteract = () => {
+      if (!startedRef.current) attempt();
+    };
+    window.addEventListener("pointerdown", onInteract);
+    window.addEventListener("keydown", onInteract);
+
     return () => {
       el.removeEventListener("timeupdate", onTime);
       el.removeEventListener("ended", onEnded);
+      window.removeEventListener("pointerdown", onInteract);
+      window.removeEventListener("keydown", onInteract);
     };
   }, []);
-
-  const start = () => {
-    const el = mediaRef.current;
-    if (!el || status !== "idle") return;
-    el.currentTime = 0;
-    void el.play().catch(() => setStatus("idle"));
-    setStatus("playing");
-  };
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
   const media = isVideo ? (
     // eslint-disable-next-line jsx-a11y/media-has-caption
-    <video ref={(el) => { mediaRef.current = el; }} src={src} className="hidden" playsInline />
+    <video
+      ref={(el) => {
+        mediaRef.current = el;
+      }}
+      src={src}
+      className="hidden"
+      playsInline
+      autoPlay
+    />
   ) : (
     // eslint-disable-next-line jsx-a11y/media-has-caption
-    <audio ref={(el) => { mediaRef.current = el; }} src={src} className="hidden" />
+    <audio
+      ref={(el) => {
+        mediaRef.current = el;
+      }}
+      src={src}
+      className="hidden"
+      autoPlay
+    />
   );
 
   return (
@@ -82,22 +115,11 @@ function OneShotMedia({ src, isVideo }: { src: string; isVideo: boolean }) {
         >
           <Headphones size={16} />
         </span>
-        {status === "idle" && (
-          <button
-            type="button"
-            onClick={start}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ background: "var(--brand)" }}
-          >
-            <Play size={14} /> Play listening audio
-          </button>
-        )}
-        {status === "playing" && (
+        {status === "playing" ? (
           <span className="text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
             Audio is playing ({fmt(elapsed)}) — it plays once through and cannot be paused.
           </span>
-        )}
-        {status === "ended" && (
+        ) : (
           <span className="text-[12.5px] font-medium" style={{ color: "var(--brand-2)" }}>
             Audio finished.
           </span>

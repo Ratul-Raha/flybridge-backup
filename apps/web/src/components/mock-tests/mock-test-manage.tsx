@@ -600,6 +600,10 @@ export function MockTestManage({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Save failed");
+      if (isFocusedEdit) {
+        router.push(`/dashboard/mock-tests?bundle=${focusBundleId}`);
+        return;
+      }
       setTestFormOpen(false);
       setEditingTestId(null);
       if (activeBundleId) await loadTests(activeBundleId);
@@ -2083,6 +2087,10 @@ export function MockTestManage({
                       <button
                         type="button"
                         onClick={() => {
+                          if (isFocusedEdit) {
+                            router.push(`/dashboard/mock-tests?bundle=${focusBundleId}`);
+                            return;
+                          }
                           setTestFormOpen(false);
                           setEditingTestId(null);
                         }}
@@ -2100,11 +2108,11 @@ export function MockTestManage({
     return (
       <div className="flex flex-col gap-6">
         <Link
-          href="/dashboard/mock-tests"
+          href={`/dashboard/mock-tests?bundle=${focusBundleId}`}
           className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
           style={{ color: "var(--brand)" }}
         >
-          ← Back to mock tests
+          ← Back to tests
         </Link>
         {error && (
           <p className="text-[13px]" style={{ color: "#C0392B" }}>{error}</p>

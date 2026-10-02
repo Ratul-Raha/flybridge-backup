@@ -129,6 +129,7 @@ export function MockTestPlayer({
   const startedAtRef = useRef(0);
 
   const [page, setPage] = useState(0);
+  const [activePart, setActivePart] = useState(0);
 
   const totalQuestions = useMemo(
     () =>
@@ -525,12 +526,15 @@ export function MockTestPlayer({
 
   const pageIdx = readingPages ? Math.min(page, readingPages.length - 1) : 0;
   const currentPage = readingPages ? readingPages[pageIdx] : null;
+  const activePartIndex = readingPages ? pageIdx : activePart;
+  const activeGroup = questionGroups[activePartIndex] ?? null;
   const goToPage = (i: number) => {
     setPage(Math.max(0, Math.min(i, (readingPages?.length ?? 1) - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const scrollToQuestion = (qid: string, partPageIndex: number | null) => {
+  const scrollToQuestion = (qid: string, partIndex: number, partPageIndex: number | null) => {
+    setActivePart(partIndex);
     const scroll = () =>
       document
         .getElementById(`q-${qid}`)
@@ -544,6 +548,7 @@ export function MockTestPlayer({
   };
 
   const jumpToPart = (partIndex: number, partPageIndex: number | null) => {
+    setActivePart(partIndex);
     if (partPageIndex !== null) {
       goToPage(partPageIndex);
     } else {
@@ -1064,55 +1069,64 @@ export function MockTestPlayer({
             <div className="flex items-stretch overflow-x-auto">
               {questionGroups.map((group, gi) => {
                 if (group.questions.length === 0) return null;
-                const active = group.pageIndex !== null ? group.pageIndex === pageIdx : false;
+                const answeredInPart = group.questions.filter((q) => isAnswered(answers[q.qid])).length;
+                const isActive = gi === activePartIndex;
                 return (
-                  <div key={group.key} className="flex shrink-0 items-stretch border-r" style={{ borderColor: "var(--line)" }}>
-                    <button
-                      type="button"
-                      onClick={() => jumpToPart(gi, group.pageIndex)}
-                      className="flex w-[76px] shrink-0 flex-col items-center justify-center gap-1 px-2 py-2.5 text-center transition-colors hover:bg-[var(--brand-soft)]"
-                      style={active ? { background: "var(--brand-soft)" } : undefined}
-                    >
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em]" style={{ color: active ? "var(--brand)" : "var(--body)" }}>
-                        Part {gi + 1}
-                      </span>
-                      <span className="text-[10px] leading-none" style={{ color: "var(--body)" }}>
-                        {group.questions.length} Q
-                      </span>
-                    </button>
-                    <div className="flex items-center gap-1 px-2 py-2">
-                      {group.questions.map((q) => {
-                        const index = questionIndex[q.qid] ?? 0;
-                        const a = isAnswered(answers[q.qid]);
-                        return (
-                          <button
-                            key={q.qid}
-                            type="button"
-                            onClick={() => scrollToQuestion(q.qid, group.pageIndex)}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-[12px] font-semibold transition-all duration-150 hover:scale-105"
-                            style={
-                              a
-                                ? { background: "var(--brand)", color: "#fff", boxShadow: "0 4px 12px -4px var(--brand)" }
-                                : { border: "1px solid var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
-                            }
-                          >
-                            {index}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => jumpToPart(gi, group.pageIndex)}
+                    className="flex shrink-0 flex-col items-center justify-center gap-0.5 border-r px-5 py-2 text-center transition-colors hover:bg-[var(--brand-soft)]"
+                    style={{ borderColor: "var(--line)", background: isActive ? "var(--brand-soft)" : "transparent" }}
+                  >
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: isActive ? "var(--brand)" : "var(--body)" }}>
+                      Part {gi + 1}
+                    </span>
+                    <span className="text-[11px]" style={{ color: isActive ? "var(--brand)" : "var(--body)" }}>
+                      {answeredInPart} of {group.questions.length}
+                    </span>
+                  </button>
                 );
               })}
             </div>
 
+            {activeGroup && activeGroup.questions.length > 0 && (
+              <div className="border-t px-4 py-2.5" style={{ borderColor: "var(--line)" }}>
+                <div className="flex flex-wrap items-end gap-2">
+                  {activeGroup.questions.map((q) => {
+                    const index = questionIndex[q.qid] ?? 0;
+                    const a = isAnswered(answers[q.qid]);
+                    return (
+                      <button
+                        key={q.qid}
+                        type="button"
+                        onClick={() => scrollToQuestion(q.qid, activePartIndex, activeGroup.pageIndex)}
+                        className="flex flex-col items-center gap-1"
+                      >
+                        <span
+                          className="block h-[3px] w-5 rounded-full transition-colors"
+                          style={{ background: a ? "#0FA968" : "var(--line)" }}
+                        />
+                        <span
+                          className="font-mono text-[12.5px] font-semibold leading-none transition-colors"
+                          style={{ color: a ? "#0FA968" : "var(--body)" }}
+                        >
+                          {index}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between gap-3 border-t px-4 py-2.5" style={{ borderColor: "var(--line)" }}>
               <div className="flex items-center gap-4 text-[11px] font-medium" style={{ color: "var(--body)" }}>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-[4px]" style={{ background: "var(--brand)" }} /> Answered
+                  <span className="h-[3px] w-5 rounded-full" style={{ background: "#0FA968" }} /> Answered
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-[4px] border" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }} /> Not answered
+                  <span className="h-[3px] w-5 rounded-full" style={{ background: "var(--line)" }} /> Not answered
                 </span>
               </div>
               <div className="flex items-center gap-2">
