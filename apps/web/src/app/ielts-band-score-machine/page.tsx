@@ -496,78 +496,67 @@ function TrustStrip({
 }
 
 /**
- * Hero offer — a dark ticket band instead of a stacked card: price on one side,
- * action on the other, separated by a dashed perforation. One focal point, no box.
+ * Hero offer. Box-less like the rest of the page's pricing: a hairline, one
+ * price line, the CTA, then the perks. Nothing decorative competes with the
+ * price, so the eye lands on the number and then the button.
  */
-function HeroOfferBand({ offer, note }: { offer: Offer; note?: string }) {
+function HeroOffer({ offer, note }: { offer: Offer; note?: string }) {
   const perks = ["লাইফটাইম অ্যাক্সেস", `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`];
   const finePrint = offer.dealNote ?? note;
 
   return (
-    <div className="mt-9 max-w-[560px]">
-      <div
-        className="relative flex flex-col sm:flex-row rounded-[20px]"
-        style={{ background: "var(--ib-navy)", boxShadow: "0 36px 64px -38px rgba(10,20,40,0.75)" }}
-      >
-        <div className="sm:w-[45%] px-6 py-6">
-          <div className="flex items-center gap-2">
-            <span className="ib-dot h-[7px] w-[7px] rounded-full" style={{ background: "var(--ib-mint)" }} />
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "#A9F5D5" }}>
-              {offer.dealLabel ?? "Launch Offer"}
+    <div className="mt-8 max-w-[500px]">
+      <div className="pt-5" style={{ borderTop: "1px solid var(--ib-line)" }}>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          {offer.originalPrice && (
+            <s className="text-[14px] font-medium" style={{ color: "var(--ib-muted)" }}>
+              <BengaliText>{offer.originalPrice}</BengaliText>
+            </s>
+          )}
+          <span
+            className="font-display font-bold leading-none tracking-[-0.02em] tabular-nums"
+            style={{ fontSize: "clamp(28px,3.1vw,34px)", color: "var(--ib-ink)" }}
+          >
+            <BengaliText>{offer.price}</BengaliText>
+          </span>
+          {offer.savings && (
+            <span className="text-[12.5px] font-bold" style={{ color: "var(--ib-brand-2)" }}>
+              <BengaliText>{`Save ${offer.savings}`}</BengaliText>
             </span>
-          </div>
-          <div className="mt-4 flex items-end gap-2.5 flex-wrap">
-            <span className="font-display text-[clamp(34px,4vw,42px)] font-bold leading-[0.95] tracking-[-0.02em] text-white tabular-nums">
-              <BengaliText>{offer.price}</BengaliText>
-            </span>
-            {offer.originalPrice && (
-              <s className="mb-1 text-[15px] font-medium" style={{ color: "#8FA0B8" }}>
-                {offer.originalPrice}
-              </s>
-            )}
-          </div>
-          <div className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-2">
-            {offer.savings && (
-              <span
-                className="rounded-full px-3 py-1 text-[11.5px] font-extrabold"
-                style={{ background: "var(--ib-mint)", color: "#052117" }}
-              >
-                Save {offer.savings}
-              </span>
-            )}
-            <span className="text-[12px] font-medium" style={{ color: "#8FA0B8" }}>
-              <BengaliText>এককালীন পেমেন্ট</BengaliText>
-            </span>
-          </div>
+          )}
         </div>
+        <p className="mt-2 text-[12.5px]" style={{ color: "var(--ib-muted)" }}>
+          <BengaliText>এককালীন পেমেন্ট</BengaliText>
+        </p>
+      </div>
 
-        <div
-          className="relative hidden sm:block w-px shrink-0"
-          style={{ borderLeft: "1.5px dashed rgba(255,255,255,0.22)" }}
-        >
-          <span className="absolute -top-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
-          <span className="absolute -bottom-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
+      {offer.dealLabel && (
+        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          <Flag className="h-[13px] w-[13px] shrink-0" strokeWidth={2.6} style={{ color: "var(--ib-brand-2)" }} />
+          <span
+            className="text-[11.5px] font-bold uppercase tracking-[0.12em]"
+            style={{ color: "var(--ib-brand-2)" }}
+          >
+            <BengaliText>{offer.dealLabel}</BengaliText>
+          </span>
         </div>
+      )}
 
-        <div
-          className="relative sm:hidden h-px"
-          style={{ borderTop: "1.5px dashed rgba(255,255,255,0.22)" }}
-        >
-          <span className="absolute -top-[10px] -left-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
-          <span className="absolute -top-[10px] -right-[10px] h-5 w-5 rounded-full" style={{ background: "var(--ib-fog)" }} />
-        </div>
+      <div className="mt-5">
+        <Cta offer={offer} tone="light" full />
+      </div>
 
-        <div className="flex-1 px-6 py-6 flex flex-col justify-center gap-4">
-          <Cta offer={offer} tone="dark" full />
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {perks.map((t) => (
-              <span key={t} className="inline-flex items-center gap-1.5 text-[12.5px] font-medium" style={{ color: "#C9D5E5" }}>
-                <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-mint)" }} />
-                <BengaliText>{t}</BengaliText>
-              </span>
-            ))}
-          </div>
-        </div>
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        {perks.map((t) => (
+          <span
+            key={t}
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-medium"
+            style={{ color: "var(--ib-body)" }}
+          >
+            <Check className="h-[13px] w-[13px] shrink-0" strokeWidth={3} style={{ color: "var(--ib-brand)" }} />
+            <BengaliText>{t}</BengaliText>
+          </span>
+        ))}
       </div>
 
       {finePrint && (
@@ -597,42 +586,42 @@ function Hero({
       <div className={`${wrap} pt-[104px] sm:pt-[124px] pb-14 lg:pb-20`}>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] gap-12 lg:gap-16 items-start">
           <Reveal>
-            <div className="inline-flex items-center gap-2.5">
-              <span className="ib-dot h-[8px] w-[8px] rounded-full" style={{ background: "var(--ib-brand)" }} />
-              <span className="text-[11.5px] font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--ib-brand-2)" }}>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-7 shrink-0" style={{ background: "var(--ib-brand)" }} />
+              <span
+                className="text-[11px] font-bold uppercase tracking-[0.18em]"
+                style={{ color: "var(--ib-brand-2)" }}
+              >
                 IELTS Preparation
               </span>
             </div>
 
-            <h1 className="mt-5 font-display font-bold tracking-[-0.03em]" style={{ color: "var(--ib-ink)" }}>
-              <span className="block leading-[0.96]" style={{ fontSize: "clamp(38px,5.4vw,72px)" }}>
+            <h1 className="mt-4 font-display font-bold tracking-[-0.02em]" style={{ color: "var(--ib-ink)" }}>
+              <span className="block leading-[1.04]" style={{ fontSize: "clamp(32px,4.2vw,52px)" }}>
                 Target Band 7
               </span>
               <span
-                className="mt-3 block font-semibold leading-[1.25]"
-                style={{ fontSize: "clamp(19px,2.1vw,26px)", color: "var(--ib-brand-2)" }}
+                className="mt-2.5 block font-semibold leading-[1.35]"
+                style={{ fontSize: "clamp(17px,1.7vw,21px)", color: "var(--ib-brand-2)" }}
               >
                 <BengaliText>{title}</BengaliText>
               </span>
             </h1>
 
-            <p className="mt-5 max-w-[520px] text-[16.5px] leading-[1.85]" style={{ color: "var(--ib-body)" }}>
+            <p className="mt-4 max-w-[500px] text-[15.5px] leading-[1.75]" style={{ color: "var(--ib-body)" }}>
               <BengaliText>{COPY.heroSub}</BengaliText>
             </p>
 
             {offer.mode === "waitlist" && (
-              <div className="mt-7">
+              <div className="mt-6">
                 <Countdown target={LAUNCH_DATE} />
               </div>
             )}
 
             {offer.mode === "buy" && offer.price ? (
-              <HeroOfferBand offer={offer} note={pricingNote} />
+              <HeroOffer offer={offer} note={pricingNote} />
             ) : (
-              <div
-                className="mt-8 max-w-[520px] rounded-2xl bg-white p-5"
-                style={{ border: "1px solid var(--ib-line)" }}
-              >
+              <div className="mt-8 max-w-[500px] pt-5" style={{ borderTop: "1px solid var(--ib-line)" }}>
                 <OfferCard offer={offer} note={pricingNote} compact />
               </div>
             )}
