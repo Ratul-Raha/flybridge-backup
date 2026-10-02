@@ -33,6 +33,8 @@ import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import { Countdown, ExamWindow, Reveal, SkillTabs, StickyOffer } from "@/components/ielts/interactive";
 import { LandingPixelEvents } from "@/components/ielts/landing-pixel-events";
 import { DbCoursePage } from "./db-course-page";
+import { publicCoursePricing } from "@/lib/course-discount";
+import { formatMoney } from "@/lib/pricing";
 
 const SLUG = "ielts-band-score-machine";
 const MOCK_TEST_COUNT = 15;
@@ -1270,6 +1272,7 @@ export default async function IeltsFullReadinessLandingPage() {
   const moduleCount = details ? details.modules.length : 6;
 
   const liveCourse = program.hasDb ? course : null;
+  const livePricing = liveCourse ? publicCoursePricing(liveCourse) : null;
 
   const [enrolledDoc, liveReviews] = await Promise.all([
     liveCourse && userId ? CourseEnrollment.exists({ user: userId, course: liveCourse._id, status: "active" }) : null,
@@ -1295,7 +1298,11 @@ export default async function IeltsFullReadinessLandingPage() {
   const mode: Offer["mode"] = cta?.enrolled ? "enrolled" : isLive ? "buy" : "waitlist";
   const showWaitlistForm = true;
 
-  const price = details?.price ?? details?.pricing?.price;
+  const price = livePricing?.price != null && livePricing.price > 0
+    ? formatMoney(livePricing.price, "BDT")
+    : (details?.price ?? details?.pricing?.price);
+  const originalPrice = livePricing?.originalPrice ?? details?.originalPrice;
+  const savings = livePricing?.discounted ? `BDT ${livePricing.savings.toLocaleString("en-US")}` : details?.savings;
   const offer: Offer = {
     mode,
     href:
@@ -1315,9 +1322,9 @@ export default async function IeltsFullReadinessLandingPage() {
             ? `ওয়েটলিস্টে জয়েন করে ${toBn(scholarshipPercent)}% স্কলারশিপ নিন`
             : "Join the waitlist",
     price,
-    originalPrice: details?.originalPrice,
-    savings: details?.savings,
-    dealLabel: details?.dealLabel,
+    originalPrice,
+    savings,
+    dealLabel: livePricing?.discountLabel ?? details?.dealLabel,
     dealNote: details?.dealNote,
     scholarshipPercent,
     showWaitlistForm,
@@ -1365,7 +1372,7 @@ export default async function IeltsFullReadinessLandingPage() {
       <LandingPixelEvents
         contentId={SLUG}
         contentName={details?.title ?? program.title}
-        value={parseAmount(details?.pricing?.price) ?? undefined}
+        value={parseAmount(price) ?? undefined}
         currency="BDT"
       />
       <Nav />

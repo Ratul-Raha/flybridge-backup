@@ -23,7 +23,6 @@ import {
   type TestListItem,
 } from "@/lib/mock-test-ui";
 import { formatMoney } from "@/lib/pricing";
-import { PromoSummary } from "@/components/checkout/promo-summary";
 
 export type PublicBundle = {
   id: string;
@@ -47,7 +46,6 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [currency, setCurrency] = useState<PickableCurrency>(
     defaultCheckoutCurrency(bundle.prices)
   );
@@ -96,7 +94,6 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
           itemType: "mock-bundle",
           itemId: bundle.id,
           currency,
-          code: appliedCode ?? undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -279,17 +276,6 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
                     prices={bundle.prices}
                     value={currency}
                     onChange={setCurrency}
-                  />
-                  <PromoSummary
-                    itemType="mock-bundle"
-                    itemId={bundle.id}
-                    currency={currency}
-                    baseAmount={
-                      currency === "BDT"
-                        ? bundle.prices?.BDT ?? bundle.price
-                        : bundle.price
-                    }
-                    onCodeChange={setAppliedCode}
                   />
                   <button
                     type="button"

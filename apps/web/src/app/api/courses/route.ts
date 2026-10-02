@@ -4,8 +4,12 @@ import { readSession } from "@/lib/auth/session";
 import { Course, isCourseCategory, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseWishlist } from "@/lib/models/wishlist";
-import { sanitizePrices, cleanPrices } from "@/lib/pricing";
-import { getPublicDiscountRules, listingPrice } from "@/lib/discounts";
+import { sanitizePrices, cleanPrices, formatMoney } from "@/lib/pricing";
+import {
+  parseCourseDiscount,
+  resolveCoursePrice,
+  serializeCourseDiscount,
+} from "@/lib/course-discount";
 import { emitEvent } from "@/lib/events/emit";
 
 export const dynamic = "force-dynamic";
@@ -16,22 +20,38 @@ function toDto(
   c: CourseDoc,
   enrollmentCount?: number,
   includeContent = false,
-  wishlistCount?: number
+  wishlistCount?: number,
+  applyDiscount = false
 ) {
+const prices = cleanPrices(c.prices);
+  // The admin editor needs the untouched prices it is about to edit, so the
+  // discount is only folded in for the public shapes.
+  const base = prices.BDT;
+  const resolved =
+    applyDiscount && typeof base === "number" && base > 0
+      ? resolveCoursePrice(base, c.discount)
+      : null;
+  // `originalPrice` is only set while a discount is actually running, so it is
+  // also what says whether the discounted price is the one to show.
+  const running = resolved?.originalPrice ?? null;
+
   return {
     id: c._id.toString(),
     slug: c.slug,
     title: c.title,
     badge: c.badge ?? "",
-    category: c.category ?? "",
     subtitle: c.subtitle ?? "",
     description: c.description ?? "",
+    category: c.category ?? null,
     level: c.level ?? "",
     language: c.language ?? "",
     pace: c.pace ?? "",
     price: c.price ?? 0,
     currency: c.currency ?? "USD",
-    prices: cleanPrices(c.prices),
+    prices: running === null ? prices : { ...prices, BDT: resolved!.price },
+    discount: serializeCourseDiscount(c.discount),
+    discountLabel: running === null ? null : resolved!.label,
+    originalPrice: running === null ? null : formatMoney(running, "BDT"),
     waitlistEnabled: c.waitlistEnabled ?? false,
     wishlistDiscountPercent: c.wishlistDiscountPercent ?? 0,
     image: c.image ?? null,
@@ -123,7 +143,7 @@ export async function GET(request: NextRequest) {
         manager ? { slug } : { slug, published: true }
       );
       if (!course) return NextResponse.json({ course: null });
-      return NextResponse.json({ course: toDto(course) });
+      return NextResponse.json({ course: toDto(course, undefined, false, undefined, true) });
     }
 
     const courses = await Course.find({
@@ -133,26 +153,11 @@ export async function GET(request: NextRequest) {
       { $group: { _id: "$course", count: { $sum: 1 } } },
     ]);
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
-    const discountRules = await getPublicDiscountRules();
     const sorted = courses
       .map((c) => ({ doc: c, count: enrollMap.get(c._id.toString()) ?? 0 }))
       .sort((a, b) => b.count - a.count);
-    const listing = sorted.map(({ doc, count }) => {
-      const dto = toDto(doc, count);
-      const baseBdt = dto.prices?.BDT;
-      if (typeof baseBdt === "number" && baseBdt > 0) {
-        const priced = listingPrice(
-          discountRules,
-          { itemType: "course", itemId: dto.id },
-          baseBdt,
-          "BDT"
-        );
-        if (priced.discount > 0) dto.prices = { ...dto.prices, BDT: priced.total };
-      }
-      return dto;
-    });
     return NextResponse.json(
-      { courses: listing },
+      { courses: sorted.map(({ doc, count }) => toDto(doc, count, false, undefined, true)) },
       { headers: { "Cache-Control": CACHE_CONTROL } }
     );
   } catch (error) {
@@ -200,6 +205,7 @@ export async function POST(request: NextRequest) {
       currency:
         typeof body.currency === "string" && body.currency.trim() ? body.currency.trim() : "USD",
       prices: sanitizePrices(body.prices),
+      discount: parseCourseDiscount(body.discount),
       waitlistEnabled: body.waitlistEnabled === true,
       wishlistDiscountPercent: Math.max(
         0,

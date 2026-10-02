@@ -44,7 +44,7 @@ const orderSchema = new Schema(
     items: { type: [orderItemSchema], default: [] },
     subtotal: { type: Number, min: 0, default: 0 },
     discountAmount: { type: Number, min: 0, default: 0 },
-    discountId: { type: Schema.Types.ObjectId, ref: "Discount", default: null, index: true },
+    /** Kept only so orders placed under the old promo codes still read back. */
     discountCode: { type: String, trim: true, uppercase: true },
     discountLabel: { type: String, trim: true },
     total: { type: Number, min: 0, default: 0 },

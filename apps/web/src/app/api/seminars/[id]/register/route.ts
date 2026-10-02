@@ -5,8 +5,7 @@ import { verifyIdToken } from "@/lib/auth/token";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
-import { createOrder } from "@/lib/orders";
-import { DiscountError } from "@/lib/discounts";
+import { createOrder, OrderError } from "@/lib/orders";
 import {
   isStripeConfigured,
   createCheckoutSession,
@@ -148,7 +147,6 @@ export async function POST(
       itemType: "seminar",
       itemId: seminar._id.toString(),
       currency: typeof body.currency === "string" ? body.currency : undefined,
-      code: typeof body.code === "string" ? body.code : undefined,
     });
 
     let paymentUrl: string | null = null;
@@ -215,7 +213,7 @@ export async function POST(
       { status: duplicate ? 200 : 201 }
     );
   } catch (error) {
-    if (error instanceof DiscountError) {
+    if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("seminar register error", error);

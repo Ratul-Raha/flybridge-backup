@@ -36,6 +36,24 @@ const pricesSchema = new Schema(
   { _id: false }
 );
 
+/**
+ * A course's own price cut. It is deliberately part of the course rather than a
+ * separate promotion: one record, one toggle, and the same price for everyone.
+ * `price` is the price everyone pays while it runs; the course's normal
+ * `prices.BDT` stays the original it is compared against.
+ */
+const discountSchema = new Schema(
+  {
+    active: { type: Boolean, default: false },
+    name: { type: String, trim: true, default: "" },
+    price: { type: Number, min: 0, default: 0 },
+    startsAt: { type: Date, default: null },
+    // No end date means it runs until someone unticks the active box.
+    endsAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
 const courseSchema = new Schema(
   {
     slug: {
@@ -62,6 +80,7 @@ const courseSchema = new Schema(
     price: { type: Number, min: 0, default: 0 },
     currency: { type: String, default: "USD", trim: true },
     prices: { type: pricesSchema },
+    discount: { type: discountSchema, default: () => ({}) },
     waitlistEnabled: { type: Boolean, default: false, index: true },
     wishlistDiscountPercent: { type: Number, min: 0, max: 100, default: 0 },
     image: { type: String, trim: true },

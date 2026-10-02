@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
-import { courseDetails } from "@/app/programs/[slug]/course-data";
 import { formatMoney } from "@/lib/pricing";
 import { BengaliText } from "../bengali-text";
 
@@ -16,6 +15,7 @@ type FetchedCourse = {
   price: number;
   currency: string;
   prices?: { BDT?: number } | null;
+  originalPrice?: string | null;
   image: string | null;
   upcoming: boolean;
 };
@@ -80,7 +80,9 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
       price: c.price,
       currency: c.currency || "USD",
       prices: c.prices,
-      originalPrice: courseDetails[c.slug]?.originalPrice,
+      // The API has already applied any running discount to these prices, and
+      // leaves the original null once the discount is off or unconfigured.
+      originalPrice: c.originalPrice ?? undefined,
       upcoming: !!c.upcoming,
       image: c.image,
       tileBg: DbTile.bg,

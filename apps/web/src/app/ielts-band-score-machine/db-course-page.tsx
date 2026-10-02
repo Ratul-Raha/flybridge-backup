@@ -9,7 +9,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nav } from "@/components/nav";
 import { BookOpen, Check, Lock, ShieldCheck, Zap } from "lucide-react";
-import { cleanPrices, formatMoney } from "@/lib/pricing";
+import { formatMoney } from "@/lib/pricing";
+import { publicCoursePricing } from "@/lib/course-discount";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
 import { BengaliText } from "@/components/bengali-text";
@@ -85,6 +86,7 @@ export function DbCoursePage({
   const moduleCount = (course.modules ?? []).length;
   const isFree = (course.price ?? 0) <= 0;
   const canAccessMaterials = isFree || enrolled;
+  const pricing = publicCoursePricing(course);
 
   const checkoutCourse = {
     courseId: course._id.toString(),
@@ -96,8 +98,11 @@ export function DbCoursePage({
     badge: course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
-    prices: cleanPrices(course.prices),
-    originalPrice: courseDetails[course.slug]?.originalPrice,
+    prices: pricing.prices,
+    originalPrice: pricing.configured
+      ? (pricing.originalPrice ?? undefined)
+      : (courseDetails[course.slug]?.originalPrice ?? undefined),
+    discountLabel: pricing.discountLabel,
     level: course.level ?? "",
     language: course.language ?? "",
     pace: course.pace ?? "",

@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course, isCourseCategory } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { sanitizePrices } from "@/lib/pricing";
+import { parseCourseDiscount } from "@/lib/course-discount";
 import { emitEvent } from "@/lib/events/emit";
 
 type EditSession = { role: string; userId?: string; name?: string; email?: string } | null;
@@ -25,6 +26,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   price: "Price",
   currency: "Currency",
   prices: "Prices",
+  discount: "Discount",
   waitlistEnabled: "Waitlist enabled",
   wishlistDiscountPercent: "Wishlist discount",
   image: "Image",
@@ -99,6 +101,34 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
     const prices = sanitizePrices(body.prices);
     if (prices) course.prices = prices;
+    if (body.discount !== undefined) {
+      const discount = parseCourseDiscount(body.discount);
+      const base = prices?.BDT ?? course.prices?.BDT;
+      if (discount.active) {
+        // An offer with no price, no window that makes sense, or a price at or
+        // above the full price is not a discount. Refuse it here so the editor
+        // can say so, rather than saving something that quietly shows full price.
+        if (discount.price <= 0) {
+          return NextResponse.json(
+            { error: "Enter a discounted price before turning the discount on" },
+            { status: 400 }
+          );
+        }
+        if (discount.startsAt && discount.endsAt && discount.endsAt < discount.startsAt) {
+          return NextResponse.json(
+            { error: "The discount end date must be after its start date" },
+            { status: 400 }
+          );
+        }
+        if (typeof base === "number" && base > 0 && discount.price >= base) {
+          return NextResponse.json(
+            { error: "The discounted price must be lower than the original price" },
+            { status: 400 }
+          );
+        }
+      }
+      course.discount = discount as typeof course.discount;
+    }
     if (typeof body.waitlistEnabled === "boolean") course.waitlistEnabled = body.waitlistEnabled;
     if (typeof body.wishlistDiscountPercent === "number") {
       course.wishlistDiscountPercent = Math.max(

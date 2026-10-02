@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/payments/*.test.ts",
     "promote": "node scripts/promote-user.mjs",
+    "migrate:course-discounts": "node scripts/migrate-course-discounts.mjs",
+    "seed:ielts-discount": "node scripts/seed-ielts-launch-discount.mjs",
     "gen-vapid": "node scripts/gen-vapid.mjs",
     "ga4-oauth": "node scripts/ga4-oauth-login.mjs",
     "clean": "rm -rf .next .turbo node_modules"

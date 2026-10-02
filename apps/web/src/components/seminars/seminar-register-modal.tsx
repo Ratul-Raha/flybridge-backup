@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
-import { PromoSummary } from "@/components/checkout/promo-summary";
 
 export type SeminarLike = {
   id: string;
@@ -46,7 +45,6 @@ export function SeminarRegisterModal({
   const [currency, setCurrency] = useState<PickableCurrency>(
     defaultCheckoutCurrency(seminar.prices)
   );
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const isPaid = seminar.type === "paid";
 
   const register = useCallback(
@@ -62,7 +60,7 @@ export function SeminarRegisterModal({
         const res = await fetch(`/api/seminars/${seminar.id}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, phone: value, currency, code: appliedCode ?? undefined }),
+          body: JSON.stringify({ email, phone: value, currency }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Registration failed");
@@ -84,7 +82,7 @@ export function SeminarRegisterModal({
         setSubmitting(false);
       }
     },
-    [seminar, phone, onRegistered, currency, appliedCode]
+    [seminar, phone, onRegistered, currency]
   );
 
   const registerWithGoogle = async () => {
@@ -184,17 +182,6 @@ export function SeminarRegisterModal({
                   prices={seminar.prices}
                   value={currency}
                   onChange={setCurrency}
-                />
-                <PromoSummary
-                  itemType="seminar"
-                  itemId={seminar.id}
-                  currency={currency}
-                  baseAmount={
-                    currency === "BDT"
-                      ? seminar.prices?.BDT ?? seminar.price ?? 0
-                      : seminar.price ?? 0
-                  }
-                  onCodeChange={setAppliedCode}
                 />
               </div>
             )}

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
-import { cleanPrices } from "@/lib/pricing";
+import { publicCoursePricing } from "@/lib/course-discount";
 import { Course } from "@/lib/models/course";
 import { CheckoutPanel } from "@/components/programs/checkout-panel";
 import { courseDetails } from "../course-data";
@@ -43,6 +43,10 @@ export default async function CheckoutPage({ params }: Props) {
     0
   );
 
+  // What the buyer is charged, resolved from the course's own discount so this
+  // page and the order it creates can never quote different numbers.
+  const pricing = publicCoursePricing(course);
+
   const checkoutCourse = {
     courseId,
     slug: course.slug,
@@ -53,8 +57,11 @@ export default async function CheckoutPage({ params }: Props) {
     badge: details?.badge ?? course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
-    prices: cleanPrices(course.prices),
-    originalPrice: details?.originalPrice,
+    prices: pricing.prices,
+    originalPrice: pricing.configured
+      ? (pricing.originalPrice ?? undefined)
+      : (details?.originalPrice ?? undefined),
+    discountLabel: pricing.discountLabel,
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",

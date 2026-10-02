@@ -3,9 +3,8 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
-import { createOrder } from "@/lib/orders";
+import { createOrder, OrderError } from "@/lib/orders";
 import { isMetaPurchaseEnabled } from "@/lib/meta-capi";
-import { DiscountError } from "@/lib/discounts";
 import { Course } from "@/lib/models/course";
 import {
   isStripeConfigured,
@@ -132,7 +131,6 @@ export async function POST(request: NextRequest) {
       itemType: body.itemType,
       itemId: body.itemId,
       currency: typeof body.currency === "string" ? body.currency : undefined,
-      code: typeof body.code === "string" ? body.code : undefined,
     });
 
     let paymentUrl: string | null = null;
@@ -232,7 +230,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("orders POST error", error);
-    if (error instanceof DiscountError) {
+    if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     const message = error instanceof Error ? error.message : "Something went wrong";

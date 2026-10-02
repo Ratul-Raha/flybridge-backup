@@ -18,6 +18,7 @@ export type DbCourse = {
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
   originalPrice?: string;
+  discountLabel?: string | null;
   image: string | null;
   level: string;
   upcoming: boolean;
@@ -103,7 +104,7 @@ export function DbCourseCard({ course }: { course: DbCourse }) {
               className="font-mono text-[10px] font-medium tracking-[0.3px]"
               style={{ color: "var(--brand-2)" }}
             >
-              INTRO OFFER
+              {course.discountLabel || "INTRO OFFER"}
             </div>
             <div className="mt-[4px] flex items-baseline gap-2">
               <div

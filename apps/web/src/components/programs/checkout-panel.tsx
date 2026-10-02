@@ -17,16 +17,8 @@ type Course = {
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
   originalPrice?: string;
+  discountLabel?: string | null;
   upcoming: boolean;
-};
-
-type Pricing = {
-  subtotal: number;
-  discount: number;
-  total: number;
-  label: string | null;
-  code: string | null;
-  currency: string;
 };
 
 /**
@@ -58,12 +50,6 @@ export function CheckoutPanel({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [pricing, setPricing] = useState<Pricing | null>(null);
-  const [promoCode, setPromoCode] = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
-  const [promoError, setPromoError] = useState<string | null>(null);
-
   useEffect(() => {
     if (user) {
       setName((prev) => prev || user.name || "");
@@ -72,77 +58,51 @@ export function CheckoutPanel({
     }
   }, [user]);
 
-  const fetchPricing = useCallback(
-    async (code?: string) => {
-      if (!user) return null;
-      const res = await fetch("/api/discounts/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemType: "course",
-          itemId: course.courseId,
-          currency: "BDT",
-          code: code?.trim() || undefined,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Could not apply promo code");
-      return data as Pricing;
-    },
-    [user, course.courseId],
-  );
-
-  useEffect(() => {
-    if (!user) {
-      setPricing(null);
-      return;
-    }
-    let active = true;
-    fetchPricing(appliedCode ?? undefined)
-      .then((data) => {
-        if (active) setPricing(data);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [user, fetchPricing, appliedCode]);
-
-  const applyCode = async () => {
-    const value = promoCode.trim();
-    if (!value) return;
-    setApplying(true);
-    setPromoError(null);
-    try {
-      const data = await fetchPricing(value);
-      if (data) {
-        setPricing(data);
-        setAppliedCode(value);
-      }
-    } catch (err) {
-      setPromoError(err instanceof Error ? err.message : "Could not apply promo code");
-    } finally {
-      setApplying(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isUpcoming) return;
-
-    if (!user) {
-      router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}/checkout`)}`);
-      return;
-    }
 
     if (!name.trim() || !email.trim()) {
       setError("Please fill in your name and email.");
       return;
     }
 
+    // Checked before anything else so a signed-out buyer who already owns this
+    // is told to sign in rather than being bounced to login and back with no
+    // idea why. The price never depends on the answer — this is only about
+    // buying it twice.
     setSubmitting(true);
     setError(null);
     try {
+      const check = await fetch("/api/orders/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemType: "course",
+          itemId: course.courseId,
+          email: email.trim(),
+        }),
+      });
+      const checked = await check.json().catch(() => null);
+
+      if (check.ok && checked?.available === false) {
+        if (!user) {
+          setError(checked.message ?? "Sign in to continue.");
+          return;
+        }
+        if (checked.reason === "enrolled") {
+          router.push(`/dashboard/courses/${course.slug}/learn`);
+          return;
+        }
+        // Signed in and the server already refuses this order; let the order
+        // endpoint be the one to say why.
+      }
+
+      if (!user) {
+        router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}/checkout`)}`);
+        return;
+      }
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,7 +113,6 @@ export function CheckoutPanel({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
-          code: appliedCode ?? undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -175,10 +134,10 @@ export function CheckoutPanel({
   const labelClass = "block text-[13px] font-medium mb-1.5";
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
-  const displayCurrency = pricing?.currency ?? "BDT";
-  const subtotal = pricing?.subtotal ?? baseAmount;
-  const discount = pricing?.discount ?? 0;
-  const total = pricing?.total ?? baseAmount;
+  const displayCurrency = "BDT";
+  // The server already applied the course's discount, so the summary and the
+  // order it creates are always the same numbers.
+  const total = baseAmount;
 
   const money = (amount: number) => (isFree ? "Free" : formatMoney(amount, displayCurrency));
 
@@ -300,20 +259,23 @@ export function CheckoutPanel({
 
             <div className="py-4 space-y-2.5">
               <div className="flex items-center justify-between text-[13.5px]">
-                <span style={{ color: "var(--body)" }}>Subtotal</span>
-                <span className="font-medium" style={{ color: "var(--ink)" }}>
-                  {money(subtotal)}
+                <span style={{ color: "var(--body)" }}>
+                  {course.discountLabel ?? "Total"}
+                </span>
+                <span className="flex items-baseline gap-2">
+                  <span className="font-medium" style={{ color: "var(--ink)" }}>
+                    {money(total)}
+                  </span>
+                  {course.originalPrice && (
+                    <span
+                      className="text-[12.5px] font-medium line-through"
+                      style={{ color: "var(--body)", opacity: 0.6 }}
+                    >
+                      {course.originalPrice}
+                    </span>
+                  )}
                 </span>
               </div>
-              {discount > 0 && (
-                <div
-                  className="flex items-center justify-between text-[13.5px]"
-                  style={{ color: "#1E8E5A" }}
-                >
-                  <span>{pricing?.label ?? "Discount"}</span>
-                  <span className="font-medium">-{money(discount)}</span>
-                </div>
-              )}
             </div>
 
             <div
@@ -337,45 +299,6 @@ export function CheckoutPanel({
                 )}
               </span>
             </div>
-
-            {canPay && (
-              <>
-                <div
-                  className="mt-5 flex items-center gap-2 border-t pt-5"
-                  style={{ borderColor: "var(--line)" }}
-                >
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                    placeholder="Promo code"
-                    className="w-full rounded-xl border border-line bg-white px-4 py-2.5 text-[13.5px] uppercase outline-none transition-colors placeholder:text-body/50 focus:border-brand-2 focus:ring-2 focus:ring-brand-2/15 disabled:opacity-60"
-                    style={{ color: "var(--ink)" }}
-                    disabled={!user}
-                  />
-                  <button
-                    type="button"
-                    onClick={applyCode}
-                    disabled={applying || !promoCode.trim() || !user}
-                    className="shrink-0 rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-colors disabled:opacity-50"
-                    style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-                    title={!user ? "Sign in to apply a code" : undefined}
-                  >
-                    {applying ? "Applying…" : "Apply"}
-                  </button>
-                </div>
-                {promoError && (
-                  <p className="mt-2 text-[12.5px] font-medium" style={{ color: "#C0392B" }}>
-                    {promoError}
-                  </p>
-                )}
-                {!user && (
-                  <p className="mt-2 text-[11.5px]" style={{ color: "var(--body)" }}>
-                    Sign in to use a promo code.
-                  </p>
-                )}
-              </>
-            )}
 
             {isUpcoming && (
               <div

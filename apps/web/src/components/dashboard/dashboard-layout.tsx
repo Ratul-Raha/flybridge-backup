@@ -28,7 +28,6 @@ import {
   Bot,
   SlidersHorizontal,
   Newspaper,
-  Tag,
   Activity,
   ShieldCheck,
   type LucideIcon,
@@ -395,13 +394,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             href: "/dashboard/admin/analytics",
             icon: Activity,
             active: pathname.startsWith("/dashboard/admin/analytics"),
-          },
-          {
-            kind: "link",
-            label: "Promotions",
-            href: "/dashboard/admin/promotions",
-            icon: Tag,
-            active: pathname.startsWith("/dashboard/admin/promotions"),
           },
           {
             kind: "group",

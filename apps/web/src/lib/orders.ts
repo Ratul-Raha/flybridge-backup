@@ -11,7 +11,7 @@ import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
 import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
-import { resolvePrice } from "@/lib/discounts";
+import { resolveCoursePrice } from "@/lib/course-discount";
 import type { EventPayload } from "@/lib/events/types";
 
 export type OrderUser = {
@@ -20,6 +20,20 @@ export type OrderUser = {
   email: string;
   phone?: string | null;
 };
+
+/**
+ * A problem with this order rather than with the server, so API routes can hand
+ * the message back to the buyer instead of reporting a failure.
+ */
+export class OrderError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status = 409) {
+    super(message);
+    this.name = "OrderError";
+    this.status = status;
+  }
+}
 
 function userPayload(u: OrderUser) {
   return {
@@ -202,7 +216,6 @@ export async function createOrder(input: {
   itemType: OrderItemType;
   itemId: string;
   currency?: string;
-  code?: string;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
@@ -210,6 +223,30 @@ export async function createOrder(input: {
   if (!product) throw new Error("Product not found");
 
   const { amount, currency } = priceInCurrency(product, input.currency);
+
+  // A course can only be bought once. The gate is the account when there is
+  // one, but a buyer who is signed out — or signed in as a different account —
+  // is still recognised by the email on their order, so the same person is never
+  // charged twice for it.
+  const email = input.user.email.toLowerCase();
+  const existing = await Order.findOne({
+    items: { $elemMatch: { itemType: product.itemType, itemId: product.itemId } },
+    status: { $in: ["completed", "pending"] },
+    $or: [{ user: input.user.id }, { email }],
+  });
+  if (existing && existing.user?.toString() !== input.user.id) {
+    throw new OrderError(
+      "You have already purchased this with that email. Sign in with it to continue."
+    );
+  }
+
+  // The course's own discount, if it is running. It has no audience and no
+  // usage cap, so everyone checking out is charged the same price they were
+  // shown, whether or not they were signed in when they saw it.
+  const priced =
+    product.itemType === "course"
+      ? resolveCoursePrice(amount, product.discount)
+      : { price: amount, originalPrice: null, savings: 0, label: null };
 
   if (amount === 0) {
     if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
@@ -220,28 +257,20 @@ export async function createOrder(input: {
     return { order: null, requiresPayment: false, duplicate: false };
   }
 
-  const existing = await Order.findOne({
-    user: input.user.id,
-    "items.itemId": product.itemId,
-    status: { $in: ["completed", "pending"] },
-  });
-
-  const resolved = await resolvePrice({
-    user: { id: input.user.id, email: input.user.email },
-    product,
-    amount,
-    currency,
-    code: input.code,
-    excludeOrderId: existing?._id?.toString(),
-  });
-
-  if (resolved.total === 0) {
+  if (priced.price === 0) {
     if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
       return { order: null, requiresPayment: false, duplicate: true };
     }
     await fulfillFreeItem(product, input.user);
     return { order: null, requiresPayment: false, duplicate: false };
   }
+
+  const resolved = {
+    subtotal: amount,
+    discount: priced.savings,
+    total: priced.price,
+    label: priced.label,
+  };
 
   if (existing) {
     if (existing.status === "pending") {
@@ -258,8 +287,7 @@ export async function createOrder(input: {
         item.price = resolved.total;
         doc.subtotal = resolved.subtotal;
         doc.discountAmount = resolved.discount;
-        doc.discountId = (resolved.discountId ?? null) as OrderDoc["discountId"];
-        doc.discountCode = resolved.code;
+        doc.discountCode = undefined;
         doc.discountLabel = resolved.label;
         doc.total = resolved.total;
         doc.currency = currency;
@@ -288,8 +316,6 @@ export async function createOrder(input: {
       ],
       subtotal: resolved.subtotal,
       discountAmount: resolved.discount,
-      discountId: resolved.discountId ?? undefined,
-      discountCode: resolved.code ?? undefined,
       discountLabel: resolved.label ?? undefined,
       total: resolved.total,
       currency,

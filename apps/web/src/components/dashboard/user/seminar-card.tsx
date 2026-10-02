@@ -23,7 +23,6 @@ export function SeminarCard({
   const [needPhone, setNeedPhone] = useState(false);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const isPaid = seminar.type === "paid";
 
   const register = async () => {
@@ -43,7 +42,6 @@ export function SeminarCard({
           email: user?.email,
           phone: p,
           currency: "USD",
-          code: appliedCode ?? undefined,
         }),
       });
       const data = await res.json();
@@ -181,16 +179,6 @@ export function SeminarCard({
               </div>
             )}
 
-            {isPaid && (
-              <input
-                type="text"
-                value={appliedCode ?? ""}
-                onChange={(e) => setAppliedCode(e.target.value.toUpperCase() || null)}
-                placeholder="Promo code (optional)"
-                className="w-full text-[12.5px] rounded-[10px] border bg-white px-3 py-[9px] uppercase transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-              />
-            )}
 
             {!needPhone && (
               <button

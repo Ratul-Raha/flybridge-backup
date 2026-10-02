@@ -7,10 +7,19 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
+import { formatMoney } from "@/lib/pricing";
 
 type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string; content: string };
 type Module = { title: string; lessons: Lesson[] };
 type Book = { title: string; description: string; pdfUrl: string };
+
+type Discount = {
+  active?: boolean | null;
+  name?: string | null;
+  price?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+};
 
 type Course = {
   id: string;
@@ -26,6 +35,7 @@ type Course = {
   price: number;
   currency: string;
   prices?: { USD?: number; BDT?: number } | null;
+  discount?: Discount | null;
   waitlistEnabled?: boolean;
   wishlistDiscountPercent?: number;
   image: string | null;
@@ -52,6 +62,11 @@ type FormState = {
   price: string;
   bdtPrice: string;
   currency: string;
+  discountActive: boolean;
+  discountName: string;
+  discountPrice: string;
+  discountStartsAt: string;
+  discountEndsAt: string;
   waitlistEnabled: boolean;
   wishlistDiscountPercent: string;
   image: string;
@@ -79,6 +94,11 @@ const emptyForm: FormState = {
   price: "",
   bdtPrice: "",
   currency: "USD",
+  discountActive: false,
+  discountName: "",
+  discountPrice: "",
+  discountStartsAt: "",
+  discountEndsAt: "",
   waitlistEnabled: false,
   wishlistDiscountPercent: "0",
   image: "",
@@ -92,6 +112,23 @@ const emptyForm: FormState = {
 
 function emptyLesson(): Lesson {
   return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "" };
+}
+
+/** `datetime-local` wants a local `YYYY-MM-DDTHH:mm`, not an ISO string. */
+function toLocalInput(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+function fromLocalInput(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 async function uploadFile(file: File): Promise<string> {
@@ -151,6 +188,11 @@ export function CourseManage() {
       price: c.price ? String(c.price) : "",
       bdtPrice: c.prices?.BDT ? String(c.prices.BDT) : "",
       currency: c.currency ?? "USD",
+      discountActive: c.discount?.active ?? false,
+      discountName: c.discount?.name ?? "",
+      discountPrice: c.discount?.price ? String(c.discount.price) : "",
+      discountStartsAt: toLocalInput(c.discount?.startsAt),
+      discountEndsAt: toLocalInput(c.discount?.endsAt),
       waitlistEnabled: c.waitlistEnabled ?? false,
       wishlistDiscountPercent:
         c.wishlistDiscountPercent != null ? String(c.wishlistDiscountPercent) : "0",
@@ -184,6 +226,24 @@ export function CourseManage() {
       setError("Title is required");
       return;
     }
+    // Checked here as well as on the server so the editor can say what is wrong
+    // without a round trip.
+    if (form.discountActive) {
+      const original = Number(form.bdtPrice) || 0;
+      const discounted = Math.max(0, Number(form.discountPrice) || 0);
+      if (discounted <= 0) {
+        setError("Enter a discounted price before turning the discount on");
+        return;
+      }
+      if (original > 0 && discounted >= original) {
+        setError("The discounted price must be lower than the original price");
+        return;
+      }
+      if (form.discountStartsAt && form.discountEndsAt && form.discountEndsAt <= form.discountStartsAt) {
+        setError("The discount end must be after its start");
+        return;
+      }
+    }
     const url = editingId ? `/api/courses/${editingId}` : "/api/courses";
     setSaving(true);
     try {
@@ -196,6 +256,13 @@ export function CourseManage() {
           prices: {
             USD: Number(form.price) || 0,
             BDT: Number(form.bdtPrice) || 0,
+          },
+          discount: {
+            active: form.discountActive,
+            name: form.discountName.trim(),
+            price: Math.max(0, Number(form.discountPrice) || 0),
+            startsAt: fromLocalInput(form.discountStartsAt),
+            endsAt: fromLocalInput(form.discountEndsAt),
           },
           wishlistDiscountPercent: Math.max(
             0,
@@ -444,6 +511,113 @@ export function CourseManage() {
                 className={inputClass}
                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
               />
+            </div>
+
+            <div
+              className="flex flex-col gap-3 md:col-span-2 rounded-xl border p-4"
+              style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}
+            >
+              <label
+                className="flex items-center gap-2.5 text-[13.5px] font-semibold cursor-pointer"
+                style={{ color: "var(--ink)" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={form.discountActive}
+                  onChange={(e) => setForm({ ...form, discountActive: e.target.checked })}
+                  className="w-4 h-4"
+                  style={{ accentColor: "var(--brand)" }}
+                />
+                Discounted price
+              </label>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Discount name
+                  </label>
+                  <input
+                    type="text"
+                    disabled={!form.discountActive}
+                    value={form.discountName}
+                    onChange={(e) => setForm({ ...form, discountName: e.target.value })}
+                    placeholder="e.g. Exclusive Launch Deal"
+                    className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                    Shown next to the price. Leave empty to just show the reduced price.
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Discounted price (BDT)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    disabled={!form.discountActive}
+                    value={form.discountPrice}
+                    onChange={(e) => setForm({ ...form, discountPrice: e.target.value })}
+                    placeholder="e.g. 2999"
+                    className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                    Everyone pays this while the discount runs. The price above is kept as
+                    the original.
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Starts
+                  </label>
+                  <input
+                    type="datetime-local"
+                    disabled={!form.discountActive}
+                    value={form.discountStartsAt}
+                    onChange={(e) => setForm({ ...form, discountStartsAt: e.target.value })}
+                    className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                    Ends <span className="font-normal opacity-60">(optional)</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    disabled={!form.discountActive}
+                    value={form.discountEndsAt}
+                    onChange={(e) => setForm({ ...form, discountEndsAt: e.target.value })}
+                    className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  />
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                    Leave empty to run until you untick the box above.
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                {(() => {
+                  const original = Number(form.bdtPrice) || 0;
+                  const price = Math.max(0, Number(form.discountPrice) || 0);
+                  if (!form.discountActive) return "Currently off — visitors see the full price.";
+                  if (!price) return "Add a discounted price to switch this on.";
+                  if (price >= original)
+                    return "The discounted price must be lower than the original price to count as a discount.";
+                  return `Visitors will see ${formatMoney(price, "BDT")} with ${formatMoney(
+                    original,
+                    "BDT"
+                  )} struck through, and pay ${formatMoney(price, "BDT")} at checkout.`;
+                })()}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">

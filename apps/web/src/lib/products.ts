@@ -6,6 +6,7 @@ import { Seminar } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
 import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { cleanPrices, type CurrencyPrices } from "@/lib/pricing";
+import type { CourseDiscount } from "@/lib/course-discount";
 import type { OrderItemType } from "@/lib/models/order";
 
 export type Product = {
@@ -15,6 +16,7 @@ export type Product = {
   price: number;
   currency: string;
   prices?: CurrencyPrices | null;
+  discount?: CourseDiscount | null;
   image?: string | null;
   url?: string | null;
   wishlistDiscountPercent?: number | null;
@@ -55,6 +57,7 @@ export async function resolveProduct(
       price: c.price,
       currency: c.currency,
       prices: cleanPrices(c.prices),
+      discount: c.discount ?? null,
       image: c.image ?? null,
       url: `/programs/${c.slug}/learn`,
       wishlistDiscountPercent: c.waitlistEnabled

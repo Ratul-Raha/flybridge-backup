@@ -12,7 +12,8 @@ import {
 import { getProgram, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
-import { priceTextFor, cleanPrices } from "@/lib/pricing";
+import { priceTextFor, cleanPrices, formatMoney } from "@/lib/pricing";
+import { publicCoursePricing } from "@/lib/course-discount";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
@@ -97,6 +98,7 @@ const getOtherDbCoursesCached = unstable_cache(
     const enrollMap = new Map(otherEnrollCounts.map((r) => [r._id.toString(), r.count as number]));
     return dbCourses.map((c) => {
       const courseId = c._id.toString();
+      const pricing = publicCoursePricing(c);
       return {
         id: courseId,
         slug: c.slug,
@@ -106,6 +108,8 @@ const getOtherDbCoursesCached = unstable_cache(
         description: c.description ?? "",
         price: c.price ?? 0,
         currency: c.currency ?? "USD",
+        prices: pricing.prices,
+        originalPrice: pricing.originalPrice ?? undefined,
         image: c.image ?? null,
         level: c.level ?? "",
         upcoming: c.upcoming ?? false,
@@ -1121,6 +1125,7 @@ function DbCoursePage({
   const moduleCount = (course.modules ?? []).length;
   const isFree = (course.price ?? 0) <= 0;
   const canAccessMaterials = isFree || enrolled;
+  const pricing = publicCoursePricing(course);
 
   const checkoutCourse = {
     courseId: course._id.toString(),
@@ -1132,8 +1137,11 @@ function DbCoursePage({
     badge: course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
-    prices: cleanPrices(course.prices),
-    originalPrice: courseDetails[course.slug]?.originalPrice,
+    prices: pricing.prices,
+    originalPrice: pricing.configured
+      ? (pricing.originalPrice ?? undefined)
+      : (courseDetails[course.slug]?.originalPrice ?? undefined),
+    discountLabel: pricing.discountLabel,
     level: course.level ?? "",
     language: course.language ?? "",
     pace: course.pace ?? "",
@@ -1671,8 +1679,8 @@ export default async function ProgramPage({ params }: Props) {
       image: c.image,
       sub: c.upcoming
         ? "Coming soon"
-        : c.price > 0
-          ? `${c.currency} ${c.price.toLocaleString()}`
+        : c.prices?.BDT != null && c.prices.BDT > 0
+          ? formatMoney(c.prices.BDT, "BDT")
           : c.subtitle || c.description || "Explore course",
       originalSub: c.upcoming ? undefined : c.originalPrice,
     })),

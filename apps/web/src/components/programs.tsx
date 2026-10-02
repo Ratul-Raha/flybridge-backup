@@ -4,8 +4,7 @@ import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
-import { cleanPrices, formatMoney, parseMoneyLabel } from "@/lib/pricing";
-import { getPublicDiscountRules, listingPrice } from "@/lib/discounts";
+import { publicCoursePricing } from "@/lib/course-discount";
 import { courseDetails } from "@/app/programs/[slug]/course-data";
 import { ProgramCard } from "./program-card";
 import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
@@ -22,24 +21,10 @@ async function getDbCoursesUncached(): Promise<DbCourse[]> {
     ]);
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
 
-    const discountRules = await getPublicDiscountRules();
-
     return courses
       .map((c) => {
         const itemId = c._id.toString();
-        const baseBdt = typeof c.prices?.BDT === "number" ? c.prices.BDT : undefined;
-        const priced =
-          baseBdt != null && baseBdt > 0
-            ? listingPrice(discountRules, { itemType: "course", itemId }, baseBdt, "BDT")
-            : null;
-        const hasDiscount = priced != null && priced.discount > 0;
-        const bdt = hasDiscount ? priced.total : baseBdt;
-        const staticOriginal = parseMoneyLabel(courseDetails[c.slug]?.originalPrice);
-        const originalPrice = hasDiscount
-          ? formatMoney(baseBdt!, "BDT")
-          : staticOriginal != null && bdt != null && staticOriginal > bdt
-            ? courseDetails[c.slug]?.originalPrice
-            : undefined;
+        const pricing = publicCoursePricing(c);
 
         return {
           id: itemId,
@@ -50,8 +35,11 @@ async function getDbCoursesUncached(): Promise<DbCourse[]> {
           description: c.description ?? "",
           price: c.price ?? 0,
           currency: c.currency ?? "USD",
-          prices: bdt != null ? { ...cleanPrices(c.prices), BDT: bdt } : cleanPrices(c.prices),
-          originalPrice,
+          prices: pricing.prices,
+          originalPrice: pricing.configured
+          ? (pricing.originalPrice ?? undefined)
+          : (courseDetails[c.slug]?.originalPrice ?? undefined),
+          discountLabel: pricing.discountLabel,
           image: c.image ?? null,
           level: c.level ?? "",
           upcoming: c.upcoming ?? false,
