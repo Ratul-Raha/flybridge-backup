@@ -111,6 +111,17 @@ export type AttemptDetail = {
   } | null;
 };
 
+export type MyAttempt = {
+  id: string;
+  testId: string;
+  title: string;
+  skill: string;
+  overallBand: number | null;
+  sections: { key: string; title: string; band: number; comments: string }[];
+  feedback: string;
+  submittedAt: string | null;
+};
+
 export const SKILL_META: Record<MockTestSkill, { label: string; accent: string; soft: string }> = {
   reading: { label: "Reading", accent: "#2F5FE0", soft: "rgba(47,95,224,0.10)" },
   listening: { label: "Listening", accent: "#6B4CE0", soft: "rgba(111,76,224,0.10)" },

@@ -8,6 +8,7 @@ import { MockTest } from "@/lib/models/mock-test";
 import { MockTestAttempt } from "@/lib/models/mock-test-attempt";
 import { resolveMockTestOwnership, testIsOwned } from "@/lib/mock-tests";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { MockTestProgress } from "@/components/mock-tests/mock-test-progress";
 import { BengaliText } from "@/components/bengali-text";
 
 export const metadata: Metadata = {
@@ -60,7 +61,7 @@ export default async function MyMockTestsPage() {
     const testId = attempt.test.toString();
     const band =
       attempt.result && typeof attempt.result === "object"
-        ? ((attempt.result as { overall?: number }).overall ?? null)
+        ? ((attempt.result as { overallBand?: number }).overallBand ?? null)
         : null;
     const current = attemptStats.get(testId) ?? { count: 0, best: null };
     current.count += 1;
@@ -93,6 +94,8 @@ export default async function MyMockTestsPage() {
         title="Mock Exams"
         subtitle="Every mock your plan unlocks, in one place. Sitting one is all it takes to see your band score."
       />
+
+      <MockTestProgress />
 
       {available.length === 0 ? (
         <div

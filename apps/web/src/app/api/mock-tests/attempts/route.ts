@@ -24,7 +24,7 @@ export async function GET() {
       attempts: attempts.map((a) => {
         const test = (a as unknown as { test?: { _id?: { toString(): string }; title?: string; skill?: string } }).test;
         const result = (a.result ?? {}) as {
-          band?: number;
+          overallBand?: number;
           feedback?: string;
         };
         return {
@@ -33,7 +33,7 @@ export async function GET() {
           title: test?.title ?? "",
           skill: test?.skill ?? "",
           status: a.status,
-          band: typeof result.band === "number" ? result.band : null,
+          band: typeof result.overallBand === "number" ? result.overallBand : null,
           submittedAt: a.submittedAt ?? null,
         };
       }),
