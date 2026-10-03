@@ -916,7 +916,7 @@ export function MockTestManage({
       c.sections = c.sections ?? [];
       c.sections.push({
         id: nextId("s", c.sections.map((s) => s.id)),
-        type: testForm.skill === "listening" ? "form-completion" : "multiple-choice",
+        type: "",
         instructions: "",
         passageId: passagesList[0]?.id ?? "",
         passage: "",
@@ -937,23 +937,15 @@ export function MockTestManage({
       if (s) (s as unknown as Record<string, unknown>)[key] = val;
     });
 
-  const changeSectionType = (si: number, type: string) =>
-    updateContent((c) => {
-      const s = c.sections?.[si];
-      if (!s) return;
-      s.type = type;
-      for (const q of s.questions ?? []) applyQuestionType(q, type);
-    });
-
   const addQuestion = (si: number) =>
     updateContent((c) => {
       const s = c.sections?.[si];
       if (!s) return;
       s.questions = s.questions ?? [];
       s.questions.push({
-        type: s.type ?? "short-answer",
+        type: "short-answer",
         prompt: "",
-        options: s.type === "true-false-ng" ? ["True", "False", "Not Given"] : [],
+        options: [],
         correctOption: -1,
         multiple: false,
         correctOptions: [],
@@ -1576,18 +1568,6 @@ export function MockTestManage({
                                 >
                                   Section {si + 1}
                                 </span>
-                                <select
-                                  value={s.type ?? "short-answer"}
-                                  onChange={(e) => changeSectionType(si, e.target.value)}
-                                  className="rounded-full border bg-white px-3 py-2 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                                >
-                                  {QUESTION_TYPE_OPTIONS.map((o) => (
-                                    <option key={o.value} value={o.value}>
-                                      {o.label}
-                                    </option>
-                                  ))}
-                                </select>
                                 {testForm.skill === "reading" && passagesList.length > 0 && (
                                   <select
                                     value={s.passageId ?? passagesList[0]?.id ?? ""}
@@ -1658,7 +1638,7 @@ export function MockTestManage({
                                           {qnum}
                                         </span>
                                         <select
-                                          value={q.type ?? s.type ?? "short-answer"}
+                                          value={q.type ?? "short-answer"}
                                           onChange={(e) => changeQuestionType(si, qi, e.target.value)}
                                           className="rounded-full border bg-white px-2.5 py-1.5 text-[11.5px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
                                           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
