@@ -8,6 +8,7 @@ import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { TrackAccordion } from "@/components/programs/track-accordion";
 import { staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { publicCoursePricing } from "@/lib/course-discount";
@@ -73,7 +74,7 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
           image: c.image ?? null,
           level: c.level ?? "",
           upcoming: c.upcoming ?? false,
-          enrollmentCount: enrollMap.get(itemId) ?? 0,
+          enrollmentCount: displayEnrollmentCount(c.slug, enrollMap.get(itemId) ?? 0),
           modules: (c.modules ?? []).map((m) => ({
             title: m.title,
             lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),

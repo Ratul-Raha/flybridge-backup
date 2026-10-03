@@ -10,6 +10,7 @@ import {
   type RelatedProgram,
 } from "@/components/programs/related-program-card";
 import { getProgram, staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
 import { priceTextFor, cleanPrices, formatMoney } from "@/lib/pricing";
@@ -114,7 +115,7 @@ const getOtherDbCoursesCached = unstable_cache(
         level: c.level ?? "",
         upcoming: c.upcoming ?? false,
         averageRating: c.averageRating ?? 0,
-        enrollmentCount: enrollMap.get(courseId) ?? 0,
+        enrollmentCount: displayEnrollmentCount(c.slug, enrollMap.get(courseId) ?? 0),
         modules: (c.modules ?? []).map((m) => ({
           title: m.title,
           lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
