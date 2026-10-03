@@ -7,6 +7,7 @@ import { ArrowUpRight, Loader2 } from "lucide-react";
 import { programs } from "@/lib/programs";
 import { useAuth } from "@/lib/auth/auth-context";
 import { BengaliText } from "@/components/bengali-text";
+import { formatMoney } from "@/lib/pricing";
 
 type Course = {
   id: string;
@@ -17,6 +18,10 @@ type Course = {
   description: string;
   price: number;
   currency: string;
+  prices?: { USD?: number; BDT?: number } | null;
+  originalPrice?: string | null;
+  discountLabel?: string | null;
+  discountEndsAt?: string | null;
   image: string | null;
   modules: { title: string; lessons: { title: string }[] }[];
 };
@@ -141,7 +146,8 @@ export function AllCourses() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
       {courses.map((c) => {
         const isEnrolled = enrolled.has(c.id);
-        const isFree = c.price <= 0;
+        const bdtPrice = c.prices?.BDT;
+        const isFree = (bdtPrice ?? c.price ?? 0) <= 0;
         const lessonCount = c.modules.reduce((n, m) => n + m.lessons.length, 0);
         return (
           <Link
@@ -197,12 +203,24 @@ export function AllCourses() {
                   {enrolling === c.id ? "Enrolling…" : "Enroll free"}
                 </button>
               ) : (
-                <span
-                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px]"
-                  style={{ background: "rgba(111,76,224,0.12)", color: "#6B4CE0" }}
-                >
-                  {c.currency} {c.price}
-                </span>
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className="font-display text-[17px] font-bold leading-none"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {bdtPrice != null
+                      ? formatMoney(bdtPrice, "BDT")
+                      : `${c.currency} ${c.price.toLocaleString()}`}
+                  </span>
+                  {c.originalPrice && (
+                    <span
+                      className="text-[12px] font-medium leading-none line-through"
+                      style={{ color: "var(--body)", opacity: 0.6 }}
+                    >
+                      {c.originalPrice}
+                    </span>
+                  )}
+                </div>
               )}
               <ArrowUpRight
                 size={16}

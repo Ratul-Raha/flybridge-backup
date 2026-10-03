@@ -5,6 +5,8 @@ import { Course, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseProgress } from "@/lib/models/course-progress";
 import { calculateGrade } from "@/lib/grading";
+import { cleanPrices, formatMoney } from "@/lib/pricing";
+import { resolveCoursePrice, serializeCourseDiscount } from "@/lib/course-discount";
 
 function toDto(c: CourseDoc, progress?: {
   overallPercentage: number;
@@ -12,6 +14,15 @@ function toDto(c: CourseDoc, progress?: {
   totalQuizzes: number;
   passed: boolean;
 }) {
+  const prices = cleanPrices(c.prices);
+  const base = prices.BDT;
+  const resolved =
+    typeof base === "number" && base > 0
+      ? resolveCoursePrice(base, c.discount)
+      : null;
+  const running = resolved?.originalPrice ?? null;
+  const discount = serializeCourseDiscount(c.discount);
+
   return {
     id: c._id.toString(),
     slug: c.slug,
@@ -21,6 +32,11 @@ function toDto(c: CourseDoc, progress?: {
     description: c.description ?? "",
     price: c.price ?? 0,
     currency: c.currency ?? "USD",
+    prices: running === null ? prices : { ...prices, BDT: resolved!.price },
+    discount,
+    discountLabel: running === null ? null : resolved!.label,
+    originalPrice: running === null ? null : formatMoney(running, "BDT"),
+    discountEndsAt: running === null ? null : discount.endsAt,
     image: c.image ?? null,
     published: c.published ?? false,
     modules: (c.modules ?? []).map((m) => ({
