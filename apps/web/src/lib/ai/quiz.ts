@@ -73,6 +73,37 @@ export function isSubjectiveLesson(category: string | null | undefined, skill: s
   return category === COURSE_CATEGORIES[0] && (skill === "speaking" || skill === "writing");
 }
 
+/**
+ * Resolve the lesson's effective IELTS skill. The lesson's own `skill` is the
+ * source of truth, but editors often set only the per-topic skill (leaving the
+ * lesson skill on the "reading" default), so fall back to the dominant topic
+ * skill when the lesson skill is still the default.
+ */
+export function resolveLessonSkill(
+  skill: string | null | undefined,
+  topics?: { items?: { skill?: string | null }[] } | null
+): string {
+  const explicit = (skill ?? "reading").trim();
+  if (explicit !== "reading") return explicit;
+
+  const counts = new Map<string, number>();
+  for (const t of topics?.items ?? []) {
+    const s = (t?.skill ?? "").trim();
+    if (s && s !== "reading") counts.set(s, (counts.get(s) ?? 0) + 1);
+  }
+  if (counts.size === 0) return "reading";
+
+  let dominant = "reading";
+  let best = -1;
+  for (const [s, n] of counts) {
+    if (n > best) {
+      best = n;
+      dominant = s;
+    }
+  }
+  return dominant;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Prompt builder                                                     */
 /* ------------------------------------------------------------------ */

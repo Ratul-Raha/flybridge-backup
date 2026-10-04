@@ -4,7 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizPending } from "@/lib/models/quiz-pending";
-import { generateQuiz } from "@/lib/ai/quiz";
+import { generateQuiz, resolveLessonSkill } from "@/lib/ai/quiz";
 
 export async function POST(
   request: NextRequest,
@@ -65,7 +65,7 @@ export async function POST(
       lesson.title,
       {
         category: course.category ?? null,
-        skill: lesson.skill ?? "reading",
+        skill: resolveLessonSkill(lesson.skill, lesson.topics),
         lessonContent: lesson.content ?? "",
         topics: {
           description: lesson.topics?.description ?? "",

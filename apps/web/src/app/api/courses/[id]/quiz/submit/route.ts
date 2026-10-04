@@ -7,7 +7,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizAttempt } from "@/lib/models/quiz-attempt";
 import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
-import { isSubjectiveLesson, type QuizQuestion } from "@/lib/ai/quiz";
+import { isSubjectiveLesson, resolveLessonSkill, type QuizQuestion } from "@/lib/ai/quiz";
 import { judgeObjectiveAnswers, judgeWrittenAnswers } from "@/lib/ai/quiz-judge";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { emitEvent } from "@/lib/events/emit";
@@ -158,7 +158,7 @@ export async function POST(
 
     const isIelts = course.category === COURSE_CATEGORIES[0];
     const lesson = course.modules?.[moduleIndex]?.lessons?.[lessonIndex];
-    const lessonSkill = lesson?.skill ?? "reading";
+    const lessonSkill = resolveLessonSkill(lesson?.skill, lesson?.topics);
 
     // Speaking/writing IELTS lessons are graded by the AI judge and never saved.
     if (isSubjectiveLesson(course.category, lessonSkill)) {
