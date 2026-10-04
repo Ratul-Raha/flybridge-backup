@@ -358,6 +358,18 @@ function stripCodeFences(raw: string): string {
   if (s.startsWith("```")) {
     s = s.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
   }
+  // The model occasionally wraps the JSON in prose (or returns a single object
+  // instead of an array when asked for one question). Extract the outermost JSON
+  // value so JSON.parse gets a clean payload.
+  const arrayStart = s.indexOf("[");
+  const objectStart = s.indexOf("{");
+  if (arrayStart !== -1 && (objectStart === -1 || arrayStart < objectStart)) {
+    const lastBracket = s.lastIndexOf("]");
+    if (lastBracket > arrayStart) s = s.slice(arrayStart, lastBracket + 1);
+  } else if (objectStart !== -1) {
+    const lastBrace = s.lastIndexOf("}");
+    if (lastBrace > objectStart) s = s.slice(objectStart, lastBrace + 1);
+  }
   return s.trim();
 }
 
@@ -383,12 +395,19 @@ function normalizeType(raw: string): QuizQuestionType {
 }
 
 function sanitizeQuestions(raw: unknown): QuizQuestion[] {
-  if (!Array.isArray(raw)) {
+  let list: unknown[];
+  if (Array.isArray(raw)) {
+    list = raw;
+  } else if (raw && typeof raw === "object") {
+    const rec = raw as Record<string, unknown>;
+    const nested = rec.questions ?? rec.quiz ?? rec.data;
+    list = Array.isArray(nested) ? nested : [raw];
+  } else {
     throw new Error("AI returned invalid quiz data");
   }
 
   const cleaned: QuizQuestion[] = [];
-  for (const q of raw) {
+  for (const q of list) {
     if (!q || typeof q !== "object") continue;
     const rec = q as Record<string, unknown>;
     const rawType = rec.type;
