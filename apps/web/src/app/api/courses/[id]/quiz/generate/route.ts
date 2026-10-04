@@ -59,6 +59,13 @@ export async function POST(
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
 
+    if (lesson.quiz === false) {
+      return NextResponse.json(
+        { error: "Quiz is not enabled for this lesson" },
+        { status: 400 }
+      );
+    }
+
     const questions = await generateQuiz(
       course.title,
       mod.title,

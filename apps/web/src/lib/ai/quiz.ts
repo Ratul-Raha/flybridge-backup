@@ -149,7 +149,9 @@ export function buildQuizPrompt(
     });
   }
 
-  if (isIelts) {
+  // A "general" lesson is mixed content — fall back to the standard quiz shape
+  // instead of the IELTS reading/listening MCQ + gap-fill.
+  if (isIelts && skill !== "general") {
     return buildIeltsObjectivePrompt({
       courseTitle,
       moduleTitle,

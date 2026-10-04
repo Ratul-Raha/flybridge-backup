@@ -7,7 +7,7 @@ const lessonTopicSchema = new Schema(
   {
     skill: {
       type: String,
-      enum: ["reading", "listening", "speaking", "writing"],
+      enum: ["reading", "listening", "speaking", "writing", "general"],
       default: "reading",
     },
     text: { type: String, trim: true, default: "" },
@@ -32,9 +32,10 @@ const lessonSchema = new Schema(
     content: { type: String, trim: true },
     skill: {
       type: String,
-      enum: ["reading", "listening", "speaking", "writing"],
+      enum: ["reading", "listening", "speaking", "writing", "general"],
       default: "reading",
     },
+    quiz: { type: Boolean, default: true },
     topics: { type: lessonTopicsSchema, default: () => ({ description: "", items: [] }) },
   },
   { _id: false }

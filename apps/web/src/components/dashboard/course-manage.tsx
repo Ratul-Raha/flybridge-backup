@@ -9,7 +9,8 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { formatMoney } from "@/lib/pricing";
 
-type TopicItem = { skill: "reading" | "listening" | "speaking" | "writing"; text: string };
+type Skill = "reading" | "listening" | "speaking" | "writing" | "general";
+type TopicItem = { skill: Skill; text: string };
 type LessonTopics = { description: string; items: TopicItem[] };
 type Lesson = {
   title: string;
@@ -17,13 +18,14 @@ type Lesson = {
   videoUrl: string;
   pdfUrl: string;
   content: string;
-  skill: "reading" | "listening" | "speaking" | "writing";
+  skill: Skill;
+  quiz: boolean;
   topics?: LessonTopics;
 };
 type Module = { title: string; lessons: Lesson[] };
 type Book = { title: string; description: string; pdfUrl: string };
 
-const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing"] as const;
+const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing", "general"] as const;
 
 type Discount = {
   active?: boolean | null;
@@ -123,7 +125,7 @@ const emptyForm: FormState = {
 };
 
 function emptyLesson(): Lesson {
-  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", skill: "reading", topics: { description: "", items: [] } };
+  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", skill: "reading", quiz: true, topics: { description: "", items: [] } };
 }
 
 /** `datetime-local` wants a local `YYYY-MM-DDTHH:mm`, not an ISO string. */
@@ -222,6 +224,7 @@ export function CourseManage() {
           pdfUrl: l.pdfUrl ?? "",
           content: l.content ?? "",
           skill: (l.skill ?? "reading") as Lesson["skill"],
+          quiz: l.quiz !== false,
           topics: {
             description: l.topics?.description ?? "",
             items: Array.isArray(l.topics?.items)
@@ -914,6 +917,21 @@ export function CourseManage() {
                                   <option key={s} value={s}>{s}</option>
                                 ))}
                               </select>
+                            </label>
+                            <label
+                              className="flex items-center gap-1.5 shrink-0 cursor-pointer"
+                              title="Show a quiz for this lesson"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={l.quiz}
+                                onChange={(e) => updateLesson(mi, li, { quiz: e.target.checked })}
+                                className="w-4 h-4"
+                                style={{ accentColor: "var(--brand)" }}
+                              />
+                              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--body)" }}>
+                                Quiz
+                              </span>
                             </label>
                             <button
                               type="button"

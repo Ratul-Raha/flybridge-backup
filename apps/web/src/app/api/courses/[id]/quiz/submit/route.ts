@@ -202,7 +202,7 @@ export async function POST(
 
     // IELTS reading/listening: enrich objective grading with an AI explanation and
     // a comparison against a band 7 answer. Failure here never blocks the result.
-    if (isIelts) {
+    if (isIelts && (lessonSkill === "reading" || lessonSkill === "listening")) {
       try {
         const feedback = await judgeObjectiveAnswers(
           questions,

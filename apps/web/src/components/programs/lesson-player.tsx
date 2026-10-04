@@ -25,6 +25,7 @@ type Lesson = {
   videoUrl: string;
   pdfUrl: string;
   content: string;
+  quiz: boolean;
 };
 
 type Module = { title: string; lessons: Lesson[] };
@@ -36,6 +37,7 @@ type FlatLesson = {
   videoUrl: string;
   pdfUrl: string;
   content: string;
+  quiz: boolean;
 };
 
 type GradeData = {
@@ -497,19 +499,21 @@ export function LessonPlayer({
                   <PlayCircle size={14} />
                   Lesson
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setTab("quiz")}
-                  className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
-                  style={
-                    tab === "quiz"
-                      ? { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
-                      : { color: "var(--body)" }
-                  }
-                >
-                  <HelpCircle size={14} />
-                  Quiz
-                </button>
+                {current.quiz && (
+                  <button
+                    type="button"
+                    onClick={() => setTab("quiz")}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                    style={
+                      tab === "quiz"
+                        ? { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
+                        : { color: "var(--body)" }
+                    }
+                  >
+                    <HelpCircle size={14} />
+                    Quiz
+                  </button>
+                )}
               </div>
 
               {/* Lesson title & meta */}
@@ -524,7 +528,7 @@ export function LessonPlayer({
               </div>
 
               {/* Content area */}
-              {tab === "lesson" ? (
+              {tab === "lesson" || !current.quiz ? (
                 <>
                   {current.content && (
                     <div
