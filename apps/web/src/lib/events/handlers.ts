@@ -8,8 +8,16 @@ import { BotConfig } from "@/lib/models/bot-config";
 import { notificationUrl, pushToUsers } from "@/lib/push";
 import { sendTelegramMessage, formatEventMessage } from "@/lib/notifications/telegram";
 import type { NotificationType } from "@/lib/models/notification";
-import type { EventPayload } from "./types";
+import type { EventName, EventPayload } from "./types";
 import type { EventHandler } from "./registry";
+
+// Telegram is intentionally limited to order activity only. Everything else is
+// delivered in-app (or via web push) so admins aren't spammed on chat.
+const TELEGRAM_EVENT_WHITELIST: EventName[] = [
+  "order.created",
+  "order.fulfilled",
+  "course.enrolled",
+];
 
 async function insertNotifications(
   recipients: { _id: unknown }[],
@@ -98,6 +106,56 @@ export const notifyStaffOnRegistration: EventHandler = {
       message: `${registrantName} registered for "${seminarTitle}"`,
       seminar: seminarId,
       registration: registrationId,
+    });
+  },
+};
+
+export const notifyStaffOnOrderCreated: EventHandler = {
+  name: "notifyStaffOnOrderCreated",
+  run: async (payload) => {
+    const user = (payload.user ?? {}) as Record<string, unknown>;
+    const order = (payload.order ?? {}) as Record<string, unknown>;
+    const userId = typeof user.id === "string" ? user.id : undefined;
+
+    const recipients = await User.find({
+      accountType: { $in: ["admin", "moderator"] },
+      ...(userId ? { _id: { $ne: userId } } : {}),
+    })
+      .select("_id")
+      .lean();
+    if (recipients.length === 0) return;
+
+    const buyerName = String(user.name ?? "");
+    const orderId = String(order.id ?? "").slice(-8);
+    await insertNotifications(recipients, {
+      type: "order_created",
+      title: "New order placed",
+      message: `${buyerName}${orderId ? ` placed order #${orderId}` : " placed a new order"}.`,
+    });
+  },
+};
+
+export const notifyStaffOnOrderFulfilled: EventHandler = {
+  name: "notifyStaffOnOrderFulfilled",
+  run: async (payload) => {
+    const user = (payload.user ?? {}) as Record<string, unknown>;
+    const order = (payload.order ?? {}) as Record<string, unknown>;
+    const userId = typeof user.id === "string" ? user.id : undefined;
+
+    const recipients = await User.find({
+      accountType: { $in: ["admin", "moderator"] },
+      ...(userId ? { _id: { $ne: userId } } : {}),
+    })
+      .select("_id")
+      .lean();
+    if (recipients.length === 0) return;
+
+    const buyerName = String(user.name ?? "");
+    const orderId = String(order.id ?? "").slice(-8);
+    await insertNotifications(recipients, {
+      type: "order_fulfilled",
+      title: "Payment confirmed",
+      message: `${buyerName}${orderId ? `'s order #${orderId}` : "'s order"} payment was confirmed.`,
     });
   },
 };
@@ -200,6 +258,7 @@ export const sendTelegramOnEvent: EventHandler = {
     )?.telegram;
 
     if (!telegram?.enabled || !telegram.botToken || !telegram.chatIds?.length) return;
+    if (!TELEGRAM_EVENT_WHITELIST.includes(eventName)) return;
     if (!telegram.events?.includes(eventName as string)) return;
 
     const text = formatEventMessage(eventName, payload as Record<string, unknown>);

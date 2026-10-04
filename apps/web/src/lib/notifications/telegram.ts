@@ -78,12 +78,14 @@ function val(v: unknown): string {
   return String(v);
 }
 
-function money(v: unknown, currency?: unknown): string {
-  if (v === undefined || v === null) return "—";
+function money(v: unknown): string {
+  if (v === undefined || v === null || v === "") return "—";
   const num = typeof v === "number" ? v : Number(v);
-  if (isNaN(num)) return String(v);
-  const ccy = typeof currency === "string" ? currency.toUpperCase() : "USD";
-  return `${(num / 100).toFixed(2)} ${ccy}`;
+  if (!Number.isFinite(num)) return String(v);
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: Number.isInteger(num) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function formatEventMessage(eventName: EventName, payload: Record<string, unknown>): string {
@@ -123,7 +125,7 @@ export function formatEventMessage(eventName: EventName, payload: Record<string,
   const orderStatus = (status?: unknown): string => String(status ?? "").toUpperCase();
   const priceLabel = (price?: unknown, currency?: unknown): string => {
     const ccy = typeof currency === "string" && currency ? currency.toUpperCase() : "USD";
-    return `${money(price, currency)} ${ccy}`;
+    return `${money(price)} ${ccy}`;
   };
   const semType = (t?: unknown): string => (t === "paid" ? "Paid" : t === "free" ? "Free" : val(t));
 

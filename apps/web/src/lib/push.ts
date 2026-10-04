@@ -50,6 +50,9 @@ export function notificationUrl(
       return "/resources";
     case "scholarship_created":
       return "/dashboard/scholarships";
+    case "order_created":
+    case "order_fulfilled":
+      return "/dashboard/admin/orders";
     default:
       return "/dashboard/notifications";
   }

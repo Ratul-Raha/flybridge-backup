@@ -90,6 +90,8 @@ export function NotificationBell() {
         window.location.assign("/resources");
       } else if (n.type === "scholarship_created") {
         window.location.assign("/dashboard/scholarships");
+      } else if (n.type === "order_created" || n.type === "order_fulfilled") {
+        window.location.assign("/dashboard/admin/orders");
       }
     },
     [markRead],
