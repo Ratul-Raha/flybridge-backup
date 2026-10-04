@@ -30,6 +30,11 @@ const lessonSchema = new Schema(
     videoUrl: { type: String, trim: true },
     pdfUrl: { type: String, trim: true },
     content: { type: String, trim: true },
+    skill: {
+      type: String,
+      enum: ["reading", "listening", "speaking", "writing"],
+      default: "reading",
+    },
     topics: { type: lessonTopicsSchema, default: () => ({ description: "", items: [] }) },
   },
   { _id: false }

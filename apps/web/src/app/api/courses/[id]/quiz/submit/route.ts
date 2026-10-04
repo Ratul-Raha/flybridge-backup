@@ -7,7 +7,8 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizAttempt } from "@/lib/models/quiz-attempt";
 import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
-import type { QuizQuestion } from "@/lib/ai/quiz";
+import { isSubjectiveLesson, type QuizQuestion } from "@/lib/ai/quiz";
+import { judgeWrittenAnswers } from "@/lib/ai/quiz-judge";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { emitEvent } from "@/lib/events/emit";
 
@@ -155,6 +156,21 @@ export async function POST(
       answerMap.set(a.questionId, a.answer);
     }
 
+    const isIelts = course.category === COURSE_CATEGORIES[0];
+    const lesson = course.modules?.[moduleIndex]?.lessons?.[lessonIndex];
+    const lessonSkill = lesson?.skill ?? "reading";
+
+    // Speaking/writing IELTS lessons are graded by the AI judge and never saved.
+    if (isSubjectiveLesson(course.category, lessonSkill)) {
+      await QuizPending.deleteOne({ _id: pending._id });
+      const results = await judgeWrittenAnswers(
+        questions,
+        Object.fromEntries(answerMap.entries()),
+        lessonSkill
+      );
+      return NextResponse.json({ mode: "subjective", results });
+    }
+
     let correctCount = 0;
     const results = questions.map((q) => {
       const userAnswer = answerMap.get(q.id) ?? "";
@@ -182,8 +198,6 @@ export async function POST(
       totalQuestions > 0
         ? Math.round((correctCount / totalQuestions) * 100)
         : 0;
-
-    const isIelts = course.category === COURSE_CATEGORIES[0];
 
     await QuizPending.deleteOne({ _id: pending._id });
 
@@ -302,7 +316,13 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ score, totalQuestions, correctCount, results });
+    return NextResponse.json({
+      mode: "objective",
+      score,
+      totalQuestions,
+      correctCount,
+      results,
+    });
   } catch (error) {
     console.error("quiz submit error", error);
     return NextResponse.json(

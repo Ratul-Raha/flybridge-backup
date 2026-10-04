@@ -5,28 +5,43 @@ import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle } from "lucide
 
 type Question = {
   id: string;
-  type: "mcq" | "true-false" | "short-answer";
+  type: "mcq" | "true-false" | "fill-blank" | "short-answer" | "written";
   question: string;
   options?: string[];
   correctAnswer: string;
   explanation: string;
 };
 
-type Result = {
+type ObjectiveResult = {
   questionId: string;
   correct: boolean;
   correctAnswer: string;
   explanation: string;
 };
 
+type SubjectiveResult = {
+  questionId: string;
+  bandScore: number;
+  feedback: string;
+  exampleAnswer: string;
+  comparison: string;
+};
+
+type Result = ObjectiveResult | SubjectiveResult;
+
 type Phase = "idle" | "loading" | "taking" | "submitting" | "results";
 
 type ResultsData = {
-  score: number;
-  totalQuestions: number;
-  correctCount: number;
+  mode: "objective" | "subjective";
+  score?: number;
+  totalQuestions?: number;
+  correctCount?: number;
   results: Result[];
 };
+
+function isSubjective(r: Result): r is SubjectiveResult {
+  return "bandScore" in r;
+}
 
 export function LessonQuiz({
   courseId,
@@ -90,7 +105,15 @@ export function LessonQuiz({
       if (!res.ok) throw new Error(data.error || "Failed to submit quiz");
       setResults(data);
       setPhase("results");
-      onScoreUpdate?.({ moduleIndex, lessonIndex, score: data.score, correctCount: data.correctCount, totalQuestions: data.totalQuestions });
+      if (data.mode === "objective") {
+        onScoreUpdate?.({
+          moduleIndex,
+          lessonIndex,
+          score: data.score ?? 0,
+          correctCount: data.correctCount ?? 0,
+          totalQuestions: data.totalQuestions ?? 0,
+        });
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setPhase("taking");
@@ -163,26 +186,91 @@ export function LessonQuiz({
 
   if (phase === "results" && results) {
     const resultMap = new Map(results.results.map((r) => [r.questionId, r]));
+    const subjective = results.mode === "subjective";
     return (
       <div className="flex flex-col gap-6 py-6">
-        <div
-          className="rounded-2xl p-6 text-center border"
-          style={{ background: "var(--bg-soft, rgba(0,0,0,0.02))", borderColor: "var(--line)" }}
-        >
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: "var(--body)" }}>
-            Your Score
-          </p>
-          <p className="text-[48px] font-bold leading-none" style={{ color: results.score >= 60 ? "#16a34a" : "#dc2626" }}>
-            {results.score}%
-          </p>
-          <p className="text-[13px] mt-2" style={{ color: "var(--body)" }}>
-            {results.correctCount} of {results.totalQuestions} correct
-          </p>
-        </div>
+        {subjective ? (
+          <div
+            className="rounded-2xl p-6 text-center border"
+            style={{ background: "var(--bg-soft, rgba(0,0,0,0.02))", borderColor: "var(--line)" }}
+          >
+            <p className="font-mono text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: "var(--body)" }}>
+              Feedback
+            </p>
+            <p className="text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
+              Your answers have been graded
+            </p>
+            <p className="text-[13px] mt-2" style={{ color: "var(--body)" }}>
+              Review each band score, the feedback and the band 7 example below.
+            </p>
+          </div>
+        ) : (
+          <div
+            className="rounded-2xl p-6 text-center border"
+            style={{ background: "var(--bg-soft, rgba(0,0,0,0.02))", borderColor: "var(--line)" }}
+          >
+            <p className="font-mono text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: "var(--body)" }}>
+              Your Score
+            </p>
+            <p className="text-[48px] font-bold leading-none" style={{ color: (results.score ?? 0) >= 60 ? "#16a34a" : "#dc2626" }}>
+              {results.score ?? 0}%
+            </p>
+            <p className="text-[13px] mt-2" style={{ color: "var(--body)" }}>
+              {results.correctCount ?? 0} of {results.totalQuestions ?? 0} correct
+            </p>
+          </div>
+        )}
 
         {questions.map((q, i) => {
           const r = resultMap.get(q.id);
           if (!r) return null;
+
+          if (isSubjective(r)) {
+            return (
+              <div
+                key={q.id}
+                className="rounded-xl p-5 border"
+                style={{ background: "var(--bg-soft, rgba(0,0,0,0.01))", borderColor: "var(--line)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="shrink-0 w-11 h-11 rounded-lg flex flex-col items-center justify-center"
+                    style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))" }}
+                  >
+                    <span className="text-[15px] font-bold leading-none" style={{ color: "var(--brand)" }}>
+                      {r.bandScore.toFixed(1)}
+                    </span>
+                    <span className="text-[9px] font-mono uppercase mt-0.5" style={{ color: "var(--body)" }}>band</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
+                      <span className="mr-1.5" style={{ color: "var(--body)" }}>Q{i + 1}.</span>
+                      {q.question}
+                    </p>
+                    <div className="mt-3 text-[12.5px] space-y-2">
+                      <p style={{ color: "var(--body)" }}>
+                        <span className="font-semibold" style={{ color: "var(--ink)" }}>Your answer: </span>
+                        {answers[q.id] || "(empty)"}
+                      </p>
+                      <p style={{ color: "var(--body)" }}>
+                        <span className="font-semibold" style={{ color: "var(--ink)" }}>Feedback: </span>
+                        {r.feedback}
+                      </p>
+                      <p style={{ color: "#16a34a" }}>
+                        <span className="font-semibold">Band 7 example: </span>
+                        {r.exampleAnswer}
+                      </p>
+                      <p style={{ color: "var(--body)" }}>
+                        <span className="font-semibold" style={{ color: "var(--ink)" }}>Compare: </span>
+                        {r.comparison}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={q.id}
@@ -248,12 +336,17 @@ export function LessonQuiz({
                 </div>
                 <div>
                   <p className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>Retake this quiz?</p>
-                  <p className="text-[12px]" style={{ color: "var(--body)" }}>Your current score of {results?.score}% will be replaced.</p>
+                  <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                    {subjective
+                      ? "Retaking will generate a new set of questions."
+                      : `Your current score of ${results?.score ?? 0}% will be replaced.`}
+                  </p>
                 </div>
               </div>
               <p className="text-[13px] mb-5 leading-relaxed" style={{ color: "var(--body)" }}>
-                Retaking this quiz will generate a new set of questions. Your previous score will be
-                overwritten in your overall grade calculation. This action cannot be undone.
+                Retaking this quiz will generate a new set of questions.
+                {!subjective && " Your previous score will be overwritten in your overall grade calculation."}{" "}
+                This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <button
@@ -295,7 +388,15 @@ export function LessonQuiz({
               className="ml-2 font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full"
               style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
             >
-              {q.type === "true-false" ? "T/F" : q.type === "mcq" ? "MCQ" : "Short"}
+              {q.type === "true-false"
+                ? "T/F"
+                : q.type === "mcq"
+                  ? "MCQ"
+                  : q.type === "fill-blank"
+                    ? "Fill"
+                    : q.type === "written"
+                      ? "Written"
+                      : "Short"}
             </span>
           </p>
 
@@ -357,6 +458,28 @@ export function LessonQuiz({
               placeholder="Type your answer…"
               rows={3}
               className="w-full rounded-lg px-4 py-3 text-[13px] resize-none focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+              style={{ background: "white", border: "1px solid var(--line)", color: "var(--ink)" }}
+            />
+          )}
+
+          {q.type === "fill-blank" && (
+            <input
+              type="text"
+              value={answers[q.id] ?? ""}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+              placeholder="Type the missing word or phrase…"
+              className="w-full rounded-lg px-4 py-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+              style={{ background: "white", border: "1px solid var(--line)", color: "var(--ink)" }}
+            />
+          )}
+
+          {q.type === "written" && (
+            <textarea
+              value={answers[q.id] ?? ""}
+              onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+              placeholder="Write your answer in a few sentences…"
+              rows={5}
+              className="w-full rounded-lg px-4 py-3 text-[13px] resize-y focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
               style={{ background: "white", border: "1px solid var(--line)", color: "var(--ink)" }}
             />
           )}

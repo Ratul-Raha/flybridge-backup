@@ -65,6 +65,7 @@ export async function POST(
       lesson.title,
       {
         category: course.category ?? null,
+        skill: lesson.skill ?? "reading",
         lessonContent: lesson.content ?? "",
         topics: {
           description: lesson.topics?.description ?? "",

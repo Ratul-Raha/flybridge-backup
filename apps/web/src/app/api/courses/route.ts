@@ -76,6 +76,7 @@ const prices = cleanPrices(c.prices);
               videoUrl: l.videoUrl ?? "",
               pdfUrl: l.pdfUrl ?? "",
               content: l.content ?? "",
+              skill: l.skill ?? "reading",
               topics: {
                 description: l.topics?.description ?? "",
                 items: (l.topics?.items ?? []).map((t) => ({
@@ -264,6 +265,7 @@ function normalizeModules(
     videoUrl?: string;
     pdfUrl?: string;
     content?: string;
+    skill?: string;
     topics?: { description: string; items: { skill: string; text: string }[] };
   }[];
 }[] {
@@ -283,6 +285,7 @@ function normalizeModules(
                 videoUrl: typeof lesson.videoUrl === "string" ? lesson.videoUrl.trim() : "",
                 pdfUrl: typeof lesson.pdfUrl === "string" ? lesson.pdfUrl.trim() : "",
                 content: typeof lesson.content === "string" ? lesson.content.trim() : "",
+                skill: normalizeSkill(lesson.skill),
                 ...(topics ? { topics } : {}),
               };
             })
@@ -294,6 +297,12 @@ function normalizeModules(
 }
 
 const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing"] as const;
+
+function normalizeSkill(raw: unknown): string {
+  return typeof raw === "string" && (TOPIC_SKILLS as readonly string[]).includes(raw)
+    ? raw
+    : "reading";
+}
 
 function normalizeTopics(raw: unknown): {
   description: string;

@@ -7,7 +7,12 @@ import { COURSE_CATEGORIES } from "@/lib/course-categories";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type QuizQuestionType = "mcq" | "true-false" | "short-answer";
+export type QuizQuestionType =
+  | "mcq"
+  | "true-false"
+  | "fill-blank"
+  | "short-answer"
+  | "written";
 
 export type QuizQuestion = {
   id: string;
@@ -25,12 +30,26 @@ export type QuizTopic = {
 
 export type QuizPromptOptions = {
   category?: string | null;
+  skill?: string | null;
   lessonContent?: string;
   topics?: { description?: string; items?: QuizTopic[] };
 };
 
-const ALLOWED_TYPES: QuizQuestionType[] = ["mcq", "true-false", "short-answer"];
+const ALLOWED_TYPES: QuizQuestionType[] = [
+  "mcq",
+  "true-false",
+  "fill-blank",
+  "short-answer",
+  "written",
+];
 const MAX_LESSON_CHARS = 8000;
+
+/** Cheap model for the small quiz jobs — falls back to the main AI model. */
+const QUIZ_MODEL = process.env.AI_QUIZ_MODEL || process.env.AI_MODEL || "";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
 
 function formatTopics(topics?: QuizPromptOptions["topics"]): string[] {
   const description = (topics?.description ?? "").trim();
@@ -49,9 +68,32 @@ function formatTopics(topics?: QuizPromptOptions["topics"]): string[] {
   return lines;
 }
 
+/** True when this lesson should be answered in the student's own words. */
+export function isSubjectiveLesson(category: string | null | undefined, skill: string | null | undefined): boolean {
+  return category === COURSE_CATEGORIES[0] && (skill === "speaking" || skill === "writing");
+}
+
 /* ------------------------------------------------------------------ */
 /*  Prompt builder                                                     */
 /* ------------------------------------------------------------------ */
+
+const JSON_ONLY = [
+  "Return ONLY a valid JSON array. No markdown, no explanation, no preamble.",
+].join("\n");
+
+function baseOutputFormat(types: string[], extraKeys: string[]): string {
+  return [
+    "## Output format",
+    JSON_ONLY,
+    "Each element must be an object with these exact keys:",
+    "",
+    '  "id":          a short random string (e.g. "q1", "q2")',
+    `  "type":        one of ${types.map((t) => `"${t}"`).join(", ")}`,
+    '  "question":    the question text',
+    ...extraKeys,
+    "",
+  ].join("\n");
+}
 
 export function buildQuizPrompt(
   courseTitle: string,
@@ -60,80 +102,166 @@ export function buildQuizPrompt(
   opts: QuizPromptOptions = {}
 ): { system: string; user: string } {
   const isIelts = opts.category === COURSE_CATEGORIES[0];
+  const skill = opts.skill ?? "reading";
+  const subjective = isSubjectiveLesson(opts.category, skill);
   const content = (opts.lessonContent ?? "").trim().slice(0, MAX_LESSON_CHARS);
   const topics = formatTopics(opts.topics);
 
-  const outputFormat = [
-    "## Output format",
-    "Return ONLY a valid JSON array. No markdown, no explanation, no preamble.",
-    "Each element must be an object with these exact keys:",
-    '',
-    '  "id":          a short random string (e.g. "q1", "q2")',
-    '  "type":        one of "mcq", "true-false", "short-answer"',
-    '  "question":    the question text',
-    '  "options":     an array of answer strings (ONLY for type "mcq", omit for others)',
-    '  "correctAnswer": the correct answer (for mcq use the exact option text, for true-false use "True" or "False", for short-answer a short reference answer)',
-    '  "explanation": a 1-2 sentence explanation of the correct answer',
-    "",
-  ].join("\n");
-
-  if (isIelts) {
-    const system = [
-      "You are a personal IELTS trainer at FlyBridge Education Group.",
-      "",
-      "## Your task",
-      "Create a focused IELTS practice quiz for a single lesson. The quiz must match what the",
-      "lesson actually teaches and give the student real exam-style practice on that specific",
-      "task or skill.",
-      "",
-      "## Supported question types",
-      "Use ONLY these types:",
-      '- "mcq": multiple choice (an "options" array).',
-      '- "true-false": a True/False statement.',
-      '- "short-answer": a written answer.',
-      "",
-      "## Quiz composition",
-      "- Generate exactly 5 questions.",
-      "- The mix of types is NOT fixed. Choose the types that best fit THIS lesson and the",
-      "  specific IELTS task it covers (reading, listening, writing or vocabulary). Base every",
-      "  question on the lesson content, never on general knowledge.",
-      "- For reading lessons:",
-      "  * For a true-false-not-given task, use type \"mcq\" with the options exactly",
-      "    [\"True\", \"False\", \"Not Given\"] and base each statement on the lesson text.",
-      "  * For heading or matching tasks, use type \"mcq\" where the question refers to a",
-      "    paragraph, section or item from the lesson and the options are the heading or match",
-      "    choices.",
-      "  * For other reading tasks, use \"true-false\", \"mcq\" or \"short-answer\" as appropriate.",
-      "- For listening or vocabulary lessons, base questions on the lesson content and pick the",
-      "  most natural IELTS-style types.",
-      "",
-      outputFormat,
-      "## Rules",
-      "- Questions must be answerable from the provided lesson text alone.",
-      "- Use clear, concise language appropriate for IELTS students.",
-      "- The correctAnswer for mcq must exactly match one of the options.",
-      "- Keep explanations factual and helpful.",
-      "- Return ONLY the JSON array, nothing else.",
-    ].join("\n");
-
-    const user = [
-      `Course: ${courseTitle}`,
-      `Module: ${moduleTitle}`,
-      `Lesson: ${lessonTitle}`,
-      "",
-      "## Lesson text",
-      content
-        ? content
-        : "(No lesson text was provided. Base the questions on the lesson title and the IELTS",
-          "skill or task it suggests, in the student's own best interest.)",
-      "",
-      ...topics,
-      "Generate exactly 5 IELTS practice questions for this lesson, adapted to its focus.",
-    ].join("\n");
-
-    return { system, user };
+  if (subjective) {
+    return buildSubjectivePrompt({
+      courseTitle,
+      moduleTitle,
+      lessonTitle,
+      skill,
+      content,
+      topics,
+    });
   }
 
+  if (isIelts) {
+    return buildIeltsObjectivePrompt({
+      courseTitle,
+      moduleTitle,
+      lessonTitle,
+      skill,
+      content,
+      topics,
+    });
+  }
+
+  return buildGenericPrompt({
+    courseTitle,
+    moduleTitle,
+    lessonTitle,
+    content,
+    topics,
+  });
+}
+
+/* -------------------------- IELTS speaking/writing ----------------- */
+
+function buildSubjectivePrompt(opts: {
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  skill: string;
+  content: string;
+  topics: string[];
+}): { system: string; user: string } {
+  const isSpeaking = opts.skill === "speaking";
+
+  const system = [
+    "You are a personal IELTS trainer at FlyBridge Education Group.",
+    "",
+    "## Your task",
+    "Create a focused IELTS practice quiz for a single lesson. The student answers by",
+    "writing their response in text, so every question must be one they can answer in a",
+    "few written sentences.",
+    isSpeaking
+      ? "- This is a SPEAKING lesson: generate IELTS Speaking Part 1 style questions — short,"
+        + "  personal, everyday topics an examiner would ask at the start of the test."
+      : "- This is a WRITING lesson: generate short IELTS Writing style prompts the student"
+        + "  answers in writing, matched to the lesson focus.",
+    "",
+    baseOutputFormat(
+      ["written"],
+      [
+        '  (for type "written": no "options", no "correctAnswer", no "explanation")',
+      ]
+    ),
+    "## Quiz composition",
+    "- Generate exactly 5 questions.",
+    "- Make each question a clear, self-contained prompt. Do not repeat the same topic",
+    "  twice. Cover different subtopics or angles.",
+    "- Base questions on the lesson content and topics when provided; never on general",
+    "  knowledge.",
+    "",
+    "## Rules",
+    "- Questions must be answerable from the student's own knowledge and experience.",
+    "- Use clear, concise language appropriate for IELTS students.",
+    "- Return ONLY the JSON array, nothing else.",
+  ].join("\n");
+
+  const user = [
+    `Course: ${opts.courseTitle}`,
+    `Module: ${opts.moduleTitle}`,
+    `Lesson: ${opts.lessonTitle}`,
+    `Skill: ${opts.skill}`,
+    "",
+    ...opts.topics,
+    ...(opts.content
+      ? ["## Lesson text", opts.content, ""]
+      : []),
+    `Generate exactly 5 ${isSpeaking ? "IELTS Speaking Part 1" : "IELTS Writing"} questions for this lesson.`,
+  ].join("\n");
+
+  return { system, user };
+}
+
+/* ----------------------- IELTS reading/listening ------------------- */
+
+function buildIeltsObjectivePrompt(opts: {
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  skill: string;
+  content: string;
+  topics: string[];
+}): { system: string; user: string } {
+  const system = [
+    "You are a personal IELTS trainer at FlyBridge Education Group.",
+    "",
+    "## Your task",
+    "Create a focused IELTS practice quiz for a single lesson. Use only multiple-choice",
+    'and fill-in-the-blank questions that test THIS lesson\'s reading or listening focus.',
+    "",
+    baseOutputFormat(
+      ["mcq", "fill-blank"],
+      [
+        '  "options":     an array of answer strings (ONLY for type "mcq", omit for fill-blank)',
+        '  "correctAnswer": the correct answer (for mcq use the exact option text, for',
+        "                  fill-blank the exact missing word/phrase)",
+        '  "explanation": a 1-2 sentence explanation of the correct answer',
+      ]
+    ),
+    "## Quiz composition",
+    "- Generate exactly 5 questions.",
+    "- Mix mcq and fill-blank as fits the lesson. For fill-blank, put ___ where the blank",
+    "  is in the question text.",
+    "- Base every question on the lesson content or topics, never on general knowledge.",
+    "",
+    "## Rules",
+    "- Questions must be answerable from the provided lesson text/topics alone.",
+    "- The correctAnswer for mcq must exactly match one of the options.",
+    "- Keep explanations factual and helpful, and short.",
+    "- Return ONLY the JSON array, nothing else.",
+  ].join("\n");
+
+  const user = [
+    `Course: ${opts.courseTitle}`,
+    `Module: ${opts.moduleTitle}`,
+    `Lesson: ${opts.lessonTitle}`,
+    `Skill: ${opts.skill}`,
+    "",
+    ...opts.topics,
+    ...(opts.content
+      ? ["## Lesson text", opts.content, ""]
+      : []),
+    "Generate exactly 5 IELTS practice questions (multiple choice and fill-in-the-blank) for this lesson.",
+  ].join("\n");
+
+  return { system, user };
+}
+
+/* ----------------------------- Non-IELTS --------------------------- */
+
+function buildGenericPrompt(opts: {
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  content: string;
+  topics: string[];
+}): { system: string; user: string } {
   const system = [
     "You are a quiz generator for FlyBridge Education Group — an education company",
     "that helps international students study, work and build a career abroad.",
@@ -141,7 +269,14 @@ export function buildQuizPrompt(
     "## Your task",
     "Generate a short quiz based on the lesson described below.",
     "",
-    outputFormat,
+    baseOutputFormat(
+      ["mcq", "true-false", "short-answer"],
+      [
+        '  "options":     an array of answer strings (ONLY for type "mcq", omit for others)',
+        '  "correctAnswer": the correct answer (for mcq use the exact option text, for true-false use "True" or "False", for short-answer a short reference answer)',
+        '  "explanation": a 1-2 sentence explanation of the correct answer',
+      ]
+    ),
     "## Quiz composition",
     "- Generate exactly 5 questions.",
     '- 2 questions of type "mcq" (4 options each, one correct).',
@@ -157,15 +292,15 @@ export function buildQuizPrompt(
   ].join("\n");
 
   const userLines = [
-    `Course: ${courseTitle}`,
-    `Module: ${moduleTitle}`,
-    `Lesson: ${lessonTitle}`,
+    `Course: ${opts.courseTitle}`,
+    `Module: ${opts.moduleTitle}`,
+    `Lesson: ${opts.lessonTitle}`,
     "",
   ];
-  if (content) {
-    userLines.push("## Lesson text", content, "");
+  if (opts.content) {
+    userLines.push("## Lesson text", opts.content, "");
   }
-  userLines.push(...topics);
+  userLines.push(...opts.topics);
   userLines.push("Generate a 5-question quiz for this lesson.");
 
   return { system, user: userLines.join("\n") };
@@ -194,13 +329,20 @@ function sanitizeQuestions(raw: unknown): QuizQuestion[] {
     const rec = q as Record<string, unknown>;
     const type = rec.type;
     if (typeof type !== "string" || !ALLOWED_TYPES.includes(type as QuizQuestionType)) continue;
-    if (
-      typeof rec.id !== "string" ||
-      typeof rec.question !== "string" ||
-      typeof rec.correctAnswer !== "string"
-    ) {
+    if (typeof rec.id !== "string" || typeof rec.question !== "string") continue;
+
+    if (type === "written") {
+      cleaned.push({
+        id: rec.id,
+        type,
+        question: rec.question,
+        correctAnswer: "",
+        explanation: "",
+      });
       continue;
     }
+
+    if (typeof rec.correctAnswer !== "string") continue;
     cleaned.push({
       id: rec.id,
       type: type as QuizQuestionType,
@@ -227,9 +369,11 @@ export async function generateQuiz(
 
   const provider = await getProvider();
   const stream = await provider.streamChat({
-    model: process.env.AI_MODEL ?? "",
+    model: QUIZ_MODEL,
     system,
     messages: [{ role: "user", content: user }],
+    jsonMode: true,
+    maxTokens: 2048,
   });
 
   const reader = stream.getReader();

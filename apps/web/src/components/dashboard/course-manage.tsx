@@ -17,6 +17,7 @@ type Lesson = {
   videoUrl: string;
   pdfUrl: string;
   content: string;
+  skill: "reading" | "listening" | "speaking" | "writing";
   topics?: LessonTopics;
 };
 type Module = { title: string; lessons: Lesson[] };
@@ -122,7 +123,7 @@ const emptyForm: FormState = {
 };
 
 function emptyLesson(): Lesson {
-  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", topics: { description: "", items: [] } };
+  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", skill: "reading", topics: { description: "", items: [] } };
 }
 
 /** `datetime-local` wants a local `YYYY-MM-DDTHH:mm`, not an ISO string. */
@@ -220,6 +221,7 @@ export function CourseManage() {
           videoUrl: l.videoUrl ?? "",
           pdfUrl: l.pdfUrl ?? "",
           content: l.content ?? "",
+          skill: (l.skill ?? "reading") as Lesson["skill"],
           topics: {
             description: l.topics?.description ?? "",
             items: Array.isArray(l.topics?.items)
@@ -898,6 +900,17 @@ export function CourseManage() {
                               className={inputClass + " !w-[110px]"}
                               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                             />
+                            <select
+                              value={l.skill}
+                              onChange={(e) => updateLesson(mi, li, { skill: e.target.value as Lesson["skill"] })}
+                              className={inputClass + " !w-[120px]"}
+                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                              title="Lesson skill — drives how the AI quiz is generated"
+                            >
+                              {TOPIC_SKILLS.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
                             <button
                               type="button"
                               onClick={() =>
