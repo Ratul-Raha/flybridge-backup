@@ -391,7 +391,7 @@ export function CheckoutPanel({
               "Instant access after enrollment",
               `${moduleCount} modules · ${lessonCount} lessons`,
               "Lifetime access — learn at your own pace",
-              "Certificate of completion",
+              ...(course.slug === "ielts-band-score-machine" ? [] : ["Certificate of completion"]),
               "Live support from instructors",
             ].map((item) => (
               <li key={item} className="flex items-start gap-2.5 text-[13px]">
