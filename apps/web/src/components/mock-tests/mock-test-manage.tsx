@@ -256,9 +256,11 @@ function sectionPreview(s: ManagedSection): string {
 export function MockTestManage({
   focusBundleId,
   focusTestId,
+  createInBundle,
 }: {
   focusBundleId?: string;
   focusTestId?: string;
+  createInBundle?: string;
 } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -267,8 +269,13 @@ export function MockTestManage({
   const queryBundleId = searchParams.get("bundle");
   const queryTestId = searchParams.get("test");
   const isFocusedEdit = Boolean(focusBundleId && focusTestId);
+  const isFocusedNew = Boolean(createInBundle);
+  const isFocused = isFocusedEdit || isFocusedNew;
+
+  const focusedBackHref = `/dashboard/mock-tests?bundle=${isFocusedEdit ? focusBundleId : createInBundle}`;
 
   const autoEditRef = useRef<string | null>(focusTestId ?? queryTestId);
+  const autoCreateRef = useRef<string | null>(createInBundle ?? null);
 
   useEffect(() => {
     if (!isFocusedEdit && queryBundleId && queryTestId) {
@@ -317,7 +324,9 @@ export function MockTestManage({
 
   useEffect(() => {
     loadBundles().then(() => {
-      if (focusBundleId) {
+      if (createInBundle) {
+        setActiveBundleId(createInBundle);
+      } else if (focusBundleId) {
         setActiveBundleId(focusBundleId);
       } else if (queryBundleId) {
         setActiveBundleId(queryBundleId);
@@ -327,7 +336,7 @@ export function MockTestManage({
       .then((r) => r.json())
       .then((d) => setCourses((d.courses ?? []).map((c: { id: string; title: string }) => ({ id: c.id, title: c.title }))))
       .catch(() => setCourses([]));
-  }, [loadBundles, focusBundleId, queryBundleId]);
+  }, [loadBundles, focusBundleId, queryBundleId, createInBundle]);
 
   const loadTests = useCallback(async (bundleId: string) => {
     setActiveBundleId(bundleId);
@@ -354,6 +363,10 @@ export function MockTestManage({
           autoEditRef.current = null;
           const target = loaded.find((t) => t.id === targetId);
           if (target) openTestEdit(target);
+        }
+        if (autoCreateRef.current) {
+          autoCreateRef.current = null;
+          openTestCreate(loaded.length);
         }
       });
     }
@@ -446,7 +459,7 @@ export function MockTestManage({
     }
   };
 
-  const openTestCreate = () => {
+  const openTestCreate = (order?: number) => {
     setEditingTestId(null);
     setTestForm({
       ...emptyTestForm,
@@ -454,7 +467,7 @@ export function MockTestManage({
       skill: "reading",
       status: "draft",
       durationMinutes: "60",
-      order: String(tests.length),
+      order: order != null ? String(order) : String(tests.length),
       course: "",
     });
     setTestFormOpen(true);
@@ -600,8 +613,8 @@ export function MockTestManage({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Save failed");
-      if (isFocusedEdit) {
-        router.push(`/dashboard/mock-tests?bundle=${focusBundleId}`);
+      if (isFocused) {
+        router.push(focusedBackHref);
         return;
       }
       setTestFormOpen(false);
@@ -2067,8 +2080,8 @@ export function MockTestManage({
                       <button
                         type="button"
                         onClick={() => {
-                          if (isFocusedEdit) {
-                            router.push(`/dashboard/mock-tests?bundle=${focusBundleId}`);
+                          if (isFocused) {
+                            router.push(focusedBackHref);
                             return;
                           }
                           setTestFormOpen(false);
@@ -2084,11 +2097,11 @@ export function MockTestManage({
   );
 
   if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
-  if (isFocusedEdit) {
+  if (isFocused) {
     return (
       <div className="flex flex-col gap-6">
         <Link
-          href={`/dashboard/mock-tests?bundle=${focusBundleId}`}
+          href={focusedBackHref}
           className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
           style={{ color: "var(--brand)" }}
         >
@@ -2395,14 +2408,13 @@ export function MockTestManage({
                   <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                     Tests in {b.title}
                   </p>
-                  <button
-                    type="button"
-                    onClick={openTestCreate}
+                  <Link
+                    href={`/dashboard/mock-tests/new?bundle=${b.id}`}
                     className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90"
                     style={{ background: "var(--brand)" }}
                   >
                     <Plus size={13} /> New test
-                  </button>
+                  </Link>
                 </div>
 
                 {!testsLoaded ? (
