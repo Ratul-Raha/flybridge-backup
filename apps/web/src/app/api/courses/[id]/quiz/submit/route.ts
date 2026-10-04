@@ -168,7 +168,12 @@ export async function POST(
         Object.fromEntries(answerMap.entries()),
         lessonSkill
       );
-      return NextResponse.json({ mode: "subjective", results });
+      const bands = results.map((r) => r.bandScore).filter((b) => b > 0);
+      const overallBand =
+        bands.length > 0
+          ? Math.round((bands.reduce((sum, b) => sum + b, 0) / bands.length) * 2) / 2
+          : 0;
+      return NextResponse.json({ mode: "subjective", overallBand, results });
     }
 
     let correctCount = 0;

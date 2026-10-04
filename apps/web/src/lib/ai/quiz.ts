@@ -183,7 +183,7 @@ function buildSubjectivePrompt(opts: {
       ]
     ),
     "## Quiz composition",
-    "- Generate exactly 5 questions.",
+    "- Generate exactly 3 questions.",
     "- Make each question a clear, self-contained prompt. Do not repeat the same topic",
     "  twice. Cover different subtopics or angles.",
     "- Base questions on the lesson content, title and topics when provided; never on",
@@ -205,7 +205,7 @@ function buildSubjectivePrompt(opts: {
     ...(opts.content
       ? ["## Lesson text", opts.content, ""]
       : []),
-    `Generate exactly 5 ${isSpeaking ? "IELTS Speaking" : "IELTS Writing"} questions that match the part/task covered by this lesson.`,
+    `Generate exactly 3 ${isSpeaking ? "IELTS Speaking" : "IELTS Writing"} questions that match the part/task covered by this lesson.`,
   ].join("\n");
 
   return { system, user };
@@ -238,9 +238,9 @@ function buildIeltsObjectivePrompt(opts: {
       ]
     ),
     "## Quiz composition",
-    "- Generate exactly 5 questions.",
-    "- Mix mcq and fill-blank as fits the lesson. For fill-blank, put ___ where the blank",
-    "  is in the question text.",
+    "- Generate exactly 5 questions: 3 of type \"mcq\" and 2 of type \"fill-blank\".",
+    "- For fill-blank questions, put ___ where the blank is in the question text and make",
+    "  the correctAnswer the exact missing word/phrase.",
     "- Base every question on the lesson content or topics, never on general knowledge.",
     "",
     "## Rules",
@@ -260,7 +260,7 @@ function buildIeltsObjectivePrompt(opts: {
     ...(opts.content
       ? ["## Lesson text", opts.content, ""]
       : []),
-    "Generate exactly 5 IELTS practice questions (multiple choice and fill-in-the-blank) for this lesson.",
+    "Generate exactly 5 IELTS practice questions for this lesson: 3 multiple-choice (type \"mcq\") and 2 fill-in-the-blank (type \"fill-blank\").",
   ].join("\n");
 
   return { system, user };
@@ -331,6 +331,27 @@ function stripCodeFences(raw: string): string {
   return s.trim();
 }
 
+/** Maps common model spellings to the canonical question type. */
+function normalizeType(raw: string): QuizQuestionType {
+  const t = raw.toLowerCase().replace(/[\s_]/g, "-");
+  if (t === "fill-in-the-blank" || t === "fill-blank" || t === "gap-fill") {
+    return "fill-blank";
+  }
+  if (t === "multiple-choice" || t === "multiple-choice-question" || t === "mcq") {
+    return "mcq";
+  }
+  if (t === "true-false" || t === "true-or-false" || t === "tf") {
+    return "true-false";
+  }
+  if (t === "short-answer" || t === "short-answer-question") {
+    return "short-answer";
+  }
+  if (t === "written" || t === "essay" || t === "writing") {
+    return "written";
+  }
+  return raw as QuizQuestionType;
+}
+
 function sanitizeQuestions(raw: unknown): QuizQuestion[] {
   if (!Array.isArray(raw)) {
     throw new Error("AI returned invalid quiz data");
@@ -340,8 +361,10 @@ function sanitizeQuestions(raw: unknown): QuizQuestion[] {
   for (const q of raw) {
     if (!q || typeof q !== "object") continue;
     const rec = q as Record<string, unknown>;
-    const type = rec.type;
-    if (typeof type !== "string" || !ALLOWED_TYPES.includes(type as QuizQuestionType)) continue;
+    const rawType = rec.type;
+    if (typeof rawType !== "string") continue;
+    const type = normalizeType(rawType);
+    if (!ALLOWED_TYPES.includes(type)) continue;
     if (typeof rec.id !== "string" || typeof rec.question !== "string") continue;
 
     if (type === "written") {

@@ -38,6 +38,7 @@ type ResultsData = {
   score?: number;
   totalQuestions?: number;
   correctCount?: number;
+  overallBand?: number;
   results: Result[];
 };
 
@@ -199,6 +200,19 @@ export function LessonQuiz({
             <p className="font-mono text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: "var(--body)" }}>
               Feedback
             </p>
+            {typeof results.overallBand === "number" && results.overallBand > 0 && (
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <div
+                  className="w-14 h-14 rounded-xl flex flex-col items-center justify-center"
+                  style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))" }}
+                >
+                  <span className="text-[22px] font-bold leading-none" style={{ color: "var(--brand)" }}>
+                    {results.overallBand.toFixed(1)}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase mt-0.5" style={{ color: "var(--body)" }}>band</span>
+                </div>
+              </div>
+            )}
             <p className="text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
               Your answers have been graded
             </p>
