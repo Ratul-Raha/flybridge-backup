@@ -1,5 +1,6 @@
 import "server-only";
 
+import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { CourseEnrollment } from "@/lib/models/enrollment";
@@ -67,6 +68,49 @@ function serializeOrder(order: OrderDoc) {
       price: i.price,
     })),
   };
+}
+
+/**
+ * Deletes orders and cascades into the enrollments/registrations they granted,
+ * matching the single-order admin delete. Used by both the single DELETE route
+ * and the bulk endpoint so the two can never drift apart.
+ */
+export async function deleteOrdersWithCascade(orderIds: mongoose.Types.ObjectId[]): Promise<void> {
+  if (orderIds.length === 0) return;
+  const orders = await Order.find({ _id: { $in: orderIds } })
+    .select("user items")
+    .lean();
+
+  const coursePairs: { user: mongoose.Types.ObjectId; course: mongoose.Types.ObjectId }[] = [];
+  const seminarPairs: { user: mongoose.Types.ObjectId | null; seminar: mongoose.Types.ObjectId }[] = [];
+
+  for (const order of orders) {
+    for (const item of order.items ?? []) {
+      if (item.itemType === "course") {
+        coursePairs.push({ user: order.user, course: item.itemId as unknown as mongoose.Types.ObjectId });
+      } else if (item.itemType === "seminar") {
+        seminarPairs.push({
+          user: order.user as mongoose.Types.ObjectId | null,
+          seminar: item.itemId as unknown as mongoose.Types.ObjectId,
+        });
+      }
+    }
+  }
+
+  const cascades: Promise<unknown>[] = [];
+  for (const p of coursePairs) {
+    cascades.push(
+      CourseEnrollment.deleteMany({ user: p.user, course: p.course })
+    );
+  }
+  for (const p of seminarPairs) {
+    cascades.push(
+      SeminarRegistration.deleteMany({ user: p.user, seminar: p.seminar })
+    );
+  }
+  if (cascades.length > 0) await Promise.all(cascades);
+
+  await Order.deleteMany({ _id: { $in: orderIds } });
 }
 
 export async function isAlreadyFulfilled(

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order, ORDER_STATUSES, type OrderStatus } from "@/lib/models/order";
-import { CourseEnrollment } from "@/lib/models/enrollment";
-import { SeminarRegistration } from "@/lib/models/seminar";
-import { fulfillOrder, type HydratedOrder } from "@/lib/orders";
+import { deleteOrdersWithCascade, fulfillOrder, type HydratedOrder } from "@/lib/orders";
 
 function isOrderStatus(value: unknown): value is OrderStatus {
   return typeof value === "string" && (ORDER_STATUSES as readonly string[]).includes(value);
@@ -64,33 +62,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const userId = order.user;
-
-    const courseIds = order.items
-      .filter((i) => i.itemType === "course")
-      .map((i) => i.itemId);
-    const seminarIds = order.items
-      .filter((i) => i.itemType === "seminar")
-      .map((i) => i.itemId);
-
-    const cascadeOps: Promise<unknown>[] = [];
-
-    if (courseIds.length > 0) {
-      cascadeOps.push(
-        CourseEnrollment.deleteMany({ user: userId, course: { $in: courseIds } })
-      );
-    }
-    if (seminarIds.length > 0) {
-      cascadeOps.push(
-        SeminarRegistration.deleteMany({ user: userId, seminar: { $in: seminarIds } })
-      );
-    }
-
-    if (cascadeOps.length > 0) {
-      await Promise.all(cascadeOps);
-    }
-
-    await Order.deleteOne({ _id: order._id });
+    await deleteOrdersWithCascade([order._id]);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -579,9 +579,11 @@ export function OrderManage() {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<"status" | "delete" | null>(null);
+  const [bulkStatus, setBulkStatus] = useState("completed");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -607,23 +609,6 @@ export function OrderManage() {
   }, [currency]);
 
   useEffect(() => { load(); }, [load]);
-
-  const updateStatus = useCallback(async (orderId: string, status: string) => {
-    setUpdatingId(orderId);
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) throw new Error("Failed to update status");
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to update status");
-    } finally {
-      setUpdatingId(null);
-    }
-  }, [load]);
 
   const retryMeta = useCallback(async (order: Order) => {
     setRetryingId(order.id);
@@ -688,6 +673,71 @@ export function OrderManage() {
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
     else { setSortKey(key); setSortDir(key === "date" ? "desc" : "asc"); }
+  };
+
+  const allOnPage = paged.length > 0 && paged.every((o) => selected.has(o.id));
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPage) {
+        paged.forEach((o) => next.delete(o.id));
+      } else {
+        paged.forEach((o) => next.add(o.id));
+      }
+      return next;
+    });
+  };
+  const clearSelection = () => setSelected(new Set());
+
+  const bulkSetStatus = async () => {
+    if (selected.size === 0) return;
+    setBulkBusy("status");
+    setError(null);
+    try {
+      const res = await fetch("/api/orders/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: [...selected], action: "status", value: bulkStatus }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Bulk update failed");
+      clearSelection();
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk update failed");
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} selected order${selected.size === 1 ? "" : "s"}? This also removes associated enrollments and registrations.`)) return;
+    setBulkBusy("delete");
+    setError(null);
+    try {
+      const res = await fetch("/api/orders/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: [...selected], action: "delete" }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Bulk delete failed");
+      clearSelection();
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk delete failed");
+    } finally {
+      setBulkBusy(null);
+    }
   };
 
   return (
@@ -797,10 +847,74 @@ export function OrderManage() {
               </div>
             </div>
 
+            {selected.size > 0 && (
+              <div
+                className="flex flex-wrap items-center gap-3 px-5 py-3"
+                style={{ borderTop: "1px solid var(--line)", background: "rgba(110,76,255,0.04)" }}
+              >
+                <span className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {selected.size.toLocaleString()} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={bulkStatus}
+                    onChange={(e) => setBulkStatus(e.target.value)}
+                    disabled={bulkBusy !== null}
+                    className="text-[12px] font-medium rounded-lg px-2.5 py-1.5 border outline-none cursor-pointer disabled:opacity-50"
+                    style={{ borderColor: "var(--line)", color: "var(--ink)", background: "#fff" }}
+                  >
+                    {["pending", "completed", "failed", "cancelled", "refunded"].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={bulkSetStatus}
+                    disabled={bulkBusy !== null}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium text-white transition-opacity disabled:opacity-50"
+                    style={{ background: "var(--brand)" }}
+                  >
+                    {bulkBusy === "status" ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+                    Set status
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={bulkDelete}
+                  disabled={bulkBusy !== null}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-50"
+                  style={{ background: "rgba(239,68,68,0.10)", color: "#991B1B" }}
+                >
+                  {bulkBusy === "delete" ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  disabled={bulkBusy !== null}
+                  className="text-[12px] font-medium px-2 py-1.5 disabled:opacity-50"
+                  style={{ color: "var(--body)" }}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr style={{ background: "var(--bg-soft)" }}>
+                    <th className="px-5 py-2.5 w-10">
+                      <input
+                        type="checkbox"
+                        checked={allOnPage}
+                        onChange={toggleSelectAll}
+                        disabled={paged.length === 0}
+                        aria-label="Select all orders on this page"
+                        className="w-4 h-4 cursor-pointer disabled:opacity-40"
+                        style={{ accentColor: "var(--brand)" }}
+                      />
+                    </th>
                     {(["date", "customer", "item", "total", "status", "id", "actions"] as const).map((col) => (
                       <th key={col} className="px-5 py-2.5 first:pl-5">
                         {col === "date" || col === "total" || col === "status" ? (
@@ -833,7 +947,7 @@ export function OrderManage() {
                 <tbody>
                   {paged.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-5 py-16 text-center">
+                      <td colSpan={8} className="px-5 py-16 text-center">
                         <Package size={32} className="mx-auto mb-3" style={{ color: "var(--line)" }} />
                         <p className="text-[13.5px] font-medium" style={{ color: "var(--body)" }}>
                           {search || statusFilter !== "all"
@@ -856,6 +970,16 @@ export function OrderManage() {
                           className="group transition-colors hover:bg-[var(--bg-soft)]/50"
                           style={{ borderBottom: "1px solid var(--line)" }}
                         >
+                          <td className="px-5 py-3.5 w-10">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(o.id)}
+                              onChange={() => toggleSelect(o.id)}
+                              aria-label={`Select order #${o.id.slice(-8)}`}
+                              className="w-4 h-4 cursor-pointer"
+                              style={{ accentColor: "var(--brand)" }}
+                            />
+                          </td>
                           <td className="px-5 py-3.5 whitespace-nowrap">
                             <div className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                               {new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -921,7 +1045,7 @@ export function OrderManage() {
                             </span>
                           </td>
                           <td className="px-5 py-3.5 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-end gap-1.5">
                               <MetaBadge meta={o.meta} status={o.status} />
                               {o.status === "completed" && !o.meta?.reported && (
                                 <button
@@ -939,24 +1063,11 @@ export function OrderManage() {
                                   )}
                                 </button>
                               )}
-                              <select
-                                value={o.status}
-                                onChange={(e) => updateStatus(o.id, e.target.value)}
-                                disabled={updatingId === o.id}
-                                className="text-[11px] font-medium rounded-lg px-2 py-1 border outline-none cursor-pointer disabled:opacity-50"
-                                style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
-                              >
-                                {["pending", "completed", "failed", "cancelled", "refunded"].map((s) => (
-                                  <option key={s} value={s}>{s}</option>
-                                ))}
-                              </select>
-                              {updatingId === o.id && (
-                                <Loader2 size={13} className="animate-spin" style={{ color: "var(--brand)" }} />
-                              )}
                               <button
                                 type="button"
                                 onClick={() => removeOrder(o)}
                                 disabled={deletingId === o.id}
+                                title="Delete order"
                                 className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors disabled:opacity-30 hover:bg-red-50"
                                 style={{ color: "var(--body)" }}
                               >
