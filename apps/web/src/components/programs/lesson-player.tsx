@@ -144,8 +144,8 @@ export function LessonPlayer({
 
   const watermark = useMemo(() => {
     if (!user?.email && !user?.name) return undefined;
-    const id = user.name || user.email;
-    return `FlyBridge · ${id} · ${new Date().toLocaleDateString()}`.toLowerCase();
+    const identity = [user.email, user.name].filter(Boolean).join(" · ");
+    return identity ? `FlyBridge Education Group - ${identity}` : undefined;
   }, [user]);
 
   const current = lessons[index];
