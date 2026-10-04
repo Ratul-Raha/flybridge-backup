@@ -6,6 +6,8 @@ import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { resolveWishlistDiscount } from "@/lib/wishlist-discount";
+import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CheckoutPanel } from "@/components/programs/checkout-panel";
 import { courseDetails } from "../course-data";
@@ -47,6 +49,20 @@ export default async function CheckoutPage({ params }: Props) {
   // page and the order it creates can never quote different numbers.
   const pricing = publicCoursePricing(course);
 
+  // A waitlist member pays a further wishlist discount on top of the general
+  // discount. Computed here so the order summary matches what the order API
+  // will charge when the buyer confirms.
+  const session = await readSession();
+  const wishlist = session
+    ? await resolveWishlistDiscount({
+        itemType: "course",
+        itemId: courseId,
+        userId: session.userId ?? session.uid,
+        email: session.email,
+        price: pricing.price ?? 0,
+      })
+    : null;
+
   const checkoutCourse = {
     courseId,
     slug: course.slug,
@@ -57,7 +73,7 @@ export default async function CheckoutPage({ params }: Props) {
     badge: details?.badge ?? course.badge ?? "COURSE",
     price: course.price ?? 0,
     currency: course.currency ?? "USD",
-    prices: pricing.prices,
+    prices: wishlist ? { ...pricing.prices, BDT: wishlist.price } : pricing.prices,
     // The summary is arithmetic the buyer can check, so only a running discount
     // gets an original to subtract from. A marketing-only strikethrough has no
     // matching discount, and a summary whose rows do not add up is worse than
@@ -67,6 +83,8 @@ export default async function CheckoutPage({ params }: Props) {
         ? pricing.price + pricing.savings
         : undefined,
     discountLabel: pricing.discountLabel,
+    wishlistDiscountPercent: wishlist?.percent ?? 0,
+    wishlistDiscountAmount: wishlist?.amount ?? 0,
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",

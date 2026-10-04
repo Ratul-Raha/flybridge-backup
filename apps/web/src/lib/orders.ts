@@ -12,6 +12,8 @@ import { emitEvent } from "@/lib/events/emit";
 import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
 import { resolveCoursePrice } from "@/lib/course-discount";
+import { resolveWishlistDiscount } from "@/lib/wishlist-discount";
+import { roundMoney } from "@/lib/wishlist";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
 import { isEPSConfigured, createEPSPayment } from "@/lib/payments/eps";
 import type { EventPayload } from "@/lib/events/types";
@@ -267,11 +269,27 @@ export async function createOrder(input: {
     return { order: null, requiresPayment: false, duplicate: false };
   }
 
+  // A waitlist member gets the course's wishlist discount on top of the general
+  // discount. It stacks sequentially: the general discount lowers the list price
+  // first, then the wishlist percent takes a further cut off that price.
+  const wishlist = await resolveWishlistDiscount({
+    itemType: product.itemType,
+    itemId: product.itemId,
+    userId: input.user.id,
+    email: input.user.email,
+    price: priced.price,
+  });
+
   const resolved = {
     subtotal: amount,
-    discount: priced.savings,
-    total: priced.price,
-    label: priced.label,
+    discount: roundMoney(priced.savings + (wishlist?.amount ?? 0)),
+    total: wishlist?.price ?? priced.price,
+    label:
+      priced.label && wishlist
+        ? `${priced.label} · Wishlist ${wishlist.percent}%`
+        : wishlist
+          ? `Wishlist ${wishlist.percent}%`
+          : priced.label,
   };
 
   if (existing) {

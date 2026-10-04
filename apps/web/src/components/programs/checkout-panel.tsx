@@ -19,6 +19,9 @@ type Course = {
   /** The pre-discount BDT amount, as a number so the summary can subtract from it. */
   originalPrice?: number;
   discountLabel?: string | null;
+  /** Wishlist discount for waitlist members, already resolved by the server. */
+  wishlistDiscountPercent?: number;
+  wishlistDiscountAmount?: number;
   upcoming: boolean;
 };
 
@@ -146,8 +149,11 @@ export function CheckoutPanel({
   // discount there is nothing to subtract, so the total stands alone rather than
   // repeating itself under a second heading.
   const originalAmount = course.originalPrice ?? total;
-  const discountAmount = Math.max(0, originalAmount - total);
-  const hasDiscount = discountAmount > 0;
+  const wishlistDiscountAmount = course.wishlistDiscountAmount ?? 0;
+  // The general (course) discount is whatever the original price drops by before
+  // the wishlist cut, so the two rows stay additive and sum to the total.
+  const discountAmount = Math.max(0, originalAmount - total - wishlistDiscountAmount);
+  const hasDiscount = discountAmount > 0 || wishlistDiscountAmount > 0;
 
   const money = (amount: number) => (isFree ? "Free" : formatMoney(amount, displayCurrency));
 
@@ -276,25 +282,49 @@ export function CheckoutPanel({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 text-[13.5px]">
-                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span style={{ color: "var(--body)" }}>Discount</span>
-                    {course.discountLabel && (
-                      <span
-                        className="font-mono text-[10px] font-medium tracking-[0.08em]"
-                        style={{ color: "var(--brand-2)" }}
-                      >
-                        {course.discountLabel}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className="font-medium tabular-nums whitespace-nowrap"
-                    style={{ color: "var(--brand-2)" }}
-                  >
-                    &minus;{formatMoney(discountAmount, displayCurrency)}
-                  </span>
-                </div>
+                {discountAmount > 0 && (
+                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span style={{ color: "var(--body)" }}>Discount</span>
+                      {course.discountLabel && (
+                        <span
+                          className="font-mono text-[10px] font-medium tracking-[0.08em]"
+                          style={{ color: "var(--brand-2)" }}
+                        >
+                          {course.discountLabel}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className="font-medium tabular-nums whitespace-nowrap"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      &minus;{formatMoney(discountAmount, displayCurrency)}
+                    </span>
+                  </div>
+                )}
+
+                {wishlistDiscountAmount > 0 && (
+                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span style={{ color: "var(--body)" }}>Wishlist discount</span>
+                      {course.wishlistDiscountPercent ? (
+                        <span
+                          className="font-mono text-[10px] font-medium tracking-[0.08em]"
+                          style={{ color: "var(--brand-2)" }}
+                        >
+                          {course.wishlistDiscountPercent}%
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className="font-medium tabular-nums whitespace-nowrap"
+                      style={{ color: "var(--brand-2)" }}
+                    >
+                      &minus;{formatMoney(wishlistDiscountAmount, displayCurrency)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
