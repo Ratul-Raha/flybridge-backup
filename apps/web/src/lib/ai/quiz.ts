@@ -214,10 +214,9 @@ function buildSubjectivePrompt(opts: {
       ]
     ),
     "## Quiz composition",
-    "- Generate exactly 3 questions.",
-    "- Make each question a clear, self-contained prompt. Do not repeat the same topic",
-    "  twice. Cover different subtopics or angles.",
-    "- Base questions on the lesson content, title and topics when provided; never on",
+    "- Generate exactly 1 question.",
+    "- Make it a clear, self-contained prompt.",
+    "- Base the question on the lesson content, title and topics when provided; never on",
     "  general knowledge.",
     "",
     "## Rules",
@@ -236,7 +235,7 @@ function buildSubjectivePrompt(opts: {
     ...(opts.content
       ? ["## Lesson text", opts.content, ""]
       : []),
-    `Generate exactly 3 ${isSpeaking ? "IELTS Speaking" : "IELTS Writing"} questions that match the part/task covered by this lesson.`,
+    `Generate exactly 1 ${isSpeaking ? "IELTS Speaking" : "IELTS Writing"} question that matches the part/task covered by this lesson.`,
   ].join("\n");
 
   return { system, user };
