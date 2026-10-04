@@ -3,6 +3,26 @@ import { COURSE_CATEGORIES } from "@/lib/course-categories";
 
 export { COURSE_CATEGORIES, isCourseCategory, type CourseCategory } from "@/lib/course-categories";
 
+const lessonTopicSchema = new Schema(
+  {
+    skill: {
+      type: String,
+      enum: ["reading", "listening", "speaking", "writing"],
+      default: "reading",
+    },
+    text: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
+const lessonTopicsSchema = new Schema(
+  {
+    description: { type: String, trim: true, default: "" },
+    items: { type: [lessonTopicSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const lessonSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -10,6 +30,7 @@ const lessonSchema = new Schema(
     videoUrl: { type: String, trim: true },
     pdfUrl: { type: String, trim: true },
     content: { type: String, trim: true },
+    topics: { type: lessonTopicsSchema, default: () => ({ description: "", items: [] }) },
   },
   { _id: false }
 );
@@ -98,6 +119,7 @@ const courseSchema = new Schema(
 );
 
 export type LessonDoc = InferSchemaType<typeof lessonSchema>;
+export type LessonTopicDoc = InferSchemaType<typeof lessonTopicSchema>;
 export type ModuleDoc = InferSchemaType<typeof moduleSchema>;
 
 export type CourseDoc = InferSchemaType<typeof courseSchema> & {

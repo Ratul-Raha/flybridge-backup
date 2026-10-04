@@ -66,6 +66,13 @@ export async function POST(
       {
         category: course.category ?? null,
         lessonContent: lesson.content ?? "",
+        topics: {
+          description: lesson.topics?.description ?? "",
+          items: (lesson.topics?.items ?? []).map((t) => ({
+            skill: t.skill,
+            text: t.text,
+          })),
+        },
       }
     );
 

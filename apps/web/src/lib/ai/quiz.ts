@@ -18,13 +18,36 @@ export type QuizQuestion = {
   explanation: string;
 };
 
+export type QuizTopic = {
+  skill?: string;
+  text: string;
+};
+
 export type QuizPromptOptions = {
   category?: string | null;
   lessonContent?: string;
+  topics?: { description?: string; items?: QuizTopic[] };
 };
 
 const ALLOWED_TYPES: QuizQuestionType[] = ["mcq", "true-false", "short-answer"];
 const MAX_LESSON_CHARS = 8000;
+
+function formatTopics(topics?: QuizPromptOptions["topics"]): string[] {
+  const description = (topics?.description ?? "").trim();
+  const items = (topics?.items ?? []).filter((t) => t.text.trim());
+  if (!description && items.length === 0) return [];
+
+  const lines: string[] = ["## Lesson topics"];
+  if (description) {
+    lines.push(description);
+    lines.push("");
+  }
+  for (const t of items) {
+    lines.push(`- ${t.skill ?? "reading"}: ${t.text}`);
+  }
+  lines.push("");
+  return lines;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Prompt builder                                                     */
@@ -38,6 +61,7 @@ export function buildQuizPrompt(
 ): { system: string; user: string } {
   const isIelts = opts.category === COURSE_CATEGORIES[0];
   const content = (opts.lessonContent ?? "").trim().slice(0, MAX_LESSON_CHARS);
+  const topics = formatTopics(opts.topics);
 
   const outputFormat = [
     "## Output format",
@@ -103,6 +127,7 @@ export function buildQuizPrompt(
         : "(No lesson text was provided. Base the questions on the lesson title and the IELTS",
           "skill or task it suggests, in the student's own best interest.)",
       "",
+      ...topics,
       "Generate exactly 5 IELTS practice questions for this lesson, adapted to its focus.",
     ].join("\n");
 
@@ -140,6 +165,7 @@ export function buildQuizPrompt(
   if (content) {
     userLines.push("## Lesson text", content, "");
   }
+  userLines.push(...topics);
   userLines.push("Generate a 5-question quiz for this lesson.");
 
   return { system, user: userLines.join("\n") };

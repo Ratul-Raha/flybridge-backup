@@ -72,7 +72,18 @@ const prices = cleanPrices(c.prices);
         title: l.title,
         duration: l.duration ?? "",
         ...(includeContent
-          ? { videoUrl: l.videoUrl ?? "", pdfUrl: l.pdfUrl ?? "", content: l.content ?? "" }
+          ? {
+              videoUrl: l.videoUrl ?? "",
+              pdfUrl: l.pdfUrl ?? "",
+              content: l.content ?? "",
+              topics: {
+                description: l.topics?.description ?? "",
+                items: (l.topics?.items ?? []).map((t) => ({
+                  skill: t.skill ?? "reading",
+                  text: t.text ?? "",
+                })),
+              },
+            }
           : {}),
       })),
     })),
@@ -253,6 +264,7 @@ function normalizeModules(
     videoUrl?: string;
     pdfUrl?: string;
     content?: string;
+    topics?: { description: string; items: { skill: string; text: string }[] };
   }[];
 }[] {
   if (!Array.isArray(raw)) return [];
@@ -264,12 +276,14 @@ function normalizeModules(
         ? mod.lessons
             .map((l) => {
               const lesson = (l ?? {}) as Record<string, unknown>;
+              const topics = normalizeTopics(lesson.topics);
               return {
                 title: typeof lesson.title === "string" ? lesson.title.trim() : "",
                 duration: typeof lesson.duration === "string" ? lesson.duration.trim() : "",
                 videoUrl: typeof lesson.videoUrl === "string" ? lesson.videoUrl.trim() : "",
                 pdfUrl: typeof lesson.pdfUrl === "string" ? lesson.pdfUrl.trim() : "",
                 content: typeof lesson.content === "string" ? lesson.content.trim() : "",
+                ...(topics ? { topics } : {}),
               };
             })
             .filter((l) => l.title)
@@ -277,6 +291,31 @@ function normalizeModules(
       return { title, lessons };
     })
     .filter((m) => m.title || m.lessons.length > 0);
+}
+
+const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing"] as const;
+
+function normalizeTopics(raw: unknown): {
+  description: string;
+  items: { skill: string; text: string }[];
+} | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as { description?: unknown; items?: unknown };
+  const description = typeof obj.description === "string" ? obj.description.trim() : "";
+  const items = Array.isArray(obj.items)
+    ? obj.items
+        .map((t) => {
+          const item = (t ?? {}) as { skill?: unknown; text?: unknown };
+          const skill =
+            typeof item.skill === "string" && (TOPIC_SKILLS as readonly string[]).includes(item.skill)
+              ? item.skill
+              : "reading";
+          const text = typeof item.text === "string" ? item.text.trim() : "";
+          return { skill, text };
+        })
+        .filter((t) => t.text)
+    : [];
+  return { description, items };
 }
 
 function normalizeBooks(raw: unknown): { title: string; description: string; pdfUrl: string }[] {

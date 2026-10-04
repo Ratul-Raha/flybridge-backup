@@ -9,9 +9,20 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { formatMoney } from "@/lib/pricing";
 
-type Lesson = { title: string; duration: string; videoUrl: string; pdfUrl: string; content: string };
+type TopicItem = { skill: "reading" | "listening" | "speaking" | "writing"; text: string };
+type LessonTopics = { description: string; items: TopicItem[] };
+type Lesson = {
+  title: string;
+  duration: string;
+  videoUrl: string;
+  pdfUrl: string;
+  content: string;
+  topics?: LessonTopics;
+};
 type Module = { title: string; lessons: Lesson[] };
 type Book = { title: string; description: string; pdfUrl: string };
+
+const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing"] as const;
 
 type Discount = {
   active?: boolean | null;
@@ -111,7 +122,7 @@ const emptyForm: FormState = {
 };
 
 function emptyLesson(): Lesson {
-  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "" };
+  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", topics: { description: "", items: [] } };
 }
 
 /** `datetime-local` wants a local `YYYY-MM-DDTHH:mm`, not an ISO string. */
@@ -209,6 +220,15 @@ export function CourseManage() {
           videoUrl: l.videoUrl ?? "",
           pdfUrl: l.pdfUrl ?? "",
           content: l.content ?? "",
+          topics: {
+            description: l.topics?.description ?? "",
+            items: Array.isArray(l.topics?.items)
+              ? l.topics.items.map((t) => ({
+                  skill: (t.skill ?? "reading") as TopicItem["skill"],
+                  text: t.text ?? "",
+                }))
+              : [],
+          },
         })),
       })),
       books: (c.books ?? []).map((b) => ({
@@ -326,6 +346,88 @@ export function CourseManage() {
       modules: f.modules.map((m, i) =>
         i === mi
           ? { ...m, lessons: m.lessons.map((l, j) => (j === li ? { ...l, ...patch } : l)) }
+          : m
+      ),
+    }));
+  };
+
+  const updateTopics = (mi: number, li: number, patch: Partial<LessonTopics>) => {
+    setForm((f) => ({
+      ...f,
+      modules: f.modules.map((m, i) =>
+        i === mi
+          ? {
+              ...m,
+              lessons: m.lessons.map((l, j) => {
+                if (j !== li) return l;
+                const topics = l.topics ?? { description: "", items: [] };
+                return { ...l, topics: { ...topics, ...patch } };
+              }),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const updateTopicItem = (mi: number, li: number, ti: number, patch: Partial<TopicItem>) => {
+    setForm((f) => ({
+      ...f,
+      modules: f.modules.map((m, i) =>
+        i === mi
+          ? {
+              ...m,
+              lessons: m.lessons.map((l, j) => {
+                if (j !== li) return l;
+                const topics = l.topics ?? { description: "", items: [] };
+                const items = (topics.items ?? []).map((t, k) => (k === ti ? { ...t, ...patch } : t));
+                return { ...l, topics: { ...topics, items } };
+              }),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const addTopicItem = (mi: number, li: number) => {
+    setForm((f) => ({
+      ...f,
+      modules: f.modules.map((m, i) =>
+        i === mi
+          ? {
+              ...m,
+              lessons: m.lessons.map((l, j) => {
+                if (j !== li) return l;
+                const topics = l.topics ?? { description: "", items: [] };
+                return {
+                  ...l,
+                  topics: {
+                    ...topics,
+                    items: [...(topics.items ?? []), { skill: "reading" as TopicItem["skill"], text: "" }],
+                  },
+                };
+              }),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const removeTopicItem = (mi: number, li: number, ti: number) => {
+    setForm((f) => ({
+      ...f,
+      modules: f.modules.map((m, i) =>
+        i === mi
+          ? {
+              ...m,
+              lessons: m.lessons.map((l, j) => {
+                if (j !== li) return l;
+                const topics = l.topics ?? { description: "", items: [] };
+                return {
+                  ...l,
+                  topics: { ...topics, items: (topics.items ?? []).filter((_, k) => k !== ti) },
+                };
+              }),
+            }
           : m
       ),
     }));
@@ -883,6 +985,64 @@ export function CourseManage() {
                             className={inputClass + " resize-y"}
                             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                           />
+                          <div
+                            className="flex flex-col gap-2 rounded-lg border p-3"
+                            style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}
+                          >
+                            <label className="text-[12px] font-semibold" style={{ color: "var(--ink)" }}>
+                              Lesson topics — guides AI quiz generation
+                            </label>
+                            <input
+                              type="text"
+                              value={l.topics?.description ?? ""}
+                              onChange={(e) => updateTopics(mi, li, { description: e.target.value })}
+                              placeholder="What this lesson covers (optional)"
+                              className={inputClass}
+                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                            />
+                            {(l.topics?.items ?? []).map((t, ti) => (
+                              <div key={ti} className="flex items-center gap-2">
+                                <select
+                                  value={t.skill}
+                                  onChange={(e) =>
+                                    updateTopicItem(mi, li, ti, { skill: e.target.value as TopicItem["skill"] })
+                                  }
+                                  className={inputClass + " !w-[120px]"}
+                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                >
+                                  {TOPIC_SKILLS.map((s) => (
+                                    <option key={s} value={s}>{s}</option>
+                                  ))}
+                                </select>
+                                <input
+                                  type="text"
+                                  value={t.text}
+                                  onChange={(e) => updateTopicItem(mi, li, ti, { text: e.target.value })}
+                                  placeholder="e.g. True/False/Not Given questions"
+                                  className={inputClass}
+                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeTopicItem(mi, li, ti)}
+                                  className="shrink-0 p-[10px] rounded-lg border"
+                                  style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.3)" }}
+                                  aria-label="Remove topic"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addTopicItem(mi, li)}
+                              className="self-start inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full border px-3 py-[7px] hover:border-brand-2 hover:text-brand-2 transition-all duration-200"
+                              style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                            >
+                              <Plus size={12} />
+                              Add topic
+                            </button>
+                          </div>
                         </div>
                       ))}
                       <button
