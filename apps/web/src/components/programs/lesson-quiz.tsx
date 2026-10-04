@@ -17,6 +17,8 @@ type ObjectiveResult = {
   correct: boolean;
   correctAnswer: string;
   explanation: string;
+  band7Answer?: string;
+  comparison?: string;
 };
 
 type SubjectiveResult = {
@@ -303,6 +305,18 @@ export function LessonQuiz({
                   <p className="mt-2 text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
                     {r.explanation}
                   </p>
+                  {r.band7Answer && (
+                    <p className="mt-2 text-[12px] leading-relaxed" style={{ color: "#16a34a" }}>
+                      <span className="font-semibold">Band 7 answer: </span>
+                      {r.band7Answer}
+                    </p>
+                  )}
+                  {r.comparison && (
+                    <p className="mt-2 text-[12px] leading-relaxed" style={{ color: "var(--body)" }}>
+                      <span className="font-semibold" style={{ color: "var(--ink)" }}>Band 7 comparison: </span>
+                      {r.comparison}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

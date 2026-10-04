@@ -8,7 +8,7 @@ import { QuizAttempt } from "@/lib/models/quiz-attempt";
 import { QuizPending } from "@/lib/models/quiz-pending";
 import { CourseProgress } from "@/lib/models/course-progress";
 import { isSubjectiveLesson, type QuizQuestion } from "@/lib/ai/quiz";
-import { judgeWrittenAnswers } from "@/lib/ai/quiz-judge";
+import { judgeObjectiveAnswers, judgeWrittenAnswers } from "@/lib/ai/quiz-judge";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { emitEvent } from "@/lib/events/emit";
 
@@ -190,8 +190,32 @@ export async function POST(
         correct,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        band7Answer: "",
+        comparison: "",
       };
     });
+
+    // IELTS reading/listening: enrich objective grading with an AI explanation and
+    // a comparison against a band 7 answer. Failure here never blocks the result.
+    if (isIelts) {
+      try {
+        const feedback = await judgeObjectiveAnswers(
+          questions,
+          Object.fromEntries(answerMap.entries()),
+          lessonSkill
+        );
+        const feedbackMap = new Map(feedback.map((f) => [f.questionId, f]));
+        for (const r of results) {
+          const f = feedbackMap.get(r.questionId);
+          if (!f) continue;
+          r.explanation = f.explanation || r.explanation;
+          r.band7Answer = f.band7Answer;
+          r.comparison = f.comparison;
+        }
+      } catch (error) {
+        console.error("objective judge error", error);
+      }
+    }
 
     const totalQuestions = questions.length;
     const score =

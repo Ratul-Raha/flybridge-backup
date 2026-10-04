@@ -156,12 +156,25 @@ function buildSubjectivePrompt(opts: {
     "## Your task",
     "Create a focused IELTS practice quiz for a single lesson. The student answers by",
     "writing their response in text, so every question must be one they can answer in a",
-    "few written sentences.",
+    "few written sentences. Match the exact IELTS part/task the lesson covers.",
     isSpeaking
-      ? "- This is a SPEAKING lesson: generate IELTS Speaking Part 1 style questions — short,"
-        + "  personal, everyday topics an examiner would ask at the start of the test."
-      : "- This is a WRITING lesson: generate short IELTS Writing style prompts the student"
-        + "  answers in writing, matched to the lesson focus.",
+      ? [
+          "- This is a SPEAKING lesson. Read the lesson title and topics to decide which",
+          "  part of the IELTS Speaking test it covers, then generate that part's questions:",
+          "  - Part 1: short, personal, everyday questions an examiner asks at the start.",
+          "  - Part 2: a cue-card style long-turn prompt (topic plus bullet points to talk",
+          "    about).",
+          "  - Part 3: abstract discussion questions that follow up on Part 2.",
+          "  - If the part is unclear, default to Part 1.",
+        ].join("\n")
+      : [
+          "- This is a WRITING lesson. Read the lesson title and topics to decide which",
+          "  IELTS Writing task it covers, then generate that task's prompts:",
+          "  - Task 1 (Academic): describe a chart, graph, table or diagram.",
+          "  - Task 1 (General Training): a letter prompt (formal/informal).",
+          "  - Task 2: an essay question (opinion / discussion / problem-solution etc).",
+          "  - If the task is unclear, default to Task 2.",
+        ].join("\n"),
     "",
     baseOutputFormat(
       ["written"],
@@ -173,8 +186,8 @@ function buildSubjectivePrompt(opts: {
     "- Generate exactly 5 questions.",
     "- Make each question a clear, self-contained prompt. Do not repeat the same topic",
     "  twice. Cover different subtopics or angles.",
-    "- Base questions on the lesson content and topics when provided; never on general",
-    "  knowledge.",
+    "- Base questions on the lesson content, title and topics when provided; never on",
+    "  general knowledge.",
     "",
     "## Rules",
     "- Questions must be answerable from the student's own knowledge and experience.",
@@ -192,7 +205,7 @@ function buildSubjectivePrompt(opts: {
     ...(opts.content
       ? ["## Lesson text", opts.content, ""]
       : []),
-    `Generate exactly 5 ${isSpeaking ? "IELTS Speaking Part 1" : "IELTS Writing"} questions for this lesson.`,
+    `Generate exactly 5 ${isSpeaking ? "IELTS Speaking" : "IELTS Writing"} questions that match the part/task covered by this lesson.`,
   ].join("\n");
 
   return { system, user };
