@@ -32,13 +32,20 @@ export async function PATCH(
     }
 
     if (body.status === "completed" && order.status !== "completed") {
-      await fulfillOrder(order as HydratedOrder);
+      // Fulfill the order with proper hydration (includes .save() method)
+      const hydratedOrder = await Order.findById(params.id);
+      if (hydratedOrder) {
+        await fulfillOrder(hydratedOrder as HydratedOrder);
+      }
     } else {
+      // For all other status changes, just update the status
       order.status = body.status;
       await order.save();
     }
 
-    return NextResponse.json({ ok: true, status: order.status });
+    // Fetch the updated order to return current state
+    const updatedOrder = await Order.findById(params.id);
+    return NextResponse.json({ ok: true, status: updatedOrder?.status ?? order.status });
   } catch (error) {
     console.error("orders PATCH error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
