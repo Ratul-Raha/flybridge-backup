@@ -2,16 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order, ORDER_STATUSES, type OrderStatus } from "@/lib/models/order";
+import { User } from "@/lib/models/user";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { deleteOrdersWithCascade, fulfillOrder, type HydratedOrder } from "@/lib/orders";
-import { Course } from "@/lib/models/course";
-import { Seminar } from "@/lib/models/seminar";
-import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 
 function isOrderStatus(value: unknown): value is OrderStatus {
   return typeof value === "string" && (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
+async function resolveOrderUserFromEmail(order: HydratedOrder): Promise<HydratedOrder> {
+  if (order.user || !order.email) return order;
+
+  const user = await User.findOne({ email: String(order.email).trim().toLowerCase() })
+    .select("_id email")
+    .lean<{ _id: unknown; email?: string } | null>();
+
+  if (user && user._id) {
+    order.user = user._id as typeof order.user;
+    await order.save();
+  }
+
+  return order;
 }
 
 /**
@@ -21,23 +34,24 @@ function isOrderStatus(value: unknown): value is OrderStatus {
  */
 async function ensureOrderFulfillment(order: HydratedOrder): Promise<void> {
   if (order.status !== "completed") return;
-  
-  for (const item of order.items ?? []) {
+
+  const resolvedOrder = await resolveOrderUserFromEmail(order);
+  if (!resolvedOrder.user) return;
+
+  for (const item of resolvedOrder.items ?? []) {
     if (item.itemType === "course") {
-      // Check if enrollment already exists
       const existing = await CourseEnrollment.findOne({
-        user: order.user,
+        user: resolvedOrder.user,
         course: item.itemId,
       });
-      
+
       if (!existing) {
-        // Create enrollment if missing
         await CourseEnrollment.findOneAndUpdate(
-          { user: order.user, course: item.itemId },
+          { user: resolvedOrder.user, course: item.itemId },
           {
-            $setOnInsert: { user: order.user, course: item.itemId },
+            $setOnInsert: { user: resolvedOrder.user, course: item.itemId },
             $set: {
-              order: order._id,
+              order: resolvedOrder._id,
               status: "active",
               lessonsPlayed: 0,
               lessonsOpened: [],
@@ -50,43 +64,39 @@ async function ensureOrderFulfillment(order: HydratedOrder): Promise<void> {
         );
       }
     } else if (item.itemType === "seminar") {
-      // Check if registration already exists
       const existing = await SeminarRegistration.findOne({
         seminar: item.itemId,
-        email: order.email,
+        email: resolvedOrder.email,
       });
-      
+
       if (!existing) {
-        // Create registration if missing
         await SeminarRegistration.findOneAndUpdate(
-          { seminar: item.itemId, email: order.email },
+          { seminar: item.itemId, email: resolvedOrder.email },
           {
             $setOnInsert: {
               seminar: item.itemId,
-              user: order.user,
-              name: order.email?.split("@")[0] ?? "",
+              user: resolvedOrder.user,
+              name: resolvedOrder.email?.split("@")[0] ?? "",
               phone: "",
-              email: order.email,
+              email: resolvedOrder.email,
             },
           },
           { upsert: true, new: true }
         );
       }
     } else if (item.itemType === "mock-bundle") {
-      // Check if enrollment already exists
       const existing = await MockTestEnrollment.findOne({
-        user: order.user,
+        user: resolvedOrder.user,
         bundle: item.itemId,
       });
-      
+
       if (!existing) {
-        // Create enrollment if missing
         await MockTestEnrollment.findOneAndUpdate(
-          { user: order.user, bundle: item.itemId },
+          { user: resolvedOrder.user, bundle: item.itemId },
           {
-            $setOnInsert: { user: order.user, bundle: item.itemId },
+            $setOnInsert: { user: resolvedOrder.user, bundle: item.itemId },
             $set: {
-              order: order._id,
+              order: resolvedOrder._id,
               status: "active",
               refundForfeitedAt: null,
               refundForfeitedReason: null,
@@ -123,25 +133,21 @@ export async function PATCH(
     }
 
     if (body.status === "completed" && order.status !== "completed") {
-      // Fulfill the order with proper hydration (includes .save() method)
       const hydratedOrder = await Order.findById(params.id);
       if (hydratedOrder) {
-        await fulfillOrder(hydratedOrder as HydratedOrder);
+        const fixedOrder = await resolveOrderUserFromEmail(hydratedOrder as HydratedOrder);
+        await fulfillOrder(fixedOrder as HydratedOrder);
       }
     } else if (body.status === "completed" && order.status === "completed") {
-      // Order is already completed, but ensure enrollments exist
-      // (fixes cases where order was marked completed without running fulfillment)
       const hydratedOrder = await Order.findById(params.id);
       if (hydratedOrder) {
         await ensureOrderFulfillment(hydratedOrder as HydratedOrder);
       }
     } else {
-      // For all other status changes, just update the status
       order.status = body.status;
       await order.save();
     }
 
-    // Fetch the updated order to return current state
     const updatedOrder = await Order.findById(params.id);
     return NextResponse.json({ ok: true, status: updatedOrder?.status ?? order.status });
   } catch (error) {
