@@ -13,13 +13,21 @@ function isOrderStatus(value: unknown): value is OrderStatus {
 }
 
 async function resolveOrderUserFromEmail(order: HydratedOrder): Promise<HydratedOrder> {
-  if (order.user || !order.email) return order;
+  if (!order.email) return order;
 
-  const user = await User.findOne({ email: String(order.email).trim().toLowerCase() })
-    .select("_id email")
-    .lean<{ _id: unknown; email?: string } | null>();
+  const normalizedEmail = String(order.email).trim().toLowerCase();
 
-  if (user && user._id) {
+  // If user is already set and valid, keep it
+  if (order.user && typeof order.user === "object") {
+    return order;
+  }
+
+  const user = await User.findOne({ email: normalizedEmail }).select("_id email").lean();
+
+  if (!user?._id) return order;
+
+  // Fix stale or missing user linkage
+  if (!order.user || order.user.toString() !== user._id.toString()) {
     order.user = user._id as typeof order.user;
     await order.save();
   }
@@ -28,82 +36,62 @@ async function resolveOrderUserFromEmail(order: HydratedOrder): Promise<Hydrated
 }
 
 /**
- * Ensures enrollments/registrations exist for a completed order.
- * Used to backfill enrollments for orders that were marked completed
- * but never had their fulfillment logic run.
+ * Backfill missing enrollments for a completed order.
+ * Ensures the user has access even if fulfillOrder() didn't create the record.
  */
-async function ensureOrderFulfillment(order: HydratedOrder): Promise<void> {
-  if (order.status !== "completed") return;
+async function backfillMissingEnrollments(order: HydratedOrder): Promise<void> {
+  if (order.status !== "completed" || !order.user) return;
 
-  const resolvedOrder = await resolveOrderUserFromEmail(order);
-  if (!resolvedOrder.user) return;
-
-  for (const item of resolvedOrder.items ?? []) {
+  for (const item of order.items ?? []) {
     if (item.itemType === "course") {
-      const existing = await CourseEnrollment.findOne({
-        user: resolvedOrder.user,
+      const exists = await CourseEnrollment.findOne({
+        user: order.user,
         course: item.itemId,
       });
 
-      if (!existing) {
-        await CourseEnrollment.findOneAndUpdate(
-          { user: resolvedOrder.user, course: item.itemId },
-          {
-            $setOnInsert: { user: resolvedOrder.user, course: item.itemId },
-            $set: {
-              order: resolvedOrder._id,
-              status: "active",
-              lessonsPlayed: 0,
-              lessonsOpened: [],
-              mockTestsPlayed: 0,
-              refundForfeitedAt: null,
-              refundForfeitedReason: null,
-            },
-          },
-          { upsert: true, new: true }
-        );
+      if (!exists) {
+        await CourseEnrollment.create({
+          user: order.user,
+          course: item.itemId,
+          order: order._id,
+          status: "active",
+          lessonsPlayed: 0,
+          lessonsOpened: [],
+          mockTestsPlayed: 0,
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
+        });
       }
     } else if (item.itemType === "seminar") {
-      const existing = await SeminarRegistration.findOne({
+      const exists = await SeminarRegistration.findOne({
         seminar: item.itemId,
-        email: resolvedOrder.email,
+        email: order.email,
       });
 
-      if (!existing) {
-        await SeminarRegistration.findOneAndUpdate(
-          { seminar: item.itemId, email: resolvedOrder.email },
-          {
-            $setOnInsert: {
-              seminar: item.itemId,
-              user: resolvedOrder.user,
-              name: resolvedOrder.email?.split("@")[0] ?? "",
-              phone: "",
-              email: resolvedOrder.email,
-            },
-          },
-          { upsert: true, new: true }
-        );
+      if (!exists) {
+        await SeminarRegistration.create({
+          seminar: item.itemId,
+          user: order.user,
+          name: order.email?.split("@")[0] ?? "Guest",
+          phone: "",
+          email: order.email,
+        });
       }
     } else if (item.itemType === "mock-bundle") {
-      const existing = await MockTestEnrollment.findOne({
-        user: resolvedOrder.user,
+      const exists = await MockTestEnrollment.findOne({
+        user: order.user,
         bundle: item.itemId,
       });
 
-      if (!existing) {
-        await MockTestEnrollment.findOneAndUpdate(
-          { user: resolvedOrder.user, bundle: item.itemId },
-          {
-            $setOnInsert: { user: resolvedOrder.user, bundle: item.itemId },
-            $set: {
-              order: resolvedOrder._id,
-              status: "active",
-              refundForfeitedAt: null,
-              refundForfeitedReason: null,
-            },
-          },
-          { upsert: true, new: true }
-        );
+      if (!exists) {
+        await MockTestEnrollment.create({
+          user: order.user,
+          bundle: item.itemId,
+          order: order._id,
+          status: "active",
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
+        });
       }
     }
   }
@@ -127,23 +115,33 @@ export async function PATCH(
     }
 
     const order = await Order.findById(params.id);
-
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     if (body.status === "completed" && order.status !== "completed") {
       const hydratedOrder = await Order.findById(params.id);
-      if (hydratedOrder) {
-        const fixedOrder = await resolveOrderUserFromEmail(hydratedOrder as HydratedOrder);
-        await fulfillOrder(fixedOrder as HydratedOrder);
+      if (!hydratedOrder) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
+
+      // Resolve missing or stale user linkage
+      const fixedOrder = await resolveOrderUserFromEmail(hydratedOrder as HydratedOrder);
+      
+      // Fulfill the order (creates enrollments)
+      await fulfillOrder(fixedOrder as HydratedOrder);
+      
+      // Backfill any missing enrollments in case fulfillOrder didn't create them
+      await backfillMissingEnrollments(fixedOrder as HydratedOrder);
     } else if (body.status === "completed" && order.status === "completed") {
+      // Order already completed but needs backfill
       const hydratedOrder = await Order.findById(params.id);
       if (hydratedOrder) {
-        await ensureOrderFulfillment(hydratedOrder as HydratedOrder);
+        const fixedOrder = await resolveOrderUserFromEmail(hydratedOrder as HydratedOrder);
+        await backfillMissingEnrollments(fixedOrder as HydratedOrder);
       }
     } else {
+      // For all other status changes, just update the status
       order.status = body.status;
       await order.save();
     }
