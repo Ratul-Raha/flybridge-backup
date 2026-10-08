@@ -11,7 +11,6 @@ import {
   Share2,
   TrendingUp,
 } from "lucide-react";
-import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 import { getCategoryColor } from "@/lib/resource-colors";
 import {
   fileTypeMeta,
@@ -290,7 +289,6 @@ export function PublicResourceList() {
   const [resources, setResources] = useState<ResourceCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [category, setCategory] = useState<string>("All");
   const [fileType, setFileType] = useState<FileTypeFilter>("video");
   const [query, setQuery] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
@@ -319,12 +317,6 @@ export function PublicResourceList() {
     };
   }, []);
 
-  const counts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const r of resources) map.set(r.category, (map.get(r.category) ?? 0) + 1);
-    return map;
-  }, [resources]);
-
   const formatCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const r of resources) map.set(r.fileType, (map.get(r.fileType) ?? 0) + 1);
@@ -335,26 +327,20 @@ export function PublicResourceList() {
     const q = query.trim().toLowerCase();
     return resources
       .filter((r) => (fileType === "all" ? true : r.fileType === fileType))
-      .filter((r) => (category === "All" ? true : r.category === category))
       .filter((r) => !q || r.title.toLowerCase().includes(q) || (r.description ?? "").toLowerCase().includes(q))
       .sort((a, b) => {
         const d = (b.downloadCount ?? 0) - (a.downloadCount ?? 0);
         if (d !== 0) return d;
         return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
       });
-  }, [resources, fileType, category, query]);
+  }, [resources, fileType, query]);
 
   const topCount = useMemo(() => resources.reduce((m, r) => Math.max(m, r.downloadCount ?? 0), 0), [resources]);
 
   const topDownloaded =
-    category === "All" && !query.trim() && topCount > 0
+    !query.trim() && topCount > 0
       ? visible.find((r) => (r.downloadCount ?? 0) === topCount) ?? null
       : null;
-
-  const selectCategory = (c: string) => {
-    setCategory(c);
-    requestAnimationFrame(() => gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  };
 
   const selectFileType = (f: FileTypeFilter) => {
     setFileType(f);
@@ -364,39 +350,76 @@ export function PublicResourceList() {
   const activeFileTypeLabel = FILE_TYPES.find((t) => t.value === fileType)?.label;
 
   const gridTitle =
-    fileType !== "all"
-      ? activeFileTypeLabel ?? "Resources"
-      : category === "All"
-        ? "Latest resources"
-        : `${category} resources`;
+    fileType !== "all" ? activeFileTypeLabel ?? "Resources" : "Latest resources";
   const gridSub =
     fileType !== "all"
       ? `Browse the latest ${(activeFileTypeLabel ?? "resources").toLowerCase()} — added as we publish.`
-      : category === "All"
-        ? "Fresh guides, checklists and templates — added as we publish."
-        : `Guides, checklists and tools filed under ${category}.`;
+      : "Fresh guides, checklists and templates — added as we publish.";
 
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="pt-[clamp(40px,5vh,64px)] pb-2">
-        <div className="mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          <p className="max-w-[560px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+      <section className="pt-[clamp(120px,15vh,150px)] pb-[clamp(32px,4vw,48px)]">
+        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 items-center gap-10 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-2">
+          {/* Description */}
+          <p className="max-w-[560px] font-display text-[clamp(22px,2.6vw,32px)] font-semibold leading-[1.3] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
             Checklists, guides, templates and videos that turn study-abroad plans
-            into action — free, instant downloads.
+            into action — <span style={{ color: "var(--brand-2)" }}>free, instant downloads.</span>
           </p>
 
-          {/* Search */}
-          <div className="relative mt-4 max-w-[560px]">
-            <Search size={18} className="absolute left-[20px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
-              className="w-full rounded-full border bg-white pl-12 pr-5 py-[15px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-              style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
-            />
+          {/* Search + format filter */}
+          <div>
+            <div className="relative">
+              <Search size={18} className="absolute left-[20px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
+                className="w-full rounded-full border bg-white pl-12 pr-5 py-[16px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
+              />
+            </div>
+
+            {/* Format filter */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
+                Format
+              </span>
+              <button
+                type="button"
+                onClick={() => selectFileType("all")}
+                className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                style={{
+                  background: fileType === "all" ? "var(--brand)" : "transparent",
+                  borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
+                  color: fileType === "all" ? "#fff" : "var(--ink)",
+                }}
+              >
+                All formats{loading ? "" : ` · ${resources.length}`}
+              </button>
+
+              {FILE_TYPES.map((t) => {
+                const count = formatCounts.get(t.value) ?? 0;
+                if (count === 0 && fileType !== t.value) return null;
+                const active = fileType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => selectFileType(t.value)}
+                    className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                    style={{
+                      background: active ? "var(--brand)" : "transparent",
+                      borderColor: active ? "var(--brand)" : "var(--line)",
+                      color: active ? "#fff" : "var(--ink)",
+                    }}
+                  >
+                    {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -404,83 +427,6 @@ export function PublicResourceList() {
       {/* ===== Library ===== */}
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          {/* Format filter */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
-              Format
-            </span>
-            <button
-              type="button"
-              onClick={() => selectFileType("all")}
-              className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-              style={{
-                background: fileType === "all" ? "var(--brand)" : "transparent",
-                borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
-                color: fileType === "all" ? "#fff" : "var(--ink)",
-              }}
-            >
-              All formats{loading ? "" : ` · ${resources.length}`}
-            </button>
-
-            {FILE_TYPES.map((t) => {
-              const count = formatCounts.get(t.value) ?? 0;
-              if (count === 0 && fileType !== t.value) return null;
-              const active = fileType === t.value;
-              return (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => selectFileType(t.value)}
-                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                  style={{
-                    background: active ? "var(--brand)" : "transparent",
-                    borderColor: active ? "var(--brand)" : "var(--line)",
-                    color: active ? "#fff" : "var(--ink)",
-                  }}
-                >
-                  {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Category filter */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => selectCategory("All")}
-              className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-              style={{
-                background: category === "All" ? "var(--brand)" : "transparent",
-                borderColor: category === "All" ? "var(--brand)" : "var(--line)",
-                color: category === "All" ? "#fff" : "var(--ink)",
-              }}
-            >
-              All topics{loading ? "" : ` · ${resources.length}`}
-            </button>
-
-            {RESOURCE_CATEGORIES.map((c) => {
-              const count = counts.get(c) ?? 0;
-              if (!count) return null;
-              const active = category === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => selectCategory(c)}
-                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                  style={{
-                    background: active ? "var(--brand)" : "transparent",
-                    borderColor: active ? "var(--brand)" : "var(--line)",
-                    color: active ? "#fff" : "var(--ink)",
-                  }}
-                >
-                  {c} <span style={{ opacity: 0.6 }}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Most downloaded banner */}
           {!loading && topDownloaded && <div className="mt-8"><FeaturedBanner r={topDownloaded} /></div>}
 
@@ -494,7 +440,7 @@ export function PublicResourceList() {
                   </h2>
                   <p className="mt-[6px] text-[14px]" style={{ color: "var(--body)" }}>
                     {query.trim()
-                      ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} ${category !== "All" ? `in ${category}` : "in the library"}.`
+                      ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} in the library.`
                       : gridSub}
                   </p>
                 </div>
