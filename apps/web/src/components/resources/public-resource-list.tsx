@@ -21,6 +21,8 @@ import {
 } from "@/components/dashboard/user/resource-card";
 import { ResourceVideoPlayer, VideoViews } from "@/components/resources/resource-video-player";
 
+const QUICK_SEARCHES = ["Cover letter", "IELTS", "Visa checklist", "Interview"];
+
 const FILE_TYPES = [
   { value: "video", label: "Videos" },
   { value: "pdf", label: "PDFs" },
@@ -291,7 +293,7 @@ export function PublicResourceList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("All");
-  const [fileType, setFileType] = useState<FileTypeFilter>("video");
+  const [fileType, setFileType] = useState<FileTypeFilter>("all");
   const [query, setQuery] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -330,6 +332,16 @@ export function PublicResourceList() {
     for (const r of resources) map.set(r.fileType, (map.get(r.fileType) ?? 0) + 1);
     return map;
   }, [resources]);
+
+  const stats = useMemo(
+    () => ({
+      total: resources.length,
+      free: resources.filter((r) => (r.price ?? 0) <= 0).length,
+      categories: counts.size,
+      formats: new Set(resources.map((r) => r.fileType)).size,
+    }),
+    [resources, counts]
+  );
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -379,106 +391,184 @@ export function PublicResourceList() {
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="pt-[clamp(40px,5vh,64px)] pb-2">
-        <div className="mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          <p className="max-w-[560px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+      <section className="relative overflow-hidden pt-[clamp(120px,15vh,150px)] pb-[clamp(48px,6vw,72px)]">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(rgba(18,32,67,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.04) 1px, transparent 1px), radial-gradient(720px 460px at 50% -10%, rgba(15,169,104,0.12), transparent 62%), radial-gradient(560px 380px at 92% 88%, rgba(107,76,224,0.08), transparent 60%)",
+            backgroundSize: "40px 40px, 40px 40px, auto, auto",
+          }}
+        />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
+
+        <div className="relative z-10 mx-auto w-full max-w-[820px] px-[clamp(20px,4.5vw,56px)] text-center">
+          <span
+            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3.5 py-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: "var(--brand-2)", boxShadow: "0 8px 20px -14px rgba(18,32,67,0.25)" }}
+          >
+            <span className="h-[6px] w-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+            Resource library
+          </span>
+
+          <h1
+            className="mt-5 font-display font-semibold leading-[1.08] tracking-[-0.02em] text-balance"
+            style={{ fontSize: "clamp(34px,4.6vw,56px)", color: "var(--ink)" }}
+          >
+            Everything you need
+            <br />
+            before you <span style={{ color: "var(--brand-2)" }}>fly</span>
+          </h1>
+
+          <p className="mx-auto mt-4 max-w-[560px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
             Checklists, guides, templates and videos that turn study-abroad plans
             into action — free, instant downloads.
           </p>
 
           {/* Search */}
-          <div className="relative mt-4 max-w-[560px]">
+          <div className="relative mx-auto mt-7 max-w-[560px]">
             <Search size={18} className="absolute left-[20px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
-              className="w-full rounded-full border bg-white pl-12 pr-5 py-[15px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+              className="w-full rounded-full border bg-white pl-12 pr-5 py-[16px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
               style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
             />
           </div>
+
+          {/* Quick chips */}
+          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
+              Popular:
+            </span>
+            {QUICK_SEARCHES.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setQuery(query === q ? "" : q)}
+                className="rounded-full border px-3 py-[6px] text-[12px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                style={{
+                  borderColor: query === q ? "var(--brand-2)" : "var(--line)",
+                  color: query === q ? "var(--brand-2)" : "var(--body)",
+                  background: query === q ? "var(--brand-soft)" : "transparent",
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          {!loading && resources.length > 0 && (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+              {[
+                { value: `${stats.free}+`, label: "Instant downloads" },
+                { value: String(stats.total), label: "Resources live" },
+                { value: String(stats.categories), label: "Topics covered" },
+                { value: String(stats.formats), label: "File formats" },
+              ].map((s, i) => (
+                <div key={s.label} className="flex items-center gap-x-10">
+                  <div>
+                    <div className="font-display text-[clamp(22px,2.4vw,28px)] font-semibold leading-none tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
+                      {s.value}
+                    </div>
+                    <div className="mt-1.5 text-[12px]" style={{ color: "var(--body)" }}>
+                      {s.label}
+                    </div>
+                  </div>
+                  {i < 3 && <span className="hidden h-9 w-px sm:block" style={{ background: "var(--line)" }} />}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* ===== Library ===== */}
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          {/* Format filter */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
-              Format
-            </span>
-            <button
-              type="button"
-              onClick={() => selectFileType("all")}
-              className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-              style={{
-                background: fileType === "all" ? "var(--brand)" : "transparent",
-                borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
-                color: fileType === "all" ? "#fff" : "var(--ink)",
-              }}
-            >
-              All formats{loading ? "" : ` · ${resources.length}`}
-            </button>
+          {/* Filters */}
+          <div className="rounded-2xl border bg-white p-5" style={{ borderColor: "var(--line)", boxShadow: "0 10px 30px -24px rgba(18,32,67,0.25)" }}>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
+                Format
+              </span>
+              <button
+                type="button"
+                onClick={() => selectFileType("all")}
+                className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                style={{
+                  background: fileType === "all" ? "var(--brand)" : "transparent",
+                  borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
+                  color: fileType === "all" ? "#fff" : "var(--ink)",
+                }}
+              >
+                All formats{loading ? "" : ` · ${resources.length}`}
+              </button>
 
-            {FILE_TYPES.map((t) => {
-              const count = formatCounts.get(t.value) ?? 0;
-              if (count === 0 && fileType !== t.value) return null;
-              const active = fileType === t.value;
-              return (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => selectFileType(t.value)}
-                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                  style={{
-                    background: active ? "var(--brand)" : "transparent",
-                    borderColor: active ? "var(--brand)" : "var(--line)",
-                    color: active ? "#fff" : "var(--ink)",
-                  }}
-                >
-                  {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
+              {FILE_TYPES.map((t) => {
+                const count = formatCounts.get(t.value) ?? 0;
+                if (count === 0 && fileType !== t.value) return null;
+                const active = fileType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => selectFileType(t.value)}
+                    className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                    style={{
+                      background: active ? "var(--brand)" : "transparent",
+                      borderColor: active ? "var(--brand)" : "var(--line)",
+                      color: active ? "#fff" : "var(--ink)",
+                    }}
+                  >
+                    {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Category filter */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => selectCategory("All")}
-              className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-              style={{
-                background: category === "All" ? "var(--brand)" : "transparent",
-                borderColor: category === "All" ? "var(--brand)" : "var(--line)",
-                color: category === "All" ? "#fff" : "var(--ink)",
-              }}
-            >
-              All topics{loading ? "" : ` · ${resources.length}`}
-            </button>
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+              <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
+                Topic
+              </span>
+              <button
+                type="button"
+                onClick={() => selectCategory("All")}
+                className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                style={{
+                  background: category === "All" ? "var(--brand)" : "transparent",
+                  borderColor: category === "All" ? "var(--brand)" : "var(--line)",
+                  color: category === "All" ? "#fff" : "var(--ink)",
+                }}
+              >
+                All topics{loading ? "" : ` · ${resources.length}`}
+              </button>
 
-            {RESOURCE_CATEGORIES.map((c) => {
-              const count = counts.get(c) ?? 0;
-              if (!count) return null;
-              const active = category === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => selectCategory(c)}
-                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                  style={{
-                    background: active ? "var(--brand)" : "transparent",
-                    borderColor: active ? "var(--brand)" : "var(--line)",
-                    color: active ? "#fff" : "var(--ink)",
-                  }}
-                >
-                  {c} <span style={{ opacity: 0.6 }}>{count}</span>
-                </button>
-              );
-            })}
+              {RESOURCE_CATEGORIES.map((c) => {
+                const count = counts.get(c) ?? 0;
+                if (!count) return null;
+                const active = category === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => selectCategory(c)}
+                    className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                    style={{
+                      background: active ? "var(--brand)" : "transparent",
+                      borderColor: active ? "var(--brand)" : "var(--line)",
+                      color: active ? "#fff" : "var(--ink)",
+                    }}
+                  >
+                    {c} <span style={{ opacity: 0.6 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Most downloaded banner */}
@@ -486,7 +576,7 @@ export function PublicResourceList() {
 
           {/* Header + grid */}
           {!loading && resources.length > 0 && (
-            <div className="mb-8 mt-2">
+            <div className="mb-8 mt-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="font-display text-[clamp(24px,2.6vw,32px)] font-medium leading-tight tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
