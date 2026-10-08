@@ -100,6 +100,27 @@ function clampBand(band: number): number {
   return Math.min(9, Math.max(0, rounded));
 }
 
+/**
+ * json_object mode forces the model to return an object, so the requested array
+ * often arrives wrapped ({"results": [...]}, {"grades": [...]}, ...). Tolerate
+ * the wrapper instead of failing the whole quiz.
+ */
+function extractArray(raw: unknown): Record<string, unknown>[] {
+  const list: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object"
+      ? (() => {
+          const rec = raw as Record<string, unknown>;
+          for (const key of ["results", "grades", "answers", "reviews", "questions", "data"]) {
+            const v = rec[key];
+            if (Array.isArray(v)) return v;
+          }
+          return [];
+        })()
+      : [];
+  return list.filter((r): r is Record<string, unknown> => !!r && typeof r === "object");
+}
+
 /* ------------------------------------------------------------------ */
 /*  Grading                                                            */
 /* ------------------------------------------------------------------ */
@@ -135,11 +156,12 @@ export async function judgeWrittenAnswers(
   }
 
   const parsed = JSON.parse(stripCodeFences(full));
-  if (!Array.isArray(parsed)) {
+  const list = extractArray(parsed);
+  if (list.length === 0) {
     throw new Error("flybridge-ielts-judge returned an invalid result");
   }
 
-  return (parsed as Record<string, unknown>[]).map((r) => ({
+  return list.map((r) => ({
     questionId: typeof r.questionId === "string" ? r.questionId : "",
     bandScore: clampBand(Number(r.bandScore) || 0),
     feedback: typeof r.feedback === "string" ? r.feedback : "",
@@ -238,11 +260,12 @@ export async function judgeObjectiveAnswers(
   }
 
   const parsed = JSON.parse(stripCodeFences(full));
-  if (!Array.isArray(parsed)) {
+  const list = extractArray(parsed);
+  if (list.length === 0) {
     throw new Error("flybridge-ielts-judge returned an invalid result");
   }
 
-  return (parsed as Record<string, unknown>[]).map((r) => ({
+  return list.map((r) => ({
     questionId: typeof r.questionId === "string" ? r.questionId : "",
     explanation: typeof r.explanation === "string" ? r.explanation : "",
     band7Answer: typeof r.band7Answer === "string" ? r.band7Answer : "",
