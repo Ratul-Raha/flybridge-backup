@@ -40,22 +40,21 @@ function buildJudgePrompt(opts: {
     "a band.",
     "",
     "## Output format",
-    "Return ONLY a valid JSON array. No markdown, no explanation, no preamble.",
-    "Each element must be an object with these exact keys:",
+    "Return ONLY a valid JSON object keyed by questionId. No markdown, no explanation,",
+    "no preamble.",
     "",
-    '  "questionId":    the id of the question you are grading',
-    '  "bandScore":     band for THIS answer (0-9 · 0.5 steps, e.g. 6.5)',
-    '  "feedback":      1-2 short sentences on mistakes and how to improve',
-    '  "exampleAnswer": a concise band 7 model answer for this question',
-    '  "comparison":    1 short sentence comparing the student\'s answer to the band 7 example',
+    "Example shape:",
+    '{ "q1": { "bandScore": 6.5, "feedback": "...", "exampleAnswer": "...", "comparison": "..." },',
+    '  "q2": { "bandScore": 6, "feedback": "...", "exampleAnswer": "...", "comparison": "..." } }',
     "",
     "## Rules",
     "- Be strict and realistic; a typical learner lands between 5.0 and 7.5.",
     "- Band must be in 0.5 increments (no 6.25 etc).",
     "- Keep every field SHORT: feedback and comparison must stay to 1-2 sentences, and",
     "  exampleAnswer to a few sentences. Do not pad.",
-    "- Grade every question in the list, in the same order.",
-    "- Return ONLY the JSON array, nothing else.",
+    "- Grade EVERY question in the list. The JSON object MUST contain one entry for",
+    "  each question id, keyed by that id.",
+    "- Return ONLY the JSON object, nothing else.",
   ].join("\n");
 
   const gradedLines = opts.questions
@@ -101,37 +100,54 @@ function clampBand(band: number): number {
 }
 
 /**
- * json_object mode forces the model to return an object, so the requested array
- * often arrives wrapped ({"results": [...]}, {"grades": [...]}, ...). Tolerate
- * the wrapper instead of failing the whole quiz.
+ * json_object mode forces the model to return an object, and the requested
+ * keyed-object shape sometimes degrades into an array or a single grade object.
+ * Accept all three shapes and normalize to a list of grade records.
  */
-function extractArray(raw: unknown): Record<string, unknown>[] {
-  const list: unknown[] = Array.isArray(raw)
-    ? raw
-    : raw && typeof raw === "object"
-      ? (() => {
-          const rec = raw as Record<string, unknown>;
-          for (const key of ["results", "grades", "answers", "reviews", "questions", "data"]) {
-            const v = rec[key];
-            if (Array.isArray(v)) return v;
-          }
-          return [];
-        })()
-      : [];
-  return list.filter((r): r is Record<string, unknown> => !!r && typeof r === "object");
+function extractGrades(raw: unknown): Record<string, unknown>[] {
+  const asRecords = (list: unknown[]): Record<string, unknown>[] =>
+    list.filter((r): r is Record<string, unknown> => !!r && typeof r === "object" && !Array.isArray(r));
+
+  if (Array.isArray(raw)) return asRecords(raw);
+  if (!raw || typeof raw !== "object") return [];
+
+  const rec = raw as Record<string, unknown>;
+  for (const key of ["results", "grades", "answers", "reviews", "questions", "data"]) {
+    const v = rec[key];
+    if (Array.isArray(v)) return asRecords(v);
+  }
+
+  // Single grade object: {"questionId": "q1", "bandScore": 2, ...}
+  if (typeof rec.questionId === "string" || typeof rec.bandScore === "number" ||
+      typeof rec.explanation === "string") {
+    return [rec];
+  }
+
+  // Keyed object: {"q1": {...}, "q2": {...}}
+  const values = Object.values(rec);
+  if (values.length > 0 && values.every((v) => !!v && typeof v === "object" && !Array.isArray(v))) {
+    return Object.entries(rec).map(([key, v]) => {
+      const r = { ...(v as Record<string, unknown>) };
+      if (typeof r.questionId !== "string") r.questionId = key;
+      return r;
+    });
+  }
+
+  return [];
 }
 
 /* ------------------------------------------------------------------ */
 /*  Grading                                                            */
 /* ------------------------------------------------------------------ */
 
-export async function judgeWrittenAnswers(
-  questions: QuizQuestion[],
-  answers: Record<string, string>,
-  skill: string
-): Promise<WrittenFeedback[]> {
+/**
+ * Runs one judge call and normalizes the reply to a list of grade records.
+ */
+async function runJudge(
+  system: string,
+  user: string
+): Promise<Record<string, unknown>[]> {
   const provider = await getProvider();
-  const { system, user } = buildJudgePrompt({ skill, questions, answers });
 
   const stream = await provider.streamChat({
     model: QUIZ_MODEL,
@@ -156,12 +172,48 @@ export async function judgeWrittenAnswers(
   }
 
   const parsed = JSON.parse(stripCodeFences(full));
-  const list = extractArray(parsed);
+  const list = extractGrades(parsed);
   if (list.length === 0) {
     throw new Error(
       `flybridge-ielts-judge returned an invalid result: ${full.slice(0, 600)}`
     );
   }
+  return list;
+}
+
+/**
+ * Grades every question; if the model skips any, retry once with only the
+ * missing questions so the student always gets feedback for all of them.
+ */
+async function runJudgeWithRetry(
+  questions: QuizQuestion[],
+  answers: Record<string, string>,
+  skill: string,
+  buildPrompt: (opts: {
+    skill: string;
+    questions: QuizQuestion[];
+    answers: Record<string, string>;
+  }) => { system: string; user: string }
+): Promise<Record<string, unknown>[]> {
+  const { system, user } = buildPrompt({ skill, questions, answers });
+  let list = await runJudge(system, user);
+
+  const gradedIds = new Set(list.map((r) => r.questionId));
+  const missing = questions.filter((q) => !gradedIds.has(q.id));
+  if (missing.length > 0 && missing.length < questions.length) {
+    const retryPrompt = buildPrompt({ skill, questions: missing, answers });
+    list = list.concat(await runJudge(retryPrompt.system, retryPrompt.user));
+  }
+
+  return list;
+}
+
+export async function judgeWrittenAnswers(
+  questions: QuizQuestion[],
+  answers: Record<string, string>,
+  skill: string
+): Promise<WrittenFeedback[]> {
+  const list = await runJudgeWithRetry(questions, answers, skill, buildJudgePrompt);
 
   return list.map((r) => ({
     questionId: typeof r.questionId === "string" ? r.questionId : "",
@@ -190,21 +242,20 @@ function buildObjectiveJudgePrompt(opts: {
     "right and compare the student's response to what a band 7 candidate would answer.",
     "",
     "## Output format",
-    "Return ONLY a valid JSON array. No markdown, no explanation, no preamble.",
-    "Each element must be an object with these exact keys:",
+    "Return ONLY a valid JSON object keyed by questionId. No markdown, no explanation,",
+    "no preamble.",
     "",
-    '  "questionId":   the id of the question you are reviewing',
-    '  "explanation":  1-2 sentences explaining why the correct answer is right',
-    '  "band7Answer":  what a band 7 candidate would answer (the correct answer plus the',
-    "                  reasoning they would rely on)",
-    '  "comparison":   1 short sentence comparing the student\'s answer to the band 7 answer',
+    "Example shape:",
+    '{ "q1": { "explanation": "...", "band7Answer": "...", "comparison": "..." },',
+    '  "q2": { "explanation": "...", "band7Answer": "...", "comparison": "..." } }',
     "",
     "## Rules",
     "- Keep every field SHORT: 1-2 sentences each, no padding.",
     "- For a correct answer, say what the student did right; for an incorrect one, say",
     "  where they went wrong.",
-    "- Review every question in the list, in the same order.",
-    "- Return ONLY the JSON array, nothing else.",
+    "- Review EVERY question in the list. The JSON object MUST contain one entry for",
+    "  each question id, keyed by that id.",
+    "- Return ONLY the JSON object, nothing else.",
   ].join("\n");
 
   const reviewedLines = opts.questions
@@ -236,38 +287,12 @@ export async function judgeObjectiveAnswers(
   answers: Record<string, string>,
   skill: string
 ): Promise<ObjectiveFeedback[]> {
-  const provider = await getProvider();
-  const { system, user } = buildObjectiveJudgePrompt({ skill, questions, answers });
-
-  const stream = await provider.streamChat({
-    model: QUIZ_MODEL,
-    system,
-    messages: [{ role: "user", content: user }],
-    jsonMode: true,
-    maxTokens: 4096,
-  });
-
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let full = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      full += value.text;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  const parsed = JSON.parse(stripCodeFences(full));
-  const list = extractArray(parsed);
-  if (list.length === 0) {
-    throw new Error(
-      `flybridge-ielts-judge returned an invalid result: ${full.slice(0, 600)}`
-    );
-  }
+  const list = await runJudgeWithRetry(
+    questions,
+    answers,
+    skill,
+    buildObjectiveJudgePrompt
+  );
 
   return list.map((r) => ({
     questionId: typeof r.questionId === "string" ? r.questionId : "",
