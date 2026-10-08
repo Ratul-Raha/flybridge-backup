@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Order, ORDER_STATUSES, type OrderStatus } from "@/lib/models/order";
-import { deleteOrdersWithCascade } from "@/lib/orders";
+import { deleteOrdersWithCascade, fulfillOrderAccess } from "@/lib/orders";
 
 const MAX_ORDERS = 500;
 
@@ -40,6 +40,26 @@ export async function POST(request: NextRequest) {
       if (!isOrderStatus(value)) {
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
+
+      if (value === "completed") {
+        // Marking an order completed must grant access, not just flip the
+        // status — otherwise manual payments would never create enrollments.
+        const failures: { id: string; error: string }[] = [];
+        let updated = 0;
+        for (const id of ids) {
+          try {
+            await fulfillOrderAccess(id);
+            updated++;
+          } catch (error) {
+            failures.push({
+              id,
+              error: error instanceof Error ? error.message : "Fulfillment failed",
+            });
+          }
+        }
+        return NextResponse.json({ ok: true, updated, failures });
+      }
+
       const result = await Order.updateMany({ _id: { $in: ids } }, { $set: { status: value } });
       return NextResponse.json({ ok: true, updated: result.modifiedCount });
     }

@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Order, type OrderDoc, type OrderItemType } from "@/lib/models/order";
 import { CourseEnrollment } from "@/lib/models/enrollment";
+import { User } from "@/lib/models/user";
 import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { Resource } from "@/lib/models/resource";
@@ -649,6 +650,116 @@ export async function fulfillOrder(
   if (isMetaPurchaseEnabled()) {
     await reportOrderPurchase(order, { phone: buyer.phone, content: purchasedContent });
   }
+}
+
+/**
+ * Links an order to its user by email when the `user` reference is missing or
+ * stale. Manual and legacy orders sometimes carry only an email; resolving it
+ * here means fulfillment can grant access to the right account.
+ */
+export async function resolveOrderUserFromEmail(order: HydratedOrder): Promise<HydratedOrder> {
+  if (!order.email) return order;
+
+  const normalizedEmail = String(order.email).trim().toLowerCase();
+
+  const user = await User.findOne({ email: normalizedEmail }).select("_id email").lean();
+
+  if (!user?._id) return order;
+
+  // Fix stale or missing user linkage
+  const current = order.user?.toString();
+  if (!current || current !== user._id.toString()) {
+    order.user = user._id as typeof order.user;
+    await order.save();
+  }
+
+  return order;
+}
+
+/**
+ * Backfill missing enrollments for a completed order. Ensures the user has
+ * access even if fulfillOrder() didn't create the record — e.g. multi-item
+ * orders, or orders completed through a code path that skipped fulfillment.
+ */
+export async function backfillMissingEnrollments(order: HydratedOrder): Promise<void> {
+  if (order.status !== "completed" || !order.user) return;
+
+  const email = order.email ?? "";
+
+  for (const item of order.items ?? []) {
+    if (item.itemType === "course") {
+      const exists = await CourseEnrollment.findOne({
+        user: order.user,
+        course: item.itemId,
+      });
+
+      if (!exists) {
+        await CourseEnrollment.create({
+          user: order.user,
+          course: item.itemId,
+          order: order._id,
+          status: "active",
+          lessonsPlayed: 0,
+          lessonsOpened: [],
+          mockTestsPlayed: 0,
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
+        });
+      }
+    } else if (item.itemType === "seminar") {
+      const exists = await SeminarRegistration.findOne({
+        seminar: item.itemId,
+        email,
+      });
+
+      if (!exists) {
+        await SeminarRegistration.create({
+          seminar: item.itemId,
+          user: order.user,
+          name: order.email?.split("@")[0] ?? "Guest",
+          phone: "",
+          email,
+        });
+      }
+    } else if (item.itemType === "mock-bundle") {
+      const exists = await MockTestEnrollment.findOne({
+        user: order.user,
+        bundle: item.itemId,
+      });
+
+      if (!exists) {
+        await MockTestEnrollment.create({
+          user: order.user,
+          bundle: item.itemId,
+          order: order._id,
+          status: "active",
+          refundForfeitedAt: null,
+          refundForfeitedReason: null,
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Grants access for an order end-to-end: links the user, fulfills it if it is
+ * not yet completed, and backfills any missing enrollments. Used whenever an
+ * admin marks an order completed — single or bulk — including manual payments.
+ */
+export async function fulfillOrderAccess(orderId: string): Promise<void> {
+  await connectDb();
+
+  const order = await Order.findById(orderId);
+  if (!order) return;
+
+  const hydrated = order as HydratedOrder;
+  const fixed = await resolveOrderUserFromEmail(hydrated);
+
+  if (fixed.status !== "completed") {
+    await fulfillOrder(fixed);
+  }
+
+  await backfillMissingEnrollments(fixed);
 }
 
 export type MetaReportResult = {
