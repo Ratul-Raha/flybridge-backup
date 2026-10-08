@@ -26,6 +26,7 @@ type Lesson = {
   pdfUrl: string;
   content: string;
   quiz: boolean;
+  skill: string;
 };
 
 type Module = { title: string; lessons: Lesson[] };
@@ -38,6 +39,7 @@ type FlatLesson = {
   pdfUrl: string;
   content: string;
   quiz: boolean;
+  skill: string;
 };
 
 type GradeData = {
@@ -566,6 +568,7 @@ export function LessonPlayer({
                     courseId={course.id}
                     moduleIndex={moduleIndex}
                     lessonIndex={lessonIndex}
+                    skill={current.skill}
                     onScoreUpdate={(entry) => {
                       setQuizScores((prev) => {
                         const idx = prev.findIndex(

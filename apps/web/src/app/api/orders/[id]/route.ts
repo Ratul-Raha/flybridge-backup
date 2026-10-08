@@ -11,6 +11,8 @@ function isOrderStatus(value: unknown): value is OrderStatus {
   return typeof value === "string" && (ORDER_STATUSES as readonly string[]).includes(value);
 }
 
+const GATEWAYS = ["stripe", "eps", "manual"] as const;
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -24,8 +26,14 @@ export async function PATCH(
     const body = await request.json();
     await connectDb();
 
-    if (!isOrderStatus(body.status)) {
+    const hasStatus = typeof body.status !== "undefined";
+    const hasGateway = typeof body.gateway !== "undefined";
+
+    if (hasStatus && !isOrderStatus(body.status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    if (hasGateway && body.gateway !== null && !(GATEWAYS as readonly string[]).includes(body.gateway)) {
+      return NextResponse.json({ error: "Invalid gateway" }, { status: 400 });
     }
 
     const order = await Order.findById(params.id);
@@ -33,19 +41,29 @@ export async function PATCH(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (body.status === "completed") {
+    if (hasGateway) {
+      const gateway = body.gateway as string | null;
+      order.gateway = gateway || null;
+    }
+
+    if (hasStatus && body.status !== "completed") {
+      order.status = body.status;
+    }
+    await order.save();
+
+    if (hasStatus && body.status === "completed") {
       // Fulfill the order (creates enrollments) and backfill any that are
       // missing, whether the order is being completed now or was already
       // marked completed through a path that skipped fulfillment.
       await fulfillOrderAccess(params.id);
-    } else {
-      // For all other status changes, just update the status
-      order.status = body.status;
-      await order.save();
     }
 
     const updatedOrder = await Order.findById(params.id);
-    return NextResponse.json({ ok: true, status: updatedOrder?.status ?? order.status });
+    return NextResponse.json({
+      ok: true,
+      status: updatedOrder?.status ?? order.status,
+      gateway: updatedOrder?.gateway ?? null,
+    });
   } catch (error) {
     console.error("orders PATCH error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

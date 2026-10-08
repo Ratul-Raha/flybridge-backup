@@ -44,6 +44,8 @@ type Order = {
   discountLabel: string | null;
   status: string;
   gateway: string | null;
+  gatewayRef: string | null;
+  merchantTransactionId: string | null;
   meta: {
     reported: boolean;
     reportedAt: string | null;
@@ -97,6 +99,13 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string; dot: string }> = {
 };
 
 const STATUS_OPTIONS = ["all", "completed", "pending", "failed", "cancelled", "refunded"] as const;
+const STATUS_VALUES = ["pending", "completed", "failed", "cancelled", "refunded"] as const;
+const GATEWAY_OPTIONS = [
+  { value: "", label: "—" },
+  { value: "stripe", label: "Stripe" },
+  { value: "eps", label: "EPS" },
+  { value: "manual", label: "Manual Payment" },
+] as const;
 const PAGE_SIZE = 10;
 type SortKey = "date" | "total" | "status";
 type SortDir = "asc" | "desc";
@@ -581,6 +590,7 @@ export function OrderManage() {
   const [page, setPage] = useState(1);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<"status" | "delete" | null>(null);
   const [bulkStatus, setBulkStatus] = useState("completed");
@@ -636,6 +646,25 @@ export function OrderManage() {
       setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingId(null);
+    }
+  }, [load]);
+
+  const patchOrder = useCallback(async (order: Order, body: { status?: string; gateway?: string | null }) => {
+    setSavingId(order.id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Update failed");
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setSavingId(null);
     }
   }, [load]);
 
@@ -863,7 +892,7 @@ export function OrderManage() {
                     className="text-[12px] font-medium rounded-lg px-2.5 py-1.5 border outline-none cursor-pointer disabled:opacity-50"
                     style={{ borderColor: "var(--line)", color: "var(--ink)", background: "#fff" }}
                   >
-                    {["pending", "completed", "failed", "cancelled", "refunded"].map((s) => (
+                    {STATUS_VALUES.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -915,7 +944,7 @@ export function OrderManage() {
                         style={{ accentColor: "var(--brand)" }}
                       />
                     </th>
-                    {(["date", "customer", "item", "total", "status", "id", "actions"] as const).map((col) => (
+                    {(["date", "customer", "item", "total", "status", "payment", "id", "actions"] as const).map((col) => (
                       <th key={col} className="px-5 py-2.5 first:pl-5">
                         {col === "date" || col === "total" || col === "status" ? (
                           <button
@@ -947,7 +976,7 @@ export function OrderManage() {
                 <tbody>
                   {paged.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-5 py-16 text-center">
+                      <td colSpan={9} className="px-5 py-16 text-center">
                         <Package size={32} className="mx-auto mb-3" style={{ color: "var(--line)" }} />
                         <p className="text-[13.5px] font-medium" style={{ color: "var(--body)" }}>
                           {search || statusFilter !== "all"
@@ -1031,13 +1060,37 @@ export function OrderManage() {
                             )}
                           </td>
                           <td className="px-5 py-3.5">
-                            <span
-                              className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1"
+                            <select
+                              value={o.status}
+                              onChange={(e) => patchOrder(o, { status: e.target.value })}
+                              disabled={savingId === o.id}
+                              aria-label={`Change status for order #${o.id.slice(-8)}`}
+                              className="text-[11px] font-semibold rounded-full px-2.5 py-1 border-0 outline-none cursor-pointer disabled:opacity-50"
                               style={{ background: sc.bg, color: sc.fg }}
                             >
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.dot }} />
-                              {o.status}
-                            </span>
+                              {STATUS_VALUES.map((s) => (
+                                <option key={s} value={s} style={{ color: "#111" }}>{s}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <select
+                              value={o.gateway ?? ""}
+                              onChange={(e) => patchOrder(o, { gateway: e.target.value || null })}
+                              disabled={savingId === o.id}
+                              aria-label={`Change payment method for order #${o.id.slice(-8)}`}
+                              className="text-[11px] font-medium rounded-md px-2 py-1 border outline-none cursor-pointer disabled:opacity-50"
+                              style={{ borderColor: "var(--line)", color: "var(--ink)", background: "#fff" }}
+                            >
+                              {GATEWAY_OPTIONS.map((g) => (
+                                <option key={g.value} value={g.value}>{g.label}</option>
+                              ))}
+                            </select>
+                            {(o.merchantTransactionId || o.gatewayRef) && (
+                              <div className="text-[9.5px] font-mono mt-0.5" style={{ color: "var(--body)" }}>
+                                {o.merchantTransactionId ?? o.gatewayRef}
+                              </div>
+                            )}
                           </td>
                           <td className="px-5 py-3.5">
                             <span className="text-[10.5px] font-mono" style={{ color: "var(--body)" }}>

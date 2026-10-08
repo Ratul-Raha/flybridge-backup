@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle, Mic, Volume2, Square } from "lucide-react";
 
 type Question = {
   id: string;
@@ -50,11 +50,13 @@ export function LessonQuiz({
   courseId,
   moduleIndex,
   lessonIndex,
+  skill,
   onScoreUpdate,
 }: {
   courseId: string;
   moduleIndex: number;
   lessonIndex: number;
+  skill?: string;
   onScoreUpdate?: (entry: { moduleIndex: number; lessonIndex: number; score: number; correctCount: number; totalQuestions: number }) => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
@@ -64,6 +66,67 @@ export function LessonQuiz({
   const [results, setResults] = useState<ResultsData | null>(null);
   const [error, setError] = useState("");
   const [showRetakeWarning, setShowRetakeWarning] = useState(false);
+  const [speechBusy, setSpeechBusy] = useState<string | null>(null);
+  const [speechError, setSpeechError] = useState("");
+
+  const useSpeech = skill === "speaking";
+
+  const getSpeechConfig = async () => {
+    const res = await fetch("/api/speech-token", { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Voice practice is unavailable");
+    return data as { token: string; region: string; locale: string; voice: string };
+  };
+
+  const readPrompt = async (question: Question) => {
+    setSpeechError("");
+    setSpeechBusy(`read-${question.id}`);
+    try {
+      const config = await getSpeechConfig();
+      const sdk = await import("microsoft-cognitiveservices-speech-sdk");
+      const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(config.token, config.region);
+      speechConfig.speechSynthesisVoiceName = config.voice;
+      const synthesizer = new sdk.SpeechSynthesizer(speechConfig);
+      await new Promise<void>((resolve, reject) => {
+        synthesizer.speakTextAsync(question.question, () => resolve(), reject);
+      });
+      synthesizer.close();
+    } catch (e) {
+      setSpeechError(e instanceof Error ? e.message : "Could not read the prompt");
+    } finally {
+      setSpeechBusy(null);
+    }
+  };
+
+  const recordAnswer = async (question: Question) => {
+    setSpeechError("");
+    setSpeechBusy(`record-${question.id}`);
+    try {
+      const config = await getSpeechConfig();
+      const sdk = await import("microsoft-cognitiveservices-speech-sdk");
+      const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(config.token, config.region);
+      speechConfig.speechRecognitionLanguage = config.locale;
+      const recognizer = new sdk.SpeechRecognizer(speechConfig);
+      const transcript = await new Promise<string>((resolve, reject) => {
+        recognizer.recognizeOnceAsync(
+          (result) => {
+            recognizer.close();
+            if (result.reason === sdk.ResultReason.RecognizedSpeech) resolve(result.text);
+            else reject(new Error("Azure could not understand that answer. Please try again."));
+          },
+          (error) => {
+            recognizer.close();
+            reject(new Error(typeof error === "string" ? error : "Microphone recognition failed"));
+          }
+        );
+      });
+      setAnswers((prev) => ({ ...prev, [question.id]: transcript }));
+    } catch (e) {
+      setSpeechError(e instanceof Error ? e.message : "Could not use the microphone");
+    } finally {
+      setSpeechBusy(null);
+    }
+  };
 
   const startQuiz = async () => {
     setPhase("loading");
@@ -428,6 +491,30 @@ export function LessonQuiz({
             </span>
           </p>
 
+          {useSpeech && q.type === "written" && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => readPrompt(q)}
+                disabled={speechBusy !== null}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-medium disabled:opacity-50"
+                style={{ color: "var(--body)", borderColor: "var(--line)" }}
+              >
+                {speechBusy === `read-${q.id}` ? <Loader2 size={13} className="animate-spin" /> : <Volume2 size={13} />}
+                Read prompt aloud
+              </button>
+              <button
+                type="button"
+                onClick={() => recordAnswer(q)}
+                disabled={speechBusy !== null}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold disabled:opacity-50"
+                style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+              >
+                {speechBusy === `record-${q.id}` ? <><Square size={12} /> Listening…</> : <><Mic size={13} /> Record answer</>}
+              </button>
+            </div>
+          )}
+
           {q.type === "mcq" && q.options && (
             <div className="flex flex-col gap-2">
               {q.options.map((opt) => (
@@ -517,6 +604,11 @@ export function LessonQuiz({
       {error && (
         <p className="text-[13px] text-center px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626" }}>
           {error}
+        </p>
+      )}
+      {speechError && (
+        <p className="text-[13px] text-center px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626" }}>
+          {speechError}
         </p>
       )}
 

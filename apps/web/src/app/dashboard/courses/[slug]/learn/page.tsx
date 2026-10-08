@@ -6,6 +6,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { readSession } from "@/lib/auth/session";
 import { signMediaUrl, isS3Ref } from "@/lib/storage";
 import { recordLessonPlay } from "@/lib/refunds";
+import { resolveLessonSkill } from "@/lib/ai/quiz";
 import { LessonPlayer } from "@/components/programs/lesson-player";
 
 function videoPlaybackUrl(courseId: string, videoUrl?: string | null, flatIndex?: number): string {
@@ -123,6 +124,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
           pdfUrl: await signMediaUrl(l.pdfUrl),
           content: l.content ?? "",
           quiz: l.quiz !== false,
+          skill: resolveLessonSkill(l.skill, l.topics),
         };
       })
     )
@@ -148,6 +150,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
           pdfUrl: await signMediaUrl(l.pdfUrl),
           content: l.content ?? "",
           quiz: l.quiz !== false,
+          skill: resolveLessonSkill(l.skill, l.topics),
         }))
       ),
     }))

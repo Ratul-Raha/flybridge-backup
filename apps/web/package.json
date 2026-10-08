@@ -37,6 +37,7 @@
     "jose": "^6.2.8",
     "jspdf": "^2.5.2",
     "lucide-react": "^1.28.0",
+    "microsoft-cognitiveservices-speech-sdk": "^1.52.0",
     "mongoose": "^9.9.1",
     "next": "^14.2.4",
     "qrcode": "^1.5.4",

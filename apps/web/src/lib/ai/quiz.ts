@@ -460,7 +460,7 @@ export async function generateQuiz(
     system,
     messages: [{ role: "user", content: user }],
     jsonMode: true,
-    maxTokens: 2048,
+    maxTokens: 4096,
   });
 
   const reader = stream.getReader();
