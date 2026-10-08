@@ -5,7 +5,7 @@ export function Watermark({ text }: { text: string }) {
       aria-hidden="true"
     >
       <span
-        className="absolute whitespace-nowrap font-mono text-[11px] tracking-wide leading-tight"
+        className="absolute whitespace-nowrap font-mono text-[5.5px] tracking-wide leading-tight"
         style={{
           color: "rgba(255,255,255,0.4)",
           textShadow: "0 1px 2px rgba(0,0,0,0.6)",
