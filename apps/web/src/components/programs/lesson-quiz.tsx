@@ -168,7 +168,7 @@ export function LessonQuiz({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to submit quiz");
+      if (!res.ok) throw new Error(data.detail || data.error || "Failed to submit quiz");
       setResults(data);
       setPhase("results");
       if (data.mode === "objective") {
