@@ -6,12 +6,10 @@ import {
   ArrowUpRight,
   Check,
   Download,
-  Plane,
   PlayCircle,
   Search,
   Share2,
   TrendingUp,
-  Zap,
 } from "lucide-react";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 import { getCategoryColor } from "@/lib/resource-colors";
@@ -35,103 +33,6 @@ const FILE_TYPES = [
 ] as const;
 
 type FileTypeFilter = (typeof FILE_TYPES)[number]["value"] | "all";
-
-function TooltipCard({ r }: { r: ResourceCardData }) {
-  const meta = fileTypeMeta(r.fileType);
-  const Icon = meta.icon;
-  return (
-    <div className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors duration-150 hover:bg-[var(--bg-soft)]">
-      <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-        style={{ background: meta.bg, color: meta.color }}
-      >
-        <Icon size={14} strokeWidth={2} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
-          {r.title}
-        </div>
-        <div className="mt-[1px] flex items-center gap-1.5 text-[10.5px]" style={{ color: "var(--body)" }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: getCategoryColor(r.category) }} />
-          {r.category}
-        </div>
-      </div>
-      <span
-        className="rounded-full px-2 py-[2px] font-mono text-[8.5px] font-semibold uppercase tracking-[0.1em]"
-        style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-      >
-        {meta.label}
-      </span>
-      <ArrowUpRight
-        className="h-3.5 w-3.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        style={{ color: "var(--body)" }}
-      />
-    </div>
-  );
-}
-
-function ToolkitPanel({ recent }: { recent: ResourceCardData[] }) {
-  const rows: ResourceCardData[] =
-    recent.length > 0
-      ? recent.slice(0, 4)
-      : ([
-          { id: "ph-a", title: "Canada work-permit checklist", description: "", category: "Documents & Templates", fileType: "pdf", fileUrl: "", fileName: null, fileSize: 0, thumbnail: null, releaseDate: new Date().toISOString(), access: "public", price: 0, featured: false },
-          { id: "ph-b", title: "Study Visa application walkthrough", description: "", category: "Study Visa", fileType: "pdf", fileUrl: "", fileName: null, fileSize: 0, thumbnail: null, releaseDate: new Date().toISOString(), access: "public", price: 0, featured: false },
-          { id: "ph-c", title: "IELTS Band 7 study plan", description: "", category: "IELTS", fileType: "video", fileUrl: "", fileName: null, fileSize: 0, thumbnail: null, releaseDate: new Date().toISOString(), access: "public", price: 0, featured: false },
-        ] as ResourceCardData[]);
-
-  return (
-    <div className="relative mx-auto w-full max-w-[400px] lg:ml-auto lg:mr-0">
-      <div
-        aria-hidden="true"
-        className="absolute -inset-8 rounded-[48px] opacity-70 blur-3xl"
-        style={{ background: "radial-gradient(closest-side, rgba(15,169,104,0.22), transparent 75%)" }}
-      />
-
-      <div
-        className="relative overflow-hidden rounded-2xl border bg-white"
-        style={{ borderColor: "var(--line)", boxShadow: "0 40px 80px -40px rgba(18,32,67,0.45)" }}
-      >
-        {/* Rows */}
-        <div className="px-2.5 py-2">
-          {rows.map((r, i) => (
-            <Link
-              key={r.id}
-              href={r.access === "public" ? `/resources/${r.id}` : "#"}
-              target={r.access === "public" ? "_blank" : undefined}
-              rel={r.access === "public" ? "noreferrer" : undefined}
-              className="group block"
-              aria-hidden={r.access !== "public"}
-            >
-              <TooltipCard r={r} />
-              {i < rows.length - 1 && <div className="mx-2 h-px" style={{ background: "var(--line)" }} />}
-            </Link>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t px-4 py-2.5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
-          <span className="font-mono text-[8.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
-            Instant download · Sign-up required
-          </span>
-          <span className="inline-flex items-center gap-1.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--brand-2)" }}>
-            <Plane size={10} />
-            FlyBridge
-          </span>
-        </div>
-      </div>
-
-      {/* Floating chip */}
-      <div
-        className="fb-float absolute -left-5 -top-5 inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 font-mono text-[9.5px] font-bold uppercase tracking-[0.12em]"
-        style={{ borderColor: "var(--line)", color: "var(--brand-2)", boxShadow: "0 16px 30px -14px rgba(18,32,67,0.4)" }}
-      >
-        <Zap size={11} fill="var(--brand-2)" style={{ color: "var(--brand-2)" }} />
-        {recent.length > 0 ? `${recent.length} downloads` : "Instant access"}
-      </div>
-    </div>
-  );
-}
 
 function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }) {
   const [copied, setCopied] = useState(false);
@@ -502,9 +403,7 @@ export function PublicResourceList() {
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
 
-        <div className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-8 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-[1.05fr_0.95fr]">
-          {/* Copy + search */}
-          <div>
+        <div className="relative z-10 mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
             <p className="max-w-[500px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
               Download checklists, guides, templates and videos that turn study-abroad
               plans into action — from first application to arrival.
@@ -568,10 +467,6 @@ export function PublicResourceList() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Visual */}
-          <ToolkitPanel recent={resources} />
         </div>
       </section>
 
