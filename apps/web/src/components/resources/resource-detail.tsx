@@ -258,9 +258,9 @@ export function ResourceDetail({
               ) : null}
             </div>
 
-            {isVideo ? (
+            {isVideo && !needsPayment ? (
               <div id="resource-video" className="mt-6 flex justify-center scroll-mt-28">
-                <div className="w-full max-w-[320px] overflow-hidden rounded-xl" style={{ boxShadow: "0 24px 60px -24px rgba(18,32,67,0.4)" }}>
+                <div className="w-full max-w-[440px] overflow-hidden rounded-xl" style={{ boxShadow: "0 24px 60px -24px rgba(18,32,67,0.4)" }}>
                   <ResourceVideoPlayer resource={r} />
                 </div>
               </div>

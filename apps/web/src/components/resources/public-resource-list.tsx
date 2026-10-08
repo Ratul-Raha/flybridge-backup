@@ -27,6 +27,17 @@ import { ResourceVideoPlayer, VideoViews } from "@/components/resources/resource
 
 const QUICK_SEARCHES = ["Cover letter", "IELTS", "Visa checklist", "Interview"];
 
+const FILE_TYPES = [
+  { value: "video", label: "Videos" },
+  { value: "pdf", label: "PDFs" },
+  { value: "image", label: "Images" },
+  { value: "audio", label: "Audio" },
+  { value: "link", label: "Links" },
+  { value: "other", label: "Files" },
+] as const;
+
+type FileTypeFilter = (typeof FILE_TYPES)[number]["value"] | "all";
+
 function TooltipCard({ r }: { r: ResourceCardData }) {
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
@@ -407,6 +418,7 @@ export function PublicResourceList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("All");
+  const [fileType, setFileType] = useState<FileTypeFilter>("video");
   const [query, setQuery] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -440,6 +452,12 @@ export function PublicResourceList() {
     return map;
   }, [resources]);
 
+  const formatCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of resources) map.set(r.fileType, (map.get(r.fileType) ?? 0) + 1);
+    return map;
+  }, [resources]);
+
   const stats = useMemo(
     () => ({
       total: resources.length,
@@ -453,6 +471,7 @@ export function PublicResourceList() {
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return resources
+      .filter((r) => (fileType === "all" ? true : r.fileType === fileType))
       .filter((r) => (category === "All" ? true : r.category === category))
       .filter((r) => !q || r.title.toLowerCase().includes(q) || (r.description ?? "").toLowerCase().includes(q))
       .sort((a, b) => {
@@ -460,7 +479,7 @@ export function PublicResourceList() {
         if (d !== 0) return d;
         return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
       });
-  }, [resources, category, query]);
+  }, [resources, fileType, category, query]);
 
   const topCount = useMemo(() => resources.reduce((m, r) => Math.max(m, r.downloadCount ?? 0), 0), [resources]);
 
@@ -474,12 +493,25 @@ export function PublicResourceList() {
     requestAnimationFrame(() => gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
+  const selectFileType = (f: FileTypeFilter) => {
+    setFileType(f);
+    requestAnimationFrame(() => gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const activeFileTypeLabel = FILE_TYPES.find((t) => t.value === fileType)?.label;
+
   const gridTitle =
-    category === "All" ? "Latest resources" : `${category} resources`;
+    fileType !== "all"
+      ? activeFileTypeLabel ?? "Resources"
+      : category === "All"
+        ? "Latest resources"
+        : `${category} resources`;
   const gridSub =
-    category === "All"
-      ? "Fresh guides, checklists and templates — added as we publish."
-      : `Guides, checklists and tools filed under ${category}.`;
+    fileType !== "all"
+      ? `Browse the latest ${(activeFileTypeLabel ?? "resources").toLowerCase()} — added as we publish.`
+      : category === "All"
+        ? "Fresh guides, checklists and templates — added as we publish."
+        : `Guides, checklists and tools filed under ${category}.`;
 
   return (
     <div>
@@ -584,8 +616,48 @@ export function PublicResourceList() {
       {/* ===== Library ===== */}
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          {/* Category filter */}
+          {/* Format filter */}
           <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
+              Format
+            </span>
+            <button
+              type="button"
+              onClick={() => selectFileType("all")}
+              className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+              style={{
+                background: fileType === "all" ? "var(--brand)" : "transparent",
+                borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
+                color: fileType === "all" ? "#fff" : "var(--ink)",
+              }}
+            >
+              All formats{loading ? "" : ` · ${resources.length}`}
+            </button>
+
+            {FILE_TYPES.map((t) => {
+              const count = formatCounts.get(t.value) ?? 0;
+              if (count === 0 && fileType !== t.value) return null;
+              const active = fileType === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => selectFileType(t.value)}
+                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                  style={{
+                    background: active ? "var(--brand)" : "transparent",
+                    borderColor: active ? "var(--brand)" : "var(--line)",
+                    color: active ? "#fff" : "var(--ink)",
+                  }}
+                >
+                  {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Category filter */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => selectCategory("All")}
@@ -596,7 +668,7 @@ export function PublicResourceList() {
                 color: category === "All" ? "#fff" : "var(--ink)",
               }}
             >
-              Everything{loading ? "" : ` · ${resources.length}`}
+              All topics{loading ? "" : ` · ${resources.length}`}
             </button>
 
             {RESOURCE_CATEGORIES.map((c) => {
@@ -669,7 +741,7 @@ export function PublicResourceList() {
               <p className="mt-1 text-[13.5px]" style={{ color: "var(--body)" }}>
                 {resources.length === 0
                   ? "Check back soon — guides and templates are on the way."
-                  : "Try a different search or category."}
+                  : "Try a different search, format or topic."}
               </p>
             </div>
           ) : (

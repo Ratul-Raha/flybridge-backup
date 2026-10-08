@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { Eye, Play, X } from "lucide-react";
+import { Eye, Lock, Play, X } from "lucide-react";
 import type { ResourceCardData } from "@/components/dashboard/user/resource-card";
+import { useAuth } from "@/lib/auth/auth-context";
+import { SignInModal } from "@/components/resources/sign-in-modal";
 
 export function resourceStreamUrl(id: string) {
   return `/api/resources/${id}/file`;
@@ -15,9 +17,11 @@ function formatViews(count: number) {
 }
 
 /**
- * Portrait ("reels") video player for resources. Native controls give
- * play/pause, volume and fullscreen (maximize/minimize); download and
- * picture-in-picture are disabled so the video can only be watched.
+ * Video player for resources. Public videos play for everyone; members-only
+ * videos show a "sign in to view" gate until the visitor authenticates.
+ * Native controls give play/pause, volume and fullscreen (maximize/minimize);
+ * download and picture-in-picture are disabled so the video can only be
+ * watched.
  */
 export function ResourceVideoPlayer({
   resource,
@@ -26,9 +30,13 @@ export function ResourceVideoPlayer({
   resource: ResourceCardData;
   className?: string;
 }) {
+  const { user, loading } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const viewedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+
+  const isMembersOnly = resource.access === "members";
 
   const blockContext = (e: ReactMouseEvent) => e.preventDefault();
 
@@ -43,9 +51,59 @@ export function ResourceVideoPlayer({
     fireView();
   };
 
+  if (isMembersOnly && loading) {
+    return <div className={`relative aspect-video overflow-hidden bg-black ${className}`} />;
+  }
+
+  if (isMembersOnly && !user) {
+    return (
+      <>
+        <div
+          className={`relative aspect-video overflow-hidden bg-black ${className}`}
+          onContextMenu={blockContext}
+          onDragStart={(e) => e.preventDefault()}
+        >
+          {resource.thumbnail ? (
+            <img
+              src={resource.thumbnail}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-70"
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(160deg, #1a1f35, #0a0e1a)" }}
+            />
+          )}
+          <div className="absolute inset-0 bg-black/30" />
+          <button
+            type="button"
+            onClick={() => setShowSignIn(true)}
+            aria-label="Sign in to view"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+          >
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
+              style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
+            >
+              <Play className="ml-1 h-5 w-5" fill="currentColor" strokeWidth={0} />
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white"
+              style={{ background: "rgba(0,0,0,0.45)" }}
+            >
+              <Lock size={11} /> Sign in to view
+            </span>
+          </button>
+        </div>
+        {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+      </>
+    );
+  }
+
   return (
     <div
-      className={`relative aspect-[9/16] overflow-hidden bg-black ${className}`}
+      className={`relative aspect-video overflow-hidden bg-black ${className}`}
       onContextMenu={blockContext}
       onDragStart={(e) => e.preventDefault()}
     >
@@ -72,8 +130,11 @@ export function ResourceVideoPlayer({
           aria-label="Play video"
           className="absolute inset-0 flex items-center justify-center"
         >
-          <span className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105" style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}>
-            <Play className="ml-1 h-7 w-7" fill="currentColor" strokeWidth={0} />
+          <span
+            className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
+            style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
+          >
+            <Play className="ml-1 h-6 w-6" fill="currentColor" strokeWidth={0} />
           </span>
         </button>
       )}
@@ -91,8 +152,8 @@ export function VideoViews({ count }: { count: number }) {
 }
 
 /**
- * Full-screen-ish portrait modal used on the dashboard so a video resource
- * can be watched in place without ever exposing a download link.
+ * Full-screen-ish modal used on the dashboard so a video resource can be
+ * watched in place without ever exposing a download link.
  */
 export function ResourceVideoModal({
   resource,
@@ -117,7 +178,7 @@ export function ResourceVideoModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={resource.title}>
       <div className="absolute inset-0 bg-[rgba(10,14,26,0.82)] backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative flex h-[min(92vh,780px)] w-[min(92vw,440px)] flex-col overflow-hidden rounded-2xl bg-black" style={{ boxShadow: "0 40px 90px -30px rgba(0,0,0,0.6)" }}>
+      <div className="relative flex w-[min(92vw,720px)] flex-col overflow-hidden rounded-2xl bg-black" style={{ boxShadow: "0 40px 90px -30px rgba(0,0,0,0.6)" }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ background: "rgba(255,255,255,0.06)" }}>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-white">{resource.title}</p>
@@ -136,12 +197,7 @@ export function ResourceVideoModal({
         </div>
 
         <div className="flex flex-1 items-center justify-center min-h-0 p-3">
-          <div
-            className="relative overflow-hidden rounded-xl bg-black"
-            style={{ height: "100%", maxWidth: "100%", aspectRatio: "9 / 16" }}
-          >
-            <ResourceVideoPlayer resource={resource} className="h-full w-full" />
-          </div>
+          <ResourceVideoPlayer resource={resource} className="w-full" />
         </div>
       </div>
     </div>
