@@ -32,7 +32,6 @@ export function ResourceVideoPlayer({
 }) {
   const { user, loading } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const viewedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
@@ -41,8 +40,6 @@ export function ResourceVideoPlayer({
   const blockContext = (e: ReactMouseEvent) => e.preventDefault();
 
   const fireView = () => {
-    if (viewedRef.current) return;
-    viewedRef.current = true;
     fetch(`/api/resources/${resource.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
   };
 
@@ -52,14 +49,14 @@ export function ResourceVideoPlayer({
   };
 
   if (isMembersOnly && loading) {
-    return <div className={`relative aspect-video overflow-hidden bg-black ${className}`} />;
+    return <div className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`} />;
   }
 
   if (isMembersOnly && !user) {
     return (
       <>
         <div
-          className={`relative aspect-video overflow-hidden bg-black ${className}`}
+          className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
           onContextMenu={blockContext}
           onDragStart={(e) => e.preventDefault()}
         >
@@ -103,7 +100,7 @@ export function ResourceVideoPlayer({
 
   return (
     <div
-      className={`relative aspect-video overflow-hidden bg-black ${className}`}
+      className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
       onContextMenu={blockContext}
       onDragStart={(e) => e.preventDefault()}
     >
@@ -178,7 +175,7 @@ export function ResourceVideoModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={resource.title}>
       <div className="absolute inset-0 bg-[rgba(10,14,26,0.82)] backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative flex w-[min(92vw,720px)] flex-col overflow-hidden rounded-2xl bg-black" style={{ boxShadow: "0 40px 90px -30px rgba(0,0,0,0.6)" }}>
+      <div className="relative flex w-[min(88vw,340px)] flex-col overflow-hidden rounded-2xl bg-black" style={{ boxShadow: "0 40px 90px -30px rgba(0,0,0,0.6)" }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ background: "rgba(255,255,255,0.06)" }}>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-white">{resource.title}</p>
