@@ -158,7 +158,9 @@ export async function judgeWrittenAnswers(
   const parsed = JSON.parse(stripCodeFences(full));
   const list = extractArray(parsed);
   if (list.length === 0) {
-    throw new Error("flybridge-ielts-judge returned an invalid result");
+    throw new Error(
+      `flybridge-ielts-judge returned an invalid result: ${full.slice(0, 600)}`
+    );
   }
 
   return list.map((r) => ({
@@ -262,7 +264,9 @@ export async function judgeObjectiveAnswers(
   const parsed = JSON.parse(stripCodeFences(full));
   const list = extractArray(parsed);
   if (list.length === 0) {
-    throw new Error("flybridge-ielts-judge returned an invalid result");
+    throw new Error(
+      `flybridge-ielts-judge returned an invalid result: ${full.slice(0, 600)}`
+    );
   }
 
   return list.map((r) => ({
