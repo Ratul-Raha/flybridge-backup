@@ -7,10 +7,10 @@ import { Programs } from "@/components/programs";
 import { PublicLeaderboard } from "@/components/public-leaderboard";
 import { getTotalUsers } from "@/lib/site-stats";
 
-const ScholarshipTicker = dynamic(
+const IeltsLaunchTicker = dynamic(
   () =>
-    import("@/components/dashboard/scholarship-ticker").then(
-      (m) => m.ScholarshipTicker
+    import("@/components/ielts-launch-ticker").then(
+      (m) => m.IeltsLaunchTicker
     ),
   { ssr: false, loading: () => null }
 );
@@ -29,7 +29,7 @@ export default async function HomePage() {
     <>
       <Nav />
       <div className="pt-[74px] px-[clamp(20px,4.5vw,56px)]">
-        <ScholarshipTicker href="/scholarships" />
+        <IeltsLaunchTicker />
       </div>
       <main>
         <Hero userCount={totalUsers} />
