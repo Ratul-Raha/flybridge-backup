@@ -38,6 +38,7 @@ export async function GET(
         price: resource.price ?? 0,
         prices: cleanPrices(resource.prices),
         featured: resource.featured ?? false,
+        viewCount: resource.viewCount ?? 0,
       },
     });
   } catch (error) {

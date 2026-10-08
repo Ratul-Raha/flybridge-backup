@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   FileText,
   FileImage,
@@ -7,9 +10,11 @@ import {
   Link2,
   ExternalLink,
   Folder,
+  Play,
   Star,
   type LucideIcon,
 } from "lucide-react";
+import { ResourceVideoModal } from "@/components/resources/resource-video-player";
 
 export type ResourceCardData = {
   id: string;
@@ -27,6 +32,7 @@ export type ResourceCardData = {
   prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
   downloadCount?: number;
+  viewCount?: number;
 };
 
 const FILE_TYPE_META: Record<string, { icon: LucideIcon; label: string; color: string; bg: string }> = {
@@ -105,6 +111,89 @@ export function ResourceRow({
 }) {
   const meta = fileTypeMeta(resource.fileType);
   const Icon = meta.icon;
+  const isVideo = resource.fileType === "video";
+  const [openVideo, setOpenVideo] = useState(false);
+
+  const openNameCell = (
+    <button
+      type="button"
+      onClick={() => setOpenVideo(true)}
+      title="Watch video"
+      className="flex items-center gap-3 min-w-0 text-left"
+    >
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: meta.bg, color: meta.color }}
+      >
+        <Icon size={18} strokeWidth={2} />
+      </span>
+      <span className="min-w-0">
+        <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
+          {resource.title}
+          {resource.featured && (
+            <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
+          )}
+        </span>
+        <span className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
+          <Folder size={11} className="shrink-0" />
+          {resource.category}
+          {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
+        </span>
+        <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {meta.label}
+          </span>
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {formatFileSize(resource.fileSize)}
+          </span>
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {formatResourceDate(resource.releaseDate)}
+          </span>
+        </span>
+      </span>
+    </button>
+  );
+
+  const fileLink = (
+    <a
+      href={fileHref(resource)}
+      target="_blank"
+      rel="noreferrer"
+      title="Open file"
+      className="flex items-center gap-3 min-w-0"
+    >
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: meta.bg, color: meta.color }}
+      >
+        <Icon size={18} strokeWidth={2} />
+      </span>
+      <span className="min-w-0">
+        <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
+          {resource.title}
+          {resource.featured && (
+            <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
+          )}
+        </span>
+        <span className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
+          <Folder size={11} className="shrink-0" />
+          {resource.category}
+          {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
+        </span>
+        <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {meta.label}
+          </span>
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {formatFileSize(resource.fileSize)}
+          </span>
+          <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {formatResourceDate(resource.releaseDate)}
+          </span>
+        </span>
+      </span>
+    </a>
+  );
 
   return (
     <div
@@ -113,44 +202,7 @@ export function ResourceRow({
     >
       {/* Name cell */}
       <div className="flex items-center gap-3 min-w-0">
-        <a
-          href={fileHref(resource)}
-          target="_blank"
-          rel="noreferrer"
-          title="Open file"
-          className="flex items-center gap-3 min-w-0"
-        >
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: meta.bg, color: meta.color }}
-          >
-            <Icon size={18} strokeWidth={2} />
-          </span>
-          <span className="min-w-0">
-            <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
-              {resource.title}
-              {resource.featured && (
-                <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
-              )}
-            </span>
-            <span className="text-[11.5px] flex items-center gap-1 truncate" style={{ color: "var(--body)" }}>
-              <Folder size={11} className="shrink-0" />
-              {resource.category}
-              {resource.fileName && <span className="truncate">· {resource.fileName}</span>}
-            </span>
-            <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                {meta.label}
-              </span>
-              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                {formatFileSize(resource.fileSize)}
-              </span>
-              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                {formatResourceDate(resource.releaseDate)}
-              </span>
-            </span>
-          </span>
-        </a>
+        {isVideo ? openNameCell : fileLink}
       </div>
 
       {/* Desktop cells */}
@@ -166,17 +218,31 @@ export function ResourceRow({
 
       {/* Action */}
       <div className="flex items-center justify-end">
-        <a
-          href={fileHref(resource)}
-          target="_blank"
-          rel="noreferrer"
-          title="Open file"
-          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
-          style={{ color: "var(--body)" }}
-        >
-          <ExternalLink size={15} />
-        </a>
+        {isVideo ? (
+          <button
+            type="button"
+            onClick={() => setOpenVideo(true)}
+            title="Watch video"
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
+            style={{ color: meta.color }}
+          >
+            <Play size={15} />
+          </button>
+        ) : (
+          <a
+            href={fileHref(resource)}
+            target="_blank"
+            rel="noreferrer"
+            title="Open file"
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-black/5"
+            style={{ color: "var(--body)" }}
+          >
+            <ExternalLink size={15} />
+          </a>
+        )}
       </div>
+
+      {openVideo && <ResourceVideoModal resource={resource} onClose={() => setOpenVideo(false)} />}
     </div>
   );
 }

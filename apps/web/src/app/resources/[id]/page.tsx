@@ -85,6 +85,7 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
                 price: resource.price ?? 0,
                 prices: cleanPrices(resource.prices),
                 featured: resource.featured ?? false,
+                viewCount: resource.viewCount ?? 0,
               }}
             />
           </div>

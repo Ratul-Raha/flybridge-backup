@@ -23,6 +23,7 @@ type ResourceDto = {
   prices: { USD?: number; BDT?: number };
   featured: boolean;
   downloadCount: number;
+  viewCount: number;
 };
 
 function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
@@ -42,6 +43,7 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
     prices: cleanPrices(r.prices),
     featured: r.featured ?? false,
     downloadCount: 0,
+    viewCount: r.viewCount ?? 0,
   };
 }
 

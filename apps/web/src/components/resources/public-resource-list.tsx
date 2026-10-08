@@ -8,6 +8,7 @@ import {
   Download,
   Flame,
   Plane,
+  PlayCircle,
   Search,
   Share2,
   TrendingUp,
@@ -22,6 +23,7 @@ import {
   formatResourceDate,
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
+import { ResourceVideoPlayer, VideoViews } from "@/components/resources/resource-video-player";
 
 const QUICK_SEARCHES = ["Cover letter", "IELTS", "Visa checklist", "Interview"];
 
@@ -249,6 +251,94 @@ function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }
         </div>
       </div>
     </Link>
+  );
+}
+
+function VideoResourceCard({ r }: { r: ResourceCardData }) {
+  const [copied, setCopied] = useState(false);
+  const accent = getCategoryColor(r.category);
+
+  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/resources/${r.id}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <div
+      className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
+      style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
+    >
+      {/* Portrait player */}
+      <div className="-mx-5 -mt-5 overflow-hidden rounded-t-lg">
+        <ResourceVideoPlayer resource={r} />
+      </div>
+
+      {/* Meta row */}
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+            style={{ background: `${accent}12`, color: accent }}
+          >
+            <PlayCircle size={14} strokeWidth={2} />
+          </span>
+          <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>
+            {r.category}
+          </span>
+        </span>
+        <span
+          className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+          style={{ background: "rgba(107,76,224,0.10)", color: "#6B4CE0" }}
+        >
+          <VideoViews count={r.viewCount ?? 0} /> views
+        </span>
+      </div>
+
+      {/* Title */}
+      <Link href={`/resources/${r.id}`} target="_blank" rel="noreferrer">
+        <h3 className="mt-4 line-clamp-2 font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+          {r.title}
+        </h3>
+      </Link>
+
+      {/* Description */}
+      {r.description && (
+        <p className="mt-1.5 line-clamp-1 text-[12.5px]" style={{ color: "var(--body)" }}>
+          {r.description}
+        </p>
+      )}
+
+      {/* Spacer pins footer */}
+      <div className="min-h-[14px] flex-1" />
+
+      {/* Footer */}
+      <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+        <span className="truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+          {formatResourceDate(r.releaseDate)}
+        </span>
+        <button
+          type="button"
+          title={copied ? "Copied!" : "Share link"}
+          aria-label={copied ? "Copied!" : "Share link"}
+          onClick={copyLink}
+          className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+          style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
+        >
+          {copied ? (
+            <Check size={13} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+          ) : (
+            <Share2 size={13} style={{ color: "var(--body)" }} />
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -584,9 +674,13 @@ export function PublicResourceList() {
             </div>
           ) : (
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {visible.map((r) => (
-                <ResourceCard key={r.id} r={r} topCount={topCount} />
-              ))}
+              {visible.map((r) =>
+                r.fileType === "video" ? (
+                  <VideoResourceCard key={r.id} r={r} />
+                ) : (
+                  <ResourceCard key={r.id} r={r} topCount={topCount} />
+                )
+              )}
             </div>
           )}
         </div>

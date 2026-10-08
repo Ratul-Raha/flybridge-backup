@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Share2, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Play, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { ResourceVideoPlayer } from "@/components/resources/resource-video-player";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import {
   fileTypeMeta,
@@ -51,6 +52,7 @@ export function ResourceDetail({
   const needsPayment = isMembersOnly && !isFree;
   const isPublic = r.access === "public";
   const isLink = r.fileType === "link";
+  const isVideo = r.fileType === "video";
   const loginNext = `/login?next=${encodeURIComponent(`/resources/${r.id}`)}`;
 
   const triggerDownload = () => {
@@ -168,40 +170,51 @@ export function ResourceDetail({
   const primaryLabel = needsPayment
     ? "Buy Now"
     : needsLogin
-      ? "Sign in to download"
-      : isFree
-        ? submitting
-          ? "Processing…"
-          : isPublic
-            ? isLink
-              ? "Open link"
-              : "Download"
-            : "Get it for free"
-        : isLink
-          ? "Open link"
-          : "Download";
+      ? isVideo
+        ? "Sign in to watch"
+        : "Sign in to download"
+      : isVideo
+        ? "Watch now"
+        : isFree
+          ? submitting
+            ? "Processing…"
+            : isPublic
+              ? isLink
+                ? "Open link"
+                : "Download"
+              : "Get it for free"
+          : isLink
+            ? "Open link"
+            : "Download";
 
   const primaryAction = needsPayment
     ? () => setPayNote((v) => !v)
     : needsLogin
       ? () => router.push(loginNext)
-      : isFree
-        ? () => (isPublic ? triggerDownload() : handleGetForFree())
-        : triggerDownload;
+      : isVideo
+        ? () => document.getElementById("resource-video")?.scrollIntoView({ behavior: "smooth", block: "center" })
+        : isFree
+          ? () => (isPublic ? triggerDownload() : handleGetForFree())
+          : triggerDownload;
 
   const reassurance = needsPayment
     ? `One-time purchase · ${r.fileName ?? r.fileType} file`
     : needsLogin
-      ? "Free for FlyBridge members — sign in to download it."
-      : isPublic
-        ? "Free download · sign up required"
-        : "Members-only · yours to keep once you\u2019re in";
+      ? isVideo
+        ? "Free for FlyBridge members — sign in to watch it."
+        : "Free for FlyBridge members — sign in to download it."
+      : isVideo
+        ? "Watch online — videos can\u2019t be downloaded."
+        : isPublic
+          ? "Free download · sign up required"
+          : "Members-only · yours to keep once you\u2019re in";
 
   const detailRows: { label: string; value: string }[] = [
     { label: "Category", value: r.category },
     { label: "File type", value: meta.label },
     ...(r.fileName ? [{ label: "File", value: r.fileName }] : []),
     ...(r.fileSize > 0 ? [{ label: "Size", value: formatFileSize(r.fileSize) }] : []),
+    ...(isVideo ? [{ label: "Views", value: (r.viewCount ?? 0).toLocaleString() }] : []),
     { label: "Published", value: formatResourceDate(r.releaseDate) },
     { label: "Access", value: isPublic ? "Public" : "Members only" },
   ];
@@ -245,14 +258,22 @@ export function ResourceDetail({
               ) : null}
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <span
-                className="flex h-[84px] w-[84px] items-center justify-center rounded-xl border"
-                style={{ background: "rgba(255,255,255,0.92)", borderColor: "var(--line)", color: accent, boxShadow: "0 18px 40px -20px rgba(18,32,67,0.3)" }}
-              >
-                <Icon size={38} strokeWidth={1.7} />
-              </span>
-            </div>
+            {isVideo ? (
+              <div id="resource-video" className="mt-6 flex justify-center scroll-mt-28">
+                <div className="w-full max-w-[320px] overflow-hidden rounded-xl" style={{ boxShadow: "0 24px 60px -24px rgba(18,32,67,0.4)" }}>
+                  <ResourceVideoPlayer resource={r} />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 flex justify-center">
+                <span
+                  className="flex h-[84px] w-[84px] items-center justify-center rounded-xl border"
+                  style={{ background: "rgba(255,255,255,0.92)", borderColor: "var(--line)", color: accent, boxShadow: "0 18px 40px -20px rgba(18,32,67,0.3)" }}
+                >
+                  <Icon size={38} strokeWidth={1.7} />
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Body */}
@@ -326,7 +347,7 @@ export function ResourceDetail({
               style={{ background: "var(--brand)" }}
             >
               {submitting && <Loader2 size={15} className="animate-spin" />}
-              {needsPayment ? <Lock size={15} /> : isLink ? <ExternalLink size={15} /> : <Download size={15} />}
+              {needsPayment ? <Lock size={15} /> : isVideo ? <Play size={15} /> : isLink ? <ExternalLink size={15} /> : <Download size={15} />}
               {primaryLabel}
             </button>
 
