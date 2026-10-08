@@ -516,7 +516,7 @@ export function PublicResourceList() {
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="relative overflow-hidden pt-[clamp(116px,15vh,150px)] pb-[clamp(52px,7vw,84px)]">
+      <section className="relative overflow-hidden pt-[clamp(64px,8vh,88px)] pb-[clamp(28px,4vw,44px)]">
         <div
           aria-hidden="true"
           className="absolute inset-0"
@@ -531,19 +531,7 @@ export function PublicResourceList() {
         <div className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-14 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-[1.05fr_0.95fr]">
           {/* Copy + search */}
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3.5 py-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em]" style={{ color: "var(--brand-2)", boxShadow: "0 8px 20px -14px rgba(18,32,67,0.25)" }}>
-              <span className="h-[6px] w-[6px] rounded-full" style={{ background: "var(--brand)" }} />
-              Resource library · Updated weekly
-            </span>
-
-            <h1 className="mt-5 font-display font-semibold leading-[1.08] tracking-[-0.02em]" style={{ fontSize: "clamp(32px,4vw,46px)", color: "var(--ink)" }}>
-              Tools for every
-              <br />
-              step before you{" "}
-              <span style={{ color: "var(--brand-2)" }}>fly</span>
-            </h1>
-
-            <p className="mt-5 max-w-[500px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+            <p className="max-w-[500px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
               Download checklists, guides, templates and videos that turn study-abroad
               plans into action — from first application to arrival.
             </p>
