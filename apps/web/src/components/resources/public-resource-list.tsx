@@ -391,82 +391,99 @@ export function PublicResourceList() {
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="relative overflow-hidden pt-[clamp(40px,5vh,60px)] pb-[clamp(16px,2.5vw,28px)]">
+      <section className="relative overflow-hidden pt-[clamp(56px,7vh,88px)] pb-[clamp(28px,3.5vw,44px)]">
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(rgba(18,32,67,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.04) 1px, transparent 1px), radial-gradient(680px 420px at 12% 6%, rgba(15,169,104,0.1), transparent 60%), radial-gradient(560px 380px at 92% 88%, rgba(107,76,224,0.08), transparent 60%)",
+              "linear-gradient(rgba(18,32,67,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(18,32,67,0.04) 1px, transparent 1px), radial-gradient(720px 460px at 50% -10%, rgba(15,169,104,0.12), transparent 62%), radial-gradient(560px 380px at 92% 88%, rgba(107,76,224,0.08), transparent 60%)",
             backgroundSize: "40px 40px, 40px 40px, auto, auto",
           }}
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
 
-        <div className="relative z-10 mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-            <p className="max-w-[500px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-              Download checklists, guides, templates and videos that turn study-abroad
-              plans into action — from first application to arrival.
-            </p>
+        <div className="relative z-10 mx-auto w-full max-w-[820px] px-[clamp(20px,4.5vw,56px)] text-center">
+          <span
+            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3.5 py-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: "var(--brand-2)", boxShadow: "0 8px 20px -14px rgba(18,32,67,0.25)" }}
+          >
+            <span className="h-[6px] w-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+            Resource library
+          </span>
 
-            {/* Search */}
-            <div className="relative mt-4 max-w-[520px]">
-              <Search size={17} className="absolute left-[18px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Try “cover letter”, “IELTS”, “visa checklist”…"
-                className="w-full rounded-full border bg-white pl-11 pr-5 py-[14px] text-[14.5px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-                style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
-              />
-            </div>
+          <h1
+            className="mt-5 font-display font-semibold leading-[1.08] tracking-[-0.02em] text-balance"
+            style={{ fontSize: "clamp(34px,4.6vw,56px)", color: "var(--ink)" }}
+          >
+            Everything you need
+            <br />
+            before you <span style={{ color: "var(--brand-2)" }}>fly</span>
+          </h1>
 
-            {/* Quick chips */}
-            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-              <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-                Popular:
-              </span>
-              {QUICK_SEARCHES.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => setQuery(query === q ? "" : q)}
-                  className="rounded-full border px-3 py-[6px] text-[12px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                  style={{
-                    borderColor: query === q ? "var(--brand-2)" : "var(--line)",
-                    color: query === q ? "var(--brand-2)" : "var(--body)",
-                    background: query === q ? "var(--brand-soft)" : "transparent",
-                  }}
-                >
-                  {q}
-                </button>
+          <p className="mx-auto mt-4 max-w-[560px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
+            Checklists, guides, templates and videos that turn study-abroad plans
+            into action — free, instant downloads.
+          </p>
+
+          {/* Search */}
+          <div className="relative mx-auto mt-7 max-w-[560px]">
+            <Search size={18} className="absolute left-[20px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
+              className="w-full rounded-full border bg-white pl-12 pr-5 py-[16px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+              style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
+            />
+          </div>
+
+          {/* Quick chips */}
+          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
+              Popular:
+            </span>
+            {QUICK_SEARCHES.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setQuery(query === q ? "" : q)}
+                className="rounded-full border px-3 py-[6px] text-[12px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                style={{
+                  borderColor: query === q ? "var(--brand-2)" : "var(--line)",
+                  color: query === q ? "var(--brand-2)" : "var(--body)",
+                  background: query === q ? "var(--brand-soft)" : "transparent",
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          {!loading && resources.length > 0 && (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+              {[
+                { value: `${stats.free}+`, label: "Instant downloads" },
+                { value: String(stats.total), label: "Resources live" },
+                { value: String(stats.categories), label: "Topics covered" },
+                { value: String(stats.formats), label: "File formats" },
+              ].map((s, i) => (
+                <div key={s.label} className="flex items-center gap-x-10">
+                  <div>
+                    <div className="font-display text-[clamp(22px,2.4vw,28px)] font-semibold leading-none tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
+                      {s.value}
+                    </div>
+                    <div className="mt-1.5 text-[12px]" style={{ color: "var(--body)" }}>
+                      {s.label}
+                    </div>
+                  </div>
+                  {i < 3 && <span className="hidden h-9 w-px sm:block" style={{ background: "var(--line)" }} />}
+                </div>
               ))}
             </div>
-
-            {/* Stats */}
-            {!loading && resources.length > 0 && (
-              <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-4">
-                {[
-                  { value: `${stats.free}+`, label: "Instant downloads" },
-                  { value: String(stats.total), label: "Resources live" },
-                  { value: String(stats.categories), label: "Topics covered" },
-                  { value: String(stats.formats), label: "File formats" },
-                ].map((s, i) => (
-                  <div key={s.label} className="flex items-center gap-x-8">
-                    <div>
-                      <div className="font-display text-[clamp(21px,2.1vw,26px)] font-semibold leading-none tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
-                        {s.value}
-                      </div>
-                      <div className="mt-2 text-[12px]" style={{ color: "var(--body)" }}>
-                        {s.label}
-                      </div>
-                    </div>
-                    {i < 3 && <span className="hidden h-9 w-px sm:block" style={{ background: "var(--line)" }} />}
-                  </div>
-                ))}
-              </div>
-            )}
+          )}
         </div>
       </section>
 
