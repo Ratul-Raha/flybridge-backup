@@ -6,13 +6,11 @@ import {
   ArrowUpRight,
   Check,
   Download,
-  Flame,
   Plane,
   PlayCircle,
   Search,
   Share2,
   TrendingUp,
-  Wallet,
   Zap,
 } from "lucide-react";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
@@ -42,12 +40,12 @@ function TooltipCard({ r }: { r: ResourceCardData }) {
   const meta = fileTypeMeta(r.fileType);
   const Icon = meta.icon;
   return (
-    <div className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-[var(--bg-soft)]">
+    <div className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors duration-150 hover:bg-[var(--bg-soft)]">
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
         style={{ background: meta.bg, color: meta.color }}
       >
-        <Icon size={16} strokeWidth={2} />
+        <Icon size={14} strokeWidth={2} />
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -94,30 +92,6 @@ function ToolkitPanel({ recent }: { recent: ResourceCardData[] }) {
         className="relative overflow-hidden rounded-2xl border bg-white"
         style={{ borderColor: "var(--line)", boxShadow: "0 40px 80px -40px rgba(18,32,67,0.45)" }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-2.5 border-b px-4 py-3" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-            style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-          >
-            <Wallet size={16} strokeWidth={2} />
-          </span>
-          <div className="min-w-0">
-            <div className="text-[12.5px] font-bold leading-tight" style={{ color: "var(--ink)" }}>
-              Free resource toolkit
-            </div>
-            <div className="font-mono text-[8.5px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
-              Updated every week
-            </div>
-          </div>
-          <span
-            className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[8.5px] font-bold uppercase tracking-[0.12em] text-white"
-            style={{ background: "var(--brand)" }}
-          >
-            <Flame size={9} fill="#fff" /> Open
-          </span>
-        </div>
-
         {/* Rows */}
         <div className="px-2.5 py-2">
           {rows.map((r, i) => (
@@ -516,7 +490,7 @@ export function PublicResourceList() {
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="relative overflow-hidden pt-[clamp(64px,8vh,88px)] pb-[clamp(28px,4vw,44px)]">
+      <section className="relative overflow-hidden pt-[clamp(40px,5vh,60px)] pb-[clamp(16px,2.5vw,28px)]">
         <div
           aria-hidden="true"
           className="absolute inset-0"
@@ -528,7 +502,7 @@ export function PublicResourceList() {
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
 
-        <div className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-14 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative z-10 mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-8 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-[1.05fr_0.95fr]">
           {/* Copy + search */}
           <div>
             <p className="max-w-[500px] text-[15.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
@@ -537,7 +511,7 @@ export function PublicResourceList() {
             </p>
 
             {/* Search */}
-            <div className="relative mt-8 max-w-[520px]">
+            <div className="relative mt-4 max-w-[520px]">
               <Search size={17} className="absolute left-[18px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
               <input
                 type="text"
@@ -550,7 +524,7 @@ export function PublicResourceList() {
             </div>
 
             {/* Quick chips */}
-            <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <span className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
                 Popular:
               </span>
@@ -573,7 +547,7 @@ export function PublicResourceList() {
 
             {/* Stats */}
             {!loading && resources.length > 0 && (
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
+              <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-4">
                 {[
                   { value: `${stats.free}+`, label: "Instant downloads" },
                   { value: String(stats.total), label: "Resources live" },
