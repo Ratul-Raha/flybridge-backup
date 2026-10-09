@@ -61,6 +61,9 @@ export type TestDetail = {
       passage?: string;
       image?: string;
       imagePlacement?: "above" | "below-passage" | "below";
+      bulletPoints?: string[];
+      prepMinutes?: number;
+      talkMinutes?: number;
       questions: {
         qid: string;
         type?: string;

@@ -23,6 +23,9 @@ function sanitizeContent(
         passage: s.passage,
         image: s.image,
         imagePlacement: s.imagePlacement,
+        bulletPoints: s.bulletPoints ?? [],
+        prepMinutes: s.prepMinutes ?? 0,
+        talkMinutes: s.talkMinutes ?? 0,
         questions: (s.questions ?? []).map((q) => ({
           qid: q.qid,
           type: q.type,

@@ -71,6 +71,9 @@ type ManagedSection = {
   passage?: string;
   image?: string;
   imagePlacement?: string;
+  bulletPoints?: string[];
+  prepMinutes?: number;
+  talkMinutes?: number;
   questions?: ManagedQuestion[];
 };
 
@@ -244,6 +247,29 @@ function applyQuestionType(q: ManagedQuestion, type: string): void {
 }
 
 type ManagedWritingTask = "t1" | "t2";
+
+const SPEAKING_PARTS_META = [
+  { type: "speaking-part-1", label: "Part 1", desc: "Introduction and interview — short everyday questions." },
+  { type: "speaking-part-2", label: "Part 2", desc: "Cue card long turn — prep time then a 1-2 minute talk." },
+  { type: "speaking-part-3", label: "Part 3", desc: "Two-way discussion — follow-up questions on Part 2." },
+] as const;
+
+function speakingPartOrder(type: string | undefined): number {
+  const idx = SPEAKING_PARTS_META.findIndex((m) => m.type === type);
+  return idx === -1 ? 99 : idx;
+}
+
+function newSpeakingQuestion(): ManagedQuestion {
+  return {
+    type: "short-answer",
+    prompt: "",
+    options: [],
+    correctOption: -1,
+    multiple: false,
+    correctOptions: [],
+    answer: "",
+  };
+}
 
 function sectionPreview(s: ManagedSection): string {
   const fromInstructions = s.instructions?.trim() ?? "";
@@ -583,7 +609,22 @@ export function MockTestManage({
         return;
       }
     }
-    if (testForm.status === "published") {
+    if (!editingTestId && testForm.skill === "speaking") {
+      const sections = (content as { sections?: unknown }).sections;
+      const count = Array.isArray(sections)
+        ? (sections as { questions?: unknown[] }[]).reduce(
+            (n, s) => n + (Array.isArray(s?.questions) ? s.questions.length : 0),
+            0
+          )
+        : 0;
+      if (count === 0) {
+        setError(
+          "No speaking questions yet — build the speaking parts below (Part 1, 2 and 3), then create the test."
+        );
+        return;
+      }
+    }
+    if (testForm.status === "published" && testForm.skill !== "speaking") {
       const missing = collectMissing(content);
       if (missing.length > 0) {
         const shown = missing.slice(0, 10).map((n) => `Q${n}`).join(", ");
@@ -1103,6 +1144,94 @@ export function MockTestManage({
     });
   };
 
+  /* ------------------------- speaking parts ------------------------- */
+
+  const speakingParts = useMemo<ManagedSection[]>(
+    () =>
+      (parsedContent?.sections ?? [])
+        .filter((s) => s.type && s.type.startsWith("speaking-part-"))
+        .sort((a, b) => speakingPartOrder(a.type) - speakingPartOrder(b.type)),
+    [parsedContent]
+  );
+
+  const addSpeakingPart = (type: string) =>
+    updateContent((c) => {
+      c.sections = c.sections ?? [];
+      c.sections.push({
+        id: nextId("s", c.sections.map((s) => s.id)),
+        type,
+        instructions: "",
+        bulletPoints: type === "speaking-part-2" ? ["", ""] : [],
+        prepMinutes: type === "speaking-part-2" ? 1 : 0,
+        talkMinutes: type === "speaking-part-2" ? 2 : 0,
+        passage: "",
+        questions: type === "speaking-part-2" ? [newSpeakingQuestion()] : [],
+      });
+      c.sections.sort(
+        (a, b) => speakingPartOrder(a.type) - speakingPartOrder(b.type)
+      );
+      renumberQids(c);
+    });
+
+  const createSpeakingParts = () =>
+    updateContent((c) => {
+      c.sections = c.sections ?? [];
+      for (const meta of SPEAKING_PARTS_META) {
+        if (c.sections.some((s) => s.type === meta.type)) continue;
+        c.sections.push({
+          id: nextId("s", c.sections.map((s) => s.id)),
+          type: meta.type,
+          instructions: "",
+          bulletPoints: meta.type === "speaking-part-2" ? ["", ""] : [],
+          prepMinutes: meta.type === "speaking-part-2" ? 1 : 0,
+          talkMinutes: meta.type === "speaking-part-2" ? 2 : 0,
+          passage: "",
+          questions: meta.type === "speaking-part-2" ? [newSpeakingQuestion()] : [],
+        });
+      }
+      c.sections.sort(
+        (a, b) => speakingPartOrder(a.type) - speakingPartOrder(b.type)
+      );
+      renumberQids(c);
+    });
+
+  const removeSpeakingPart = (type: string) =>
+    updateContent((c) => {
+      c.sections = (c.sections ?? []).filter((s) => s.type !== type);
+      renumberQids(c);
+    });
+
+  const addSpeakingQuestion = (type: string) =>
+    updateContent((c) => {
+      const s = (c.sections ?? []).find((x) => x.type === type);
+      if (!s) return;
+      s.questions = s.questions ?? [];
+      s.questions.push(newSpeakingQuestion());
+      renumberQids(c);
+    });
+
+  const setBulletPoint = (type: string, bi: number, val: string) =>
+    updateContent((c) => {
+      const s = (c.sections ?? []).find((x) => x.type === type);
+      if (!s) return;
+      s.bulletPoints = s.bulletPoints ?? [];
+      s.bulletPoints[bi] = val;
+    });
+
+  const addBulletPoint = (type: string) =>
+    updateContent((c) => {
+      const s = (c.sections ?? []).find((x) => x.type === type);
+      if (!s) return;
+      s.bulletPoints = [...(s.bulletPoints ?? []), ""];
+    });
+
+  const removeBulletPoint = (type: string, bi: number) =>
+    updateContent((c) => {
+      const s = (c.sections ?? []).find((x) => x.type === type);
+      if (!s) return;
+      s.bulletPoints = (s.bulletPoints ?? []).filter((_, i) => i !== bi);
+    });
+
   /* Answer completeness + answer-key coverage flags for review */
   const answerStats = useMemo(() => {
     const questions = (parsedContent?.sections ?? []).flatMap((s) => s.questions ?? []);
@@ -1270,7 +1399,7 @@ export function MockTestManage({
                         />
                       </div>
 
-                      {testForm.skill !== "writing" && (
+                      {testForm.skill !== "writing" && testForm.skill !== "speaking" && (
                         <div className="flex flex-col gap-2 md:col-span-2">
                           <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                             Answer key / answers text (optional)
@@ -1286,18 +1415,26 @@ export function MockTestManage({
                         </div>
                       )}
 
-                      <div className="md:col-span-2">
-                        <button
-                          type="button"
-                          onClick={generate}
-                          disabled={generating}
-                          className="inline-flex items-center gap-2 rounded-full px-5 py-[10px] text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-60"
-                          style={{ background: "var(--brand-2)" }}
-                        >
-                          {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-                          {generating ? "Generating structure…" : "Generate structure with AI"}
-                        </button>
-                      </div>
+                      {testForm.skill !== "speaking" && (
+                        <div className="md:col-span-2">
+                          <button
+                            type="button"
+                            onClick={generate}
+                            disabled={generating}
+                            className="inline-flex items-center gap-2 rounded-full px-5 py-[10px] text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-60"
+                            style={{ background: "var(--brand-2)" }}
+                          >
+                            {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                            {generating ? "Generating structure…" : "Generate structure with AI"}
+                          </button>
+                        </div>
+                      )}
+                      {testForm.skill === "speaking" && (
+                        <p className="md:col-span-2 rounded-xl border px-4 py-3 text-[12px]" style={{ borderColor: "var(--line)", color: "var(--body)", background: "#FBFBFD" }}>
+                          Speaking tests are built by hand in the editor below — add the three parts,
+                          questions and the Part 2 cue card, then the AI grades each attempt.
+                        </p>
+                      )}
 
                       {testForm.skill === "listening" && (
                         <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
@@ -1407,7 +1544,7 @@ export function MockTestManage({
                         </div>
 
                         {/* Answer coverage */}
-                        {answerStats.total > 0 && (
+                        {answerStats.total > 0 && testForm.skill !== "speaking" && (
                           <div className="flex flex-col gap-2 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
                             <div className="flex items-center justify-between gap-3">
                               <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -1489,6 +1626,213 @@ export function MockTestManage({
                           </div>
                         )}
 
+                        {/* Speaking parts */}
+                        {testForm.skill === "speaking" && (
+                          <div className="flex flex-col gap-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                                Speaking test parts
+                              </p>
+                              {speakingParts.length < 3 && (
+                                <button
+                                  type="button"
+                                  onClick={createSpeakingParts}
+                                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                                  style={{ background: "var(--brand)" }}
+                                >
+                                  <Plus size={12} /> Add all three parts
+                                </button>
+                              )}
+                            </div>
+                            {speakingParts.length === 0 && (
+                              <p className="rounded-xl border border-dashed bg-white px-4 py-5 text-center text-[12.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                                No parts yet — add Part 1, Part 2 and Part 3 to build the speaking test.
+                              </p>
+                            )}
+                            {SPEAKING_PARTS_META.map((meta) => {
+                              const idx = contentSections.findIndex((s) => s.type === meta.type);
+                              const s = idx === -1 ? null : contentSections[idx];
+                              const isPart2 = meta.type === "speaking-part-2";
+                              if (!s) {
+                                return (
+                                  <div key={meta.type} className="flex items-center justify-between gap-3 rounded-xl border border-dashed bg-white px-4 py-3" style={{ borderColor: "var(--line)" }}>
+                                    <div className="flex items-center gap-3">
+                                      <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]" style={{ background: "var(--bg-soft)", color: "var(--body)" }}>
+                                        {meta.label}
+                                      </span>
+                                      <p className="text-[12px]" style={{ color: "var(--body)" }}>{meta.desc}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => addSpeakingPart(meta.type)}
+                                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-medium text-white transition-opacity hover:opacity-90"
+                                      style={{ background: "var(--brand)" }}
+                                    >
+                                      <Plus size={11} /> Add {meta.label}
+                                    </button>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div key={meta.type} className="flex flex-col gap-2 rounded-xl border bg-white p-3" style={{ borderColor: "var(--line)" }}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                                      {meta.label}
+                                    </span>
+                                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>{meta.desc}</span>
+                                    <span className="flex-1" />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeSpeakingPart(meta.type)}
+                                      className="inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-2 text-[12px] font-medium transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                      style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                    >
+                                      <Trash2 size={12} /> Remove
+                                    </button>
+                                  </div>
+
+                                  {isPart2 ? (
+                                    <>
+                                      <textarea
+                                        value={s.instructions ?? ""}
+                                        onChange={(e) => setSectionField(idx, "instructions", e.target.value)}
+                                        rows={2}
+                                        placeholder="Cue card topic — e.g. Describe a memorable journey you took…"
+                                        className={inputClass + " resize-y font-mono text-[12px]"}
+                                        style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                      />
+                                      <div className="flex flex-col gap-1.5">
+                                        <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+                                          Cue card bullet points
+                                        </p>
+                                        {(s.bulletPoints ?? []).map((b, bi) => (
+                                          <div key={bi} className="flex items-center gap-2">
+                                            <input
+                                              type="text"
+                                              value={b ?? ""}
+                                              onChange={(e) => setBulletPoint(meta.type, bi, e.target.value)}
+                                              placeholder={`Bullet ${bi + 1}`}
+                                              className={rowInputClass}
+                                              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => removeBulletPoint(meta.type, bi)}
+                                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                              style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                            >
+                                              <X size={12} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <button
+                                          type="button"
+                                          onClick={() => addBulletPoint(meta.type)}
+                                          className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-[11.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                        >
+                                          <Plus size={11} /> Add bullet
+                                        </button>
+                                      </div>
+                                      <div className="flex flex-wrap items-center gap-4">
+                                        <label className="flex items-center gap-2 text-[12px] font-medium" style={{ color: "var(--ink)" }}>
+                                          Prep (min)
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            value={s.prepMinutes ?? 1}
+                                            onChange={(e) => setSectionField(idx, "prepMinutes", Math.max(0, Number(e.target.value) || 0))}
+                                            className="w-20 rounded-lg border bg-white px-3 py-2 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                          />
+                                        </label>
+                                        <label className="flex items-center gap-2 text-[12px] font-medium" style={{ color: "var(--ink)" }}>
+                                          Talk (min)
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max="15"
+                                            value={s.talkMinutes ?? 2}
+                                            onChange={(e) => setSectionField(idx, "talkMinutes", Math.max(0, Number(e.target.value) || 0))}
+                                            className="w-20 rounded-lg border bg-white px-3 py-2 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                          />
+                                        </label>
+                                      </div>
+                                      {s.questions?.[0] && (
+                                        <textarea
+                                          value={s.questions[0].prompt ?? ""}
+                                          onChange={(e) => setQuestionField(idx, 0, "prompt", e.target.value)}
+                                          rows={2}
+                                          placeholder="Talk instruction — e.g. You should say: where you went, who you were with, and why it was memorable."
+                                          className={inputClass + " resize-y font-mono text-[12px]"}
+                                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                        />
+                                      )}
+                                    </>
+                                  ) : (
+                                    <div className="flex flex-col gap-2">
+                                      {(s.questions ?? []).map((q, qi) => (
+                                        <div key={q.qid ?? qi} className="flex flex-col gap-1.5 rounded-lg border p-2.5" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+                                          <div className="flex items-center gap-2">
+                                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-bold" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                                              {qi + 1}
+                                            </span>
+                                            <span className="flex-1" />
+                                            <button
+                                              type="button"
+                                              onClick={() => moveQuestion(idx, qi, -1)}
+                                              disabled={qi === 0}
+                                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                              style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                            >
+                                              <ChevronUp size={13} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => moveQuestion(idx, qi, 1)}
+                                              disabled={qi === (s.questions?.length ?? 0) - 1}
+                                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                                              style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                            >
+                                              <ChevronDown size={13} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => removeQuestion(idx, qi)}
+                                              className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                                              style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </div>
+                                          <textarea
+                                            value={q.prompt ?? ""}
+                                            onChange={(e) => setQuestionField(idx, qi, "prompt", e.target.value)}
+                                            rows={2}
+                                            placeholder={`${meta.label} question ${qi + 1} — what the examiner asks…`}
+                                            className={inputClass + " resize-y font-mono text-[12px]"}
+                                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                          />
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={() => addSpeakingQuestion(meta.type)}
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-[12px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                      >
+                                        <Plus size={12} /> Add question
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {/* Reading passages */}
                         {testForm.skill === "reading" && (
                           <div className="flex flex-col gap-2.5">
@@ -1550,11 +1894,12 @@ export function MockTestManage({
                         )}
 
                         {/* Sections + questions */}
-                        <div className="flex flex-col gap-2.5">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                              Sections &amp; questions
-                            </p>
+                        {testForm.skill !== "speaking" && (
+                          <div className="flex flex-col gap-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                                Sections &amp; questions
+                              </p>
                             <button
                               type="button"
                               onClick={addSection}
@@ -1830,10 +2175,11 @@ export function MockTestManage({
                               </div>
                             </div>
                           ))}
-                        </div>
+                          </div>
+                        )}
                       </div>
 
-                      {contentSections.length > 0 && (
+                      {contentSections.length > 0 && testForm.skill !== "speaking" && (
                         <div className="flex flex-col gap-3 md:col-span-2 rounded-2xl border p-4" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -2049,7 +2395,7 @@ export function MockTestManage({
                         </div>
                       )}
 
-                      {testForm.skill !== "writing" && (
+                      {testForm.skill !== "writing" && testForm.skill !== "speaking" && (
                         <div className="flex flex-col gap-2 md:col-span-2">
                           <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                             Answer key (raw text, used by the AI grader)

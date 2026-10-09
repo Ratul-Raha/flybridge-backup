@@ -31,6 +31,9 @@ const testSectionSchema = new Schema(
     passage: { type: String },
     image: { type: String, trim: true },
     imagePlacement: { type: String, trim: true },
+    bulletPoints: { type: [String], default: [] },
+    prepMinutes: { type: Number, min: 0, default: 0 },
+    talkMinutes: { type: Number, min: 0, default: 0 },
     questions: { type: [testQuestionSchema], default: [] },
   },
   { _id: false }

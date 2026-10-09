@@ -33,6 +33,10 @@ export function buildJudgePrompt(opts: {
     id?: string | null;
     type?: string | null;
     passageId?: string | null;
+    instructions?: string | null;
+    bulletPoints?: string[] | null;
+    prepMinutes?: number | null;
+    talkMinutes?: number | null;
     questions: {
       qid?: string | null;
       prompt?: string | null;
@@ -47,6 +51,7 @@ export function buildJudgePrompt(opts: {
   answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined>;
 }): { system: string; user: string } {
   const isWriting = opts.skill === "writing";
+  const isSpeaking = opts.skill === "speaking";
   const answerLines = opts.sections
     .flatMap((s) =>
       (s.questions ?? []).map((q) => {
@@ -113,87 +118,177 @@ export function buildJudgePrompt(opts: {
   const system = [
     "You are flybridge-ielts-judge, the official IELTS mock-test grading engine",
     "for FlyBridge Education Group.",
-    isWriting
+    isSpeaking
       ? [
-          "You grade WRITING test answers against the official IELTS Writing band",
-          "descriptors (Task Response / Coherence and Cohesion / Lexical Resource /",
-          "Grammatical Range and Accuracy) and assign each task a band.",
+          "You grade SPEAKING test answers against the official IELTS Speaking band",
+          "descriptors across the four criteria: Fluency and Coherence, Lexical",
+          "Resource, Grammatical Range and Accuracy, and Pronunciation. Grade each",
+          "part of the test (Part 1, Part 2, Part 3) separately, then derive the",
+          "overall band.",
         ].join("\n")
-      : "You grade READING/LISTENING answers against the provided answer key.",
+      : isWriting
+        ? [
+            "You grade WRITING test answers against the official IELTS Writing band",
+            "descriptors (Task Response / Coherence and Cohesion / Lexical Resource /",
+            "Grammatical Range and Accuracy) and assign each task a band.",
+          ].join("\n")
+        : "You grade READING/LISTENING answers against the provided answer key.",
     "",
     "## Output format",
     "Return ONLY a valid JSON object. No markdown, no explanation.",
-    isWriting
+    isSpeaking
       ? [
-          '  "band":     overall Writing band (0-9 · 0.5 steps)',
-          '  "sections": [ { "key": "writingTask1", "title": "Task 1", "band": 6.5, "comments": "short note" },',
-          '               { "key": "writingTask2", "title": "Task 2", "band": 6.5, "comments": "short note" } ]',
+          '  "band":     overall Speaking band (0-9 · 0.5 steps)',
+          '  "sections": [ { "key": "part1", "title": "Part 1", "band": 6.5, "comments": "FC 6.5 · LR 6 · GR 6 · P 7 — short note" },',
+          '               { "key": "part2", "title": "Part 2", "band": 6.0, "comments": "FC 6 · LR 6.5 · GR 6 · P 6.5 — short note" },',
+          '               { "key": "part3", "title": "Part 3", "band": 6.5, "comments": "FC 6.5 · LR 6.5 · GR 6.5 · P 7 — short note" } ]',
           '  "feedback": 2-4 sentence actionable feedback on how to improve.',
         ].join("\n")
-      : [
-          '  "band":         overall band (0-9 · 0.5 steps) derived from correct count',
-          '  "correctCount": number of correct answers',
-          '  "totalCount":   total number of questions',
-          '  "sections":     per-section bands, e.g. [ { "key": "s1", "title": "..." } ]',
-          '  "feedback":     2-4 sentence actionable feedback on how to improve.',
-        ].join("\n"),
+      : isWriting
+        ? [
+            '  "band":     overall Writing band (0-9 · 0.5 steps)',
+            '  "sections": [ { "key": "writingTask1", "title": "Task 1", "band": 6.5, "comments": "short note" },',
+            '               { "key": "writingTask2", "title": "Task 2", "band": 6.5, "comments": "short note" } ]',
+            '  "feedback": 2-4 sentence actionable feedback on how to improve.',
+          ].join("\n")
+        : [
+            '  "band":         overall band (0-9 · 0.5 steps) derived from correct count',
+            '  "correctCount": number of correct answers',
+            '  "totalCount":   total number of questions',
+            '  "sections":     per-section bands, e.g. [ { "key": "s1", "title": "..." } ]',
+            '  "feedback":     2-4 sentence actionable feedback on how to improve.',
+          ].join("\n"),
     "",
     "## Rules",
-    isWriting
+    isSpeaking
       ? [
+          "- Use the official IELTS Speaking band descriptors for every criterion.",
+          "- Score all four criteria (Fluency and Coherence, Lexical Resource,",
+          "  Grammatical Range and Accuracy, Pronunciation) for each part, and",
+          "  summarise them in \"comments\" as e.g. \"FC 6.5 · LR 6 · GR 6 · P 7\"",
+          "  followed by a short 1-2 sentence note.",
+          "- Grade from the transcript only; do not penalise a blank part beyond",
+          "  recording that no response was captured there.",
           "- Be strict and realistic; a typical learner lands between 5.0 and 7.5.",
-          "- Reward clear ideas, good paragraphing, accurate grammar and a",
-          "  suitable range of vocabulary.",
           "- Band must be in 0.5 increments (no 6.25 etc).",
         ].join("\n")
-      : [
-          "- Mark an answer correct only if it matches the answer key exactly or is a",
-          "  clear semantic/technical equivalent (e.g. case, tense, article/number).",
-          "- \"Not Given\" is only correct when the answer key says Not Given/NG.",
-          "- For multiple-choice questions, both the answer key and the candidate's",
-          "  answers use option letters (A, B, C, …): a single letter for one answer and",
-          "  a comma-separated list for multi-answer questions.",
-          "- For a question whose answer key lists several letters (e.g. \"A, C\"), the",
-          "  candidate must have selected exactly that set — no more, no fewer.",
-          "- Convert the correct count to a band using standard IELTS raw-score",
-          "  guidelines (Reading: 30/40 → ~7.0, 23/40 → ~6.0; adjust for timing).",
-          "- Band must be in 0.5 increments.",
-        ].join("\n"),
+      : isWriting
+        ? [
+            "- Be strict and realistic; a typical learner lands between 5.0 and 7.5.",
+            "- Reward clear ideas, good paragraphing, accurate grammar and a",
+            "  suitable range of vocabulary.",
+            "- Band must be in 0.5 increments (no 6.25 etc).",
+          ].join("\n")
+        : [
+            "- Mark an answer correct only if it matches the answer key exactly or is a",
+            "  clear semantic/technical equivalent (e.g. case, tense, article/number).",
+            "- \"Not Given\" is only correct when the answer key says Not Given/NG.",
+            "- For multiple-choice questions, both the answer key and the candidate's",
+            "  answers use option letters (A, B, C, …): a single letter for one answer and",
+            "  a comma-separated list for multi-answer questions.",
+            "- For a question whose answer key lists several letters (e.g. \"A, C\"), the",
+            "  candidate must have selected exactly that set — no more, no fewer.",
+            "- Convert the correct count to a band using standard IELTS raw-score",
+            "  guidelines (Reading: 30/40 → ~7.0, 23/40 → ~6.0; adjust for timing).",
+            "- Band must be in 0.5 increments.",
+          ].join("\n"),
   ].join("\n");
 
   const passagesText = (opts.content.passages ?? [])
     .map((p) => `${p.title ?? p.id ?? "Passage"}\n${p.text ?? ""}`)
     .join("\n\n");
 
-  const user = [
-    `Test: ${opts.title}`,
-    `Skill: ${opts.skill.toUpperCase()}`,
-    ...(opts.content.passage
-      ? ["", "## Passage", opts.content.passage]
-      : []),
-    ...(passagesText && !opts.content.passage
-      ? ["", "## Passages", passagesText]
-      : []),
-    ...(isWriting && opts.content.writingTask1
-      ? ["", "## Writing Task 1", opts.content.writingTask1]
-      : []),
-    ...(isWriting && opts.content.writingTask2
-      ? ["", "## Writing Task 2", opts.content.writingTask2]
-      : []),
-    ...(!isWriting
-      ? [
-          "",
-          "## Questions",
-          gradedLines || "(no structured questions)",
-          "",
-          "## Candidate answers",
-          answeredLines || "(none)",
-        ]
-      : ["", "## Candidate answers", "Task 1:", opts.answers["writingTask1"]?.text ?? "(no answer)", "Task 2:", opts.answers["writingTask2"]?.text ?? "(no answer)"]),
-    ...(!isWriting ? ["", "## Answer key", answerLines || opts.answerKey || "(none)"] : []),
-  ].join("\n");
+  const user = isSpeaking
+    ? buildSpeakingUserLines(opts).join("\n")
+    : [
+        `Test: ${opts.title}`,
+        `Skill: ${opts.skill.toUpperCase()}`,
+        ...(opts.content.passage
+          ? ["", "## Passage", opts.content.passage]
+          : []),
+        ...(passagesText && !opts.content.passage
+          ? ["", "## Passages", passagesText]
+          : []),
+        ...(isWriting && opts.content.writingTask1
+          ? ["", "## Writing Task 1", opts.content.writingTask1]
+          : []),
+        ...(isWriting && opts.content.writingTask2
+          ? ["", "## Writing Task 2", opts.content.writingTask2]
+          : []),
+        ...(!isWriting
+          ? [
+              "",
+              "## Questions",
+              gradedLines || "(no structured questions)",
+              "",
+              "## Candidate answers",
+              answeredLines || "(none)",
+            ]
+          : ["", "## Candidate answers", "Task 1:", opts.answers["writingTask1"]?.text ?? "(no answer)", "Task 2:", opts.answers["writingTask2"]?.text ?? "(no answer)"]),
+        ...(!isWriting ? ["", "## Answer key", answerLines || opts.answerKey || "(none)"] : []),
+      ].join("\n");
 
   return { system, user };
+}
+
+type SpeakingJudgeOpts = {
+  sections: {
+    type?: string | null;
+    instructions?: string | null;
+    bulletPoints?: string[] | null;
+    prepMinutes?: number | null;
+    talkMinutes?: number | null;
+    questions: { qid?: string | null; prompt?: string | null }[];
+  }[];
+  answers: Record<string, { text?: string } | undefined>;
+  title: string;
+};
+
+/** Builds the per-part transcript listing the speaking judge grades. */
+function buildSpeakingUserLines(opts: SpeakingJudgeOpts): string[] {
+  const lines: string[] = [`Test: ${opts.title}`, "Skill: SPEAKING"];
+  opts.sections.forEach((s, i) => {
+    const partType = (s.type ?? "").toLowerCase();
+    const isPart2 =
+      partType.includes("part-2") ||
+      (Array.isArray(s.bulletPoints) && s.bulletPoints.length > 0) ||
+      (s.prepMinutes ?? 0) > 0 ||
+      (s.talkMinutes ?? 0) > 0;
+    const label = partType.includes("part-1")
+      ? "Part 1 · Introduction and interview"
+      : isPart2
+        ? "Part 2 · Individual long turn"
+        : partType.includes("part-3")
+          ? "Part 3 · Two-way discussion"
+          : `Part ${i + 1}`;
+    lines.push("", `## ${label}`);
+
+    if (isPart2) {
+      if (s.instructions?.trim()) {
+        lines.push(`Cue card topic: ${s.instructions.trim()}`);
+      }
+      if (Array.isArray(s.bulletPoints) && s.bulletPoints.length > 0) {
+        lines.push("Cue card points:");
+        for (const b of s.bulletPoints) lines.push(`- ${b}`);
+      }
+      for (const q of s.questions ?? []) {
+        if (q.prompt?.trim()) lines.push(`Task: ${q.prompt.trim()}`);
+      }
+      const transcript = (s.questions ?? [])
+        .map((q) => opts.answers[q.qid ?? ""]?.text ?? "")
+        .filter((t) => t.trim())
+        .join(" ");
+      lines.push(`Candidate response: ${transcript.trim() || "(no answer recorded)"}`);
+      return;
+    }
+
+    for (const q of s.questions ?? []) {
+      lines.push(`Q: ${q.prompt ?? ""}`);
+      const text = opts.answers[q.qid ?? ""]?.text ?? "";
+      lines.push(`Candidate: ${text.trim() || "(no answer)"}`);
+    }
+  });
+  return lines;
 }
 
 /* ------------------------------------------------------------------ */
@@ -239,6 +334,10 @@ export async function judgeMockTestAttempt(opts: {
     id?: string | null;
     type?: string | null;
     passageId?: string | null;
+    instructions?: string | null;
+    bulletPoints?: string[] | null;
+    prepMinutes?: number | null;
+    talkMinutes?: number | null;
     questions: {
       qid?: string | null;
       prompt?: string | null;

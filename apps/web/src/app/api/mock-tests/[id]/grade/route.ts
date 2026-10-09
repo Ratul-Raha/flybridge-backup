@@ -68,6 +68,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         id: s.id,
         type: s.type,
         passageId: s.passageId,
+        instructions: s.instructions,
+        bulletPoints: s.bulletPoints,
+        prepMinutes: s.prepMinutes,
+        talkMinutes: s.talkMinutes,
         questions: (s.questions ?? []).map((q) => ({
           qid: q.qid,
           prompt: q.prompt,

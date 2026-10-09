@@ -25,6 +25,7 @@ import {
   type TestDetail,
 } from "@/lib/mock-test-ui";
 import { ListeningTestPlayer } from "@/components/mock-tests/listening-test-player";
+import { SpeakingTestPlayer } from "@/components/mock-tests/speaking-test-player";
 
 type Phase = "loading" | "intro" | "ready" | "submitting" | "result" | "disqualified" | "error";
 
@@ -147,6 +148,7 @@ export function MockTestPlayer({
   );
 
   const isWriting = test?.skill === "writing";
+  const isSpeaking = test?.skill === "speaking";
   const hasTimer = (test?.durationMinutes ?? 0) > 0;
   const lowTime = hasTimer && secondsLeft > 0 && secondsLeft <= 60;
   const flattened = useMemo(
@@ -953,7 +955,7 @@ export function MockTestPlayer({
             </p>
           </div>
         )}
-        {!isWriting && test?.content?.hasAudio && (
+        {!isWriting && !isSpeaking && test?.content?.hasAudio && (
           <div className="mb-6 flex flex-col gap-3 rounded-xl border bg-white px-5 py-5" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-3">
               <Headphones size={18} style={{ color: "var(--brand-2)" }} />
@@ -969,6 +971,17 @@ export function MockTestPlayer({
               </div>
             )}
           </div>
+        )}
+
+        {/* Speaking test: parts 1-3 with Azure speech */}
+        {isSpeaking && (
+          <SpeakingTestPlayer
+            sections={test?.content?.sections ?? []}
+            answers={answers}
+            onTextChange={setText}
+            onFinish={() => setConfirmOpen(true)}
+            submitting={submitting}
+          />
         )}
 
         {/* Writing tasks */}
@@ -1006,6 +1019,7 @@ export function MockTestPlayer({
 
         {/* Reading passages: side-by-side passage | questions */}
         {!isWriting &&
+          !isSpeaking &&
           (readingPages ? (
             <>
               <div className="mb-5 flex items-center gap-2.5">
@@ -1061,7 +1075,7 @@ export function MockTestPlayer({
           ))}
 
         {/* Bottom navigation bar */}
-        {!isWriting && flattened.length > 0 && (
+        {!isWriting && !isSpeaking && flattened.length > 0 && (
           <div
             className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 shadow-[0_-12px_40px_-24px_rgba(18,32,67,0.35)] backdrop-blur"
             style={{ borderColor: "var(--line)" }}
