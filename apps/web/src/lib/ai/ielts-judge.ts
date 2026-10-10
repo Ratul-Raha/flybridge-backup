@@ -27,6 +27,16 @@ export function buildJudgePrompt(opts: {
     passage?: string | null;
     passages?: { id?: string | null; title?: string | null; text?: string | null }[] | null;
     writingTask1?: string | null;
+    writingTask1Chart?: {
+      chartType: string;
+      title?: string | null;
+      xAxis?: string[] | null;
+      yAxisLabel?: string | null;
+      categories?: string[] | null;
+      series?: { name?: string | null; data?: number[] | null }[] | null;
+      unit?: string | null;
+      source?: string | null;
+    } | null;
     writingTask2?: string | null;
   };
   sections: {
@@ -184,6 +194,10 @@ export function buildJudgePrompt(opts: {
             "- Be strict and realistic; a typical learner lands between 5.0 and 7.5.",
             "- Reward clear ideas, good paragraphing, accurate grammar and a",
             "  suitable range of vocabulary.",
+            "- For Task 1, use the authoritative visual data supplied in the user prompt.",
+            "  Check whether the response selects an accurate overview, compares the",
+            "  relevant categories or series, and reports key values and trends without",
+            "  inventing or reversing information from the chart.",
             "- Band must be in 0.5 increments (no 6.25 etc).",
           ].join("\n")
         : [
@@ -218,6 +232,14 @@ export function buildJudgePrompt(opts: {
           : []),
         ...(isWriting && opts.content.writingTask1
           ? ["", "## Writing Task 1", opts.content.writingTask1]
+          : []),
+        ...(isWriting && opts.content.writingTask1Chart
+          ? [
+              "",
+              "## Writing Task 1 visual data (authoritative)",
+              JSON.stringify(opts.content.writingTask1Chart),
+              "Use these exact categories, series and values when judging Task 1 accuracy. Do not infer or invent visual data.",
+            ]
           : []),
         ...(isWriting && opts.content.writingTask2
           ? ["", "## Writing Task 2", opts.content.writingTask2]
@@ -335,6 +357,16 @@ export async function judgeMockTestAttempt(opts: {
     passage?: string | null;
     passages?: { id?: string | null; title?: string | null; text?: string | null }[] | null;
     writingTask1?: string | null;
+    writingTask1Chart?: {
+      chartType: string;
+      title?: string | null;
+      xAxis?: string[] | null;
+      yAxisLabel?: string | null;
+      categories?: string[] | null;
+      series?: { name?: string | null; data?: number[] | null }[] | null;
+      unit?: string | null;
+      source?: string | null;
+    } | null;
     writingTask2?: string | null;
   };
   sections: {

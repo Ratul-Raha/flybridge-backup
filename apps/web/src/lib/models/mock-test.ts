@@ -6,6 +6,17 @@ export const MOCK_TEST_STATUSES = ["draft", "published", "archived"] as const;
 export type MockTestSkill = (typeof MOCK_TEST_SKILLS)[number];
 export type MockTestStatus = (typeof MOCK_TEST_STATUSES)[number];
 
+export type MockTestChart = {
+  chartType: "line" | "bar" | "pie" | "table";
+  title: string;
+  xAxis: string[];
+  yAxisLabel: string;
+  categories: string[];
+  series: { name: string; data: number[] }[];
+  unit: string;
+  source: string;
+};
+
 const testQuestionSchema = new Schema(
   {
     qid: { type: String, trim: true },
@@ -49,6 +60,28 @@ const testPassageSchema = new Schema(
   { _id: false }
 );
 
+const writingChartSeriesSchema = new Schema(
+  {
+    name: { type: String, trim: true, required: true },
+    data: { type: [Number], default: [] },
+  },
+  { _id: false }
+);
+
+const writingChartSchema = new Schema(
+  {
+    chartType: { type: String, enum: ["line", "bar", "pie", "table"], required: true },
+    title: { type: String, trim: true, default: "" },
+    xAxis: { type: [String], default: [] },
+    yAxisLabel: { type: String, trim: true, default: "" },
+    categories: { type: [String], default: [] },
+    series: { type: [writingChartSeriesSchema], default: [] },
+    unit: { type: String, trim: true, default: "" },
+    source: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
 const mockTestContentSchema = new Schema(
   {
     type: { type: String, enum: [...MOCK_TEST_SKILLS], default: "reading" },
@@ -59,6 +92,7 @@ const mockTestContentSchema = new Schema(
     videoUrl: { type: String, trim: true },
     sections: { type: [testSectionSchema], default: [] },
     writingTask1: { type: String },
+    writingTask1Chart: { type: writingChartSchema, default: null },
     writingTask2: { type: String },
     writingTask1Image: { type: String, trim: true },
     writingTask1ImagePlacement: { type: String, trim: true },

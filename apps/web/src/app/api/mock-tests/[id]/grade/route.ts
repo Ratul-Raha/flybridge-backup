@@ -62,6 +62,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           text: p.text,
         })),
         writingTask1: test.content?.writingTask1,
+        writingTask1Chart: test.content?.writingTask1Chart ?? null,
         writingTask2: test.content?.writingTask2,
       },
       sections: (test.content?.sections ?? []).map((s) => ({

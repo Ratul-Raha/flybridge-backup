@@ -1,5 +1,16 @@
 export type MockTestSkill = "reading" | "listening" | "writing" | "speaking";
 
+export type MockTestChart = {
+  chartType: "line" | "bar" | "pie" | "table";
+  title?: string;
+  xAxis?: string[];
+  yAxisLabel?: string;
+  categories?: string[];
+  series: { name: string; data: number[] }[];
+  unit?: string;
+  source?: string;
+};
+
 export type BundleDto = {
   id: string;
   title: string;
@@ -77,6 +88,7 @@ export type TestDetail = {
       }[];
     }[];
     writingTask1?: string;
+    writingTask1Chart?: MockTestChart | null;
     writingTask2?: string;
     writingTask1Image?: string;
     writingTask1ImagePlacement?: "above" | "below";

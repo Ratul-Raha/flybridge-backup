@@ -62,6 +62,7 @@ function sanitizeContent(
     hasAudio: !!(content.audioUrl || content.audioPublicId || content.videoUrl),
     sections,
     writingTask1: content.writingTask1,
+    writingTask1Chart: content.writingTask1Chart ?? null,
     writingTask2: content.writingTask2,
     writingTask1Image: content.writingTask1Image,
     writingTask1ImagePlacement: content.writingTask1ImagePlacement,

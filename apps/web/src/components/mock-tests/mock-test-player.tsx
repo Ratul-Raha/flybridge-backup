@@ -26,6 +26,7 @@ import {
 } from "@/lib/mock-test-ui";
 import { ListeningTestPlayer } from "@/components/mock-tests/listening-test-player";
 import { SpeakingTestPlayer } from "@/components/mock-tests/speaking-test-player";
+import { WritingTaskChart } from "@/components/mock-tests/writing-task-chart";
 
 type Phase = "loading" | "intro" | "ready" | "submitting" | "result" | "disqualified" | "error";
 
@@ -1036,6 +1037,7 @@ export function MockTestPlayer({
                 <TaskWriter
                   label="Writing Task 1"
                   prompt={test.content.writingTask1}
+                  chart={test.content.writingTask1Chart}
                   image={test.content.writingTask1Image}
                   imagePlacement={test.content.writingTask1ImagePlacement}
                   value={typeof answers["writingTask1"]?.text === "string" ? answers["writingTask1"].text ?? "" : ""}
@@ -1332,6 +1334,7 @@ export function MockTestPlayer({
 function TaskWriter({
   label,
   prompt,
+  chart,
   image,
   imagePlacement,
   value,
@@ -1339,6 +1342,7 @@ function TaskWriter({
 }: {
   label: string;
   prompt: string;
+  chart?: TestDetail["content"]["writingTask1Chart"];
   image?: string;
   imagePlacement?: "above" | "below";
   value: string;
@@ -1363,6 +1367,7 @@ function TaskWriter({
       </div>
       <div className="px-5 py-5">
         {placement === "above" && taskImage}
+        {chart && <WritingTaskChart chart={chart} />}
         <p className="whitespace-pre-line text-[13.5px] leading-[1.8]" style={{ color: "var(--ink)" }}>
           {inlineRich(prompt)}
         </p>

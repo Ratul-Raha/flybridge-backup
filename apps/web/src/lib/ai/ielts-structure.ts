@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getProvider } from "@/lib/ai/provider";
-import type { MockTestContentDoc } from "@/lib/models/mock-test";
+import type { MockTestChart, MockTestContentDoc } from "@/lib/models/mock-test";
 
 class StructureError extends Error {}
 class NoQuestionsError extends Error {}
@@ -45,11 +45,18 @@ function skillInstructions(skill: StructureSkill): string {
       "  (the audio is attached separately).",
       "- Structure the QUESTIONS into sections (Form/Notes/Table/Completion,",
       "  Multiple Choice, Matching, Plan/Map/Diagram Labelling).",
+      "- For questions with one or more blanks, replace each blank with an inline",
+      "  token [[gap:1]], [[gap:2]], etc. in the prompt, and put the matching",
+      "  answers in gapAnswers in the same order. Use a normal prompt",
+      "  and answer for questions that have only one answer box and no inline blanks.",
     ].join("\n");
   }
   return [
     "- WRITING tests have no question sections.",
     "- Put Task 1 into \"writingTask1\" and Task 2 into \"writingTask2\" verbatim.",
+    "- If Task 1 refers to a chart, graph, table or pie chart, extract every visible",
+    "  label, category, series name, unit and numeric value into \"writingTask1Chart\".",
+    "  Never invent values. Set writingTask1Chart to null when no visual data is present.",
     "- Leave \"passage\", \"passages\" and \"sections\" empty.",
   ].join("\n");
 }
@@ -76,10 +83,17 @@ export function buildStructurePrompt(opts: {
     '  "passages":     array of passage objects (reading only; empty otherwise)',
     '  "sections":     array of section objects',
     '  "writingTask1": string (writing only)',
+    '  "writingTask1Chart": chart object or null (writing Task 1 visuals)',
     '  "writingTask2": string (writing only)',
     '',
     'A passage object:',
     '  { "id": "p1", "title": "Reading Passage 1", "text": "<full verbatim text>" }',
+    '',
+    'A writingTask1Chart object:',
+    '  { "chartType": "line" | "bar" | "pie" | "table", "title": "",',
+    '    "xAxis": ["<axis label or category>", ...], "yAxisLabel": "",',
+    '    "categories": ["<category>", ...], "series": [{ "name": "", "data": [0] }],',
+    '    "unit": "", "source": "" }',
     '',
     'A section object:',
     '  { "id": "s1", "passageId": "p1", "type": "<question type>",',
@@ -91,6 +105,7 @@ export function buildStructurePrompt(opts: {
     '    "options": ["<choice a>", "<choice b>", ...],',
     '    "correctOption": <0-based index of the correct option, or -1>,',
     '    "answer": "<the correct answer as text (for completion/short-answer)>",',
+    '    "gapAnswers": ["<answer for [[gap:1]]>", "<answer for [[gap:2]]>"],',
     '    "passageRef": "<optional paragraph reference>",',
     '    "wordHint": "<optional word limit hint (e.g. NO MORE THAN TWO WORDS)>" }',
     "",
@@ -102,10 +117,16 @@ export function buildStructurePrompt(opts: {
     "- For true-false-ng the options are exactly [\"True\", \"False\", \"Not Given\"].",
     "- For completion and short-answer questions set \"options\" to [\"\"] and put",
     "  the exact expected words in \"answer\".",
+    "- When a prompt contains [[gap:N]] tokens, set gapAnswers with one answer",
+    "  for each token, in token order. Do not leave gapAnswers",
+    "  empty for an inline-gap question.",
     "- CRITICAL: SOLVE and answer EVERY question. Every question object MUST have its",
     "  correct answer filled in: set \"correctOption\" (0-based) for choice-style",
     "  questions and \"answer\" for completion/short-answer questions. Never leave",
     "  both empty and never use -1.",
+    "- For a writing Task 1 visual, preserve the visual's exact data in",
+    "  writingTask1Chart. The chart's categories and every series data array must",
+    "  align by index. Return null if the source contains no chart data.",
     "- The answers section at the end of the user message is the official answer key.",
     "  Read it FIRST: it gives one answer per line as \"<number>. <answer>\". Use it as",
     "  the source of truth and keep the question numbering 1:1 with it. If a question",
@@ -183,6 +204,7 @@ type NormalizedQuestion = {
   options: string[];
   correctOption: number;
   answer: string;
+  gapAnswers: string[];
   passageRef: string;
   wordHint: string;
 };
@@ -223,6 +245,9 @@ function normalizeQuestion(
         : typeof q.correctAnswer === "string"
           ? q.correctAnswer
           : "",
+    gapAnswers: Array.isArray(q.gapAnswers)
+      ? (q.gapAnswers as unknown[]).filter((a): a is string => typeof a === "string")
+      : [],
     passageRef: typeof q.passageRef === "string" ? q.passageRef : "",
     wordHint: typeof q.wordHint === "string" ? q.wordHint : "",
   };
@@ -249,6 +274,43 @@ function normalizePassages(raw: Record<string, unknown>): NormalizedPassage[] {
       };
     })
     .filter((p) => p.text.trim().length > 0);
+}
+
+function normalizeChart(raw: unknown): MockTestChart | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Record<string, unknown>;
+  const chartType = value.chartType;
+  if (chartType !== "line" && chartType !== "bar" && chartType !== "pie" && chartType !== "table") {
+    return null;
+  }
+  const strings = (input: unknown): string[] =>
+    Array.isArray(input) ? input.filter((item): item is string => typeof item === "string") : [];
+  const series = Array.isArray(value.series)
+    ? value.series
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const entry = item as Record<string, unknown>;
+          const data = Array.isArray(entry.data)
+            ? entry.data.filter((n): n is number => typeof n === "number" && Number.isFinite(n))
+            : [];
+          return {
+            name: typeof entry.name === "string" ? entry.name : "Series",
+            data,
+          };
+        })
+        .filter((item): item is { name: string; data: number[] } => item !== null && item.data.length > 0)
+    : [];
+  if (series.length === 0) return null;
+  return {
+    chartType,
+    title: typeof value.title === "string" ? value.title : "",
+    xAxis: strings(value.xAxis),
+    yAxisLabel: typeof value.yAxisLabel === "string" ? value.yAxisLabel : "",
+    categories: strings(value.categories),
+    series,
+    unit: typeof value.unit === "string" ? value.unit : "",
+    source: typeof value.source === "string" ? value.source : "",
+  };
 }
 
 function normalizeContent(
@@ -345,6 +407,7 @@ function normalizeContent(
     videoUrl: "",
     sections,
     writingTask1: typeof raw.writingTask1 === "string" ? raw.writingTask1 : "",
+    writingTask1Chart: skill === "writing" ? normalizeChart(raw.writingTask1Chart) : null,
     writingTask2: typeof raw.writingTask2 === "string" ? raw.writingTask2 : "",
   } as unknown as MockTestContentDoc;
 }

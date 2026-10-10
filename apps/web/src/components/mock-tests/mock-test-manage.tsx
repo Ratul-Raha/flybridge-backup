@@ -96,6 +96,16 @@ type ManagedWritingContent = {
   audioPublicId?: string;
   videoUrl?: string;
   writingTask1?: string;
+  writingTask1Chart?: {
+    chartType: "line" | "bar" | "pie" | "table";
+    title?: string;
+    xAxis?: string[];
+    yAxisLabel?: string;
+    categories?: string[];
+    series: { name: string; data: number[] }[];
+    unit?: string;
+    source?: string;
+  } | null;
   writingTask2?: string;
   writingTask1Image?: string;
   writingTask1ImagePlacement?: string;
@@ -1571,7 +1581,9 @@ export function MockTestManage({
                           <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
                             Add passages, sections and questions by hand — no AI needed. Use the{" "}
                             <code className="font-mono" style={{ color: "var(--brand-2)" }}>![alt](url)</code>{" "}
-                            token to embed images anywhere text appears.
+                            token to embed images anywhere text appears. For listening gap-fill questions,
+                            put <code className="font-mono" style={{ color: "var(--brand-2)" }}>[[gap:1]]</code>{" "}
+                            and <code className="font-mono" style={{ color: "var(--brand-2)" }}>[[gap:2]]</code> in the prompt, then enter one correct answer per gap.
                           </p>
                         </div>
 
