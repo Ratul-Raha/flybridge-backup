@@ -5,17 +5,20 @@ import type { EChartsOption } from "echarts";
 import { Card } from "./card";
 import { Chart } from "./echart";
 import { BRAND, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "./lib";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type Growth = { labels: string[]; signups: number[] };
 
 export function GrowthChart() {
   const [data, setData] = useState<Growth | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/reports/growth?days=14", { cache: "no-store" })
       .then((r) => r.json())
       .then((res) => setData(res.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const option = useMemo<EChartsOption>(() => {
@@ -103,7 +106,7 @@ export function GrowthChart() {
         ) : null
       }
     >
-      <Chart option={option} height={300} />
+      {loading ? <InlineLoader label="Loading…" /> : <Chart option={option} height={300} />}
     </Card>
   );
 }

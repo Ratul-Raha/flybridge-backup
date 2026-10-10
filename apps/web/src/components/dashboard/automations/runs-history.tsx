@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { SectionCard, StatusPill, EMERALD, AMBER, ROSE, ACCENT } from "./ui";
+import { CardLoader } from "@/components/dashboard/page-loader";
 
 type RunStep = { nodeType: string; status: string; error?: string; detail?: unknown };
 
@@ -65,9 +66,7 @@ export function RunsHistory({ id }: { id: string }) {
 
       <SectionCard title="Run history" subtitle="Every time this automation reacted to an event, its execution is recorded step by step.">
         {loading ? (
-          <p className="py-8 text-center text-[13px]" style={{ color: "var(--body)" }}>
-            Loading…
-          </p>
+          <CardLoader label="Loading…" />
         ) : runs.length === 0 ? (
           <p className="py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>
             No runs yet. Fire a matching event (or use "Test event" in the editor) and it will appear here.

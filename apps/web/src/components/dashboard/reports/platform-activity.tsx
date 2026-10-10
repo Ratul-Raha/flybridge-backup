@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { UserPlus, CalendarCheck, CalendarPlus, Activity } from "lucide-react";
 import { Card } from "./card";
 import { timeAgo, BRAND, SKY, EMERALD } from "./lib";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type ActivityItem = {
   id: string;
@@ -22,12 +23,14 @@ const TYPE_STYLE: Record<ActivityItem["type"], { bg: string; fg: string; icon: t
 
 export function PlatformActivity() {
   const [items, setItems] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/reports/platform-activity", { cache: "no-store" })
       .then((r) => r.json())
       .then((res) => setItems(res.data?.activity ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -37,7 +40,8 @@ export function PlatformActivity() {
       action={<Activity size={16} style={{ color: "var(--body)" }} />}
     >
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>
-        {items.length === 0 && (
+        {loading && <InlineLoader label="Loading…" />}
+        {!loading && items.length === 0 && (
           <p className="text-[13px] py-6 text-center" style={{ color: "var(--body)" }}>
             No activity yet.
           </p>

@@ -45,6 +45,7 @@ function isAnswered(a?: AnswerValue): boolean {
   return (
     (typeof a?.choice === "number" && a.choice >= 0) ||
     (Array.isArray(a?.choices) && a.choices.length > 0) ||
+    (Array.isArray(a?.gaps) && a.gaps.some((gap) => gap.trim().length > 0)) ||
     (typeof a?.text === "string" && a.text.trim().length > 0)
   );
 }
@@ -79,6 +80,39 @@ function inlineRich(text?: string): ReactNode {
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts.length > 0 ? parts : text;
+}
+
+const GAP_TOKEN_RE = /\[\[gap:(\d+)\]\]/g;
+
+function inlineGaps(
+  text: string | undefined,
+  values: string[],
+  onChange: (index: number, value: string) => void
+): ReactNode {
+  if (!text || !GAP_TOKEN_RE.test(text)) return inlineRich(text);
+  GAP_TOKEN_RE.lastIndex = 0;
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  let match: RegExpExecArray | null;
+  while ((match = GAP_TOKEN_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(<span key={key++}>{inlineRich(text.slice(last, match.index))}</span>);
+    const index = Math.max(0, Number(match[1]) - 1);
+    parts.push(
+      <input
+        key={key++}
+        aria-label={`Answer for gap ${index + 1}`}
+        type="text"
+        value={values[index] ?? ""}
+        onChange={(event) => onChange(index, event.target.value)}
+        className="mx-1 inline-block w-[min(10rem,35vw)] border-0 border-b-2 bg-transparent px-1 py-0.5 text-center text-[14px] font-normal focus:outline-none focus:ring-0"
+        style={{ borderColor: values[index]?.trim() ? "var(--brand)" : "var(--line)", color: "var(--ink)" }}
+      />
+    );
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(<span key={key++}>{inlineRich(text.slice(last))}</span>);
+  return parts;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -363,11 +397,19 @@ export function MockTestPlayer({
   const setText = (key: string, value: string) =>
     setAnswers((prev) => ({ ...prev, [key]: { text: value, choice: undefined } }));
 
+  const setGap = (qid: string, index: number, value: string) =>
+    setAnswers((prev) => {
+      const gaps = Array.isArray(prev[qid]?.gaps) ? [...prev[qid]!.gaps!] : [];
+      gaps[index] = value;
+      return { ...prev, [qid]: { gaps, choice: undefined, text: undefined } };
+    });
+
   const renderQuestion = (q: TestDetail["content"]["sections"][number]["questions"][number], qi: number = 0) => {
     const opts = Array.isArray(q.options) ? q.options : [];
     const hasOptions = opts.some((o) => typeof o === "string" && o.trim().length > 0);
     const current = answers[q.qid];
     const answered = isAnswered(current);
+    const hasInlineGaps = /\[\[gap:\d+\]\]/.test(q.prompt ?? "");
     const num = questionIndex[q.qid] ?? qi + 1;
     const isMulti = q.multiple === true;
     const selectedChoices = isMulti && Array.isArray(current?.choices) ? current.choices : [];
@@ -417,7 +459,7 @@ export function MockTestPlayer({
           );
         })}
       </div>
-    ) : (
+    ) : hasInlineGaps ? null : (
       <div className="mt-4">
         <div className="flex items-center gap-3">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11.5px] font-bold" style={{ borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }}>
@@ -451,7 +493,9 @@ export function MockTestPlayer({
               {num}
             </span>
             <p className="text-[14px] font-medium leading-[1.65]" style={{ color: "var(--ink)" }}>
-              {inlineRich(q.prompt)}
+              {hasInlineGaps
+                ? inlineGaps(q.prompt, current?.gaps ?? [], (index, value) => setGap(q.qid, index, value))
+                : inlineRich(q.prompt)}
             </p>
           </div>
           {answered && <CheckCircle2 size={17} className="mt-1 shrink-0" style={{ color: "#0FA968" }} />}

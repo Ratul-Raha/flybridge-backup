@@ -9,6 +9,7 @@ import { createNode, createEdge, triggerEventOf, graphValidationErrors } from "@
 import type { AutomationGraph, AutomationNode, ActionType } from "@/lib/automation/types";
 import { FlowGraph, type StepItem } from "./flow-graph";
 import { NodeConfig } from "./node-config";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { EmitModal } from "./emit-modal";
 import { SectionCard, PrimaryButton, GhostButton, StatusPill, EMERALD, AMBER, ROSE, ACCENT, fieldClass, Label } from "./ui";
 
@@ -149,7 +150,7 @@ export function AutomationEditor({ id }: { id: string }) {
   const validationErrors = graphValidationErrors({ nodes, edges });
 
   if (loading) {
-    return <p className="py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>Loading…</p>;
+    return <PageLoader label="Loading…" />;
   }
 
   if (notFound) {

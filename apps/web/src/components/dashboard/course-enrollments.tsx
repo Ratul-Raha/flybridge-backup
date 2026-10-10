@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
 import { CertificateFace, type CertificateGrade } from "@/components/dashboard/certificate-face";
 import { qrCodeDataUrl } from "@/lib/qr-code";
@@ -538,7 +539,7 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
   const to = Math.min(safePage * perPage, visible.length);
 
-  if (loading) return <ScreenLoading label="Loading members…" />;
+  if (loading) return <PageLoader label="Loading members…" />;
   if (error) return <ScreenError message={error} />;
 
   return (

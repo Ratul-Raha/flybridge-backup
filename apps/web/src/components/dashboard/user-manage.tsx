@@ -25,7 +25,8 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
-import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { CardLoader } from "@/components/dashboard/page-loader";
+import { ScreenError } from "@/components/dashboard/user/ui";
 import { BulkEmailModal } from "@/components/dashboard/user/bulk-email-modal";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -1003,7 +1004,7 @@ export function UserManage() {
       )}
 
       {loading ? (
-        <ScreenLoading label="Loading users…" />
+        <CardLoader label="Loading users…" />
       ) : (
         <>
           {/* Table */}

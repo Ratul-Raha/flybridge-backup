@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, Crown, ShoppingCart, BookOpen, Gauge, Download, Award, ArrowUpRight } from "lucide-react";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type Overview = {
   totalUsers: number;
@@ -150,17 +151,7 @@ export function StatCards() {
   }, []);
 
   if (!data) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-        {CARDS.map((c) => (
-          <div key={c.key} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
-            <div className="w-11 h-11 rounded-lg mb-4" style={{ background: "var(--line)" }} />
-            <div className="h-[26px] w-16 rounded-lg mb-2" style={{ background: "var(--line)" }} />
-            <div className="h-[10px] w-24 rounded" style={{ background: "var(--line)" }} />
-          </div>
-        ))}
-      </div>
-    );
+    return <InlineLoader label="Loading…" />;
   }
 
   return (

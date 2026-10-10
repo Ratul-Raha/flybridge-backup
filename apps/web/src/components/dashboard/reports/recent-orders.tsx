@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { Card } from "./card";
 import { priceLabel } from "./lib";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type Order = {
   id: string;
@@ -18,18 +19,21 @@ type Order = {
 
 export function RecentOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/reports/recent-orders", { cache: "no-store" })
       .then((r) => r.json())
       .then((res) => setOrders(res.data?.orders ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <Card title="Recent orders" subtitle="Latest seminar registrations">
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>
-        {orders.length === 0 && (
+        {loading && <InlineLoader label="Loading…" />}
+        {!loading && orders.length === 0 && (
           <p className="text-[13px] py-6 text-center" style={{ color: "var(--body)" }}>
             No orders yet.
           </p>

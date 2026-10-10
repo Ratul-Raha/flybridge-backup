@@ -6,6 +6,7 @@ import { BookOpen, Heart, Loader2, Plus, Trash2, Upload, Users } from "lucide-re
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 import { formatMoney } from "@/lib/pricing";
 
@@ -438,7 +439,7 @@ export function CourseManage() {
     }));
   };
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">

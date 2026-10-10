@@ -45,10 +45,11 @@ export function buildJudgePrompt(opts: {
       correctOptions?: number[] | null;
       multiple?: boolean | null;
       answer?: string | null;
+      gapAnswers?: string[] | null;
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined>;
+  answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined>;
 }): { system: string; user: string } {
   const isWriting = opts.skill === "writing";
   const isSpeaking = opts.skill === "speaking";
@@ -71,7 +72,10 @@ export function buildJudgePrompt(opts: {
               .map((i) => String.fromCharCode(65 + i))
               .join(", ")
           : "";
-        const expected = isMulti
+        const gapAnswers = Array.isArray(q.gapAnswers) ? q.gapAnswers.filter((a) => typeof a === "string" && a.trim()) : [];
+        const expected = gapAnswers.length > 0
+          ? gapAnswers.map((a, i) => `Gap ${i + 1}: ${a.trim()}`).join(" | ")
+          : isMulti
           ? multiLetters || q.answer?.trim() || "—"
           : optIdx >= 0
             ? `${String.fromCharCode(65 + optIdx)}${optText ? `. ${optText}` : ""}`
@@ -101,6 +105,9 @@ export function buildJudgePrompt(opts: {
         const raw = opts.answers[q.qid ?? ""];
         const letterOf = (i: number) => String.fromCharCode(65 + i);
         const picked =
+          Array.isArray(raw?.gaps) && raw.gaps.length > 0
+            ? raw.gaps.map((a, i) => `Gap ${i + 1}: ${(a ?? "").trim() || "(blank)"}`).join(" | ")
+            :
           Array.isArray(raw?.choices) && raw.choices.length > 0
             ? raw.choices
                 .slice()
@@ -109,7 +116,7 @@ export function buildJudgePrompt(opts: {
                 .join(", ")
             : raw?.choice !== undefined && raw.choice >= 0
               ? letterOf(raw.choice)
-              : (raw?.text ?? "").trim();
+            : (raw?.text ?? "").trim();
         return `${q.qid} → ${picked || "(no answer)"}`;
       })
     )
@@ -345,11 +352,12 @@ export async function judgeMockTestAttempt(opts: {
       correctOption?: number | null;
       correctOptions?: number[] | null;
       multiple?: boolean | null;
-      answer?: string | null;
+       answer?: string | null;
+       gapAnswers?: string[] | null;
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; choices?: number[]; text?: string } | undefined>;
+  answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined>;
 }): Promise<JudgeResult> {
   const provider = await getProvider();
 

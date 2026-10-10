@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { StatCards } from "@/components/dashboard/reports/stat-cards";
 import { GrowthChart } from "@/components/dashboard/reports/growth-chart";
 import { TopCourses } from "@/components/dashboard/reports/top-courses";
@@ -13,7 +14,7 @@ import { OrderOverview } from "@/components/dashboard/reports/order-overview";
 export function AdminDashboard() {
   const { user } = useAuth();
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading...</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">

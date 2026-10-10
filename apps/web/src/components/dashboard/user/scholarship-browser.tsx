@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
+import { PageLoader } from "@/components/dashboard/page-loader";
 
 type ScholarshipItem = {
   id: string;
@@ -225,9 +226,7 @@ export function ScholarshipBrowser() {
       )}
 
       {loading ? (
-        <p className="text-[13.5px] text-center py-10" style={{ color: "var(--body)" }}>
-          Loading scholarships…
-        </p>
+        <PageLoader label="Loading scholarships…" />
       ) : filtered.length === 0 ? (
         <div
           className="rounded-[20px] border bg-white px-6 py-16 flex flex-col items-center text-center gap-2.5"

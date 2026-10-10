@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 import {
   FileText,
@@ -170,6 +171,7 @@ const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_72px_auto]";
 export function ResourceManage() {
   const { user } = useAuth();
   const [resources, setResources] = useState<ResourceItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -191,6 +193,7 @@ export function ResourceManage() {
   const [period, setPeriod] = useState<"all" | "7" | "30" | "90">("all");
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const daysParam = period === "all" ? "" : `&days=${period}`;
       const res = await fetch(`/api/resources?all=true${daysParam}`, { cache: "no-store" });
@@ -198,6 +201,8 @@ export function ResourceManage() {
       setResources(data.resources ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, [period]);
 
@@ -391,7 +396,7 @@ export function ResourceManage() {
     }
   };
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   const uploading = uploadingFile !== null;
 
@@ -821,7 +826,8 @@ export function ResourceManage() {
         </div>
       )}
 
-      {resources.length === 0 && !formOpen ? (
+      {loading && <CardLoader label="Loading resources…" />}
+      {!loading && resources.length === 0 && !formOpen ? (
         <p className="text-[13.5px] text-center py-10" style={{ color: "var(--body)" }}>
           No resources yet — click "New resource" to upload your first one.
         </p>

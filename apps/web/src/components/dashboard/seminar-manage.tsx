@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 
 type Seminar = {
   id: string;
@@ -38,6 +39,7 @@ const emptyForm = {
 export function SeminarManage() {
   const { user } = useAuth();
   const [seminars, setSeminars] = useState<Seminar[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -47,12 +49,15 @@ export function SeminarManage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/seminars?all=true", { cache: "no-store" });
       const data = await res.json();
       setSeminars(data.seminars ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -130,7 +135,7 @@ export function SeminarManage() {
 
   const viewRegistrationsHref = (s: Seminar) => `/dashboard/seminars/${s.id}/registrations`;
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -321,6 +326,7 @@ export function SeminarManage() {
       )}
 
       <div className="flex flex-col gap-5">
+        {loading && <CardLoader label="Loading seminars…" />}
         {seminars.map((s) => (
           <div key={s.id} className="rounded-[24px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
             <div className="flex flex-col sm:flex-row">
@@ -420,7 +426,7 @@ export function SeminarManage() {
           </div>
         ))}
 
-        {seminars.length === 0 && !formOpen && (
+        {!loading && seminars.length === 0 && !formOpen && (
           <p className="text-[13.5px] text-center py-10" style={{ color: "var(--body)" }}>
             No seminars yet — click "New seminar" to create your first one.
           </p>

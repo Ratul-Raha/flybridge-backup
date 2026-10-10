@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, TriangleAlert, Terminal } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { TRAFFIC_WINDOWS, type TrafficSource } from "@/lib/analytics/types";
 import { TrafficStatCards } from "./traffic-stat-cards";
 import { TrafficDensityChart } from "./traffic-density-chart";
@@ -177,7 +178,9 @@ export function AnalyticsDashboard() {
         </div>
       )}
 
-      {state.status !== "unconfigured" && (
+      {state.status === "loading" && <PageLoader label="Loading…" />}
+
+      {state.status !== "unconfigured" && state.status !== "loading" && (
         <>
           <TrafficStatCards data={data} />
           <TrafficDensityChart data={data} />

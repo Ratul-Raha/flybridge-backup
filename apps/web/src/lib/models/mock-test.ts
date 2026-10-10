@@ -16,6 +16,7 @@ const testQuestionSchema = new Schema(
     multiple: { type: Boolean, default: false },
     correctOptions: { type: [Number], default: [] },
     answer: { type: String, trim: true },
+    gapAnswers: { type: [String], default: [] },
     passageRef: { type: String, trim: true },
     wordHint: { type: String, trim: true },
   },

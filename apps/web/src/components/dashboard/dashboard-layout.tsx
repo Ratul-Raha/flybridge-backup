@@ -39,6 +39,7 @@ import { CurrencyProvider, CurrencySelector } from "@/components/dashboard/curre
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { PushEnabler } from "@/components/notifications/push-enabler";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 import { OpsBotWidget } from "@/components/ops-bot/ops-bot-widget";
 import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
 
@@ -650,7 +651,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-3">
             {loading ? (
-              <div className="w-9 h-9 rounded-full" style={{ background: "var(--line)" }} />
+              <InlineLoader />
             ) : (
               user && (
                 <div className="flex items-center gap-3">

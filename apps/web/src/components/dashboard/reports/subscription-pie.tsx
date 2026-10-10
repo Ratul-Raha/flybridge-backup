@@ -5,17 +5,20 @@ import type { EChartsOption } from "echarts";
 import { Card } from "./card";
 import { Chart } from "./echart";
 import { BRAND, SKY, CARD_TOOLTIP } from "./lib";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type Split = { free: number; paid: number; total: number };
 
 export function SubscriptionPie() {
   const [data, setData] = useState<Split | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/reports/subscription-split", { cache: "no-store" })
       .then((r) => r.json())
       .then((res) => setData(res.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const option = useMemo<EChartsOption>(() => {
@@ -80,7 +83,7 @@ export function SubscriptionPie() {
 
   return (
     <Card title="Free vs paid" subtitle="Subscription split of all users">
-      <Chart option={option} height={300} />
+      {loading ? <InlineLoader label="Loading…" /> : <Chart option={option} height={300} />}
     </Card>
   );
 }

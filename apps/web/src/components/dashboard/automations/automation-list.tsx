@@ -8,6 +8,7 @@ import { eventLabel } from "@/lib/events/catalog";
 import { createNode, createEdge, triggerEventOf } from "@/lib/automation/graph";
 import type { AutomationGraph } from "@/lib/automation/types";
 import { SectionCard, StatusPill, PrimaryButton, GhostButton, timeAgo, ACCENT, EMERALD, ROSE, SKY, AMBER } from "./ui";
+import { CardLoader } from "@/components/dashboard/page-loader";
 
 type AutomationItem = {
   id: string;
@@ -128,9 +129,7 @@ export function AutomationList() {
         }
       >
         {loading ? (
-          <p className="text-[13px] py-8 text-center" style={{ color: "var(--body)" }}>
-            Loading…
-          </p>
+          <CardLoader label="Loading…" />
         ) : items.length === 0 ? (
           <div className="py-12 text-center">
             <div

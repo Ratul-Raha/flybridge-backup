@@ -13,7 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
-import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { CardLoader } from "@/components/dashboard/page-loader";
+import { ScreenError } from "@/components/dashboard/user/ui";
 
 type ReadinessRow = {
   id: string;
@@ -221,7 +222,7 @@ export function ReadinessManage() {
       </div>
 
       {loading ? (
-        <ScreenLoading label="Loading readiness checks…" />
+        <CardLoader label="Loading readiness checks…" />
       ) : (
         <>
           {runs.length === 0 ? (

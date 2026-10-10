@@ -5,6 +5,7 @@ import { Bell, BellRing, CheckCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import type { AppNotification, NotificationsResponse } from "@/lib/notifications";
 import { NotificationIcon } from "@/components/notifications/notification-icon";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 import { timeAgo } from "@/lib/time";
 
 const POLL_INTERVAL = 30_000;
@@ -167,9 +168,7 @@ export function NotificationBell() {
 
           <div className="flex-1 min-h-0 overflow-y-auto">
             {loading ? (
-              <div className="px-5 py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>
-                Loading&hellip;
-              </div>
+              <InlineLoader label="Loading…" />
             ) : notifications.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <div

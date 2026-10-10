@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 import {
   GraduationCap,
   Briefcase,
@@ -93,6 +94,7 @@ function formatDate(iso: string) {
 export function SuccessStoryManage() {
   const { user } = useAuth();
   const [stories, setStories] = useState<StoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -110,12 +112,15 @@ export function SuccessStoryManage() {
   const [typeFilter, setTypeFilter] = useState("all");
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/success-stories?all=true", { cache: "no-store" });
       const data = await res.json();
       setStories(data.stories ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -283,7 +288,7 @@ export function SuccessStoryManage() {
     }
   };
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -561,7 +566,8 @@ export function SuccessStoryManage() {
         </div>
 
         {/* Card grid */}
-        {filtered.length === 0 ? (
+        {loading && <CardLoader label="Loading stories…" />}
+        {!loading && filtered.length === 0 ? (
           <div className="rounded-lg border bg-white px-4 py-12 text-center text-[13.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
             No stories match your search or filters.
           </div>
@@ -661,7 +667,7 @@ export function SuccessStoryManage() {
           </div>
         )}
 
-        {stories.length === 0 && (
+        {!loading && stories.length === 0 && (
           <p className="text-[13.5px] text-center py-6" style={{ color: "var(--body)" }}>
             No stories yet — click "New story" to add your first one.
           </p>

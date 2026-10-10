@@ -71,6 +71,7 @@ export type TestDetail = {
         options: string[];
         multiple?: boolean;
         answer?: string;
+        gapAnswers?: string[];
         passageRef?: string;
         wordHint?: string;
       }[];
@@ -95,7 +96,7 @@ export type AttemptListItem = {
   submittedAt: string | null;
 };
 
-export type AnswerValue = { choice?: number; choices?: number[]; text?: string };
+export type AnswerValue = { choice?: number; choices?: number[]; text?: string; gaps?: string[] };
 
 export type AttemptDetail = {
   id: string;

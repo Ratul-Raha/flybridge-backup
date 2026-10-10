@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Search, Trash2, Users } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
-import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { PageLoader } from "@/components/dashboard/page-loader";
+import { ScreenError } from "@/components/dashboard/user/ui";
 import { useAuth } from "@/lib/auth/auth-context";
 
 type Registration = {
@@ -132,7 +133,7 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
   const to = Math.min(safePage * perPage, visible.length);
 
-  if (loading) return <ScreenLoading label="Loading registrations…" />;
+  if (loading) return <PageLoader label="Loading registrations…" />;
   if (error) return <ScreenError message={error} />;
 
   return (

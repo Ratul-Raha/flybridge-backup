@@ -39,6 +39,7 @@ function sanitizeContent(
                 correctOption: q.correctOption ?? -1,
                 correctOptions: q.correctOptions ?? [],
                 answer: q.answer ?? "",
+                gapAnswers: q.gapAnswers ?? [],
               }
             : {}),
         })),

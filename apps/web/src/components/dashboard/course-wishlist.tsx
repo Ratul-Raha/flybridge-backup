@@ -15,7 +15,8 @@ import {
   Users,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
-import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { PageLoader } from "@/components/dashboard/page-loader";
+import { ScreenError } from "@/components/dashboard/user/ui";
 
 type WishlistEntry = {
   id: string;
@@ -192,7 +193,7 @@ export function CourseWishlist({ courseSlug }: { courseSlug: string }) {
   const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
   const to = Math.min(safePage * perPage, visible.length);
 
-  if (loading) return <ScreenLoading label="Loading waitlist…" />;
+  if (loading) return <PageLoader label="Loading waitlist…" />;
   if (error) return <ScreenError message={error} />;
 
   return (

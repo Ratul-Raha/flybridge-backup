@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "./card";
 import { useCurrency } from "@/components/dashboard/currency-context";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type TopItem = {
   title: string;
@@ -20,17 +21,22 @@ const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
 
 export function TopCourses() {
   const [items, setItems] = useState<TopItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const { currency, fmt } = useCurrency();
 
   useEffect(() => {
     let cancelled = false;
     setItems([]);
+    setLoading(true);
     fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((res) => {
         if (!cancelled) setItems(res?.topItems ?? []);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -38,7 +44,9 @@ export function TopCourses() {
 
   return (
     <Card title="Top selling items" subtitle="Most purchased items by order count">
-      {items.length === 0 ? (
+      {loading ? (
+        <InlineLoader label="Loading…" />
+      ) : items.length === 0 ? (
         <p className="text-[13.5px] text-center py-12" style={{ color: "var(--body)" }}>
           No paid orders yet — top items will appear here.
         </p>

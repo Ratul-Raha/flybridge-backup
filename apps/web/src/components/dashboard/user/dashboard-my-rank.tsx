@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Trophy } from "lucide-react";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type MyRank = {
   rank: number | null;
@@ -23,13 +24,26 @@ const TOP_COLORS: Record<number, { ring: string; fg: string; bg: string; label: 
 
 export function DashboardMyRank() {
   const [data, setData] = useState<MyRank | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/me/leaderboard", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => setData(d ?? null))
-      .catch(() => setData(null));
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div
+        className="rounded-lg border bg-white p-5"
+        style={{ borderColor: "var(--line)" }}
+      >
+        <InlineLoader label="Loading rank…" />
+      </div>
+    );
+  }
 
   const medal = data?.rank && data.rank <= 3 ? TOP_COLORS[data.rank] : null;
   const hasProgress = data?.my !== null;

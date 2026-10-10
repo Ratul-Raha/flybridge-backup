@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 import { BengaliText } from "@/components/bengali-text";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { DashboardMyRank } from "@/components/dashboard/user/dashboard-my-rank";
 
 type MiniCourse = {
@@ -53,6 +54,7 @@ export function MobileDashboardHome() {
   const [unread, setUnread] = useState<number | null>(null);
   const [courses, setCourses] = useState<MiniCourse[]>([]);
   const [seminars, setSeminars] = useState<MiniSeminar[]>([]);
+  const [settled, setSettled] = useState(0);
 
   useEffect(() => {
     fetch("/api/me/readiness", { cache: "no-store" })
@@ -66,7 +68,8 @@ export function MobileDashboardHome() {
           setScore(null);
         }
       })
-      .catch(() => setScore(null));
+      .catch(() => setScore(null))
+      .finally(() => setSettled((n) => n + 1));
   }, []);
 
   useEffect(() => {
@@ -86,14 +89,16 @@ export function MobileDashboardHome() {
             .slice(0, 3)
         );
       })
-      .catch(() => setSeminarCount(0));
+      .catch(() => setSeminarCount(0))
+      .finally(() => setSettled((n) => n + 1));
   }, []);
 
   useEffect(() => {
     fetch("/api/resources", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => setResourceCount((data.resources ?? []).length))
-      .catch(() => setResourceCount(0));
+      .catch(() => setResourceCount(0))
+      .finally(() => setSettled((n) => n + 1));
   }, []);
 
   useEffect(() => {
@@ -112,15 +117,21 @@ export function MobileDashboardHome() {
             .slice(0, 3)
         );
       })
-      .catch(() => setCourses([]));
+      .catch(() => setCourses([]))
+      .finally(() => setSettled((n) => n + 1));
   }, []);
 
   useEffect(() => {
     fetch("/api/notifications?limit=1", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => setUnread(typeof data.unreadCount === "number" ? data.unreadCount : null))
-      .catch(() => setUnread(null));
+      .catch(() => setUnread(null))
+      .finally(() => setSettled((n) => n + 1));
   }, []);
+
+  if (settled < 5) {
+    return <PageLoader label="Loading dashboard…" />;
+  }
 
   const firstName = user?.name?.split(" ")[0] || "there";
   const enrolledCount = courses.length;

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, Bell, CheckCheck } from "lucide-react";
 import type { AppNotification, NotificationsResponse } from "@/lib/notifications";
 import { NotificationIcon } from "@/components/notifications/notification-icon";
+import { CardLoader } from "@/components/dashboard/page-loader";
 import { timeAgo } from "@/lib/time";
 
 export function NotificationCenter() {
@@ -114,21 +115,7 @@ export function NotificationCenter() {
 
       {/* List */}
       {loading ? (
-        <div className="flex flex-col">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className={i === 0 ? "py-4 px-4 flex items-center gap-4" : "py-4 px-4 flex items-center gap-4 border-t"}
-              style={i === 0 ? {} : { borderColor: "var(--line)" }}
-            >
-              <div className="w-10 h-10 rounded-full shrink-0" style={{ background: "var(--line)" }} />
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="h-[10px] rounded-full w-[35%]" style={{ background: "var(--line)" }} />
-                <div className="h-[10px] rounded-full w-[60%]" style={{ background: "var(--line)" }} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <CardLoader label="Loading notifications…" />
       ) : error ? (
         <div
           className="text-[12.5px] rounded-xl border px-4 py-3"

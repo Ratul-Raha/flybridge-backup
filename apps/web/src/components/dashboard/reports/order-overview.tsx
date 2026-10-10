@@ -14,6 +14,7 @@ import {
 import { Card } from "./card";
 import { useCurrency } from "@/components/dashboard/currency-context";
 import { formatMoney } from "@/lib/pricing";
+import { CardLoader } from "@/components/dashboard/page-loader";
 
 type OrderStats = {
   totalOrders: number;
@@ -107,6 +108,8 @@ export function OrderOverview() {
       cancelled = true;
     };
   }, [currency]);
+
+  if (!data) return <CardLoader label="Loading…" />;
 
   return (
     <div className="grid lg:grid-cols-5 gap-4">

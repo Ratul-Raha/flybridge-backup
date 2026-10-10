@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 import { MarkdownEditor } from "@/components/blogs/markdown-editor";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 import {
@@ -84,6 +85,7 @@ function extractGeneratedFields(content: string): { excerpt: string } {
 export function BlogManage() {
   const { user } = useAuth();
   const [blogs, setBlogs] = useState<BlogItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -104,6 +106,7 @@ export function BlogManage() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/blogs?all=true", { cache: "no-store" });
       const data = await res.json();
@@ -111,6 +114,8 @@ export function BlogManage() {
       setBlogs(data.blogs ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -257,7 +262,7 @@ cover: form.cover,
     }
   };
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -522,7 +527,8 @@ cover: form.cover,
       )}
 
       {/* List */}
-      {blogs.length === 0 && !formOpen ? (
+      {loading && <CardLoader label="Loading blogs…" />}
+      {!loading && blogs.length === 0 && !formOpen ? (
         <p className="text-[13.5px] text-center py-10" style={{ color: "var(--body)" }}>
           No blog posts yet — click &quot;New blog post&quot; to write one, or generate a draft with AI.
         </p>

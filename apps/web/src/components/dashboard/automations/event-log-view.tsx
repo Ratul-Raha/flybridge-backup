@@ -5,6 +5,7 @@ import { Play, ChevronDown } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { SectionCard, PrimaryButton, StatusPill, EMERALD, AMBER, ROSE, SKY } from "./ui";
 import { EmitModal } from "./emit-modal";
+import { CardLoader } from "@/components/dashboard/page-loader";
 
 type LogItem = {
   id: string;
@@ -57,9 +58,7 @@ export function EventLogView() {
         }
       >
         {loading ? (
-          <p className="py-8 text-center text-[13px]" style={{ color: "var(--body)" }}>
-            Loading…
-          </p>
+          <CardLoader label="Loading…" />
         ) : logs.length === 0 ? (
           <p className="py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>
             No events recorded yet. Events appear here as users register and seminars are created.

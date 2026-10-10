@@ -57,9 +57,20 @@ type ManagedQuestion = {
   multiple?: boolean;
   correctOptions?: number[];
   answer?: string;
+  gapAnswers?: string[];
   passageRef?: string;
   wordHint?: string;
 };
+
+const GAP_TOKEN_RE = /\[\[gap:(\d+)\]\]/g;
+
+function gapCount(prompt?: string): number {
+  if (!prompt) return 0;
+  return Array.from(prompt.matchAll(GAP_TOKEN_RE)).reduce(
+    (max, match) => Math.max(max, Number(match[1]) || 0),
+    0
+  );
+}
 
 type ManagedPassage = { id?: string; title?: string; text?: string };
 
@@ -181,11 +192,25 @@ function collectMissing(content: unknown): number[] {
     const sec = (s as { questions?: unknown }) ?? {};
     if (!Array.isArray(sec.questions)) continue;
     for (const q of sec.questions) {
-      const qu = (q as { type?: string; options?: string[]; correctOption?: number; correctOptions?: number[]; multiple?: boolean; answer?: string }) ?? {};
+      const qu = (q as {
+        type?: string;
+        options?: string[];
+        correctOption?: number;
+        correctOptions?: number[];
+        multiple?: boolean;
+        answer?: string;
+        prompt?: string;
+        gapAnswers?: string[];
+      }) ?? {};
+      const gaps = gapCount(qu.prompt);
       const answered = detectHasOptions(qu)
         ? qu.multiple
           ? Array.isArray(qu.correctOptions) && qu.correctOptions.length > 0
           : typeof qu.correctOption === "number" && qu.correctOption >= 0
+        : gaps > 0
+          ? Array.isArray(qu.gapAnswers) &&
+            qu.gapAnswers.length >= gaps &&
+            qu.gapAnswers.slice(0, gaps).every((answer) => typeof answer === "string" && answer.trim().length > 0)
         : typeof qu.answer === "string" && qu.answer.trim().length > 0;
       if (!answered) missing.push(n);
       n++;
@@ -268,6 +293,7 @@ function newSpeakingQuestion(): ManagedQuestion {
     multiple: false,
     correctOptions: [],
     answer: "",
+    gapAnswers: [],
   };
 }
 
@@ -1004,6 +1030,7 @@ export function MockTestManage({
         multiple: false,
         correctOptions: [],
         answer: "",
+        gapAnswers: [],
       });
       renumberQids(c);
     });
@@ -1265,6 +1292,11 @@ export function MockTestManage({
         const expected = ci >= 0 ? opts[ci] : "";
         if (keyVal) return normalizeAnswerText(expected) === normalizeAnswerText(keyVal) ? "key" : "ai";
         return ci >= 0 ? "ai" : "missing";
+      }
+      const gaps = gapCount(q.prompt);
+      if (gaps > 0) {
+        const answers = Array.isArray(q.gapAnswers) ? q.gapAnswers : [];
+        return answers.length >= gaps && answers.slice(0, gaps).every((answer) => answer.trim()) ? "ai" : "missing";
       }
       const expected = q.answer ?? "";
       const qnum = q.qid ? parseInt(String(q.qid).match(/\d+$/)?.[0] ?? "-1", 10) : -1;
@@ -1977,6 +2009,7 @@ export function MockTestManage({
                               <div className="flex flex-col gap-2">
                                 {s.questions?.map((q, qi) => {
                                   const hasOpts = detectHasOptions(q);
+                                  const gaps = gapCount(q.prompt);
                                   const qnum = (sectionStartNums[si] ?? 1) + qi;
                                   const st = questionStatus(q);
                                   const stMeta =
@@ -2139,6 +2172,35 @@ export function MockTestManage({
                                           >
                                             <Plus size={11} /> Add option
                                           </button>
+                                        </div>
+                                      ) : gaps > 0 ? (
+                                        <div className="flex flex-col gap-1.5">
+                                          <p className="text-[11.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
+                                            Use <code>[[gap:1]]</code>, <code>[[gap:2]]</code> in the prompt. Enter one correct answer per gap.
+                                          </p>
+                                          {Array.from({ length: gaps }, (_, gi) => (
+                                            <input
+                                              key={gi}
+                                              type="text"
+                                              value={q.gapAnswers?.[gi] ?? ""}
+                                              onChange={(e) => {
+                                                const next = [...(q.gapAnswers ?? [])];
+                                                next[gi] = e.target.value;
+                                                setQuestionField(si, qi, "gapAnswers", next);
+                                              }}
+                                              placeholder={`Correct answer for gap ${gi + 1}`}
+                                              className={rowInputClass}
+                                              style={{ borderColor: q.gapAnswers?.[gi]?.trim() ? "#0FA968" : "var(--line)", color: "var(--ink)" }}
+                                            />
+                                          ))}
+                                          <input
+                                            type="text"
+                                            value={q.wordHint ?? ""}
+                                            onChange={(e) => setQuestionField(si, qi, "wordHint", e.target.value)}
+                                            placeholder="Word hint shown to students (optional)"
+                                            className={rowInputClass}
+                                            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                          />
                                         </div>
                                       ) : (
                                         <div className="flex flex-col gap-1.5">

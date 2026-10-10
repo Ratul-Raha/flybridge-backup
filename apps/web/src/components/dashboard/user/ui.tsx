@@ -1,6 +1,9 @@
+import { Loader2 } from "lucide-react";
+
 export function ScreenLoading({ label }: { label: string }) {
   return (
-    <div className="flex justify-center py-16">
+    <div className="flex flex-col items-center justify-center gap-3 py-16">
+      <Loader2 size={22} className="animate-spin" style={{ color: "var(--brand)" }} />
       <span className="text-[13.5px]" style={{ color: "var(--body)" }}>
         {label}
       </span>

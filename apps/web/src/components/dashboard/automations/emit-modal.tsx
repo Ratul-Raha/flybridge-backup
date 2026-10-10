@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { eventLabel } from "@/lib/events/catalog";
 import { Modal, PrimaryButton, GhostButton, StatusPill, EMERALD, AMBER, ROSE } from "./ui";
+import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type CatalogEvent = {
   name: string;
@@ -30,6 +31,7 @@ export function EmitModal({
   defaultEvent?: string;
 }) {
   const [events, setEvents] = useState<CatalogEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
   const [event, setEvent] = useState(defaultEvent ?? "");
   const [payload, setPayload] = useState("{}");
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export function EmitModal({
     if (!open) return;
     setResult(null);
     setError(null);
+    setLoadingEvents(true);
     fetch("/api/admin/events", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
@@ -50,7 +53,8 @@ export function EmitModal({
         const found = list.find((e) => e.name === initial);
         if (found) setPayload(JSON.stringify(found.samplePayload, null, 2));
       })
-      .catch(() => setEvents([]));
+      .catch(() => setEvents([]))
+      .finally(() => setLoadingEvents(false));
   }, [open, defaultEvent]);
 
   const selectEvent = (name: string) => {
@@ -96,18 +100,22 @@ export function EmitModal({
           <label className="block text-[11.5px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: "var(--body)" }}>
             Event
           </label>
-          <select
-            className="w-full rounded-lg border bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            value={event}
-            onChange={(e) => selectEvent(e.target.value)}
-          >
-            {events.map((e) => (
-              <option key={e.name} value={e.name}>
-                {e.label} — {e.name}
-              </option>
-            ))}
-          </select>
+          {loadingEvents ? (
+            <InlineLoader label="Loading…" />
+          ) : (
+            <select
+              className="w-full rounded-lg border bg-white px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#6E4CFF]/30"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              value={event}
+              onChange={(e) => selectEvent(e.target.value)}
+            >
+              {events.map((e) => (
+                <option key={e.name} value={e.name}>
+                  {e.label} — {e.name}
+                </option>
+              ))}
+            </select>
+          )}
           <p className="mt-1 text-[11.5px]" style={{ color: "var(--body)" }}>
             {events.find((e) => e.name === event)?.description}
           </p>

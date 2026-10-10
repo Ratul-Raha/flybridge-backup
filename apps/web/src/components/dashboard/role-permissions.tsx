@@ -20,7 +20,8 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
-import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
+import { CardLoader } from "@/components/dashboard/page-loader";
+import { ScreenError } from "@/components/dashboard/user/ui";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
   GRANTABLE_MODULES,
@@ -607,7 +608,7 @@ export function RolePermissions() {
               </p>
             </div>
             {loading ? (
-              <ScreenLoading label="Loading staff…" />
+              <CardLoader label="Loading staff…" />
             ) : admins.length === 0 ? (
               <p className="px-5 py-8 text-center text-[13px]" style={{ color: "var(--body)" }}>
                 No admins yet.
@@ -637,7 +638,7 @@ export function RolePermissions() {
               </p>
             </div>
             {loading ? (
-              <ScreenLoading label="Loading staff…" />
+              <CardLoader label="Loading staff…" />
             ) : moderators.length === 0 ? (
               <p className="px-5 py-8 text-center text-[13px]" style={{ color: "var(--body)" }}>
                 No moderators yet. Promote a member from the panel above.

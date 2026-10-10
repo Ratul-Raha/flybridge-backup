@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 import {
   Award,
   Sparkles,
@@ -116,6 +117,7 @@ function levelIcon(level: string) {
 export function ScholarshipManage() {
   const { user } = useAuth();
   const [scholarships, setScholarships] = useState<ScholarshipItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -135,12 +137,15 @@ export function ScholarshipManage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/scholarships?all=true", { cache: "no-store" });
       const data = await res.json();
       setScholarships(data.scholarships ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -339,7 +344,7 @@ export function ScholarshipManage() {
     }
   };
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) return <PageLoader label="Loading…" />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -661,7 +666,8 @@ export function ScholarshipManage() {
         </div>
 
         {/* Card grid */}
-        {filtered.length === 0 ? (
+        {loading && <CardLoader label="Loading scholarships…" />}
+        {!loading && filtered.length === 0 ? (
           <div className="rounded-lg border bg-white px-4 py-12 text-center text-[13.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
             No scholarships match your search or filters.
           </div>
@@ -774,7 +780,7 @@ export function ScholarshipManage() {
           </div>
         )}
 
-        {scholarships.length === 0 && (
+        {!loading && scholarships.length === 0 && (
           <p className="text-[13.5px] text-center py-6" style={{ color: "var(--body)" }}>
             No scholarships yet — click "New scholarship" to add your first one.
           </p>

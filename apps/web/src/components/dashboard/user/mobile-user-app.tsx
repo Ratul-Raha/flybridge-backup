@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Avatar } from "@/components/dashboard/avatar";
+import { PageLoader } from "@/components/dashboard/page-loader";
 import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
 import { MobileDashboardHome } from "./mobile-dashboard-home";
 import { AllSeminars } from "./all-seminars";
@@ -76,9 +77,7 @@ export function MobileUserApp({ children }: { children: ReactNode }) {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <span className="text-[13.5px]" style={{ color: "var(--body)" }}>
-          Loading…
-        </span>
+        <PageLoader label="Loading…" />
       </div>
     );
   }
