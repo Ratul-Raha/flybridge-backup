@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle, Mic, Volume2, Square } from "lucide-react";
+import { WritingChart } from "@/components/shared/writing-chart";
+import type { ChartData } from "@/lib/chart-data";
 
 type Question = {
   id: string;
@@ -10,6 +12,7 @@ type Question = {
   options?: string[];
   correctAnswer: string;
   explanation: string;
+  chart?: ChartData;
 };
 
 type ObjectiveResult = {
@@ -326,6 +329,7 @@ export function LessonQuiz({
                       <span className="mr-1.5" style={{ color: "var(--body)" }}>Q{i + 1}.</span>
                       {q.question}
                     </p>
+                    {q.chart && <WritingChart chart={q.chart} />}
                     <div className="mt-3 text-[12.5px] space-y-2">
                       <p style={{ color: "var(--body)" }}>
                         <span className="font-semibold" style={{ color: "var(--ink)" }}>Your answer: </span>
@@ -490,6 +494,8 @@ export function LessonQuiz({
                       : "Short"}
             </span>
           </p>
+
+          {q.chart && <WritingChart chart={q.chart} />}
 
           {useSpeech && q.type === "written" && (
             <div className="flex flex-wrap gap-2 mb-4">

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getProvider } from "@/lib/ai/provider";
+import type { ChartData } from "@/lib/chart-data";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
 
 /* ------------------------------------------------------------------ */
@@ -21,6 +22,7 @@ export type QuizQuestion = {
   options?: string[];
   correctAnswer: string;
   explanation: string;
+  chart?: ChartData;
 };
 
 export type QuizTopic = {
@@ -207,13 +209,25 @@ function buildSubjectivePrompt(opts: {
           "  - Task 1 (General Training): a letter prompt (formal/informal).",
           "  - Task 2: an essay question (opinion / discussion / problem-solution etc).",
           "  - If the task is unclear, default to Task 2.",
+          "  - For an Academic Task 1 question about a chart, graph, table or diagram,",
+          "    always attach the visual's data in the \"chart\" field (see output format).",
         ].join("\n"),
     "",
     baseOutputFormat(
       ["written"],
-      [
-        '  (for type "written": no "options", no "correctAnswer", no "explanation")',
-      ]
+      isSpeaking
+        ? ['  (for type "written": no "options", no "correctAnswer", no "explanation")']
+        : [
+            '  (for type "written": no "options", no "correctAnswer", no "explanation")',
+            '  "chart":       REQUIRED when the question describes a chart, graph, table or',
+            "                 diagram — the visual's data; omit otherwise",
+            "",
+            "A chart object:",
+            '  { "chartType": "line" | "bar" | "pie" | "table", "title": "",',
+            '    "xAxis": ["2000", "2005", ...], "yAxisLabel": "",',
+            '    "categories": ["Country A", ...], "series": [{ "name": "", "data": [0] }],',
+            '    "unit": "", "source": "" }',
+          ]
     ),
     "## Quiz composition",
     "- Generate exactly 1 question.",
@@ -224,6 +238,12 @@ function buildSubjectivePrompt(opts: {
     "## Rules",
     "- Questions must be answerable from the student's own knowledge and experience.",
     "- Use clear, concise language appropriate for IELTS students.",
+    ...(isSpeaking
+      ? []
+      : [
+          "- Every number in the \"chart\" object must exactly match the values stated in",
+          "  the question text. Never attach a chart whose data contradicts the prompt.",
+        ]),
     "- Return ONLY the JSON array, nothing else.",
   ].join("\n");
 
@@ -396,6 +416,43 @@ function normalizeType(raw: string): QuizQuestionType {
   return raw as QuizQuestionType;
 }
 
+function sanitizeChart(raw: unknown): ChartData | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Record<string, unknown>;
+  const chartType = value.chartType;
+  if (chartType !== "line" && chartType !== "bar" && chartType !== "pie" && chartType !== "table") {
+    return null;
+  }
+  const strings = (input: unknown): string[] =>
+    Array.isArray(input) ? input.filter((item): item is string => typeof item === "string") : [];
+  const series = Array.isArray(value.series)
+    ? value.series
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const entry = item as Record<string, unknown>;
+          const data = Array.isArray(entry.data)
+            ? entry.data.filter((n): n is number => typeof n === "number" && Number.isFinite(n))
+            : [];
+          return {
+            name: typeof entry.name === "string" ? entry.name : "Series",
+            data,
+          };
+        })
+        .filter((item): item is { name: string; data: number[] } => item !== null && item.data.length > 0)
+    : [];
+  if (series.length === 0) return null;
+  return {
+    chartType,
+    title: typeof value.title === "string" ? value.title : "",
+    xAxis: strings(value.xAxis),
+    yAxisLabel: typeof value.yAxisLabel === "string" ? value.yAxisLabel : "",
+    categories: strings(value.categories),
+    series,
+    unit: typeof value.unit === "string" ? value.unit : "",
+    source: typeof value.source === "string" ? value.source : "",
+  };
+}
+
 function sanitizeQuestions(raw: unknown): QuizQuestion[] {
   let list: unknown[];
   if (Array.isArray(raw)) {
@@ -419,12 +476,14 @@ function sanitizeQuestions(raw: unknown): QuizQuestion[] {
     if (typeof rec.id !== "string" || typeof rec.question !== "string") continue;
 
     if (type === "written") {
+      const chart = sanitizeChart(rec.chart);
       cleaned.push({
         id: rec.id,
         type,
         question: rec.question,
         correctAnswer: "",
         explanation: "",
+        ...(chart ? { chart } : {}),
       });
       continue;
     }

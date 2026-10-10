@@ -62,6 +62,12 @@ function buildJudgePrompt(opts: {
       const answer = (opts.answers[q.id] ?? "").trim();
       return [
         `Question ${q.id}: ${q.question}`,
+        ...(q.chart
+          ? [
+              "Visual data (authoritative — judge the response against these exact",
+              `categories, series and values): ${JSON.stringify(q.chart)}`,
+            ]
+          : []),
         `Student answer: ${answer || "(no answer)"}`,
       ].join("\n");
     })
