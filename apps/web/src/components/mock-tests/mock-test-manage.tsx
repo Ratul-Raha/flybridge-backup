@@ -78,6 +78,8 @@ type ManagedSection = {
   id?: string;
   passageId?: string;
   type?: string;
+  partTitle?: string;
+  matchBox?: string[];
   instructions?: string;
   passage?: string;
   image?: string;
@@ -143,6 +145,22 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "form-completion", label: "Form completion" },
   { value: "table-completion", label: "Table completion" },
   { value: "diagram-completion", label: "Diagram completion" },
+  { value: "short-answer", label: "Short answer" },
+] as const;
+
+/** Section (part) types for IELTS Listening, mirroring the official exam. */
+const LISTENING_SECTION_TYPES = [
+  { value: "", label: "Choose type…" },
+  { value: "multiple-choice", label: "Multiple choice" },
+  { value: "matching", label: "Matching" },
+  { value: "plan-map-labelling", label: "Plan / Map labelling" },
+  { value: "diagram-labelling", label: "Diagram labelling" },
+  { value: "flow-chart-completion", label: "Flow-chart completion" },
+  { value: "form-completion", label: "Form completion" },
+  { value: "notes-completion", label: "Notes completion" },
+  { value: "table-completion", label: "Table completion" },
+  { value: "sentence-completion", label: "Sentence completion" },
+  { value: "summary-completion", label: "Summary completion" },
   { value: "short-answer", label: "Short answer" },
 ] as const;
 
@@ -1172,6 +1190,214 @@ export function MockTestManage({
       syncMultiAnswer(q);
     });
 
+  /* -------------------- listening matching builder -------------------- */
+
+  const setSectionType = (si: number, type: string) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.type = type;
+      if (type === "matching" && !(s.matchBox ?? []).length) s.matchBox = ["", "", ""];
+    });
+
+  const addMatchBoxOption = (si: number) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.matchBox = [...(s.matchBox ?? []), ""];
+      for (const q of s.questions ?? []) q.options = [...(q.options ?? []), ""];
+    });
+
+  const setMatchBoxOption = (si: number, oi: number, val: string) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      const box = s.matchBox ?? [];
+      box[oi] = val;
+      s.matchBox = box;
+      for (const q of s.questions ?? []) {
+        const opts = q.options ?? [];
+        opts[oi] = val;
+        q.options = opts;
+      }
+    });
+
+  const removeMatchBoxOption = (si: number, oi: number) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.matchBox = (s.matchBox ?? []).filter((_, i) => i !== oi);
+      for (const q of s.questions ?? []) {
+        const opts = (q.options ?? []).filter((_, i) => i !== oi);
+        q.options = opts;
+        if (typeof q.correctOption === "number") {
+          if (q.correctOption === oi) {
+            q.correctOption = -1;
+            q.answer = "";
+          } else if (q.correctOption > oi) q.correctOption--;
+        }
+      }
+    });
+
+  const addMatchingItem = (si: number) =>
+    updateContent((c) => {
+      const s = c.sections?.[si];
+      if (!s) return;
+      s.questions = s.questions ?? [];
+      s.questions.push({
+        type: "matching",
+        prompt: "",
+        options: [...(s.matchBox ?? [])],
+        correctOption: -1,
+        multiple: false,
+        correctOptions: [],
+        answer: "",
+        gapAnswers: [],
+      });
+      renumberQids(c);
+    });
+
+  const setMatchingCorrect = (si: number, qi: number, oi: number) =>
+    updateContent((c) => {
+      const q = c.sections?.[si]?.questions?.[qi];
+      if (!q) return;
+      q.multiple = false;
+      q.correctOptions = [];
+      q.correctOption = oi;
+      q.answer = String.fromCharCode(65 + oi);
+    });
+
+  const matchingBox = (s: ManagedSection): string[] => {
+    if ((s.matchBox ?? []).filter((t) => t.trim()).length > 0) return s.matchBox ?? [];
+    const first = (s.questions ?? []).find((q) => (q.options ?? []).some((o) => o.trim()));
+    return first?.options ?? [];
+  };
+
+  const renderMatchingBuilder = (s: ManagedSection, si: number) => {
+    const box = matchingBox(s);
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+          Options box (A, B, C …) — shown to students above the items
+        </p>
+        {box.map((opt, oi) => (
+          <div key={oi} className="flex items-center gap-2">
+            <span
+              className="w-5 shrink-0 text-center font-mono text-[11.5px] font-bold"
+              style={{ color: "var(--brand-2)" }}
+            >
+              {String.fromCharCode(65 + oi)}
+            </span>
+            <input
+              type="text"
+              value={opt ?? ""}
+              onChange={(e) => setMatchBoxOption(si, oi, e.target.value)}
+              placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+              className={rowInputClass}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            />
+            <button
+              type="button"
+              onClick={() => removeMatchBoxOption(si, oi)}
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+              style={{ borderColor: "var(--line)", color: "#C0392B" }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => addMatchBoxOption(si)}
+          className="inline-flex w-fit items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-[11.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+        >
+          <Plus size={11} /> Add option
+        </button>
+
+        <p className="mt-1.5 text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+          Items — each item is one numbered question. Mark its correct letter.
+        </p>
+        {(s.questions ?? []).map((q, qi) => {
+          const qnum = (sectionStartNums[si] ?? 1) + qi;
+          return (
+            <div key={q.qid ?? qi} className="flex flex-col gap-2 rounded-lg border p-2.5" style={{ borderColor: "var(--line)", background: "#FBFBFD" }}>
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-bold" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+                  {qnum}
+                </span>
+                <span className="flex-1" />
+                <button
+                  type="button"
+                  onClick={() => moveQuestion(si, qi, -1)}
+                  disabled={qi === 0}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                  style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                >
+                  <ChevronUp size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveQuestion(si, qi, 1)}
+                  disabled={qi === (s.questions?.length ?? 0) - 1}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"
+                  style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                >
+                  <ChevronDown size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeQuestion(si, qi)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border transition-colors hover:border-[#C0392B] hover:text-[#C0392B]"
+                  style={{ borderColor: "var(--line)", color: "#C0392B" }}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+              <textarea
+                value={q.prompt ?? ""}
+                onChange={(e) => setQuestionField(si, qi, "prompt", e.target.value)}
+                rows={2}
+                placeholder={`Item ${qnum} — the statement students match…`}
+                className={inputClass + " resize-y font-mono text-[12px]"}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              />
+              <div className="flex flex-wrap items-center gap-1.5">
+                {box.map((_, oi) => {
+                  const active = q.correctOption === oi;
+                  return (
+                    <button
+                      key={oi}
+                      type="button"
+                      onClick={() => setMatchingCorrect(si, qi, oi)}
+                      title="Mark as the correct letter"
+                      className="flex h-7 w-7 items-center justify-center rounded-md border font-mono text-[11.5px] font-bold transition-colors"
+                      style={
+                        active
+                          ? { borderColor: "var(--brand)", background: "var(--brand)", color: "#fff" }
+                          : { borderColor: "var(--line)", background: "white", color: "var(--ink)" }
+                      }
+                    >
+                      {String.fromCharCode(65 + oi)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => addMatchingItem(si)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-[12px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+          style={{ borderColor: "var(--line)", color: "var(--body)" }}
+        >
+          <Plus size={12} /> Add item
+        </button>
+      </div>
+    );
+  };
+
   const setWritingTaskText = (task: ManagedWritingTask, text: string) => {
     const f = taskFields(task);
     updateContent((c) => {
@@ -1585,6 +1811,14 @@ export function MockTestManage({
                             put <code className="font-mono" style={{ color: "var(--brand-2)" }}>[[gap:1]]</code>{" "}
                             and <code className="font-mono" style={{ color: "var(--brand-2)" }}>[[gap:2]]</code> in the prompt, then enter one correct answer per gap.
                           </p>
+                          {testForm.skill === "listening" && (
+                            <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                              Listening layout: each part is one section. Pick the part&apos;s question type above —
+                              Matching parts get a shared options box + letter-marked items; Plan/Map/Diagram and
+                              Flow-chart parts use an uploaded image with numbered questions. Audio is added in the
+                              “Listening media” panel above and plays once through for students.
+                            </p>
+                          )}
                         </div>
 
                         {/* Answer coverage */}
@@ -1942,7 +2176,7 @@ export function MockTestManage({
                           <div className="flex flex-col gap-2.5">
                             <div className="flex items-center justify-between gap-3">
                               <p className="text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                                Sections &amp; questions
+                                {testForm.skill === "listening" ? "Parts & questions" : "Sections & questions"}
                               </p>
                             <button
                               type="button"
@@ -1950,13 +2184,15 @@ export function MockTestManage({
                               className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
                               style={{ background: "var(--brand)" }}
                             >
-                              <Plus size={12} /> Add section
+                              <Plus size={12} /> {testForm.skill === "listening" ? "Add part" : "Add section"}
                             </button>
                           </div>
 
                           {contentSections.length === 0 && (
                             <p className="rounded-xl border border-dashed bg-white px-4 py-5 text-center text-[12.5px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
-                              No sections yet — add a section to start authoring questions.
+                              {testForm.skill === "listening"
+                                ? "No parts yet — add Part 1 (Questions 1–10) to start authoring."
+                                : "No sections yet — add a section to start authoring questions."}
                             </p>
                           )}
 
@@ -1968,8 +2204,22 @@ export function MockTestManage({
                                   className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] rounded-full px-2.5 py-[4px]"
                                   style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
                                 >
-                                  Section {si + 1}
+                                  {testForm.skill === "listening" ? `Part ${si + 1}` : `Section ${si + 1}`}
                                 </span>
+                                {testForm.skill === "listening" && (
+                                  <select
+                                    value={s.type ?? ""}
+                                    onChange={(e) => setSectionType(si, e.target.value)}
+                                    className="rounded-full border bg-white px-2.5 py-1.5 text-[11.5px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                  >
+                                    {LISTENING_SECTION_TYPES.map((o) => (
+                                      <option key={o.value} value={o.value}>
+                                        {o.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
                                 {testForm.skill === "reading" && passagesList.length > 0 && (
                                   <select
                                     value={s.passageId ?? passagesList[0]?.id ?? ""}
@@ -1999,10 +2249,25 @@ export function MockTestManage({
                                 value={s.instructions ?? ""}
                                 onChange={(e) => setSectionField(si, "instructions", e.target.value)}
                                 rows={2}
-                                placeholder="Instructions shown above the questions (optional)"
+                                placeholder={
+                                  testForm.skill === "listening"
+                                    ? "Instructions — e.g. You will hear a conversation between … Complete the notes below. Write NO MORE THAN TWO WORDS AND/OR A NUMBER."
+                                    : "Instructions shown above the questions (optional)"
+                                }
                                 className={inputClass + " resize-y font-mono text-[12px]"}
                                 style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                               />
+
+                              {testForm.skill === "listening" && (
+                                <input
+                                  type="text"
+                                  value={s.partTitle ?? ""}
+                                  onChange={(e) => setSectionField(si, "partTitle", e.target.value)}
+                                  placeholder="Part title (optional) — e.g. A conversation about booking a hotel"
+                                  className={rowInputClass}
+                                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                                />
+                              )}
 
                               <textarea
                                 value={s.passage ?? ""}
@@ -2018,7 +2283,18 @@ export function MockTestManage({
                               />
 
                               {/* Questions */}
+                              {testForm.skill === "listening" && s.type === "matching" ? (
+                                renderMatchingBuilder(s, si)
+                              ) : (
                               <div className="flex flex-col gap-2">
+                                {testForm.skill === "listening" &&
+                                  ["plan-map-labelling", "diagram-labelling", "flow-chart-completion"].includes(s.type ?? "") && (
+                                    <p className="rounded-lg px-3 py-2 text-[11.5px] leading-[1.6]" style={{ background: "var(--brand-soft)", color: "var(--body)" }}>
+                                      Upload the plan / map / diagram / flow-chart image below in “Attach images to
+                                      sections”. Each question is one numbered item: add Options (A–H) for letter
+                                      answers, or leave options empty for a typed word answer.
+                                    </p>
+                                  )}
                                 {s.questions?.map((q, qi) => {
                                   const hasOpts = detectHasOptions(q);
                                   const gaps = gapCount(q.prompt);
@@ -2247,6 +2523,7 @@ export function MockTestManage({
                                   <Plus size={12} /> Add question
                                 </button>
                               </div>
+                              )}
                             </div>
                           ))}
                           </div>
@@ -2497,6 +2774,16 @@ export function MockTestManage({
                         {savingTest && <Loader2 size={15} className="animate-spin" />}
                         {savingTest ? "Saving…" : editingTestId ? "Save changes" : "Create test"}
                       </button>
+                      {editingTestId && (
+                        <Link
+                          href={`/dashboard/mock-tests/${editingTestId}/take`}
+                          target="_blank"
+                          className="inline-flex items-center gap-1.5 rounded-full border px-6 py-[11px] text-[13.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                        >
+                          Preview as student
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={() => {

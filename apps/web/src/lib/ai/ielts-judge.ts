@@ -210,7 +210,7 @@ export function buildJudgePrompt(opts: {
             "- For a question whose answer key lists several letters (e.g. \"A, C\"), the",
             "  candidate must have selected exactly that set — no more, no fewer.",
             "- Convert the correct count to a band using standard IELTS raw-score",
-            "  guidelines (Reading: 30/40 → ~7.0, 23/40 → ~6.0; adjust for timing).",
+            "  guidelines (Reading and Listening: 30/40 → ~7.0, 23/40 → ~6.0, 39/40 → 9.0).",
             "- Band must be in 0.5 increments.",
           ].join("\n"),
   ].join("\n");

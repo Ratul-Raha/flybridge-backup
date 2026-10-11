@@ -39,6 +39,8 @@ const testSectionSchema = new Schema(
     id: { type: String, trim: true },
     passageId: { type: String, trim: true },
     type: { type: String, trim: true },
+    partTitle: { type: String, trim: true },
+    matchBox: { type: [String], default: [] },
     instructions: { type: String, trim: true },
     passage: { type: String },
     image: { type: String, trim: true },

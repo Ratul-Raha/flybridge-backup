@@ -25,10 +25,22 @@ import {
   type TestDetail,
 } from "@/lib/mock-test-ui";
 import { ListeningTestPlayer } from "@/components/mock-tests/listening-test-player";
+import {
+  LabellingSection,
+  MatchingSection,
+} from "@/components/mock-tests/listening-question-layouts";
 import { SpeakingTestPlayer } from "@/components/mock-tests/speaking-test-player";
 import { WritingTaskChart } from "@/components/mock-tests/writing-task-chart";
 
-type Phase = "loading" | "intro" | "ready" | "submitting" | "result" | "disqualified" | "error";
+type Phase =
+  | "loading"
+  | "intro"
+  | "ready"
+  | "review"
+  | "submitting"
+  | "result"
+  | "disqualified"
+  | "error";
 
 type JudgeResult = {
   overallBand: number;
@@ -130,6 +142,18 @@ const TYPE_LABELS: Record<string, string> = {
   "short-answer": "Short answer",
 };
 
+const LABELLING_TYPES = [
+  "map-labelling",
+  "plan-labelling",
+  "diagram-labelling",
+  "plan-map-labelling",
+];
+
+const isListeningMatching = (t?: string): boolean => t === "matching";
+
+const isListeningLabelling = (t?: string): boolean =>
+  Boolean(t) && LABELLING_TYPES.includes(t ?? "");
+
 export function MockTestPlayer({
   testId,
   attemptId,
@@ -153,6 +177,7 @@ export function MockTestPlayer({
   const [introStep, setIntroStep] = useState<number | null>(null);
   const [violations, setViolations] = useState(0);
   const [leaveWarning, setLeaveWarning] = useState(false);
+  const [reviewFrom, setReviewFrom] = useState<"submit" | "timeout" | null>(null);
 
   const answersRef = useRef(answers);
   answersRef.current = answers;
@@ -257,7 +282,7 @@ export function MockTestPlayer({
     }
     return (test?.content?.sections ?? []).map((s, i) => ({
       key: `section-${i}`,
-      label: `Section ${i + 1}`,
+      label: test?.skill === "listening" ? `Part ${i + 1}` : `Section ${i + 1}`,
       pageIndex: null,
       questions: s.questions ?? [],
     }));
@@ -349,12 +374,15 @@ export function MockTestPlayer({
     return () => clearInterval(id);
   }, [phase, timerActive]);
 
-  // Auto-submit on timeout
+  // Open the review screen on timeout instead of auto-submitting, so students
+  // can still check their answers before the attempt is graded.
   useEffect(() => {
     if (phase !== "ready" || !timerActive) return;
     if (secondsLeft === 0) {
       timedOutRef.current = true;
-      void submitTest(true);
+      setTimerActive(false);
+      setReviewFrom("timeout");
+      setPhase("review");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, phase, timerActive]);
@@ -462,19 +490,14 @@ export function MockTestPlayer({
       </div>
     ) : hasInlineGaps ? null : (
       <div className="mt-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11.5px] font-bold" style={{ borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }}>
-            {String.fromCharCode(64 + Math.min(num, 26))}
-          </span>
-          <input
-            type="text"
-            value={typeof current?.text === "string" ? current.text : ""}
-            onChange={(e) => setText(q.qid, e.target.value)}
-            placeholder="Type your answer here…"
-            className="w-full select-text rounded-lg border-b-2 bg-transparent px-1 py-1.5 text-[14px] transition-colors focus:outline-none focus:ring-0"
-            style={{ borderColor: answered ? "var(--brand)" : "var(--line)", color: "var(--ink)" }}
-          />
-        </div>
+        <input
+          type="text"
+          value={typeof current?.text === "string" ? current.text : ""}
+          onChange={(e) => setText(q.qid, e.target.value)}
+          placeholder="Type your answer here…"
+          className="w-full max-w-[420px] select-text rounded-lg border bg-white px-3 py-2 text-[14px] transition-colors focus:outline-none focus:ring-0"
+          style={{ borderColor: answered ? "var(--brand)" : "var(--line)", color: "var(--ink)" }}
+        />
       </div>
     );
 
@@ -532,21 +555,72 @@ export function MockTestPlayer({
         />
       </div>
     ) : null;
+    const isListening = test?.skill === "listening";
+    const matching = isListening && isListeningMatching(section.type);
+    const labelling = isListening && isListeningLabelling(section.type);
+
+    const body = matching ? (
+      <MatchingSection
+        questions={section.questions ?? []}
+        answers={answers}
+        questionIndex={questionIndex}
+        matchBox={section.matchBox}
+        onChoice={setChoice}
+        onText={setText}
+      />
+    ) : labelling ? (
+      <LabellingSection
+        questions={section.questions ?? []}
+        answers={answers}
+        questionIndex={questionIndex}
+        onChoice={setChoice}
+        onText={setText}
+      />
+    ) : (
+      <div className="flex flex-col gap-3">
+        {(section.questions ?? []).map((q, qi) => renderQuestion(q, qi))}
+      </div>
+    );
+
     return (
       <div key={section.id ?? `s${si}`} id={`part-${si}`} className="mb-7 scroll-mt-24">
         <div className="mb-3 flex flex-wrap items-center gap-2.5">
-          {range && (
-            <span
-              className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
-              style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
-            >
-              Questions {range}
-            </span>
+          {isListening ? (
+            <>
+              <span
+                className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
+                style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+              >
+                Part {si + 1}
+              </span>
+              {range && (
+                <span
+                  className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
+                  style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+                >
+                  Questions {range}
+                </span>
+              )}
+            </>
+          ) : (
+            range && (
+              <span
+                className="rounded-full px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
+                style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+              >
+                Questions {range}
+              </span>
+            )
           )}
           <span className="text-[12px] font-medium capitalize" style={{ color: "var(--body)" }}>
             {section.type ? (TYPE_LABELS[section.type] ?? section.type) : "Questions"}
           </span>
         </div>
+        {section.partTitle && isListening && (
+          <h2 className="mb-3 text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+            {section.partTitle}
+          </h2>
+        )}
         {placement === "above" && sectionImage}
         {section.instructions && (
           <div className="mb-4 rounded-xl border bg-[#FBFBFD] px-5 py-4" style={{ borderColor: "var(--line)" }}>
@@ -563,9 +637,7 @@ export function MockTestPlayer({
           </div>
         )}
         {placement === "below-passage" && sectionImage}
-        <div className="flex flex-col gap-3">
-          {(section.questions ?? []).map((q, qi) => renderQuestion(q, qi))}
-        </div>
+        {body}
         {placement === "below" && sectionImage}
       </div>
     );
@@ -618,7 +690,7 @@ export function MockTestPlayer({
   };
 
   const registerViolation = () => {
-    if (phaseRef.current !== "ready") return;
+    if (phaseRef.current !== "ready" && phaseRef.current !== "review") return;
     if (Date.now() - startedAtRef.current < 2000) return;
     const next = violationsRef.current + 1;
     violationsRef.current = next;
@@ -654,7 +726,7 @@ export function MockTestPlayer({
     };
     const onBlur = () => registerViolation();
     const onFullscreenChange = () => {
-      if (phaseRef.current !== "ready") return;
+      if (phaseRef.current !== "ready" && phaseRef.current !== "review") return;
       if (document.fullscreenElement) return;
       registerViolation();
       try {
@@ -677,7 +749,7 @@ export function MockTestPlayer({
 
   // Block copy/paste/print/devtools while the test is running
   useEffect(() => {
-    if (phase !== "ready") return;
+    if (phase !== "ready" && phase !== "review") return;
     const prevent = (e: Event) => e.preventDefault();
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
@@ -807,6 +879,139 @@ export function MockTestPlayer({
     );
   }
 
+  if (phase === "review") {
+    const timedOut = reviewFrom === "timeout";
+    return (
+      <div className="min-h-screen select-none" style={{ background: "var(--bg)" }}>
+        <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur" style={{ borderColor: "var(--line)" }}>
+          <div className="flex h-16 items-center justify-between gap-3 px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {test?.title}
+                </p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.08em]" style={{ color: SKILL_META[test?.skill ?? "reading"].accent }}>
+                  Review your answers · {SKILL_META[test?.skill ?? "reading"].label}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {hasTimer && (
+                <span
+                  className="flex items-center gap-1.5 rounded-full px-3.5 py-[7px] font-mono text-[12.5px] font-semibold"
+                  style={
+                    timedOut
+                      ? { background: "rgba(192,57,43,0.10)", color: "#C0392B" }
+                      : { background: "var(--brand-soft)", color: "var(--brand)" }
+                  }
+                >
+                  <Clock size={13} /> {fmtTime(secondsLeft)}
+                </span>
+              )}
+              <span className="rounded-full px-3.5 py-[7px] font-mono text-[11.5px] font-semibold" style={{ background: "var(--bg-soft)", color: "var(--body)" }}>
+                {Math.min(answeredCount, flattened.length)}/{flattened.length}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="mx-auto w-full max-w-[820px] px-5 pt-8 pb-24">
+          {timedOut && (
+            <div
+              className="mb-6 flex items-center gap-3 rounded-xl border px-5 py-4"
+              style={{ borderColor: "rgba(192,57,43,0.25)", background: "rgba(192,57,43,0.06)" }}
+            >
+              <AlertTriangle size={18} style={{ color: "#C0392B" }} />
+              <p className="text-[13px] leading-[1.6]" style={{ color: "var(--ink)" }}>
+                Time is up. Review your answers below, then submit to get your band score.
+              </p>
+            </div>
+          )}
+
+          <h1 className="font-display text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
+            Review your answers
+          </h1>
+          <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>
+            Tap any question to go back and change it. Questions you haven&apos;t answered are shown in grey.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-5">
+            {questionGroups.map((group, gi) => {
+              if (group.questions.length === 0) return null;
+              const answeredIn = group.questions.filter((q) => isAnswered(answers[q.qid])).length;
+              return (
+                <div key={group.key} className="rounded-2xl border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
+                      {group.label}
+                    </p>
+                    <span className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>
+                      {answeredIn}/{group.questions.length} answered
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-10">
+                    {group.questions.map((q) => {
+                      const answered = isAnswered(answers[q.qid]);
+                      const index = questionIndex[q.qid] ?? 0;
+                      return (
+                        <button
+                          key={q.qid}
+                          type="button"
+                          onClick={() => {
+                            setPhase("ready");
+                            window.setTimeout(() => {
+                              if (group.pageIndex !== null && group.pageIndex !== pageIdx) {
+                                setPage(group.pageIndex);
+                              }
+                              setActivePart(gi);
+                              window.setTimeout(() => {
+                                document
+                                  .getElementById(`q-${q.qid}`)
+                                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }, 80);
+                            }, 30);
+                          }}
+                          className="flex h-10 w-full items-center justify-center rounded-lg border font-mono text-[12.5px] font-bold transition-all duration-150 hover:scale-[1.04]"
+                          style={
+                            answered
+                              ? { borderColor: "#0FA968", background: "rgba(15,169,104,0.10)", color: "#0FA968" }
+                              : { borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
+                          }
+                        >
+                          {index}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={() => setPhase("ready")}
+              className="inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-[14px] font-semibold transition-colors hover:bg-[var(--bg-soft)]"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            >
+              <ArrowLeft size={15} /> Back to questions
+            </button>
+            <button
+              type="button"
+              onClick={() => void submitTest(timedOut)}
+              disabled={submitting}
+              className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)" }}
+            >
+              <Send size={15} /> Submit answers ({Math.min(answeredCount, flattened.length)}/{flattened.length})
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === "result") {
     return (
       <div className="min-h-screen" style={{ background: "var(--bg)" }}>
@@ -928,7 +1133,7 @@ export function MockTestPlayer({
     );
   }
 
-  if (phase === "submitting" || (submitting && phase === "ready")) {
+  if (phase === "submitting" || (submitting && (phase === "ready" || phase === "review"))) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6" style={{ background: "var(--bg)" }}>
         <Loader2 size={22} className="animate-spin" style={{ color: "var(--brand)" }} />
@@ -939,7 +1144,7 @@ export function MockTestPlayer({
     );
   }
 
-  const submitDisabled = submitting || (hasTimer && secondsLeft <= 0);
+  const submitDisabled = submitting;
 
   return (
     <div className="min-h-screen select-none" style={{ background: "var(--bg)" }}>
@@ -1203,7 +1408,10 @@ export function MockTestPlayer({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setConfirmOpen(true)}
+                  onClick={() => {
+                    setReviewFrom("submit");
+                    setPhase("review");
+                  }}
                   disabled={submitDisabled}
                   className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)" }}
@@ -1324,7 +1532,7 @@ export function MockTestPlayer({
 
       {lowTime && (
         <div className="fixed bottom-32 left-1/2 z-40 -translate-x-1/2 rounded-full bg-[#C0392B] px-5 py-2.5 text-[12.5px] font-semibold text-white shadow-lg">
-          Submitting automatically when time runs out
+          Time is almost up — the review screen will open at 00:00
         </div>
       )}
     </div>

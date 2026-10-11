@@ -68,6 +68,8 @@ export type TestDetail = {
       id?: string;
       passageId?: string;
       type?: string;
+      partTitle?: string;
+      matchBox?: string[];
       instructions?: string;
       passage?: string;
       image?: string;

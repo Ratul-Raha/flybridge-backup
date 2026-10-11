@@ -43,8 +43,17 @@ function skillInstructions(skill: StructureSkill): string {
     return [
       "- Listening is answer-only: leave \"passage\" and \"passages\" empty",
       "  (the audio is attached separately).",
-      "- Structure the QUESTIONS into sections (Form/Notes/Table/Completion,",
-      "  Multiple Choice, Matching, Plan/Map/Diagram Labelling).",
+      "- Structure the questions into sections, one per listening part. Set each",
+      "  section's \"type\" to one of: \"multiple-choice\", \"matching\",",
+      "  \"plan-map-labelling\", \"diagram-labelling\", \"flow-chart-completion\",",
+      "  \"form-completion\", \"notes-completion\", \"table-completion\",",
+      "  \"sentence-completion\", \"summary-completion\" or \"short-answer\".",
+      "- For MATCHING sections: the numbered items are questions. Put the shared",
+      "  A-H options-box texts into EVERY question's \"options\" array (the identical",
+      "  list) and set \"correctOption\" to the 0-based index of the matching letter.",
+      "- For PLAN/MAP/DIAGRAM LABELLING sections: each numbered spot is one question.",
+      "  Keep \"options\" empty when the answer is a word (use \"answer\"), or list",
+      "  the letter options (A-H) when the answer is a letter shown on the image.",
       "- For questions with one or more blanks, replace each blank with an inline",
       "  token [[gap:1]], [[gap:2]], etc. in the prompt, and put the matching",
       "  answers in gapAnswers in the same order. Use a normal prompt",
@@ -213,6 +222,8 @@ type NormalizedSection = {
   id: string;
   passageId: string;
   type: string;
+  partTitle: string;
+  matchBox: string[];
   instructions: string;
   passage: string;
   questions: NormalizedQuestion[];
@@ -332,6 +343,10 @@ function normalizeContent(
             id: typeof sec.id === "string" ? sec.id : `s${si + 1}`,
             passageId: typeof sec.passageId === "string" ? sec.passageId : "",
             type: typeof sec.type === "string" ? sec.type : "short-answer",
+            partTitle: typeof sec.partTitle === "string" ? sec.partTitle : "",
+            matchBox: Array.isArray(sec.matchBox)
+              ? (sec.matchBox as unknown[]).filter((x): x is string => typeof x === "string")
+              : [],
             instructions:
               typeof sec.instructions === "string" ? sec.instructions : "",
             passage: typeof sec.passage === "string" ? sec.passage : "",
@@ -350,6 +365,8 @@ function normalizeContent(
         id: "s1",
         passageId: "",
         type: "short-answer",
+        partTitle: "",
+        matchBox: [],
         instructions: "",
         passage: "",
         questions,
@@ -375,6 +392,10 @@ function normalizeContent(
           id: typeof sec.id === "string" ? sec.id : `s${nested.length + 1}`,
           passageId: pId,
           type: typeof sec.type === "string" ? sec.type : "short-answer",
+          partTitle: typeof sec.partTitle === "string" ? sec.partTitle : "",
+          matchBox: Array.isArray(sec.matchBox)
+            ? (sec.matchBox as unknown[]).filter((x): x is string => typeof x === "string")
+            : [],
           instructions:
             typeof sec.instructions === "string" ? sec.instructions : "",
           passage: typeof sec.passage === "string" ? sec.passage : "",
