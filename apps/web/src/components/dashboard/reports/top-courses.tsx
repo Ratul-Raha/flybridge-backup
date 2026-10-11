@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card } from "./card";
 import { useCurrency } from "@/components/dashboard/currency-context";
 import { InlineLoader } from "@/components/dashboard/page-loader";
-
-type TopItem = {
-  title: string;
-  itemType: string;
-  orders: number;
-  revenue: number;
-  avgPrice: number;
-};
+import type { OrderStatsItem } from "@/lib/admin/orders-stats";
 
 const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
   course: { bg: "rgba(14,165,233,0.10)", fg: "#0369A1" },
@@ -19,28 +11,8 @@ const TYPE_BADGE: Record<string, { bg: string; fg: string }> = {
   subscription: { bg: "rgba(245,158,11,0.10)", fg: "#B45309" },
 };
 
-export function TopCourses() {
-  const [items, setItems] = useState<TopItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { currency, fmt } = useCurrency();
-
-  useEffect(() => {
-    let cancelled = false;
-    setItems([]);
-    setLoading(true);
-    fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((res) => {
-        if (!cancelled) setItems(res?.topItems ?? []);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [currency]);
+export function TopCourses({ items, loading }: { items: OrderStatsItem[]; loading?: boolean }) {
+  const { fmt } = useCurrency();
 
   return (
     <Card title="Top selling items" subtitle="Most purchased items by order count">

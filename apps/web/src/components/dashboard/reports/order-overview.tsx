@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -11,33 +10,10 @@ import {
   Gift,
   BarChart3,
 } from "lucide-react";
-import { Card } from "./card";
 import { useCurrency } from "@/components/dashboard/currency-context";
 import { formatMoney } from "@/lib/pricing";
 import { CardLoader } from "@/components/dashboard/page-loader";
-
-type OrderStats = {
-  totalOrders: number;
-  completedOrders: number;
-  pendingOrders: number;
-  failedOrders: number;
-  freeOrders: number;
-  totalRevenue: number;
-  avgOrderValue: number;
-  thisMonthOrders: number;
-  lastMonthOrders: number;
-  monthlyGrowth: number;
-  recentOrders: {
-    id: string;
-    userName: string;
-    userEmail: string;
-    items: { title: string; price: number; itemType: string }[];
-    total: number;
-    currency: string;
-    status: string;
-    createdAt: string;
-  }[];
-};
+import type { OrderStats } from "@/lib/admin/orders-stats";
 
 const STATUS_DOT: Record<string, string> = {
   completed: "#10B981",
@@ -91,23 +67,8 @@ function Metric({
   );
 }
 
-export function OrderOverview() {
-  const [data, setData] = useState<OrderStats | null>(null);
-  const { currency, fmt } = useCurrency();
-
-  useEffect(() => {
-    let cancelled = false;
-    setData(null);
-    fetch(`/api/admin/orders-stats?currency=${currency}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((res) => {
-        if (!cancelled && res) setData(res);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [currency]);
+export function OrderOverview({ data }: { data: OrderStats | null }) {
+  const { fmt } = useCurrency();
 
   if (!data) return <CardLoader label="Loading…" />;
 

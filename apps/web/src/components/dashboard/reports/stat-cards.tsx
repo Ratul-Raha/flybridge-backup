@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, Crown, ShoppingCart, BookOpen, Gauge, Download, Award, ArrowUpRight } from "lucide-react";
 import { InlineLoader } from "@/components/dashboard/page-loader";
@@ -140,16 +139,7 @@ function StatCard({
   );
 }
 
-export function StatCards() {
-  const [data, setData] = useState<Overview | null>(null);
-
-  useEffect(() => {
-    fetch("/api/admin/reports/overview", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => setData(res.data))
-      .catch(() => {});
-  }, []);
-
+export function StatCards({ data }: { data: Overview | null }) {
   if (!data) {
     return <InlineLoader label="Loading…" />;
   }

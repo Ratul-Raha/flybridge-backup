@@ -16,6 +16,9 @@ export type SessionUser = {
   avatar?: string | null;
   role: AccountType;
   subscription: SubscriptionType;
+  phone?: string | null;
+  address?: Record<string, string>;
+  createdAt?: string;
 };
 
 function getSecret(): Uint8Array {
@@ -60,14 +63,57 @@ export async function readSession(): Promise<SessionUser | null> {
   }
 }
 
+export type UserSnapshot = {
+  name: string;
+  email: string;
+  avatar?: string | null;
+  accountType: AccountType;
+  subscription: SubscriptionType;
+  phone?: string | null;
+  address?: Record<string, string>;
+  createdAt: string;
+};
+
+/**
+ * Minimal projection user lookup. readSession() enriches the cookie session
+ * through this, so consumers of the session rarely need a second query.
+ */
+export async function getUserSnapshot(
+  userId: string
+): Promise<UserSnapshot | null> {
+    await connectDb();
+    const { User } = await import("@/lib/models/user");
+    const user = await User.findById(userId)
+      .select(
+        "accountType subscription name email avatar phone address createdAt"
+      )
+      .lean<{
+        name: string;
+        email: string;
+        avatar?: string | null;
+        accountType: AccountType;
+        subscription: SubscriptionType;
+        phone?: string | null;
+        address?: Record<string, string>;
+        createdAt: Date;
+      } | null>();
+    if (!user) return null;
+    return {
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar ?? null,
+      accountType: user.accountType,
+      subscription: user.subscription,
+      phone: user.phone ?? null,
+      address: user.address,
+      createdAt: user.createdAt.toISOString(),
+    };
+  }
+
 async function applyLiveUser(session: SessionUser): Promise<SessionUser | null> {
   if (!session.userId) return session;
   try {
-    await connectDb();
-    const { User } = await import("@/lib/models/user");
-    const user = await User.findById(session.userId).select(
-      "accountType subscription name email avatar"
-    );
+    const user = await getUserSnapshot(session.userId);
     if (!user) return null;
     return {
       ...session,
@@ -76,6 +122,9 @@ async function applyLiveUser(session: SessionUser): Promise<SessionUser | null> 
       avatar: user.avatar ?? session.avatar,
       role: user.accountType as AccountType,
       subscription: user.subscription as SubscriptionType,
+      phone: user.phone ?? null,
+      address: user.address,
+      createdAt: user.createdAt,
     };
   } catch {
     return session;

@@ -27,6 +27,8 @@ export type SeminarDoc = InferSchemaType<typeof seminarSchema> & {
   updatedAt: Date;
 };
 
+seminarSchema.index({ createdAt: -1 });
+
 export const Seminar =
   (mongoose.models.Seminar as mongoose.Model<SeminarDoc>) ??
   mongoose.model<SeminarDoc>("Seminar", seminarSchema);
@@ -48,6 +50,8 @@ const registrationSchema = new Schema(
 );
 
 registrationSchema.index({ seminar: 1, email: 1 }, { unique: true });
+registrationSchema.index({ createdAt: -1 });
+registrationSchema.index({ email: 1 });
 
 export type RegistrationDoc = InferSchemaType<typeof registrationSchema> & {
   _id: mongoose.Types.ObjectId;

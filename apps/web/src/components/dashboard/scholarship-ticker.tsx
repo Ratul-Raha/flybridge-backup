@@ -15,9 +15,15 @@ type TickerScholarship = {
   deadline: string;
 };
 
-export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?: string }) {
-  const [items, setItems] = useState<TickerScholarship[]>([]);
-  const [ready, setReady] = useState(false);
+export function ScholarshipTicker({
+  href = "/dashboard/scholarships",
+  initial,
+}: {
+  href?: string;
+  initial?: TickerScholarship[];
+}) {
+  const [items, setItems] = useState<TickerScholarship[]>(initial ?? []);
+  const [ready, setReady] = useState(initial ? true : false);
   const { trackRef, duration } = useMarqueeSpeed(22);
 
   const load = useCallback(async () => {
@@ -33,8 +39,9 @@ export function ScholarshipTicker({ href = "/dashboard/scholarships" }: { href?:
   }, []);
 
   useEffect(() => {
+    if (initial) return;
     load();
-  }, [load]);
+  }, [initial, load]);
 
   if (!ready) return null;
   if (items.length === 0) return null;

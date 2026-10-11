@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { UserPlus, CalendarCheck, CalendarPlus, Activity } from "lucide-react";
 import { Card } from "./card";
 import { timeAgo, BRAND, SKY, EMERALD } from "./lib";
@@ -21,18 +20,7 @@ const TYPE_STYLE: Record<ActivityItem["type"], { bg: string; fg: string; icon: t
   seminar: { bg: "rgba(16,185,129,0.1)", fg: EMERALD, icon: CalendarPlus },
 };
 
-export function PlatformActivity() {
-  const [items, setItems] = useState<ActivityItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/admin/reports/platform-activity", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => setItems(res.data?.activity ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
+export function PlatformActivity({ items, loading }: { items: ActivityItem[]; loading?: boolean }) {
   return (
     <Card
       title="Platform activity"

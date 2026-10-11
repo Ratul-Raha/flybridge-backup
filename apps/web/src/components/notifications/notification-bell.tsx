@@ -8,7 +8,7 @@ import { NotificationIcon } from "@/components/notifications/notification-icon";
 import { InlineLoader } from "@/components/dashboard/page-loader";
 import { timeAgo } from "@/lib/time";
 
-const POLL_INTERVAL = 30_000;
+const POLL_INTERVAL = 60_000;
 const DROPDOWN_LIMIT = 12;
 
 export function NotificationBell() {
@@ -35,17 +35,32 @@ export function NotificationBell() {
     }
   }, []);
 
+  const lastFetchRef = useRef(0);
+  const throttledFetch = useCallback(() => {
+    const now = Date.now();
+    if (now - lastFetchRef.current < 5000) return;
+    lastFetchRef.current = now;
+    fetchNotifications();
+  }, [fetchNotifications]);
+
   useEffect(() => {
     if (!user) return;
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, POLL_INTERVAL);
-    const onFocus = () => fetchNotifications();
+    const interval = setInterval(() => {
+      if (!document.hidden) throttledFetch();
+    }, POLL_INTERVAL);
+    const onFocus = () => throttledFetch();
+    const onVisibility = () => {
+      if (!document.hidden) throttledFetch();
+    };
     window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [user, fetchNotifications]);
+  }, [user, throttledFetch]);
 
   useEffect(() => {
     if (!open) return;

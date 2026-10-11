@@ -1,26 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { EChartsOption } from "echarts";
 import { Card } from "./card";
 import { Chart } from "./echart";
 import { BRAND, SKY, CARD_TOOLTIP } from "./lib";
-import { InlineLoader } from "@/components/dashboard/page-loader";
 
 type Split = { free: number; paid: number; total: number };
 
-export function SubscriptionPie() {
-  const [data, setData] = useState<Split | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/admin/reports/subscription-split", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => setData(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
+export function SubscriptionPie({ data }: { data: Split | null }) {
   const option = useMemo<EChartsOption>(() => {
     const free = data?.free ?? 0;
     const paid = data?.paid ?? 0;
@@ -83,7 +71,7 @@ export function SubscriptionPie() {
 
   return (
     <Card title="Free vs paid" subtitle="Subscription split of all users">
-      {loading ? <InlineLoader label="Loading…" /> : <Chart option={option} height={300} />}
+      <Chart option={option} height={300} />
     </Card>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { Card } from "./card";
 import { InlineLoader } from "@/components/dashboard/page-loader";
@@ -14,18 +13,7 @@ type Signup = {
   createdAt: string;
 };
 
-export function RecentSignups() {
-  const [signups, setSignups] = useState<Signup[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/admin/reports/recent-signups", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((res) => setSignups(res.data?.signups ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
+export function RecentSignups({ signups, loading }: { signups: Signup[]; loading?: boolean }) {
   return (
     <Card title="Recent sign ups" subtitle="Newest members on the platform">
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--line)" }}>

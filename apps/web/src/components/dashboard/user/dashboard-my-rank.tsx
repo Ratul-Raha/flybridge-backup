@@ -22,16 +22,18 @@ const TOP_COLORS: Record<number, { ring: string; fg: string; bg: string; label: 
   3: { ring: "#C2712F", fg: "#A15C07", bg: "rgba(194,113,47,0.14)", label: "Bronze" },
 };
 
-export function DashboardMyRank() {
-  const [data, setData] = useState<MyRank | null>(null);
-  const [loading, setLoading] = useState(true);
+export function DashboardMyRank({ initial }: { initial?: MyRank | null }) {
+  const [data, setData] = useState<MyRank | null>(initial ?? null);
+  const [loading, setLoading] = useState(!initial);
 
   useEffect(() => {
+    if (initial) return;
     fetch("/api/me/leaderboard", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => setData(d ?? null))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

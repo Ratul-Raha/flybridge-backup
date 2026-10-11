@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -19,8 +18,8 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { ScholarshipTicker } from "@/components/dashboard/scholarship-ticker";
 import { BengaliText } from "@/components/bengali-text";
-import { PageLoader } from "@/components/dashboard/page-loader";
 import { DashboardMyRank } from "@/components/dashboard/user/dashboard-my-rank";
+import type { UserDashboardData } from "@/lib/dashboard/user";
 
 type Stat = {
   label: string;
@@ -33,20 +32,6 @@ type Stat = {
   glow: string;
 };
 
-type MiniCourse = {
-  id: string;
-  slug: string;
-  title: string;
-  image: string | null;
-  progress: { percentage: number; passed: boolean } | null;
-};
-
-type MiniSeminar = {
-  id: string;
-  title: string;
-  dateTime: string;
-};
-
 function scoreColor(score: number): string {
   if (score >= 80) return "var(--brand-2)";
   if (score >= 60) return "#2F5FE0";
@@ -54,93 +39,15 @@ function scoreColor(score: number): string {
   return "#E0572E";
 }
 
-export function DashboardHome() {
+export function DashboardHome({ initial }: { initial: UserDashboardData | null }) {
   const { user } = useAuth();
-  const [seminarCount, setSeminarCount] = useState<number>(0);
-  const [resourceCount, setResourceCount] = useState<number>(0);
-  const [score, setScore] = useState<number | null>(null);
-  const [scoreLabel, setScoreLabel] = useState<string>("");
-  const [unread, setUnread] = useState<number | null>(null);
-  const [courses, setCourses] = useState<MiniCourse[]>([]);
-  const [seminars, setSeminars] = useState<MiniSeminar[]>([]);
-  const [settled, setSettled] = useState(0);
-
-  useEffect(() => {
-    fetch("/api/me/readiness", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        const a = data?.assessment;
-        if (a && typeof a.score === "number") {
-          setScore(a.score);
-          setScoreLabel(a.label ?? "");
-        } else {
-          setScore(null);
-        }
-      })
-      .catch(() => setScore(null))
-      .finally(() => setSettled((n) => n + 1));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/me/seminars", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data?.seminars) ? data.seminars : [];
-        setSeminarCount(list.length);
-        setSeminars(
-          list
-            .map((s: { id: string; title: string; dateTime: string }) => ({
-              id: s.id,
-              title: s.title,
-              dateTime: s.dateTime,
-            }))
-            .slice(0, 3)
-        );
-      })
-      .catch(() => setSeminarCount(0))
-      .finally(() => setSettled((n) => n + 1));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/resources", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setResourceCount((data.resources ?? []).length))
-      .catch(() => setResourceCount(0))
-      .finally(() => setSettled((n) => n + 1));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/me/courses", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data?.courses) ? data.courses : [];
-        const enrolledIds = new Set<string>(data?.enrolled ?? []);
-        const mine = list.filter((c: MiniCourse) => enrolledIds.has(c.id));
-        setCourses(
-          mine
-            .map((c: MiniCourse) => c)
-            .sort(
-              (a: MiniCourse, b: MiniCourse) =>
-                (b.progress?.percentage ?? 0) - (a.progress?.percentage ?? 0)
-            )
-            .slice(0, 3)
-        );
-      })
-      .catch(() => setCourses([]))
-      .finally(() => setSettled((n) => n + 1));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/notifications?limit=1", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setUnread(typeof data.unreadCount === "number" ? data.unreadCount : null))
-      .catch(() => setUnread(null))
-      .finally(() => setSettled((n) => n + 1));
-  }, []);
-
-  if (settled < 5) {
-    return <PageLoader label="Loading dashboard…" />;
-  }
+  const seminarCount = initial?.seminarCount ?? 0;
+  const resourceCount = initial?.resourceCount ?? 0;
+  const unread = initial?.unread ?? null;
+  const courses = initial?.courses ?? [];
+  const seminars = initial?.seminars ?? [];
+  const score = initial?.assessment && typeof initial.assessment.score === "number" ? initial.assessment.score : null;
+  const scoreLabel = initial?.assessment?.label ?? "";
 
   const firstName = user?.name?.split(" ")[0] || "there";
   const today = new Date().toLocaleDateString("en-US", {
@@ -219,7 +126,7 @@ export function DashboardHome() {
 
   return (
     <div className="flex flex-col gap-7">
-      <ScholarshipTicker />
+      <ScholarshipTicker initial={initial?.scholarships} />
 
       {/* Welcome hero */}
       <div
@@ -370,7 +277,7 @@ export function DashboardHome() {
       {/* My rank */}
       <section>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
-          <DashboardMyRank />
+          <DashboardMyRank initial={initial?.rank} />
           <div className="hidden lg:col-span-2 lg:flex flex-col justify-center rounded-lg border border-dashed px-5 py-5" style={{ borderColor: "var(--line)" }}>
             <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
               Climb the weekly board

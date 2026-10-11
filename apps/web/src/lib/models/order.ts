@@ -81,6 +81,9 @@ orderSchema.index(
   }
 );
 
+orderSchema.index({ currency: 1, status: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+
 export type OrderItem = InferSchemaType<typeof orderItemSchema>;
 
 export type OrderDoc = InferSchemaType<typeof orderSchema> & {

@@ -36,6 +36,8 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+userSchema.index({ createdAt: -1 });
+
 export type UserDoc = InferSchemaType<typeof userSchema> & {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
