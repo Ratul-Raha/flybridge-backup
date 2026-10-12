@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
+  ArrowLeft,
   Check,
+  ChevronRight,
   ChevronDown,
   ChevronUp,
   Copy,
@@ -15,9 +17,12 @@ import {
   ImagePlus,
   Loader2,
   Mic,
+  Package,
   Pencil,
   PenLine,
   Plus,
+  Search,
+  Save,
   Trash2,
   Upload,
   Wand2,
@@ -25,7 +30,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PageHeader } from "@/components/dashboard/page-header";
 import { uploadToStorage } from "@/lib/upload-client";
 import {
   SKILL_META,
@@ -167,6 +171,15 @@ const TEST_FILTERS: { value: "all" | MockTestSkill; label: string }[] = [
 
 const iconActionClass =
   "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors";
+
+type TestStatusFilter = "all" | "draft" | "published" | "archived";
+
+const TEST_STATUS_FILTERS: { value: TestStatusFilter; label: string }[] = [
+  { value: "all", label: "All statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "published", label: "Published" },
+  { value: "archived", label: "Archived" },
+];
 
 /** Question types whose answer is one of the listed options (choice-style). */
 const CHOICE_TYPES: string[] = [
@@ -428,6 +441,7 @@ export function MockTestManage({
 
   const [bundles, setBundles] = useState<BundleDto[]>([]);
   const [bundlesLoaded, setBundlesLoaded] = useState(false);
+  const [bundleSearch, setBundleSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const [bundleFormOpen, setBundleFormOpen] = useState(false);
@@ -440,6 +454,8 @@ export function MockTestManage({
   const [tests, setTests] = useState<TestListItem[]>([]);
   const [testsLoaded, setTestsLoaded] = useState(false);
   const [testFilter, setTestFilter] = useState<"all" | MockTestSkill>("all");
+  const [testStatusFilter, setTestStatusFilter] = useState<TestStatusFilter>("all");
+  const [testSearch, setTestSearch] = useState("");
   const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
   const [testFormOpen, setTestFormOpen] = useState(false);
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
@@ -455,26 +471,31 @@ export function MockTestManage({
   const [copiedTask, setCopiedTask] = useState<ManagedWritingTask | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState(false);
 
-  const loadBundles = useCallback(async () => {
+  const loadBundles = useCallback(async (): Promise<BundleDto[]> => {
     try {
       const res = await fetch("/api/mock-tests/bundles?all=true", { cache: "no-store" });
       const data = await res.json();
-      setBundles(Array.isArray(data.bundles) ? data.bundles : []);
+      const loaded = Array.isArray(data.bundles) ? (data.bundles as BundleDto[]) : [];
+      setBundles(loaded);
+      return loaded;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load bundles");
+      return [];
     } finally {
       setBundlesLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    loadBundles().then(() => {
+    loadBundles().then((loaded) => {
       if (createInBundle) {
         setActiveBundleId(createInBundle);
       } else if (focusBundleId) {
         setActiveBundleId(focusBundleId);
       } else if (queryBundleId) {
         setActiveBundleId(queryBundleId);
+      } else if (loaded.length > 0) {
+        setActiveBundleId((current) => current ?? loaded[0].id);
       }
     });
     fetch("/api/courses", { cache: "no-store" })
@@ -484,22 +505,34 @@ export function MockTestManage({
   }, [loadBundles, focusBundleId, queryBundleId, createInBundle]);
 
   const loadTests = useCallback(async (bundleId: string) => {
-    setActiveBundleId(bundleId);
     setTestsLoaded(false);
-    setTestFilter("all");
+    setTests([]);
     try {
       const res = await fetch(`/api/mock-tests/bundles/${bundleId}`, { cache: "no-store" });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load tests");
       const loaded = Array.isArray(data.tests) ? (data.tests as TestListItem[]) : [];
       setTests(loaded);
       return loaded;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load tests");
+      setTests([]);
       return [];
     } finally {
       setTestsLoaded(true);
     }
   }, []);
+
+  const selectBundle = (bundleId: string) => {
+    if (bundleId === activeBundleId) return;
+    if (testFormOpen && !confirm("Discard your unsaved test changes and switch packs?")) return;
+    setTestFormOpen(false);
+    setEditingTestId(null);
+    setTestSearch("");
+    setTestFilter("all");
+    setTestStatusFilter("all");
+    setActiveBundleId(bundleId);
+  };
 
   useEffect(() => {
     if (activeBundleId) {
@@ -565,9 +598,15 @@ export function MockTestManage({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Save failed");
+      const wasCreating = !editingBundleId;
       setBundleFormOpen(false);
       setEditingBundleId(null);
-      await loadBundles();
+      const updatedBundles = await loadBundles();
+      if (wasCreating && typeof data.bundle?.id === "string") {
+        setActiveBundleId(data.bundle.id);
+      } else if (!activeBundleId && updatedBundles.length > 0) {
+        setActiveBundleId(updatedBundles[0].id);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -577,12 +616,13 @@ export function MockTestManage({
 
   const deleteBundle = async (b: BundleDto) => {
     if (!confirm(`Delete pack "${b.title}"? All tests inside it will also be removed.`)) return;
+    const deletingActiveBundle = activeBundleId === b.id;
     setDeletingBundleId(b.id);
     try {
       const res = await fetch(`/api/mock-tests/bundles/${b.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
-      if (activeBundleId === b.id) setActiveBundleId(null);
-      await loadBundles();
+      const remaining = await loadBundles();
+      if (deletingActiveBundle) setActiveBundleId(remaining[0]?.id ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
@@ -810,8 +850,32 @@ export function MockTestManage({
   );
 
   const filteredTests = useMemo(
-    () => (testFilter === "all" ? tests : tests.filter((t) => t.skill === testFilter)),
-    [tests, testFilter]
+    () => {
+      const query = testSearch.trim().toLowerCase();
+      return tests.filter((test) => {
+        const matchesSkill = testFilter === "all" || test.skill === testFilter;
+        const matchesStatus = testStatusFilter === "all" || test.status === testStatusFilter;
+        const matchesSearch = !query || test.title.toLowerCase().includes(query);
+        return matchesSkill && matchesStatus && matchesSearch;
+      });
+    },
+    [tests, testFilter, testSearch, testStatusFilter]
+  );
+
+  const filteredBundles = useMemo(() => {
+    const query = bundleSearch.trim().toLowerCase();
+    return bundles.filter(
+      (bundle) => !query || bundle.title.toLowerCase().includes(query)
+    );
+  }, [bundles, bundleSearch]);
+
+  const libraryStats = useMemo(
+    () => ({
+      packs: bundles.length,
+      tests: bundles.reduce((count, bundle) => count + (bundle.testCount ?? 0), 0),
+      published: bundles.filter((bundle) => bundle.published).length,
+    }),
+    [bundles]
   );
 
   const parsedContent = useMemo(() => {
@@ -1676,34 +1740,38 @@ export function MockTestManage({
     [keyedNumbers]
   );
 
+  const CurrentSkillIcon = SKILL_ICON[testForm.skill];
+
   const renderTestForm = () => (
     <div>
       <div
-        className="sticky top-16 z-20 flex flex-wrap items-center gap-3 border-b bg-white/95 px-5 py-3.5 backdrop-blur"
-        style={{ borderColor: "var(--line)" }}
+        className="sticky top-16 z-20 flex flex-wrap items-center gap-3 border-b bg-white/95 px-4 py-3 backdrop-blur sm:px-6"
+        style={{ borderColor: "var(--line)", boxShadow: "0 8px 18px -16px rgba(18,32,67,0.42)" }}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <h4 className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
-            {editingTestId ? "Edit test" : "New test"}
-          </h4>
-          <span
-            className="shrink-0 rounded-full px-3 py-[5px] font-mono text-[10px] font-bold uppercase tracking-[0.08em]"
-            style={{ background: SKILL_META[testForm.skill].soft, color: SKILL_META[testForm.skill].accent }}
-          >
-            {SKILL_META[testForm.skill].label}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: SKILL_META[testForm.skill].soft, color: SKILL_META[testForm.skill].accent }}>
+            <CurrentSkillIcon size={16} />
           </span>
-          {testForm.title.trim() && (
-            <span className="min-w-0 truncate text-[12.5px]" style={{ color: "var(--body)" }}>
-              {testForm.title}
-            </span>
-          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="font-display text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                {editingTestId ? "Edit test" : "New test"}
+              </h4>
+              <span className="rounded-md px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.08em]" style={{ background: SKILL_META[testForm.skill].soft, color: SKILL_META[testForm.skill].accent }}>
+                {SKILL_META[testForm.skill].label}
+              </span>
+            </div>
+            <p className="max-w-[360px] truncate text-[11px]" style={{ color: "var(--body)" }}>
+              {testForm.title.trim() || activeBundle?.title || "Untitled mock test"}
+            </p>
+          </div>
         </div>
         <span className="flex-1" />
         {editingTestId && (
           <Link
             href={`/dashboard/mock-tests/${editingTestId}/take`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[11.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
           >
             <Eye size={13} /> Preview as student
@@ -1719,7 +1787,7 @@ export function MockTestManage({
             setTestFormOpen(false);
             setEditingTestId(null);
           }}
-          className="rounded-full border px-4 py-2 text-[12.5px] font-medium transition-colors hover:bg-[var(--bg-soft)]"
+          className="rounded-lg border px-3.5 py-2 text-[11.5px] font-medium transition-colors hover:bg-[var(--bg-soft)]"
           style={{ borderColor: "var(--line)", color: "var(--body)" }}
         >
           Cancel
@@ -1728,14 +1796,14 @@ export function MockTestManage({
           type="button"
           onClick={saveTest}
           disabled={savingTest}
-          className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-60"
           style={{ background: "var(--brand)" }}
         >
-          {savingTest && <Loader2 size={14} className="animate-spin" />}
+          {savingTest ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
           {savingTest ? "Saving…" : editingTestId ? "Save changes" : "Create test"}
         </button>
       </div>
-      <div className="border-t px-5 py-5" style={{ borderColor: "var(--line)" }}>
+      <div className="bg-[#FBFBFD] px-4 py-5 sm:px-6">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2 md:col-span-2">
                         <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
@@ -3065,26 +3133,43 @@ export function MockTestManage({
     </div>
   );
 
-  if (!user) return <p style={{ color: "var(--body)" }}>Loading…</p>;
+  if (!user) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 size={22} className="animate-spin" style={{ color: "var(--brand)" }} />
+      </div>
+    );
+  }
   if (isFocused) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
         <Link
           href={focusedBackHref}
-          className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
-          style={{ color: "var(--brand)" }}
+          className="inline-flex w-fit items-center gap-2 rounded-full border bg-white px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2"
+          style={{ color: "var(--body)", borderColor: "var(--line)" }}
         >
-          ← Back to tests
+          <ArrowLeft size={14} />
+          <span>Pack library</span>
+          {activeBundle && (
+            <>
+              <ChevronRight size={13} className="opacity-50" />
+              <span className="max-w-[180px] truncate" style={{ color: "var(--ink)" }}>
+                {activeBundle.title}
+              </span>
+            </>
+          )}
         </Link>
         {error && (
-          <p className="text-[13px]" style={{ color: "#C0392B" }}>{error}</p>
+          <p className="rounded-xl border px-4 py-3 text-[13px]" style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.2)", background: "rgba(192,57,43,0.04)" }}>
+            {error}
+          </p>
         )}
         {!testFormOpen ? (
           <div className="flex justify-center py-16">
             <Loader2 size={20} className="animate-spin" style={{ color: "var(--brand)" }} />
           </div>
         ) : (
-          <div className="rounded-[24px] border bg-white" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-[20px] border bg-white" style={{ borderColor: "var(--line)" }}>
             {renderTestForm()}
           </div>
         )}
@@ -3095,33 +3180,101 @@ export function MockTestManage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Mock Tests"
-        subtitle="Create practice packs, build tests with AI, and publish them for students."
-        action={
+      <header className="flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--brand-2)" }}>
+            IELTS · Content studio
+          </p>
+          <h1 className="font-display text-[28px] font-semibold tracking-[-0.035em] sm:text-[32px]" style={{ color: "var(--ink)" }}>
+            Mock test library
+          </h1>
+          <p className="mt-1.5 max-w-[560px] text-[13.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
+            Organize practice packs and manage every test from one workspace.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="hidden items-center gap-5 rounded-xl border bg-white px-4 py-2.5 sm:flex" style={{ borderColor: "var(--line)" }}>
+            <div>
+              <p className="font-mono text-[16px] font-bold leading-none" style={{ color: "var(--ink)" }}>{libraryStats.packs}</p>
+              <p className="mt-1 text-[10.5px]" style={{ color: "var(--body)" }}>Packs</p>
+            </div>
+            <span className="h-7 w-px" style={{ background: "var(--line)" }} />
+            <div>
+              <p className="font-mono text-[16px] font-bold leading-none" style={{ color: "var(--ink)" }}>{libraryStats.tests}</p>
+              <p className="mt-1 text-[10.5px]" style={{ color: "var(--body)" }}>Tests</p>
+            </div>
+            <span className="h-7 w-px" style={{ background: "var(--line)" }} />
+            <div>
+              <p className="font-mono text-[16px] font-bold leading-none" style={{ color: "#0FA968" }}>{libraryStats.published}</p>
+              <p className="mt-1 text-[10.5px]" style={{ color: "var(--body)" }}>Live packs</p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={openBundleCreate}
-            className="rounded-full text-white text-[13.5px] font-medium px-6 py-[10px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-[13px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(107,76,224,0.7)] transition-all hover:-translate-y-0.5 hover:opacity-95"
             style={{ background: "var(--brand)" }}
           >
-            + New pack
+            <Plus size={16} /> New pack
           </button>
-        }
-      />
+        </div>
+      </header>
 
       {error && (
-        <p className="text-[13px]" style={{ color: "#C0392B" }}>
-          {error}
-        </p>
+        <div className="flex items-start justify-between gap-3 rounded-xl border px-4 py-3" style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.2)", background: "rgba(192,57,43,0.04)" }}>
+          <p className="text-[13px]">{error}</p>
+          <button type="button" onClick={() => setError(null)} aria-label="Dismiss error" className="shrink-0 opacity-70 hover:opacity-100">
+            <X size={15} />
+          </button>
+        </div>
       )}
 
       {/* Bundle form */}
       {bundleFormOpen && (
-        <div className="rounded-[24px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
-          <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
-            {editingBundleId ? "Edit pack" : "New practice pack"}
-          </h2>
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-[#17152B]/45 p-4 backdrop-blur-sm"
+          role="presentation"
+          onMouseDown={() => {
+            setBundleFormOpen(false);
+            setEditingBundleId(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bundle-form-title"
+            className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[22px] border bg-white shadow-[0_28px_80px_-28px_rgba(18,32,67,0.45)]"
+            style={{ borderColor: "var(--line)" }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-white/95 px-6 py-5 backdrop-blur" style={{ borderColor: "var(--line)" }}>
+              <div className="flex min-w-0 items-center gap-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ color: "var(--brand)", background: "var(--brand-soft)" }}>
+                  <Package size={20} />
+                </span>
+                <div className="min-w-0">
+                  <h2 id="bundle-form-title" className="font-display text-[18px] font-semibold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
+                    {editingBundleId ? "Edit practice pack" : "Create a practice pack"}
+                  </h2>
+                  <p className="mt-0.5 text-[12.5px]" style={{ color: "var(--body)" }}>
+                    Set up the pack details students will see.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setBundleFormOpen(false);
+                  setEditingBundleId(null);
+                }}
+                aria-label="Close pack editor"
+                className={iconActionClass + " h-9 w-9 hover:border-brand-2 hover:text-brand-2"}
+                style={{ borderColor: "var(--line)", color: "var(--body)" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-6 py-5">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
@@ -3246,7 +3399,7 @@ export function MockTestManage({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 mt-6">
+          <div className="mt-6 flex items-center justify-end gap-2.5 border-t pt-5" style={{ borderColor: "var(--line)" }}>
             <button
               type="button"
               onClick={saveBundle}
@@ -3263,331 +3416,275 @@ export function MockTestManage({
                 setBundleFormOpen(false);
                 setEditingBundleId(null);
               }}
-              className="text-[13.5px] font-medium px-4 py-[11px]"
+              className="rounded-full px-4 py-[11px] text-[13px] font-medium transition-colors hover:bg-[var(--bg-soft)]"
               style={{ color: "var(--body)" }}
             >
               Cancel
             </button>
           </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Bundles list */}
+      {/* Pack library workspace */}
       {!bundlesLoaded ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-24">
-          <Loader2 size={24} className="animate-spin" style={{ color: "var(--brand)" }} />
-          <p className="text-[13px]" style={{ color: "var(--body)" }}>
-            Loading practice packs…
-          </p>
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-2xl border bg-white" style={{ borderColor: "var(--line)" }}>
+          <Loader2 size={25} className="animate-spin" style={{ color: "var(--brand)" }} />
+          <p className="text-[13px]" style={{ color: "var(--body)" }}>Loading your mock test library…</p>
         </div>
-      ) : bundles.length === 0 && !bundleFormOpen ? (
-        <div
-          className="rounded-[24px] border border-dashed bg-white px-6 py-16 text-center"
-          style={{ borderColor: "var(--line)" }}
-        >
-          <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
-            No practice packs yet
+      ) : bundles.length === 0 ? (
+        <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed bg-white px-6 py-14 text-center" style={{ borderColor: "var(--line)" }}>
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
+            <Package size={25} />
+          </span>
+          <h2 className="mt-5 font-display text-[19px] font-semibold" style={{ color: "var(--ink)" }}>Start with a practice pack</h2>
+          <p className="mt-1.5 max-w-[390px] text-[13px] leading-[1.65]" style={{ color: "var(--body)" }}>
+            Packs keep related IELTS mock tests together. Create one, then add tests by skill.
           </p>
-          <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>
-            Click “New pack” above to create your first mock test pack.
-          </p>
+          <button type="button" onClick={openBundleCreate} className="mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white" style={{ background: "var(--brand)" }}>
+            <Plus size={15} /> Create first pack
+          </button>
         </div>
       ) : (
-        <div className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {bundles.map((b) => {
-            const isActive = activeBundleId === b.id;
-            return (
-              <div key={b.id} className={isActive ? "md:col-span-2 xl:col-span-3" : ""}>
-                <div
-                  className="overflow-hidden rounded-[20px] border bg-white transition-shadow duration-200 hover:shadow-[0_16px_40px_-24px_rgba(18,32,67,0.4)]"
-                  style={{
-                    borderColor: isActive ? "var(--brand)" : "var(--line)",
-                    boxShadow: isActive ? "0 0 0 3px var(--brand-soft)" : undefined,
-                  }}
-                >
-                  {/* Cover */}
-                  <div
-                    className="relative h-24 overflow-hidden"
-                    style={{ background: "linear-gradient(135deg,#6B4CE0,#2F5FE0)" }}
+        <div className="grid items-start gap-4 xl:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="overflow-hidden rounded-2xl border bg-white xl:sticky xl:top-[84px]" style={{ borderColor: "var(--line)" }}>
+            <div className="border-b px-4 pb-3.5 pt-4" style={{ borderColor: "var(--line)" }}>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>Practice packs</h2>
+                  <p className="mt-0.5 text-[11px]" style={{ color: "var(--body)" }}>{bundles.length} {bundles.length === 1 ? "pack" : "packs"} in your library</p>
+                </div>
+                <button type="button" onClick={openBundleCreate} title="Create pack" aria-label="Create pack" className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--brand-soft)]" style={{ color: "var(--brand)" }}>
+                  <Plus size={17} />
+                </button>
+              </div>
+              <label className="relative mt-3 block">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
+                <input
+                  type="search"
+                  value={bundleSearch}
+                  onChange={(event) => setBundleSearch(event.target.value)}
+                  placeholder="Find a pack"
+                  aria-label="Find a practice pack"
+                  className="w-full rounded-lg border bg-[#FBFBFD] py-2 pl-9 pr-3 text-[12px] outline-none transition-colors focus:border-brand-2 focus:bg-white"
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                />
+              </label>
+            </div>
+            <nav aria-label="Practice packs" className="max-h-[260px] space-y-1 overflow-y-auto p-2 xl:max-h-[min(60vh,620px)]">
+              {filteredBundles.map((bundle) => {
+                const selected = bundle.id === activeBundleId;
+                return (
+                  <button
+                    key={bundle.id}
+                    type="button"
+                    onClick={() => selectBundle(bundle.id)}
+                    aria-current={selected ? "page" : undefined}
+                    className="group flex w-full items-center gap-3 rounded-xl border px-2.5 py-2.5 text-left transition-colors"
+                    style={selected
+                      ? { borderColor: "rgba(107,76,224,0.18)", background: "var(--brand-soft)" }
+                      : { borderColor: "transparent", background: "transparent" }}
                   >
-                    {b.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={b.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                    )}
-                    {b.image && (
-                      <div
-                        className="absolute inset-0"
-                        style={{ background: "linear-gradient(to top, rgba(18,32,67,0.45), rgba(18,32,67,0.05) 60%)" }}
-                      />
-                    )}
-                    <span
-                      className="absolute left-4 top-4 rounded-full px-3 py-[5px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em]"
-                      style={
-                        b.published
-                          ? { background: "rgba(15,169,104,0.92)", color: "#fff" }
-                          : { background: "rgba(255,255,255,0.92)", color: "var(--body)" }
-                      }
-                    >
-                      {b.published ? "Published" : "Draft"}
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl" style={{ background: selected ? "#fff" : "var(--bg-soft)", color: "var(--brand)" }}>
+                      {bundle.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={bundle.image} alt="" className="h-full w-full object-cover" />
+                      ) : <Package size={17} />}
                     </span>
-                    {b.badge && (
-                      <span
-                        className="absolute right-4 top-4 rounded-full px-3 py-[5px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em]"
-                        style={{ background: "rgba(255,255,255,0.92)", color: "#6B4CE0" }}
-                      >
-                        {b.badge}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                        {b.title}
-                      </h3>
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => togglePublish(b, !b.published)}
-                          title={b.published ? "Unpublish pack" : "Publish pack"}
-                          className={iconActionClass + " hover:border-[#0FA968] hover:text-[#0FA968]"}
-                          style={{
-                            borderColor: b.published ? "rgba(15,169,104,0.4)" : "var(--line)",
-                            color: b.published ? "#0FA968" : "var(--body)",
-                          }}
-                        >
-                          <Globe size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openBundleEdit(b)}
-                          title="Edit pack"
-                          className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"}
-                          style={{ borderColor: "var(--line)", color: "var(--body)" }}
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteBundle(b)}
-                          disabled={deletingBundleId === b.id}
-                          title="Delete pack"
-                          className={iconActionClass + " hover:border-[#C0392B] hover:text-[#C0392B] disabled:opacity-50"}
-                          style={{ borderColor: "var(--line)", color: "#C0392B" }}
-                        >
-                          {deletingBundleId === b.id ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={14} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {b.description && (
-                      <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
-                        {b.description}
-                      </p>
-                    )}
-
-                    <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
-                      <span
-                        className="rounded-full px-2.5 py-[4px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em]"
-                        style={{ background: "var(--bg-soft)", color: "var(--ink)" }}
-                      >
-                        {b.testCount} {b.testCount === 1 ? "test" : "tests"}
-                      </span>
-                      <span
-                        className="rounded-full px-2.5 py-[4px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em]"
-                        style={{ background: "rgba(224,138,23,0.12)", color: "#E08A17" }}
-                      >
-                        {formatPriceText({ price: b.price, currency: b.currency, prices: b.prices })}
-                      </span>
-                      {b.featured && (
-                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
-                          ★ Featured
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-semibold" style={{ color: selected ? "var(--brand)" : "var(--ink)" }}>{bundle.title}</span>
+                      <span className="mt-1 flex items-center gap-1.5 text-[10.5px]" style={{ color: "var(--body)" }}>
+                        <span>{bundle.testCount} {bundle.testCount === 1 ? "test" : "tests"}</span>
+                        <span className="opacity-50">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: bundle.published ? "#0FA968" : "#A0A4B1" }} />
+                          {bundle.published ? "Live" : "Draft"}
                         </span>
-                      )}
-                      {(["reading", "listening", "writing", "speaking"] as const).map((k) =>
-                        (b.skills?.[k] ?? 0) > 0 ? (
-                          <span
-                            key={k}
-                            className="rounded-full px-2.5 py-[4px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em]"
-                            style={{ background: SKILL_META[k].soft, color: SKILL_META[k].accent }}
-                          >
-                            {SKILL_META[k].label} {b.skills[k]}
-                          </span>
-                        ) : null
-                      )}
-                    </div>
+                      </span>
+                    </span>
+                    <ChevronRight size={15} className="shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: selected ? "var(--brand)" : "#A6A8B2" }} />
+                  </button>
+                );
+              })}
+              {filteredBundles.length === 0 && (
+                <div className="px-3 py-8 text-center">
+                  <p className="text-[12px]" style={{ color: "var(--body)" }}>No packs match “{bundleSearch}”.</p>
+                  <button type="button" onClick={() => setBundleSearch("")} className="mt-2 text-[11.5px] font-semibold" style={{ color: "var(--brand)" }}>Clear search</button>
+                </div>
+              )}
+            </nav>
+            <div className="border-t p-2" style={{ borderColor: "var(--line)" }}>
+              <button type="button" onClick={openBundleCreate} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-[12px] font-semibold transition-colors hover:border-brand-2 hover:bg-[var(--brand-soft)] hover:text-brand-2" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                <Plus size={14} /> New practice pack
+              </button>
+            </div>
+          </aside>
 
-                    <button
-                      type="button"
-                      onClick={() => (isActive ? setActiveBundleId(null) : loadTests(b.id))}
-                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full px-5 py-[9px] text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ background: isActive ? "var(--brand-2)" : "var(--brand)" }}
-                    >
-                      {isActive ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      {isActive ? "Close tests" : "Manage tests"}
+          {activeBundle ? (
+            <section className="min-w-0 rounded-2xl border bg-white" style={{ borderColor: "var(--line)" }}>
+              <div className="border-b px-5 py-5 sm:px-6" style={{ borderColor: "var(--line)" }}>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-2xl" style={{ background: "linear-gradient(145deg, rgba(107,76,224,0.14), rgba(47,95,224,0.12))", color: "var(--brand)" }}>
+                      {activeBundle.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={activeBundle.image} alt="" className="h-full w-full object-cover" />
+                      ) : <Package size={22} />}
+                    </span>
+                    <div className="min-w-0 pt-0.5">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[9.5px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--brand-2)" }}>Practice pack</span>
+                        <span className="h-1 w-1 rounded-full" style={{ background: "var(--line)" }} />
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold" style={{ color: activeBundle.published ? "#0FA968" : "var(--body)" }}>
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: activeBundle.published ? "#0FA968" : "#A0A4B1" }} />
+                          {activeBundle.published ? "Published" : "Draft"}
+                        </span>
+                        {activeBundle.badge && <span className="rounded-md px-2 py-0.5 text-[10px] font-semibold" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>{activeBundle.badge}</span>}
+                      </div>
+                      <h2 className="truncate font-display text-[21px] font-semibold tracking-[-0.025em] sm:text-[23px]" style={{ color: "var(--ink)" }}>{activeBundle.title}</h2>
+                      {activeBundle.description && <p className="mt-1 max-w-[650px] text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>{activeBundle.description}</p>}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button type="button" onClick={() => togglePublish(activeBundle, !activeBundle.published)} title={activeBundle.published ? "Unpublish pack" : "Publish pack"} aria-label={activeBundle.published ? "Unpublish pack" : "Publish pack"} className={iconActionClass + " h-9 w-9 hover:border-[#0FA968] hover:text-[#0FA968]"} style={{ borderColor: activeBundle.published ? "rgba(15,169,104,0.35)" : "var(--line)", color: activeBundle.published ? "#0FA968" : "var(--body)" }}>
+                      <Globe size={15} />
+                    </button>
+                    <button type="button" onClick={() => openBundleEdit(activeBundle)} title="Edit pack details" aria-label="Edit pack details" className={iconActionClass + " h-9 w-9 hover:border-brand-2 hover:text-brand-2"} style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+                      <Pencil size={15} />
+                    </button>
+                    <button type="button" onClick={() => deleteBundle(activeBundle)} disabled={deletingBundleId === activeBundle.id} title="Delete pack" aria-label="Delete pack" className={iconActionClass + " h-9 w-9 hover:border-[#C0392B] hover:text-[#C0392B] disabled:opacity-50"} style={{ borderColor: "var(--line)", color: "#C0392B" }}>
+                      {deletingBundleId === activeBundle.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                     </button>
                   </div>
                 </div>
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3.5" style={{ borderColor: "var(--line)" }}>
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}><strong className="font-mono text-[12px]" style={{ color: "var(--ink)" }}>{activeBundle.testCount}</strong> tests in pack</span>
+                  <span className="hidden h-4 w-px sm:block" style={{ background: "var(--line)" }} />
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>Price <strong className="ml-1 font-medium" style={{ color: "var(--ink)" }}>{formatPriceText({ price: activeBundle.price, currency: activeBundle.currency, prices: activeBundle.prices })}</strong></span>
+                  {(["reading", "listening", "writing", "speaking"] as const).map((skill) => (activeBundle.skills?.[skill] ?? 0) > 0 && (
+                    <span key={skill} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: SKILL_META[skill].accent }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: SKILL_META[skill].accent }} />
+                      {SKILL_META[skill].label} {activeBundle.skills[skill]}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-                {/* Tests for the active bundle */}
-                {isActive && (
-                  <div
-                    className="mt-5 rounded-[20px] border bg-white"
-                    style={{ borderColor: "var(--line)" }}
-                  >
-                    <div
-                      className="flex flex-wrap items-center gap-3 rounded-t-[20px] border-b px-5 py-4"
-                      style={{ borderColor: "var(--line)" }}
-                    >
-                      <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                        Tests in {b.title}
-                      </p>
-                      <span
-                        className="rounded-full px-2.5 py-[3px] font-mono text-[10.5px] font-bold"
-                        style={{ background: "var(--bg-soft)", color: "var(--body)" }}
-                      >
-                        {b.testCount} total
-                      </span>
-                      <span className="flex-1" />
-                      <Link
-                        href={`/dashboard/mock-tests/new?bundle=${b.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium text-white transition-opacity hover:opacity-90"
-                        style={{ background: "var(--brand)" }}
-                      >
-                        <Plus size={13} /> New test
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => setActiveBundleId(null)}
-                        title="Close tests"
-                        className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"}
-                        style={{ borderColor: "var(--line)", color: "var(--body)" }}
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-5 sm:px-6">
+                  <div>
+                    <h3 className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>{testFormOpen ? (editingTestId ? "Edit test" : "New test") : "Tests"}</h3>
+                    <p className="mt-0.5 text-[11.5px]" style={{ color: "var(--body)" }}>{testFormOpen ? "Update the test content and save when ready." : `${tests.length} ${tests.length === 1 ? "test" : "tests"} · Filter by IELTS skill or status`}</p>
+                  </div>
+                  {!testFormOpen && (
+                    <button type="button" onClick={() => openTestCreate(tests.length)} className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: "var(--brand)" }}>
+                      <Plus size={15} /> New test
+                    </button>
+                  )}
+                </div>
 
-                    {/* Category filter tabs */}
-                    <div
-                      className="flex flex-wrap items-center gap-2 border-b px-5 py-3"
-                      style={{ borderColor: "var(--line)" }}
-                    >
-                      {TEST_FILTERS.map((f) => {
-                        const count = f.value === "all" ? tests.length : tests.filter((t) => t.skill === f.value).length;
-                        const active = testFilter === f.value;
+                {testFormOpen ? renderTestForm() : (
+                  <>
+                    <div className="flex gap-5 overflow-x-auto border-b px-5 sm:px-6" role="tablist" aria-label="Filter tests by skill" style={{ borderColor: "var(--line)" }}>
+                      {TEST_FILTERS.map((filter) => {
+                        const count = filter.value === "all" ? tests.length : tests.filter((test) => test.skill === filter.value).length;
+                        const selected = testFilter === filter.value;
                         return (
-                          <button
-                            key={f.value}
-                            type="button"
-                            onClick={() => setTestFilter(f.value)}
-                            className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-[7px] text-[12px] font-medium transition-colors"
-                            style={
-                              active
-                                ? { borderColor: "var(--brand)", background: "var(--brand)", color: "#fff" }
-                                : { borderColor: "var(--line)", color: "var(--body)" }
-                            }
-                          >
-                            {f.label}
-                            <span
-                              className="rounded-full px-1.5 font-mono text-[10px] font-bold"
-                              style={
-                                active
-                                  ? { background: "rgba(255,255,255,0.22)", color: "#fff" }
-                                  : { background: "var(--bg-soft)", color: "var(--body)" }
-                              }
-                            >
-                              {count}
-                            </span>
+                          <button key={filter.value} type="button" role="tab" aria-selected={selected} onClick={() => setTestFilter(filter.value)} className="relative flex shrink-0 items-center gap-2 py-3 text-[12px] font-medium transition-colors" style={{ color: selected ? "var(--brand)" : "var(--body)" }}>
+                            {filter.label}
+                            <span className="rounded-md px-1.5 py-0.5 font-mono text-[9.5px] font-bold" style={{ background: selected ? "var(--brand-soft)" : "var(--bg-soft)", color: selected ? "var(--brand)" : "var(--body)" }}>{count}</span>
+                            {selected && <span className="absolute inset-x-0 bottom-0 h-[2px] rounded-full" style={{ background: "var(--brand)" }} />}
                           </button>
                         );
                       })}
                     </div>
 
+                    <div className="flex flex-col gap-2.5 border-b px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6" style={{ borderColor: "var(--line)" }}>
+                      <label className="relative block w-full sm:max-w-[320px]">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
+                        <input type="search" value={testSearch} onChange={(event) => setTestSearch(event.target.value)} placeholder="Search tests by name" aria-label="Search tests" className="w-full rounded-lg border bg-white py-2 pl-9 pr-3 text-[12px] outline-none transition-colors focus:border-brand-2" style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+                      </label>
+                      <label className="flex w-full items-center gap-2 sm:w-auto">
+                        <span className="hidden text-[11px] font-medium sm:inline" style={{ color: "var(--body)" }}>Status</span>
+                        <select value={testStatusFilter} onChange={(event) => setTestStatusFilter(event.target.value as TestStatusFilter)} aria-label="Filter tests by status" className="w-full rounded-lg border bg-white px-3 py-2 text-[12px] outline-none focus:border-brand-2 sm:w-[150px]" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                          {TEST_STATUS_FILTERS.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
                     {!testsLoaded ? (
-                      <div className="flex justify-center py-12">
-                        <Loader2 size={18} className="animate-spin" style={{ color: "var(--brand)" }} />
+                      <div className="flex min-h-[240px] flex-col items-center justify-center gap-2.5">
+                        <Loader2 size={21} className="animate-spin" style={{ color: "var(--brand)" }} />
+                        <p className="text-[12px]" style={{ color: "var(--body)" }}>Loading tests…</p>
                       </div>
-                    ) : filteredTests.length === 0 && !testFormOpen ? (
-                      <p className="px-5 py-10 text-center text-[13px]" style={{ color: "var(--body)" }}>
-                        {testFilter === "all"
-                          ? "No tests yet — click “New test” to create the first one."
-                          : `No ${SKILL_META[testFilter].label} tests in this pack yet.`}
-                      </p>
+                    ) : filteredTests.length === 0 ? (
+                      <div className="flex min-h-[250px] flex-col items-center justify-center px-5 py-10 text-center">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "var(--bg-soft)", color: "var(--body)" }}>
+                          {tests.length === 0 ? <Package size={19} /> : <Search size={18} />}
+                        </span>
+                        <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--ink)" }}>{tests.length === 0 ? "No tests in this pack yet" : "No tests match these filters"}</p>
+                        <p className="mt-1 max-w-[360px] text-[11.5px] leading-[1.6]" style={{ color: "var(--body)" }}>{tests.length === 0 ? "Add your first test, then organize the pack by IELTS skill." : "Try a different search or clear the current filters."}</p>
+                        {tests.length === 0 ? (
+                          <button type="button" onClick={() => openTestCreate(0)} className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12px] font-semibold text-white" style={{ background: "var(--brand)" }}><Plus size={14} /> Create a test</button>
+                        ) : (
+                          <button type="button" onClick={() => { setTestSearch(""); setTestFilter("all"); setTestStatusFilter("all"); }} className="mt-4 text-[12px] font-semibold" style={{ color: "var(--brand)" }}>Clear filters</button>
+                        )}
+                      </div>
                     ) : (
-                      <div className="flex flex-col divide-y overflow-hidden rounded-b-[20px]" style={{ borderColor: "var(--line)" }}>
-                        {filteredTests.map((t) => {
-                          const meta = SKILL_META[t.skill] ?? SKILL_META.reading;
-                          const SkillIcon = SKILL_ICON[t.skill] ?? BookOpen;
-                          return (
-                            <div
-                              key={t.id}
-                              className="flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-[#FBFBFD]"
-                            >
-                              <span
-                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                                style={{ background: meta.soft, color: meta.accent }}
-                              >
-                                <SkillIcon size={16} />
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                                  {t.title}
-                                </p>
-                                <p className="mt-0.5 text-[11.5px]" style={{ color: "var(--body)" }}>
-                                  {t.questionCount} questions · {t.durationMinutes} min ·{" "}
-                                  <span style={{ color: t.status === "published" ? "#0FA968" : t.status === "archived" ? "#C0392B" : "var(--body)" }}>
-                                    {t.status}
-                                  </span>
-                                </p>
+                      <div>
+                        <div className="hidden grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_112px] items-center gap-3 bg-[#FBFBFD] px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] md:grid sm:px-6" style={{ color: "var(--body)" }}>
+                          <span>Test</span><span>Skill</span><span>Questions</span><span>Duration</span><span>Status</span><span className="text-right">Actions</span>
+                        </div>
+                        <div className="divide-y" style={{ borderColor: "var(--line)" }}>
+                          {filteredTests.map((test) => {
+                            const meta = SKILL_META[test.skill] ?? SKILL_META.reading;
+                            const SkillIcon = SKILL_ICON[test.skill] ?? BookOpen;
+                            const statusStyle = test.status === "published"
+                              ? { background: "rgba(15,169,104,0.09)", color: "#0B8F58" }
+                              : test.status === "archived"
+                                ? { background: "rgba(192,57,43,0.08)", color: "#B13329" }
+                                : { background: "var(--bg-soft)", color: "var(--body)" };
+                            return (
+                              <div key={test.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-[#FCFBFE] md:grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_112px] md:gap-3 sm:px-6">
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: meta.soft, color: meta.accent }}><SkillIcon size={16} /></span>
+                                  <div className="min-w-0">
+                                    <p className="truncate text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>{test.title}</p>
+                                    <p className="mt-0.5 text-[10.5px] md:hidden" style={{ color: "var(--body)" }}>
+                                      {meta.label} · {test.questionCount} questions · {test.durationMinutes} min ·{" "}
+                                      <span className="capitalize" style={{ color: test.status === "published" ? "#0FA968" : test.status === "archived" ? "#C0392B" : "var(--body)" }}>{test.status}</span>
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="hidden items-center gap-2 text-[11.5px] font-medium md:flex" style={{ color: meta.accent }}>
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />{meta.label}
+                                </span>
+                                <span className="hidden font-mono text-[11.5px] md:block" style={{ color: "var(--body)" }}>{test.questionCount}</span>
+                                <span className="hidden font-mono text-[11.5px] md:block" style={{ color: "var(--body)" }}>{test.durationMinutes} min</span>
+                                <span className="hidden w-fit rounded-md px-2 py-1 text-[10px] font-semibold capitalize md:inline-flex" style={statusStyle}>{test.status}</span>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Link href={`/dashboard/mock-tests/${test.id}/take`} target="_blank" title="Preview as student" aria-label={`Preview ${test.title}`} className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"} style={{ borderColor: "var(--line)", color: "var(--body)" }}><Eye size={14} /></Link>
+                                  <button type="button" onClick={() => void openTestEdit(test)} title="Edit test" aria-label={`Edit ${test.title}`} className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"} style={{ borderColor: "var(--line)", color: "var(--body)" }}><Pencil size={14} /></button>
+                                  <button type="button" onClick={() => deleteTest(test)} disabled={deletingTestId === test.id} title="Delete test" aria-label={`Delete ${test.title}`} className={iconActionClass + " hover:border-[#C0392B] hover:text-[#C0392B] disabled:opacity-50"} style={{ borderColor: "var(--line)", color: "#C0392B" }}>{deletingTestId === test.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
+                                </div>
                               </div>
-                              <Link
-                                href={`/dashboard/mock-tests/${t.id}/take`}
-                                target="_blank"
-                                title="Preview as student"
-                                className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"}
-                                style={{ borderColor: "var(--line)", color: "var(--body)" }}
-                              >
-                                <Eye size={14} />
-                              </Link>
-                              <Link
-                                href={`/dashboard/mock-tests/${t.id}/edit`}
-                                title="Edit test"
-                                className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"}
-                                style={{ borderColor: "var(--line)", color: "var(--body)" }}
-                              >
-                                <Pencil size={14} />
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => deleteTest(t)}
-                                disabled={deletingTestId === t.id}
-                                title="Delete test"
-                                className={iconActionClass + " hover:border-[#C0392B] hover:text-[#C0392B] disabled:opacity-50"}
-                                style={{ borderColor: "var(--line)", color: "#C0392B" }}
-                              >
-                                {deletingTestId === t.id ? (
-                                  <Loader2 size={14} className="animate-spin" />
-                                ) : (
-                                  <Trash2 size={14} />
-                                )}
-                              </button>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
-
-                    {/* Test form */}
-                    {testFormOpen && renderTestForm()}
-                  </div>
+                  </>
                 )}
               </div>
-            );
-          })}
+            </section>
+          ) : (
+            <section className="flex min-h-[420px] flex-col items-center justify-center rounded-2xl border border-dashed bg-white px-6 text-center" style={{ borderColor: "var(--line)" }}>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}><Package size={21} /></span>
+              <h2 className="mt-4 font-display text-[17px] font-semibold" style={{ color: "var(--ink)" }}>Choose a practice pack</h2>
+              <p className="mt-1.5 max-w-[360px] text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>Select a pack from the library to view, filter and manage its tests.</p>
+            </section>
+          )}
         </div>
       )}
     </div>
