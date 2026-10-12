@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { MockTestBundle, type MockTestBundleDoc } from "@/lib/models/mock-test-bundle";
@@ -22,8 +23,11 @@ type BundleSkills = Record<"reading" | "listening" | "writing" | "speaking", num
 
 async function skillsFor(bundleIds: string[]): Promise<Map<string, BundleSkills>> {
   if (bundleIds.length === 0) return new Map();
+  // Mongoose does NOT cast aggregation pipelines, so the ObjectIds must be
+  // cast manually — otherwise every bundle reports 0 tests.
+  const oids = bundleIds.map((id) => new mongoose.Types.ObjectId(id));
   const rows = await MockTest.aggregate([
-    { $match: { bundle: { $in: bundleIds } } },
+    { $match: { bundle: { $in: oids } } },
     { $group: { _id: { bundle: "$bundle", skill: "$skill" }, count: { $sum: 1 } } },
   ]);
   const map = new Map<string, BundleSkills>();

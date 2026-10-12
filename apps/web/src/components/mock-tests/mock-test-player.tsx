@@ -111,15 +111,23 @@ function inlineGaps(
   while ((match = GAP_TOKEN_RE.exec(text)) !== null) {
     if (match.index > last) parts.push(<span key={key++}>{inlineRich(text.slice(last, match.index))}</span>);
     const index = Math.max(0, Number(match[1]) - 1);
+    const value = values[index] ?? "";
+    const width = `${Math.min(22, Math.max(7, value.length + 2))}ch`;
     parts.push(
       <input
         key={key++}
         aria-label={`Answer for gap ${index + 1}`}
         type="text"
-        value={values[index] ?? ""}
+        value={value}
         onChange={(event) => onChange(index, event.target.value)}
-        className="mx-1 inline-block w-[min(10rem,35vw)] border-0 border-b-2 bg-transparent px-1 py-0.5 text-center text-[14px] font-normal focus:outline-none focus:ring-0"
-        style={{ borderColor: values[index]?.trim() ? "var(--brand)" : "var(--line)", color: "var(--ink)" }}
+        autoComplete="off"
+        spellCheck={false}
+        className="mx-1 inline-block min-w-[7ch] border-0 border-b-2 bg-transparent px-1 py-0.5 text-center text-[14px] font-normal transition-[border-color,width] duration-150 focus:outline-none focus:ring-0"
+        style={{
+          width,
+          borderColor: value.trim() ? "var(--brand)" : "var(--line)",
+          color: "var(--ink)",
+        }}
       />
     );
     last = match.index + match[0].length;
@@ -434,57 +442,95 @@ export function MockTestPlayer({
     });
 
   const renderQuestion = (q: TestDetail["content"]["sections"][number]["questions"][number], qi: number = 0) => {
-    const opts = Array.isArray(q.options) ? q.options : [];
-    const hasOptions = opts.some((o) => typeof o === "string" && o.trim().length > 0);
+    const opts = Array.isArray(q.options) ? q.options.filter((o) => typeof o === "string" && o.trim().length > 0) : [];
+    const hasOptions = opts.length > 0;
     const current = answers[q.qid];
     const answered = isAnswered(current);
     const hasInlineGaps = /\[\[gap:\d+\]\]/.test(q.prompt ?? "");
     const num = questionIndex[q.qid] ?? qi + 1;
     const isMulti = q.multiple === true;
+    const maxSelections = typeof q.maxSelections === "number" && q.maxSelections > 0 ? q.maxSelections : 0;
     const selectedChoices = isMulti && Array.isArray(current?.choices) ? current.choices : [];
+    const atLimit = isMulti && maxSelections > 0 && selectedChoices.length >= maxSelections;
+    const isMatching =
+      q.type === "matching-features" ||
+      q.type === "heading-matching" ||
+      q.type === "matching";
+    const selectedOption = typeof current?.choice === "number" && current.choice >= 0 ? current.choice : -1;
 
-    const body = hasOptions ? (
-      <div className="mt-4 flex flex-col gap-2">
+    const body = isMatching ? (
+      <div className="mt-4">
+        <select
+          value={selectedOption}
+          onChange={(e) => setChoice(q.qid, Number(e.target.value))}
+          aria-label={`Answer for question ${num}`}
+          className="h-9 w-full max-w-[320px] cursor-pointer select-none rounded-lg border bg-white px-2.5 font-mono text-[12.5px] font-semibold focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+          style={{
+            borderColor: selectedOption >= 0 ? "var(--brand)" : "var(--line)",
+            color: selectedOption >= 0 ? "var(--brand)" : "var(--body)",
+          }}
+        >
+          <option value={-1}>— Choose —</option>
+          {opts.map((opt, oi) => (
+            <option key={oi} value={oi}>
+              {String.fromCharCode(65 + oi)}. {opt}
+            </option>
+          ))}
+        </select>
+      </div>
+    ) : hasOptions ? (
+      <div className="mt-4 flex flex-col gap-1.5">
         {isMulti && (
           <p className="text-[12px] font-medium" style={{ color: "var(--body)" }}>
-            Select all that apply.
+            {maxSelections > 0
+              ? `Choose ${maxSelections === 1 ? "one" : maxSelections === 2 ? "TWO" : maxSelections === 3 ? "THREE" : maxSelections} answer${maxSelections === 1 ? "" : "s"}.`
+              : "Choose all that apply."}
           </p>
         )}
         {opts.map((opt, oi) => {
           const selected = isMulti ? selectedChoices.includes(oi) : current?.choice === oi;
+          const disabled = isMulti && atLimit && !selected;
+          const toggle = () => {
+            if (isMulti) toggleChoice(q.qid, oi);
+            else setChoice(q.qid, oi);
+          };
           return (
-            <button
+            <label
               key={oi}
-              type="button"
-              onClick={() => (isMulti ? toggleChoice(q.qid, oi) : setChoice(q.qid, oi))}
-              aria-pressed={selected}
-              className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all duration-150 hover:border-brand-2/50 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-              style={
-                selected
-                  ? { borderColor: "var(--brand)", background: "var(--brand-soft)" }
-                  : { borderColor: "var(--line)", background: "white" }
-              }
+              className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[var(--brand-soft)] focus-within:bg-[var(--brand-soft)]"
+              style={disabled ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
+              title={disabled ? `You can choose up to ${maxSelections} answers` : undefined}
             >
+              <input
+                type={isMulti ? "checkbox" : "radio"}
+                name={`${q.qid}-choice`}
+                checked={selected}
+                disabled={disabled}
+                onChange={toggle}
+                aria-label={`${String.fromCharCode(65 + oi)}. ${opt}`}
+                className="peer sr-only"
+              />
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11.5px] font-bold transition-colors"
-                style={
-                  selected
-                    ? { borderColor: "var(--brand)", background: "var(--brand)", color: "#fff" }
-                    : { borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }
-                }
+                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center border-2 transition-colors ${isMulti ? "rounded-[5px]" : "rounded-full"}`}
+                style={{
+                  borderColor: selected ? "var(--brand)" : "var(--line)",
+                  background: selected ? "var(--brand)" : "white",
+                }}
               >
-                {String.fromCharCode(65 + oi)}
+                {selected &&
+                  (isMulti ? (
+                    <Check size={11} strokeWidth={3.5} style={{ color: "#fff" }} />
+                  ) : (
+                    <span className="h-[8px] w-[8px] rounded-full" style={{ background: "#fff" }} />
+                  ))}
+              </span>
+              <span className="font-mono text-[12px] font-bold" style={{ color: "var(--brand-2)" }}>
+                {String.fromCharCode(65 + oi)}.
               </span>
               <span className="flex-1 text-[13.5px] leading-snug" style={{ color: "var(--ink)" }}>
                 {opt}
               </span>
-              <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center border ${isMulti ? "rounded-[4px]" : "rounded-full"}`}
-                style={{ borderColor: selected ? "var(--brand)" : "var(--line)" }}
-              >
-                {selected && (isMulti ? <Check size={11} style={{ color: "var(--brand)" }} /> : <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />)}
-              </span>
-            </button>
+            </label>
           );
         })}
       </div>
@@ -559,28 +605,74 @@ export function MockTestPlayer({
     const matching = isListening && isListeningMatching(section.type);
     const labelling = isListening && isListeningLabelling(section.type);
 
-    const body = matching ? (
-      <MatchingSection
-        questions={section.questions ?? []}
-        answers={answers}
-        questionIndex={questionIndex}
-        matchBox={section.matchBox}
-        onChoice={setChoice}
-        onText={setText}
-      />
-    ) : labelling ? (
-      <LabellingSection
-        questions={section.questions ?? []}
-        answers={answers}
-        questionIndex={questionIndex}
-        onChoice={setChoice}
-        onText={setText}
-      />
-    ) : (
-      <div className="flex flex-col gap-3">
-        {(section.questions ?? []).map((q, qi) => renderQuestion(q, qi))}
-      </div>
-    );
+    const renderBody = (qs: TestDetail["content"]["sections"][number]["questions"]) =>
+      matching ? (
+        <MatchingSection
+          questions={qs}
+          answers={answers}
+          questionIndex={questionIndex}
+          matchBox={section.matchBox}
+          onChoice={setChoice}
+          onText={setText}
+        />
+      ) : labelling ? (
+        <LabellingSection
+          questions={qs}
+          answers={answers}
+          questionIndex={questionIndex}
+          onChoice={setChoice}
+          onText={setText}
+        />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {qs.map((q, qi) => renderQuestion(q, qi))}
+        </div>
+      );
+
+    // Listening: figures uploaded in the editor are bound to specific question
+    // numbers and render side by side with those questions.
+    const figures = isListening
+      ? (section.figures ?? []).filter((f) => f.image)
+      : [];
+    const boundQids = new Set<string>();
+    for (const f of figures) for (const id of f.questionIds ?? []) boundQids.add(id);
+    const unboundQuestions = figures.length
+      ? (section.questions ?? []).filter((q) => !boundQids.has(q.qid))
+      : section.questions ?? [];
+
+    const body = renderBody(unboundQuestions);
+
+    const figureBlocks = figures.map((f, fi) => {
+      const fqs = (section.questions ?? []).filter((q) =>
+        (f.questionIds ?? []).includes(q.qid)
+      );
+      const imageCard = (
+        <div className="overflow-hidden rounded-xl border bg-[#FBFBFD]" style={{ borderColor: "var(--line)" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={f.image}
+            alt={f.alt || "Question figure"}
+            className="block w-full object-contain"
+          />
+        </div>
+      );
+      if (fqs.length === 0) {
+        return (
+          <div key={fi} className="mb-4">
+            {imageCard}
+          </div>
+        );
+      }
+      return (
+        <div
+          key={fi}
+          className="mb-4 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-start"
+        >
+          <div className="xl:sticky xl:top-[84px]">{imageCard}</div>
+          <div className="flex min-w-0 flex-col gap-3">{renderBody(fqs)}</div>
+        </div>
+      );
+    });
 
     return (
       <div key={section.id ?? `s${si}`} id={`part-${si}`} className="mb-7 scroll-mt-24">
@@ -637,6 +729,7 @@ export function MockTestPlayer({
           </div>
         )}
         {placement === "below-passage" && sectionImage}
+        {figureBlocks}
         {body}
         {placement === "below" && sectionImage}
       </div>

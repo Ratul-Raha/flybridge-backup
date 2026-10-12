@@ -26,10 +26,20 @@ const testQuestionSchema = new Schema(
     correctOption: { type: Number, default: -1 },
     multiple: { type: Boolean, default: false },
     correctOptions: { type: [Number], default: [] },
+    maxSelections: { type: Number, min: 0, default: 0 },
     answer: { type: String, trim: true },
     gapAnswers: { type: [String], default: [] },
     passageRef: { type: String, trim: true },
     wordHint: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const sectionFigureSchema = new Schema(
+  {
+    image: { type: String, trim: true },
+    alt: { type: String, trim: true },
+    questionIds: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -45,6 +55,7 @@ const testSectionSchema = new Schema(
     passage: { type: String },
     image: { type: String, trim: true },
     imagePlacement: { type: String, trim: true },
+    figures: { type: [sectionFigureSchema], default: [] },
     bulletPoints: { type: [String], default: [] },
     prepMinutes: { type: Number, min: 0, default: 0 },
     talkMinutes: { type: Number, min: 0, default: 0 },
@@ -134,6 +145,7 @@ const mockTestSchema = new Schema(
 mockTestSchema.index({ bundle: 1, skill: 1, order: 1 });
 
 export type MockTestQuestionDoc = InferSchemaType<typeof testQuestionSchema>;
+export type MockTestSectionFigureDoc = InferSchemaType<typeof sectionFigureSchema>;
 export type MockTestSectionDoc = InferSchemaType<typeof testSectionSchema>;
 export type MockTestPassageDoc = InferSchemaType<typeof testPassageSchema>;
 export type MockTestContentDoc = InferSchemaType<typeof mockTestContentSchema>;

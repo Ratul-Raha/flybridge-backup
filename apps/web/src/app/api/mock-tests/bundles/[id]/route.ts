@@ -98,6 +98,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .sort({ order: 1, createdAt: 1 })
       .lean()) as unknown as StaffTest[];
 
+    const skillCounts = { reading: 0, listening: 0, writing: 0, speaking: 0 };
+    for (const t of tests) {
+      const k = t.skill as keyof typeof skillCounts;
+      if (k in skillCounts) skillCounts[k] += 1;
+    }
+
     const courseIds = [
       ...new Set(
         tests.map((t) => t.course?.toString()).filter((c): c is string => !!c)
@@ -120,7 +126,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       tests.map((t) => toTestDto(t, bundle, ownership, courseMap))
     );
 
-    return NextResponse.json({ bundle: toDto(bundle), tests: dtoTests });
+    return NextResponse.json({ bundle: toDto(bundle, skillCounts), tests: dtoTests });
   } catch (error) {
     console.error("mock-test bundle GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

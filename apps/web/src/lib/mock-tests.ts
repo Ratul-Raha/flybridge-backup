@@ -76,16 +76,22 @@ export function normalizeMockTestAnswers(content: unknown): void {
         multiple?: boolean;
         correctOptions?: number[];
         correctOption?: number;
+        maxSelections?: number;
       } | null;
-      if (!qu || qu.multiple === true) continue;
+      if (!qu) continue;
       const opts = Array.isArray(qu.options) ? qu.options : [];
-      if (opts.length < 2) continue;
-      if (typeof qu.answer !== "string") continue;
-      const multi = multiLetterIndices(qu.answer);
-      if (multi && multi.every((i) => i < opts.length)) {
-        qu.multiple = true;
-        qu.correctOptions = Array.from(new Set(multi)).sort((a, b) => a - b);
-        qu.correctOption = -1;
+      if (qu.multiple !== true) {
+        if (opts.length < 2) continue;
+        if (typeof qu.answer !== "string") continue;
+        const multi = multiLetterIndices(qu.answer);
+        if (multi && multi.every((i) => i < opts.length)) {
+          qu.multiple = true;
+          qu.correctOptions = Array.from(new Set(multi)).sort((a, b) => a - b);
+          qu.correctOption = -1;
+        }
+      }
+      if (qu.multiple === true && (typeof qu.maxSelections !== "number" || qu.maxSelections <= 0)) {
+        qu.maxSelections = Array.isArray(qu.correctOptions) ? qu.correctOptions.length : 0;
       }
     }
   }

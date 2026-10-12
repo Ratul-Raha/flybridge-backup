@@ -45,22 +45,62 @@ function choiceQuestion(qid, type, prompt, options, correctOption) {
     correctOption,
     multiple: false,
     correctOptions: [],
+    maxSelections: 0,
     answer: options[correctOption] ?? "",
     passageRef: "",
     wordHint: "",
   };
 }
 
-function completionQuestion(qid, type, prompt, answer, wordHint = "") {
+function multiChoiceQuestion(qid, type, prompt, options, correctIdxs) {
+  const sorted = Array.from(new Set(correctIdxs)).sort((a, b) => a - b);
   return {
     qid,
     type,
+    prompt,
+    options,
+    correctOption: -1,
+    multiple: true,
+    correctOptions: sorted,
+    maxSelections: sorted.length,
+    answer: sorted.map((i) => String.fromCharCode(65 + i)).join(", "),
+    passageRef: "",
+    wordHint: "",
+  };
+}
+
+function completionQuestion(qid, type, prompt, answers, wordHint = "") {
+  const list = Array.isArray(answers) ? answers : [answers];
+  let n = 0;
+  const promptWithGaps = prompt.replace(/___/g, () => `[[gap:${++n}]]`);
+  return {
+    qid,
+    type,
+    prompt: promptWithGaps,
+    options: [],
+    correctOption: -1,
+    multiple: false,
+    correctOptions: [],
+    maxSelections: 0,
+    answer: list.join(" / "),
+    gapAnswers: list,
+    passageRef: "",
+    wordHint,
+  };
+}
+
+function shortAnswerQuestion(qid, prompt, answer, wordHint = "") {
+  return {
+    qid,
+    type: "short-answer",
     prompt,
     options: [],
     correctOption: -1,
     multiple: false,
     correctOptions: [],
+    maxSelections: 0,
     answer,
+    gapAnswers: [],
     passageRef: "",
     wordHint,
   };
@@ -91,7 +131,7 @@ function buildContent() {
     section(
       "s2",
       "",
-      "PART 2 – Questions 11–20.\n\nQuestions 11–14: complete the notes below.\nWrite ONE WORD ONLY for each answer.\n\nQuestions 15–18: match each facility to the correct floor, A–C.\n\nQuestions 19–20: choose the correct letter, A, B or C.",
+      "PART 2 – Questions 11–20.\n\nQuestions 11–14: complete the notes below.\nWrite ONE WORD ONLY for each answer.\n\nQuestions 15–18: match each facility to the correct floor, A–C.\n\nQuestions 19–20: choose the correct letters, A, B, C or D.",
       "Guided tour notes",
       [
         completionQuestion("q11", "notes-completion", "The museum opens at ___ every morning.", "nine", "ONE WORD ONLY"),
@@ -102,7 +142,7 @@ function buildContent() {
         choiceQuestion("q16", "matching-features", "Café", ["Ground floor", "First floor", "Basement"], 0),
         choiceQuestion("q17", "matching-features", "Gym", ["Ground floor", "First floor", "Basement"], 1),
         choiceQuestion("q18", "matching-features", "Cinema", ["Ground floor", "First floor", "Basement"], 1),
-        choiceQuestion("q19", "multiple-choice", "What is the main topic of the lecture?", ["Climate change", "Ocean currents", "Volcanic activity"], 1),
+        multiChoiceQuestion("q19", "multiple-choice", "Which TWO facilities are open after 9 pm?", ["Swimming pool", "Library", "Fitness centre", "Café"], [2, 3]),
         choiceQuestion("q20", "multiple-choice", "How often does the research team collect samples?", ["Daily", "Weekly", "Monthly"], 2),
       ]
     ),
@@ -138,8 +178,8 @@ function buildContent() {
         completionQuestion("q36", "summary-completion", "Participants were tested after a short ___.", "break", "ONE WORD ONLY"),
         completionQuestion("q37", "summary-completion", "Those who slept showed ___ recall.", "better", "ONE WORD ONLY"),
         completionQuestion("q38", "summary-completion", "The effect was strongest in ___ adults.", "young", "ONE WORD ONLY"),
-        completionQuestion("q39", "short-answer", "When does the library close on Fridays?", "ten o'clock", "NO MORE THAN THREE WORDS"),
-        completionQuestion("q40", "short-answer", "Which room is the workshop held in?", "Room B", "NO MORE THAN THREE WORDS"),
+        shortAnswerQuestion("q39", "When does the library close on Fridays?", "ten o'clock", "NO MORE THAN THREE WORDS"),
+        shortAnswerQuestion("q40", "Which room is the workshop held in?", "Room B", "NO MORE THAN THREE WORDS"),
       ]
     ),
   ];
@@ -163,9 +203,13 @@ function buildAnswerKey(content) {
   for (const s of content.sections) {
     for (const q of s.questions) {
       const answer =
-        Array.isArray(q.options) && q.options.length > 1
-          ? String.fromCharCode(65 + (q.correctOption ?? 0))
-          : q.answer;
+        q.multiple === true && Array.isArray(q.correctOptions) && q.correctOptions.length > 0
+          ? q.correctOptions.map((i) => String.fromCharCode(65 + i)).join(", ")
+          : Array.isArray(q.options) && q.options.length > 1
+            ? String.fromCharCode(65 + (q.correctOption ?? 0))
+            : Array.isArray(q.gapAnswers) && q.gapAnswers.length > 0
+              ? q.gapAnswers.join(" / ")
+              : q.answer;
       lines.push(`${n}. ${answer}`);
       n += 1;
     }

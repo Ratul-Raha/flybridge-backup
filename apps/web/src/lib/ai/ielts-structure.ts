@@ -115,6 +115,9 @@ export function buildStructurePrompt(opts: {
     '    "correctOption": <0-based index of the correct option, or -1>,',
     '    "answer": "<the correct answer as text (for completion/short-answer)>",',
     '    "gapAnswers": ["<answer for [[gap:1]]>", "<answer for [[gap:2]]>"],',
+    '    "maxSelections": <0, or the number of options to pick when the question',
+    '      asks for TWO/THREE letters (e.g. "Choose TWO letters") — set to the',
+    '      number of correct options>,',
     '    "passageRef": "<optional paragraph reference>",',
     '    "wordHint": "<optional word limit hint (e.g. NO MORE THAN TWO WORDS)>" }',
     "",
@@ -123,6 +126,9 @@ export function buildStructurePrompt(opts: {
     "- For \"multiple-choice\", \"true-false-ng\", \"heading-matching\" and",
     "  \"matching-features\", put the choices in \"options\" and set",
     "  \"correctOption\" to the 0-based index of the right choice.",
+    "- When a multiple-choice question asks for TWO or more letters, set",
+    "  \"multiple\" to true, put ALL correct option indices in \"correctOptions\"",
+    "  and set \"maxSelections\" to that same count (e.g. 2 for \"Choose TWO\").",
     "- For true-false-ng the options are exactly [\"True\", \"False\", \"Not Given\"].",
     "- For completion and short-answer questions set \"options\" to [\"\"] and put",
     "  the exact expected words in \"answer\".",
@@ -212,8 +218,11 @@ type NormalizedQuestion = {
   prompt: string;
   options: string[];
   correctOption: number;
+  multiple: boolean;
+  correctOptions: number[];
   answer: string;
   gapAnswers: string[];
+  maxSelections: number;
   passageRef: string;
   wordHint: string;
 };
@@ -250,6 +259,13 @@ function normalizeQuestion(
       typeof q.correctOption === "number" && q.correctOption >= 0
         ? Math.round(q.correctOption)
         : -1,
+    multiple: q.multiple === true,
+    correctOptions: Array.isArray(q.correctOptions)
+      ? (q.correctOptions as unknown[])
+          .filter((i): i is number => typeof i === "number" && Number.isFinite(i))
+          .map((i) => Math.round(i))
+          .filter((i) => i >= 0)
+      : [],
     answer:
       typeof q.answer === "string"
         ? q.answer
@@ -259,6 +275,12 @@ function normalizeQuestion(
     gapAnswers: Array.isArray(q.gapAnswers)
       ? (q.gapAnswers as unknown[]).filter((a): a is string => typeof a === "string")
       : [],
+    maxSelections:
+      typeof q.maxSelections === "number" && q.maxSelections > 0
+        ? Math.round(q.maxSelections)
+        : q.multiple === true && Array.isArray(q.correctOptions) && q.correctOptions.length > 0
+          ? q.correctOptions.length
+          : 0,
     passageRef: typeof q.passageRef === "string" ? q.passageRef : "",
     wordHint: typeof q.wordHint === "string" ? q.wordHint : "",
   };
@@ -509,6 +531,7 @@ function applyAnswerKey(
           q.multiple = true;
           q.correctOptions = Array.from(new Set(multi)).sort((a, b) => a - b);
           q.correctOption = -1;
+          q.maxSelections = q.correctOptions.length;
           q.answer = q.correctOptions
             .map((i) => String.fromCharCode(65 + i))
             .join(", ");

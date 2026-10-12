@@ -23,6 +23,11 @@ function sanitizeContent(
         passage: s.passage,
         image: s.image,
         imagePlacement: s.imagePlacement,
+        figures: (s.figures ?? []).map((f) => ({
+          image: f.image,
+          alt: f.alt,
+          questionIds: f.questionIds ?? [],
+        })),
         bulletPoints: s.bulletPoints ?? [],
         prepMinutes: s.prepMinutes ?? 0,
         talkMinutes: s.talkMinutes ?? 0,
@@ -32,6 +37,7 @@ function sanitizeContent(
           prompt: q.prompt,
           options: q.options,
           multiple: q.multiple === true,
+          maxSelections: q.maxSelections ?? 0,
           passageRef: q.passageRef,
           wordHint: q.wordHint,
           ...(includeAnswers

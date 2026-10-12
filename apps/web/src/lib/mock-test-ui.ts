@@ -74,6 +74,11 @@ export type TestDetail = {
       passage?: string;
       image?: string;
       imagePlacement?: "above" | "below-passage" | "below";
+      figures?: {
+        image?: string;
+        alt?: string;
+        questionIds: string[];
+      }[];
       bulletPoints?: string[];
       prepMinutes?: number;
       talkMinutes?: number;
@@ -83,6 +88,7 @@ export type TestDetail = {
         prompt?: string;
         options: string[];
         multiple?: boolean;
+        maxSelections?: number;
         answer?: string;
         gapAnswers?: string[];
         passageRef?: string;
