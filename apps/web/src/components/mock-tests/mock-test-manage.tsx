@@ -343,6 +343,10 @@ function nextId(prefix: string, existing: (string | undefined)[]): string {
   return `${prefix}${n}`;
 }
 
+function nextTestOrder(tests: Pick<TestListItem, "order">[]): number {
+  return tests.reduce((highest, test) => Math.max(highest, test.order ?? -1), -1) + 1;
+}
+
 /** Applies a question-type change: options + correct answer are kept in sync. */
 function applyQuestionType(q: ManagedQuestion, type: string): void {
   q.type = type;
@@ -461,6 +465,7 @@ export function MockTestManage({
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
   const [testForm, setTestForm] = useState(emptyTestForm);
   const [savingTest, setSavingTest] = useState(false);
+  const [reorderingTests, setReorderingTests] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [deletingTestId, setDeletingTestId] = useState<string | null>(null);
   const [uploadingSection, setUploadingSection] = useState<number | null>(null);
@@ -545,7 +550,7 @@ export function MockTestManage({
         }
         if (autoCreateRef.current) {
           autoCreateRef.current = null;
-          openTestCreate(loaded.length);
+          openTestCreate(nextTestOrder(loaded));
         }
       });
     }
@@ -653,7 +658,7 @@ export function MockTestManage({
       skill: "reading",
       status: "draft",
       durationMinutes: "60",
-      order: order != null ? String(order) : String(tests.length),
+      order: order != null ? String(order) : String(nextTestOrder(tests)),
       course: "",
     });
     setTestFormOpen(true);
@@ -668,7 +673,6 @@ export function MockTestManage({
       skill: t.skill,
       status: t.status,
       durationMinutes: String(t.durationMinutes ?? 0),
-      order: String(t.order ?? 0),
       course: t.course?.id ?? "",
       questionText: "",
       answerText: "",
@@ -806,7 +810,7 @@ export function MockTestManage({
           skill: testForm.skill,
           status: testForm.status,
           durationMinutes: Number(testForm.durationMinutes) || 0,
-          order: Number(testForm.order) || 0,
+          ...(!editingTestId ? { order: Number(testForm.order) || 0 } : {}),
           course: testForm.course || null,
           content,
           answerKey: testForm.answerKey,
@@ -841,6 +845,42 @@ export function MockTestManage({
       setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingTestId(null);
+    }
+  };
+
+  const canReorderTests =
+    testFilter === "all" && testStatusFilter === "all" && testSearch.trim().length === 0;
+
+  const moveTest = async (testId: string, direction: -1 | 1) => {
+    if (!activeBundleId || !canReorderTests || reorderingTests) return;
+    const currentIndex = tests.findIndex((test) => test.id === testId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tests.length) return;
+
+    const reordered = [...tests];
+    [reordered[currentIndex], reordered[nextIndex]] = [
+      reordered[nextIndex],
+      reordered[currentIndex],
+    ];
+    const orderedTests = reordered.map((test, order) => ({ ...test, order }));
+    setTests(orderedTests);
+    setError(null);
+    setReorderingTests(true);
+
+    try {
+      const res = await fetch(`/api/mock-tests/bundles/${activeBundleId}/order`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testIds: orderedTests.map((test) => test.id) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to update test order");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to update test order";
+      await loadTests(activeBundleId);
+      setError(message);
+    } finally {
+      setReorderingTests(false);
     }
   };
 
@@ -1868,20 +1908,6 @@ export function MockTestManage({
                           min="0"
                           value={testForm.durationMinutes}
                           onChange={(e) => setTestForm({ ...testForm, durationMinutes: e.target.value })}
-                          className={inputClass}
-                          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                          Order
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={testForm.order}
-                          onChange={(e) => setTestForm({ ...testForm, order: e.target.value })}
                           className={inputClass}
                           style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                         />
@@ -3575,10 +3601,16 @@ export function MockTestManage({
                 <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-5 sm:px-6">
                   <div>
                     <h3 className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>{testFormOpen ? (editingTestId ? "Edit test" : "New test") : "Tests"}</h3>
-                    <p className="mt-0.5 text-[11.5px]" style={{ color: "var(--body)" }}>{testFormOpen ? "Update the test content and save when ready." : `${tests.length} ${tests.length === 1 ? "test" : "tests"} · Filter by IELTS skill or status`}</p>
+                    <p className="mt-0.5 text-[11.5px]" style={{ color: "var(--body)" }}>
+                      {testFormOpen
+                        ? "Update content here; reorder tests from the list using ↑ and ↓."
+                        : tests.length === 0
+                          ? "Add tests to this pack, then arrange the list."
+                          : `${tests.length} ${tests.length === 1 ? "test" : "tests"} · ${reorderingTests ? "Saving order…" : `Use ↑ and ↓ to reorder the list${canReorderTests ? "" : " (clear filters first)"}`}`}
+                    </p>
                   </div>
                   {!testFormOpen && (
-                    <button type="button" onClick={() => openTestCreate(tests.length)} className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: "var(--brand)" }}>
+                    <button type="button" onClick={() => openTestCreate(nextTestOrder(tests))} className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: "var(--brand)" }}>
                       <Plus size={15} /> New test
                     </button>
                   )}
@@ -3624,7 +3656,7 @@ export function MockTestManage({
                           {tests.length === 0 ? <Package size={19} /> : <Search size={18} />}
                         </span>
                         <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--ink)" }}>{tests.length === 0 ? "No tests in this pack yet" : "No tests match these filters"}</p>
-                        <p className="mt-1 max-w-[360px] text-[11.5px] leading-[1.6]" style={{ color: "var(--body)" }}>{tests.length === 0 ? "Add your first test, then organize the pack by IELTS skill." : "Try a different search or clear the current filters."}</p>
+                        <p className="mt-1 max-w-[360px] text-[11.5px] leading-[1.6]" style={{ color: "var(--body)" }}>{tests.length === 0 ? "Add your first test, then use the arrows to arrange the list." : "Try a different search or clear the current filters."}</p>
                         {tests.length === 0 ? (
                           <button type="button" onClick={() => openTestCreate(0)} className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12px] font-semibold text-white" style={{ background: "var(--brand)" }}><Plus size={14} /> Create a test</button>
                         ) : (
@@ -3633,11 +3665,12 @@ export function MockTestManage({
                       </div>
                     ) : (
                       <div>
-                        <div className="hidden grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_112px] items-center gap-3 bg-[#FBFBFD] px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] md:grid sm:px-6" style={{ color: "var(--body)" }}>
+                        <div className="hidden grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_176px] items-center gap-3 bg-[#FBFBFD] px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] md:grid sm:px-6" style={{ color: "var(--body)" }}>
                           <span>Test</span><span>Skill</span><span>Questions</span><span>Duration</span><span>Status</span><span className="text-right">Actions</span>
                         </div>
                         <div className="divide-y" style={{ borderColor: "var(--line)" }}>
                           {filteredTests.map((test) => {
+                            const testIndex = tests.findIndex((item) => item.id === test.id);
                             const meta = SKILL_META[test.skill] ?? SKILL_META.reading;
                             const SkillIcon = SKILL_ICON[test.skill] ?? BookOpen;
                             const statusStyle = test.status === "published"
@@ -3646,7 +3679,7 @@ export function MockTestManage({
                                 ? { background: "rgba(192,57,43,0.08)", color: "#B13329" }
                                 : { background: "var(--bg-soft)", color: "var(--body)" };
                             return (
-                              <div key={test.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-[#FCFBFE] md:grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_112px] md:gap-3 sm:px-6">
+                              <div key={test.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-[#FCFBFE] md:grid-cols-[minmax(0,1fr)_126px_84px_84px_100px_176px] md:gap-3 sm:px-6">
                                 <div className="flex min-w-0 items-center gap-3">
                                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: meta.soft, color: meta.accent }}><SkillIcon size={16} /></span>
                                   <div className="min-w-0">
@@ -3664,6 +3697,28 @@ export function MockTestManage({
                                 <span className="hidden font-mono text-[11.5px] md:block" style={{ color: "var(--body)" }}>{test.durationMinutes} min</span>
                                 <span className="hidden w-fit rounded-md px-2 py-1 text-[10px] font-semibold capitalize md:inline-flex" style={statusStyle}>{test.status}</span>
                                 <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => void moveTest(test.id, -1)}
+                                    disabled={!canReorderTests || reorderingTests || testIndex <= 0}
+                                    title={canReorderTests ? "Move test up" : "Clear filters to reorder tests"}
+                                    aria-label={`Move ${test.title} up`}
+                                    className={iconActionClass + " disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"}
+                                    style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                  >
+                                    <ChevronUp size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void moveTest(test.id, 1)}
+                                    disabled={!canReorderTests || reorderingTests || testIndex < 0 || testIndex >= tests.length - 1}
+                                    title={canReorderTests ? "Move test down" : "Clear filters to reorder tests"}
+                                    aria-label={`Move ${test.title} down`}
+                                    className={iconActionClass + " disabled:cursor-not-allowed disabled:opacity-35 hover:border-brand-2 hover:text-brand-2"}
+                                    style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                                  >
+                                    <ChevronDown size={14} />
+                                  </button>
                                   <Link href={`/dashboard/mock-tests/${test.id}/take`} target="_blank" title="Preview as student" aria-label={`Preview ${test.title}`} className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"} style={{ borderColor: "var(--line)", color: "var(--body)" }}><Eye size={14} /></Link>
                                   <button type="button" onClick={() => void openTestEdit(test)} title="Edit test" aria-label={`Edit ${test.title}`} className={iconActionClass + " hover:border-brand-2 hover:text-brand-2"} style={{ borderColor: "var(--line)", color: "var(--body)" }}><Pencil size={14} /></button>
                                   <button type="button" onClick={() => deleteTest(test)} disabled={deletingTestId === test.id} title="Delete test" aria-label={`Delete ${test.title}`} className={iconActionClass + " hover:border-[#C0392B] hover:text-[#C0392B] disabled:opacity-50"} style={{ borderColor: "var(--line)", color: "#C0392B" }}>{deletingTestId === test.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>

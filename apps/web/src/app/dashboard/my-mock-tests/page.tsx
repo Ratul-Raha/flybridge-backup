@@ -24,6 +24,8 @@ const SKILL_LABEL: Record<string, string> = {
   speaking: "Speaking",
 };
 
+const SKILL_ORDER = ["reading", "listening", "writing", "speaking"] as const;
+
 type TestRow = {
   id: string;
   title: string;
@@ -46,8 +48,8 @@ export default async function MyMockTestsPage() {
 
   const [tests, attempts] = await Promise.all([
     MockTest.find({ status: "published" })
-      .select("title skill durationMinutes questionCount bundle course")
-      .sort({ skill: 1, createdAt: -1 })
+      .select("title skill durationMinutes questionCount bundle course order")
+      .sort({ skill: 1, bundle: 1, order: 1, createdAt: 1 })
       .lean(),
     MockTestAttempt.find({ user: userId, status: "graded" })
       .select("test result")
@@ -87,6 +89,11 @@ export default async function MyMockTestsPage() {
 
   const available = rows.filter((r) => r.owned);
   const locked = rows.filter((r) => !r.owned);
+  const categoryGroups = (items: TestRow[]) =>
+    SKILL_ORDER.map((skill) => ({
+      skill,
+      rows: items.filter((row) => row.skill === skill),
+    })).filter((group) => group.rows.length > 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -119,9 +126,23 @@ export default async function MyMockTestsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-3.5 sm:grid-cols-2">
-          {available.map((row) => (
-            <TestCard key={row.id} row={row} />
+        <div className="flex flex-col gap-7">
+          {categoryGroups(available).map((group) => (
+            <section key={group.skill} className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {SKILL_LABEL[group.skill] ?? group.skill} tests
+                </h2>
+                <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                  {group.rows.length} {group.rows.length === 1 ? "test" : "tests"}
+                </span>
+              </div>
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                {group.rows.map((row) => (
+                  <TestCard key={row.id} row={row} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
@@ -134,9 +155,23 @@ export default async function MyMockTestsPage() {
           >
             Not in your plan
           </p>
-          <div className="grid gap-3.5 sm:grid-cols-2">
-            {locked.map((row) => (
-              <TestCard key={row.id} row={row} />
+          <div className="flex flex-col gap-6">
+            {categoryGroups(locked).map((group) => (
+              <section key={group.skill} className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="font-display text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                    {SKILL_LABEL[group.skill] ?? group.skill} tests
+                  </h2>
+                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                    {group.rows.length} {group.rows.length === 1 ? "test" : "tests"}
+                  </span>
+                </div>
+                <div className="grid gap-3.5 sm:grid-cols-2">
+                  {group.rows.map((row) => (
+                    <TestCard key={row.id} row={row} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </div>
@@ -160,21 +195,12 @@ function TestCard({ row }: { row: TestRow }) {
         opacity: row.owned ? 1 : 0.72,
       }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
         <BengaliText>
           <span className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
             {row.title}
           </span>
         </BengaliText>
-        <span
-          className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-          style={{
-            background: "var(--brand-soft)",
-            color: "var(--brand)",
-          }}
-        >
-          {SKILL_LABEL[row.skill] ?? row.skill}
-        </span>
       </div>
 
       <p className="text-[12.5px]" style={{ color: "var(--body)" }}>
