@@ -22,15 +22,9 @@ import {
   ListChecks,
   Gauge,
   ShoppingCart,
-  RotateCcw,
   Loader2,
   Award,
   Bot,
-  SlidersHorizontal,
-  Newspaper,
-  Activity,
-  ShieldCheck,
-  Tag,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -271,72 +265,60 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     ];
     if (user.accountType === "moderator" || user.accountType === "admin") {
       segments.push({
-        title: "Content",
+        title: "Workspace",
         items: [
           {
-            kind: "link",
-            label: "Seminars",
-            href: "/dashboard/seminars",
-            icon: CalendarDays,
-            active: pathname.startsWith("/dashboard/seminars"),
-          },
-          {
-            kind: "link",
-            label: "Courses",
-            href: "/dashboard/courses",
-            icon: BookOpen,
-            active: pathname.startsWith("/dashboard/courses"),
-          },
-          {
-            kind: "link",
-            label: "Resources",
-            href: "/dashboard/resources",
+            kind: "group",
+            label: "Content",
             icon: FolderOpen,
-            active: pathname.startsWith("/dashboard/resources"),
+            children: [
+              {
+                label: "Seminars",
+                href: "/dashboard/seminars",
+                active: pathname.startsWith("/dashboard/seminars"),
+              },
+              {
+                label: "Courses",
+                href: "/dashboard/courses",
+                active: pathname.startsWith("/dashboard/courses"),
+              },
+              {
+                label: "Resources",
+                href: "/dashboard/resources",
+                active: pathname.startsWith("/dashboard/resources"),
+              },
+              {
+                label: "Mock Tests",
+                href: "/dashboard/mock-tests",
+                active: pathname.startsWith("/dashboard/mock-tests"),
+              },
+              {
+                label: "Blogs",
+                href: "/dashboard/blogs",
+                active: pathname.startsWith("/dashboard/blogs"),
+              },
+              {
+                label: "Success Stories",
+                href: "/dashboard/success-stories",
+                active: pathname.startsWith("/dashboard/success-stories"),
+              },
+              {
+                label: "Scholarships",
+                href: "/dashboard/scholarships",
+                active: pathname.startsWith("/dashboard/scholarships"),
+              },
+            ],
           },
           {
             kind: "link",
-            label: "Mock Tests",
-            href: "/dashboard/mock-tests",
-            icon: ListChecks,
-            active: pathname.startsWith("/dashboard/mock-tests"),
-          },
-          {
-            kind: "link",
-            label: "Blogs",
-            href: "/dashboard/blogs",
-            icon: Newspaper,
-            active: pathname.startsWith("/dashboard/blogs"),
-          },
-          {
-            kind: "link",
-            label: "Success Stories",
-            href: "/dashboard/success-stories",
-            icon: FolderOpen,
-            active: pathname.startsWith("/dashboard/success-stories"),
-          },
-          {
-            kind: "link",
-            label: "Scholarships",
-            href: "/dashboard/scholarships",
-            icon: Award,
-            active: pathname.startsWith("/dashboard/scholarships"),
+            label: "SOP Generator",
+            href: "/dashboard/sop-generator",
+            icon: FileText,
+            active: pathname.startsWith("/dashboard/sop-generator"),
           },
         ],
       });
     }
-    segments.push({
-      title: "Tools",
-      items: [
-        {
-          kind: "link",
-          label: "SOP Generator",
-          href: "/dashboard/sop-generator",
-          icon: FileText,
-          active: pathname.startsWith("/dashboard/sop-generator"),
-        },
-      ],
-    });
     if (user.accountType === "moderator" || user.accountType === "admin") {
       segments.push({
         title: "Account",
@@ -364,46 +346,48 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             active: pathname === "/dashboard/admin",
           },
           {
-            kind: "link",
-            label: "Users",
-            href: "/dashboard/admin/users",
+            kind: "group",
+            label: "People",
             icon: Users,
-            active: pathname.startsWith("/dashboard/admin/users"),
+            children: [
+              {
+                label: "Users",
+                href: "/dashboard/admin/users",
+                active: pathname.startsWith("/dashboard/admin/users"),
+              },
+              {
+                label: "Roles & Permissions",
+                href: "/dashboard/admin/roles",
+                active: pathname.startsWith("/dashboard/admin/roles"),
+              },
+            ],
           },
           {
-            kind: "link",
-            label: "Roles & Permissions",
-            href: "/dashboard/admin/roles",
-            icon: ShieldCheck,
-            active: pathname.startsWith("/dashboard/admin/roles"),
-          },
-          {
-            kind: "link",
-            label: "Orders",
-            href: "/dashboard/admin/orders",
+            kind: "group",
+            label: "Sales",
             icon: ShoppingCart,
-            active: pathname.startsWith("/dashboard/admin/orders"),
-          },
-          {
-            kind: "link",
-            label: "Coupons",
-            href: "/dashboard/admin/discounts",
-            icon: Tag,
-            active: pathname.startsWith("/dashboard/admin/discounts"),
-          },
-          {
-            kind: "link",
-            label: "Refunds",
-            href: "/dashboard/admin/refunds",
-            icon: RotateCcw,
-            active: pathname.startsWith("/dashboard/admin/refunds"),
-          },
-          {
-            kind: "link",
-            label: "Growth & Sales",
-            href: "/dashboard/admin/analytics",
-            icon: Activity,
-            active: pathname.startsWith("/dashboard/admin/analytics"),
+            children: [
+              {
+                label: "Orders",
+                href: "/dashboard/admin/orders",
+                active: pathname.startsWith("/dashboard/admin/orders"),
+              },
+              {
+                label: "Coupons",
+                href: "/dashboard/admin/discounts",
+                active: pathname.startsWith("/dashboard/admin/discounts"),
+              },
+              {
+                label: "Refunds",
+                href: "/dashboard/admin/refunds",
+                active: pathname.startsWith("/dashboard/admin/refunds"),
+              },
+              {
+                label: "Growth & Sales",
+                href: "/dashboard/admin/analytics",
+                active: pathname.startsWith("/dashboard/admin/analytics"),
+              },
+            ],
           },
           {
             kind: "group",
@@ -433,18 +417,21 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             ],
           },
           {
-            kind: "link",
-            label: "Ops Bot",
-            href: "/dashboard/admin/ops-bot",
+            kind: "group",
+            label: "AI & Bots",
             icon: Bot,
-            active: pathname.startsWith("/dashboard/admin/ops-bot"),
-          },
-          {
-            kind: "link",
-            label: "Bot Config",
-            href: "/dashboard/admin/bot-config",
-            icon: SlidersHorizontal,
-            active: pathname.startsWith("/dashboard/admin/bot-config"),
+            children: [
+              {
+                label: "Ops Bot",
+                href: "/dashboard/admin/ops-bot",
+                active: pathname.startsWith("/dashboard/admin/ops-bot"),
+              },
+              {
+                label: "Bot Config",
+                href: "/dashboard/admin/bot-config",
+                active: pathname.startsWith("/dashboard/admin/bot-config"),
+              },
+            ],
           },
         ],
       });
@@ -482,8 +469,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     return <div className="min-h-screen" style={{ background: "var(--bg)" }}>{children}</div>;
   }
 
-  const toggleGroup = (label: string) =>
-    setOpenGroups((prev) => ({ ...prev, [label]: !(prev[label] ?? false) }));
+  const toggleGroup = (label: string, openByDefault: boolean) =>
+    setOpenGroups((prev) => ({ ...prev, [label]: !(prev[label] ?? openByDefault) }));
 
   const renderItem = (item: NavItem) => {
     if (item.kind === "link") {
@@ -513,20 +500,23 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     }
 
     const Icon = item.icon;
-    const open = openGroups[item.label] ?? item.children.some((c) => c.active);
+    const hasActiveChild = item.children.some((child) => child.active);
+    const open = openGroups[item.label] ?? hasActiveChild;
+    const active = open || hasActiveChild;
     return (
       <div key={item.label} className="flex flex-col gap-0.5">
         <button
           type="button"
-          onClick={() => toggleGroup(item.label)}
+          onClick={() => toggleGroup(item.label, open)}
+          aria-expanded={open}
           className="flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[13.5px] font-medium transition-all duration-200"
           style={
-            open
+            active
               ? { background: "var(--brand-soft)", color: "var(--brand)" }
               : { color: "var(--body)" }
           }
         >
-          <Icon size={17} strokeWidth={open ? 2.2 : 1.8} />
+          <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
           {item.label}
           {open ? (
             <ChevronDown size={14} className="ml-auto" />
