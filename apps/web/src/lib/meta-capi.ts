@@ -25,6 +25,7 @@ export type MetaPurchaseInput = {
   value: number;
   currency: string;
   contentIds: string[];
+  eventSourceUrl: string;
   contentName?: string;
   fbc?: string | null;
   fbp?: string | null;
@@ -67,7 +68,7 @@ export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<string
         event_time: Math.floor(Date.now() / 1000),
         event_id: input.eventId,
         action_source: "website",
-        event_source_url: `${SITE_URL}/programs/${input.contentIds[0] ?? ""}`,
+        event_source_url: new URL(input.eventSourceUrl, `${SITE_URL}/`).toString(),
         user_data: userData,
         custom_data: {
           currency: input.currency.toUpperCase(),

@@ -15,6 +15,7 @@ import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
 import { CouponError } from "@/lib/coupons";
 import { resolveCheckoutPricing } from "@/lib/checkout-pricing";
+import type { OrderAttribution } from "@/lib/marketing-attribution";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
 import { isEPSConfigured, createEPSPayment } from "@/lib/payments/eps";
 import type { EventPayload } from "@/lib/events/types";
@@ -265,6 +266,7 @@ export async function createOrder(input: {
   itemId: string;
   currency?: string;
   code?: string;
+  attribution?: OrderAttribution;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
@@ -316,6 +318,7 @@ export async function createOrder(input: {
       const doc = existing as OrderDoc & { save(): Promise<unknown> };
       const item = doc.items[0];
       const couponId = resolved.couponId?.toString() ?? null;
+      let changed = false;
       if (
         item &&
         (doc.total !== resolved.total ||
@@ -335,6 +338,13 @@ export async function createOrder(input: {
         doc.discountLabel = resolved.discountLabel ?? undefined;
         doc.total = resolved.total;
         doc.currency = currency;
+        changed = true;
+      }
+      if (!doc.attribution && input.attribution) {
+        doc.attribution = input.attribution;
+        changed = true;
+      }
+      if (changed) {
         await doc.save();
       }
       if (resolved.total === 0) await fulfillOrder(doc);
@@ -364,6 +374,7 @@ export async function createOrder(input: {
       couponId: resolved.couponId ?? undefined,
       discountCode: resolved.discountCode ?? undefined,
       discountLabel: resolved.discountLabel ?? undefined,
+      attribution: input.attribution,
       total: resolved.total,
       currency,
       status: "pending",
@@ -777,6 +788,14 @@ export async function reportOrderPurchase(
   // two sides agree on content_ids. Everything else goes out as the raw item id.
   const content = opts.content ?? (await contentRef(item));
   const attribution = order.attribution;
+  const eventSourcePath =
+    item.itemType === "course"
+      ? `/programs/${content.id}`
+      : item.itemType === "seminar"
+        ? `/seminars/${item.itemId}`
+        : item.itemType === "resource"
+          ? `/resources/${item.itemId}`
+          : `/mock-tests/${item.itemId}`;
 
   try {
     const traceId = await sendMetaPurchase({
@@ -787,6 +806,7 @@ export async function reportOrderPurchase(
       value: order.total,
       currency: order.currency,
       contentIds: [content.id],
+      eventSourceUrl: eventSourcePath,
       contentName: content.title,
       fbc: attribution?.fbc,
       fbp: attribution?.fbp,

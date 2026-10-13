@@ -79,6 +79,7 @@ refundRequestSchema.index(
     },
   }
 );
+refundRequestSchema.index({ currency: 1, status: 1, refundedAt: 1 });
 
 export type RefundRequestDoc = InferSchemaType<typeof refundRequestSchema> & {
   _id: mongoose.Types.ObjectId;

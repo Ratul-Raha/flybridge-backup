@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import { formatMoney } from "@/lib/pricing";
+import { trackMetaEvent } from "@/lib/meta-events";
 
 export type SeminarLike = {
   id: string;
@@ -61,6 +62,15 @@ export function SeminarRegisterModal({
       }
       setPhoneError(null);
       setSubmitting(true);
+      if (isPaid) {
+        trackMetaEvent("InitiateCheckout", {
+          content_ids: [seminar.id],
+          content_name: seminar.title,
+          content_type: "product",
+          value: currentCouponQuote?.total ?? amount,
+          currency,
+        });
+      }
       try {
         const res = await fetch(`/api/seminars/${seminar.id}/register`, {
           method: "POST",
@@ -87,7 +97,7 @@ export function SeminarRegisterModal({
         setSubmitting(false);
       }
     },
-    [seminar, phone, onRegistered, currency, currentCouponQuote?.code]
+    [seminar, phone, onRegistered, currency, currentCouponQuote?.code, currentCouponQuote?.total, amount, isPaid]
   );
 
   const registerWithGoogle = async () => {

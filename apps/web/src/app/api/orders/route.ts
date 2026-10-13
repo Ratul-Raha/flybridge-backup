@@ -7,6 +7,7 @@ import { createOrder, initiateOrderPayment, OrderError } from "@/lib/orders";
 import { CouponError } from "@/lib/coupons";
 import { isMetaPurchaseEnabled } from "@/lib/meta-capi";
 import { ORDER_ITEM_TYPES } from "@/lib/models/order";
+import { orderAttributionFromRequest } from "@/lib/order-attribution";
 
 function isOrderItemType(value: unknown): value is OrderItemType {
   return typeof value === "string" && (ORDER_ITEM_TYPES as readonly string[]).includes(value);
@@ -124,20 +125,10 @@ export async function POST(request: NextRequest) {
       itemId: body.itemId,
       currency: typeof body.currency === "string" ? body.currency : undefined,
       code: typeof body.code === "string" ? body.code : undefined,
+      attribution: orderAttributionFromRequest(request),
     });
 
     let paymentUrl: string | null = null;
-
-    if (order) {
-      const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
-      orderDoc.attribution = {
-        fbc: request.cookies.get("fbc")?.value || undefined,
-        fbp: request.cookies.get("fbp")?.value || undefined,
-        ip: clientIp(request) || undefined,
-        userAgent: request.headers.get("user-agent") || undefined,
-      };
-      await orderDoc.save();
-    }
 
     if (requiresPayment && order) {
       const { url } = await initiateOrderPayment({

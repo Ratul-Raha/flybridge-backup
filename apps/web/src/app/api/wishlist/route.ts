@@ -5,6 +5,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { User } from "@/lib/models/user";
+import { orderAttributionFromRequest } from "@/lib/order-attribution";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
 
     const courseId = course._id;
     const discountPercent = course.wishlistDiscountPercent ?? 0;
+    const attribution = orderAttributionFromRequest(request);
 
     const user = await User.findById(session.userId).select("name email phone");
     const name = user?.name?.trim() || session.name?.trim() || "Student";
@@ -65,6 +67,7 @@ export async function POST(request: NextRequest) {
       if (email && entry.email !== email) update.email = email;
       if (phone && entry.phone !== phone) update.phone = phone;
       if (entry.discountPercent !== discountPercent) update.discountPercent = discountPercent;
+      if (!entry.attribution) update.attribution = attribution;
       if (Object.keys(update).length) {
         await CourseWishlist.updateOne({ _id: entry._id }, { $set: update });
       }
@@ -76,6 +79,7 @@ export async function POST(request: NextRequest) {
         email: email || undefined,
         phone: phone || undefined,
         source,
+        attribution,
         discountPercent,
       });
     }

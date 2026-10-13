@@ -400,7 +400,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           },
           {
             kind: "link",
-            label: "Analytics",
+            label: "Growth & Sales",
             href: "/dashboard/admin/analytics",
             icon: Activity,
             active: pathname.startsWith("/dashboard/admin/analytics"),

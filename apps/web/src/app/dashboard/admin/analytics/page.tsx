@@ -4,7 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { AnalyticsDashboard } from "@/components/dashboard/reports/analytics/analytics-dashboard";
 
 export const metadata: Metadata = {
-  title: "Analytics | FlyBridge",
+  title: "Growth & Sales | FlyBridge",
 };
 
 export default async function AnalyticsPage() {

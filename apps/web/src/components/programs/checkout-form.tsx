@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { formatMoney } from "@/lib/pricing";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
+import { trackMetaEvent } from "@/lib/meta-events";
 
 type Props = {
   courseId: string;
@@ -96,6 +97,14 @@ export function CheckoutForm({ course }: { course: Props }) {
         router.push(`/login?next=${encodeURIComponent(`/programs/${course.slug}/checkout`)}`);
         return;
       }
+
+      trackMetaEvent("InitiateCheckout", {
+        content_ids: [course.courseId],
+        content_name: course.title,
+        content_type: "product",
+        value: couponQuote?.total ?? baseAmount,
+        currency: displayCurrency,
+      });
 
       const res = await fetch("/api/orders", {
         method: "POST",

@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import type { CourseDoc } from "@/lib/models/course";
 import { CheckoutForm } from "@/components/programs/checkout-form";
+import { MetaProductView } from "@/components/meta-product-view";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 import {
   courseDetails,
@@ -1153,6 +1154,12 @@ function DbCoursePage({
 
   return (
     <div className="checkout-page">
+      <MetaProductView
+        contentId={course._id.toString()}
+        contentName={course.title}
+        value={pricing.price}
+        currency="BDT"
+      />
       <Nav />
 
       {/* Breadcrumb */}

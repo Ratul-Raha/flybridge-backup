@@ -7,6 +7,7 @@ import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import { createOrder, OrderError } from "@/lib/orders";
 import { CouponError } from "@/lib/coupons";
+import { orderAttributionFromRequest } from "@/lib/order-attribution";
 import {
   isStripeConfigured,
   createCheckoutSession,
@@ -149,6 +150,7 @@ export async function POST(
       itemId: seminar._id.toString(),
       currency: typeof body.currency === "string" ? body.currency : undefined,
       code: typeof body.code === "string" ? body.code : undefined,
+      attribution: orderAttributionFromRequest(request),
     });
 
     let paymentUrl: string | null = null;

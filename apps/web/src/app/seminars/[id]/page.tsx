@@ -6,6 +6,7 @@ import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { SeminarDetail } from "@/components/seminars/seminar-detail";
+import { MetaProductView } from "@/components/meta-product-view";
 
 type Params = { params: { id: string } };
 
@@ -62,6 +63,12 @@ export default async function SeminarDetailPage({ params }: Params) {
 
     return (
       <main>
+        <MetaProductView
+          contentId={seminar._id.toString()}
+          contentName={seminar.title}
+          value={seminar.prices?.BDT ?? seminar.price ?? undefined}
+          currency={seminar.prices?.BDT != null ? "BDT" : "USD"}
+        />
         <Nav />
         <section className="px-[clamp(20px,4.5vw,56px)] pt-[clamp(110px,14vh,150px)] pb-24">
           <div className="w-full max-w-[980px] mx-auto">

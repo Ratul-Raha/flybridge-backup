@@ -16,6 +16,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { MetaProductView } from "@/components/meta-product-view";
+import { trackMetaEvent } from "@/lib/meta-events";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import {
@@ -89,6 +91,15 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
     }
     setSubmitting(true);
     setError(null);
+    if (!isFree) {
+      trackMetaEvent("InitiateCheckout", {
+        content_ids: [bundle.id],
+        content_name: bundle.title,
+        content_type: "product",
+        value: currentCouponQuote?.total ?? bundle.prices?.[currency] ?? bundle.price,
+        currency,
+      });
+    }
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -144,6 +155,10 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
 
   return (
     <div>
+      <MetaProductView
+        contentId={bundle.id}
+        contentName={bundle.title}
+      />
       <Link
         href="/mock-tests"
         className="inline-flex items-center gap-2 text-[13px] font-medium transition-colors duration-200 hover:opacity-70"

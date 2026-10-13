@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import { createMarketingAttributionSchema } from "@/lib/models/marketing-attribution";
 
 export const ORDER_STATUSES = ["pending", "completed", "failed", "cancelled", "refunded"] as const;
 export const ORDER_ITEM_TYPES = ["course", "seminar", "resource", "mock-bundle"] as const;
@@ -12,16 +13,6 @@ const orderItemSchema = new Schema(
     itemId: { type: String, required: true },
     title: { type: String, trim: true },
     price: { type: Number, min: 0, default: 0 },
-  },
-  { _id: false }
-);
-
-const orderAttributionSchema = new Schema(
-  {
-    fbc: { type: String, trim: true },
-    fbp: { type: String, trim: true },
-    ip: { type: String, trim: true },
-    userAgent: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -65,7 +56,7 @@ const orderSchema = new Schema(
     gatewayMode: { type: String, trim: true },
     /** Meta click ids + request context, captured at order creation so the
      *  Conversions API can match the server-side Purchase to the ad click. */
-    attribution: { type: orderAttributionSchema, default: undefined },
+    attribution: { type: createMarketingAttributionSchema(), default: undefined },
     /** Whether the server-side Purchase actually reached Meta, and what it said. */
     meta: { type: orderMetaSchema, default: undefined },
   },
@@ -83,6 +74,7 @@ orderSchema.index(
 );
 
 orderSchema.index({ currency: 1, status: 1, createdAt: -1 });
+orderSchema.index({ currency: 1, status: 1, completedAt: 1 });
 orderSchema.index({ createdAt: -1 });
 
 export type OrderItem = InferSchemaType<typeof orderItemSchema>;

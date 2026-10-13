@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Play, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ResourceVideoPlayer } from "@/components/resources/resource-video-player";
+import { MetaProductView } from "@/components/meta-product-view";
+import { trackMetaEvent } from "@/lib/meta-events";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import {
@@ -106,6 +108,13 @@ export function ResourceDetail({
     }
     setSubmitting(true);
     setError(null);
+    trackMetaEvent("InitiateCheckout", {
+      content_ids: [r.id],
+      content_name: r.title,
+      content_type: "product",
+      value: currentCouponQuote?.total ?? r.prices?.[currency] ?? r.price ?? 0,
+      currency,
+    });
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -225,6 +234,10 @@ export function ResourceDetail({
 
   return (
     <div>
+      <MetaProductView
+        contentId={r.id}
+        contentName={r.title}
+      />
       {/* Breadcrumb */}
       <nav className="flex min-w-0 flex-wrap items-center gap-2 text-[13px] font-medium">
         <Link href="/resources" className="inline-flex shrink-0 items-center gap-2 transition-opacity duration-200 hover:opacity-70" style={{ color: "var(--brand)" }}>

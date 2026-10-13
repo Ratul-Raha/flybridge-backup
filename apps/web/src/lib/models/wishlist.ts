@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import { createMarketingAttributionSchema } from "@/lib/models/marketing-attribution";
 
 const wishlistSchema = new Schema(
   {
@@ -8,6 +9,7 @@ const wishlistSchema = new Schema(
     email: { type: String, lowercase: true, trim: true },
     phone: { type: String, trim: true },
     source: { type: String, default: "waitlist", trim: true },
+    attribution: { type: createMarketingAttributionSchema(), default: undefined },
     discountPercent: { type: Number, default: 10 },
   },
   { timestamps: true }
@@ -15,6 +17,7 @@ const wishlistSchema = new Schema(
 
 wishlistSchema.index({ course: 1, email: 1 }, { unique: true, sparse: true });
 wishlistSchema.index({ course: 1, user: 1 }, { unique: true, sparse: true });
+wishlistSchema.index({ createdAt: 1 });
 
 export type WishlistDoc = InferSchemaType<typeof wishlistSchema> & {
   _id: mongoose.Types.ObjectId;
