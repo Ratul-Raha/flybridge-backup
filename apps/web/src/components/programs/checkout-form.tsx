@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { formatMoney } from "@/lib/pricing";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
+import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 
 type Props = {
   courseId: string;
@@ -37,6 +38,7 @@ export function CheckoutForm({ course }: { course: Props }) {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -105,6 +107,7 @@ export function CheckoutForm({ course }: { course: Props }) {
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
+          code: couponQuote?.code,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -127,6 +130,7 @@ export function CheckoutForm({ course }: { course: Props }) {
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
   const displayCurrency = "BDT";
+  const currentCouponQuote = couponQuote?.currency === displayCurrency ? couponQuote : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -194,7 +198,7 @@ export function CheckoutForm({ course }: { course: Props }) {
               className="flex items-center justify-between text-[16px] font-bold"
               style={{ color: "var(--ink)" }}
             >
-              <span>{course.discountLabel ?? "Total"}</span>
+              <span>{course.discountLabel ?? (currentCouponQuote ? "Subtotal" : "Total")}</span>
               <span className="flex items-baseline gap-2">
                 {formatMoney(baseAmount, displayCurrency)}
                 {course.originalPrice && (
@@ -207,6 +211,24 @@ export function CheckoutForm({ course }: { course: Props }) {
                 )}
               </span>
             </div>
+            {currentCouponQuote && (
+              <>
+                <div className="flex items-center justify-between text-[13.5px]" style={{ color: "#16834B" }}>
+                  <span>Coupon · {currentCouponQuote.code}</span>
+                  <span>&minus;{formatMoney(currentCouponQuote.couponDiscount, displayCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-3 text-[16px] font-bold" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                  <span>Total</span>
+                  <span>{formatMoney(currentCouponQuote.total, displayCurrency)}</span>
+                </div>
+              </>
+            )}
+            <CouponCodeEntry
+              itemType="course"
+              itemId={course.courseId}
+              currency={displayCurrency}
+              onQuoteChange={setCouponQuote}
+            />
           </div>
         </div>
       )}
@@ -235,7 +257,11 @@ export function CheckoutForm({ course }: { course: Props }) {
           }}
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          {submitting ? "Redirecting to payment…" : isFree ? "Get it for free" : "Pay with EPS"}
+          {submitting
+            ? "Redirecting to payment…"
+            : isFree || currentCouponQuote?.total === 0
+              ? "Get it for free"
+              : "Pay with EPS"}
         </button>
       )}
 

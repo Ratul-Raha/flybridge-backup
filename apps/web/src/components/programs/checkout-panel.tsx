@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { formatMoney } from "@/lib/pricing";
 import { ArrowUpRight, BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 
 type Course = {
   courseId: string;
@@ -53,6 +54,7 @@ export function CheckoutPanel({
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -117,6 +119,7 @@ export function CheckoutPanel({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
+          code: couponQuote?.code,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -139,23 +142,25 @@ export function CheckoutPanel({
   const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
 
   const displayCurrency = "BDT";
+  const currentCouponQuote = couponQuote?.currency === displayCurrency ? couponQuote : null;
   // The server already applied the course's discount, so the summary and the
   // order it creates are always the same numbers.
-  const total = baseAmount;
+  const total = currentCouponQuote?.total ?? baseAmount;
 
   // The summary reads as an invoice: the full price, what the running discount
   // takes off it, then what is left to pay. The discount is derived from the two
   // amounts rather than sent separately, so the rows can never disagree. With no
   // discount there is nothing to subtract, so the total stands alone rather than
   // repeating itself under a second heading.
-  const originalAmount = course.originalPrice ?? total;
+  const originalAmount = course.originalPrice ?? baseAmount;
   const wishlistDiscountAmount = course.wishlistDiscountAmount ?? 0;
   // The general (course) discount is whatever the original price drops by before
   // the wishlist cut, so the two rows stay additive and sum to the total.
-  const discountAmount = Math.max(0, originalAmount - total - wishlistDiscountAmount);
-  const hasDiscount = discountAmount > 0 || wishlistDiscountAmount > 0;
+  const discountAmount = Math.max(0, originalAmount - baseAmount - wishlistDiscountAmount);
+  const couponDiscountAmount = currentCouponQuote?.couponDiscount ?? 0;
+  const hasDiscount = discountAmount > 0 || wishlistDiscountAmount > 0 || couponDiscountAmount > 0;
 
-  const money = (amount: number) => (isFree ? "Free" : formatMoney(amount, displayCurrency));
+  const money = (amount: number) => (amount <= 0 ? "Free" : formatMoney(amount, displayCurrency));
 
   return (
     <form
@@ -325,6 +330,31 @@ export function CheckoutPanel({
                     </span>
                   </div>
                 )}
+
+                {couponDiscountAmount > 0 && currentCouponQuote && (
+                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span style={{ color: "var(--body)" }}>Coupon</span>
+                      <span className="font-mono text-[10px] font-medium tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
+                        {currentCouponQuote.code}
+                      </span>
+                    </span>
+                    <span className="whitespace-nowrap font-medium tabular-nums" style={{ color: "var(--brand-2)" }}>
+                      &minus;{formatMoney(couponDiscountAmount, displayCurrency)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {canPay && (
+              <div className={hasDiscount ? "border-t pt-4" : "pt-4"} style={{ borderColor: "var(--line)" }}>
+                <CouponCodeEntry
+                  itemType="course"
+                  itemId={course.courseId}
+                  currency={displayCurrency}
+                  onQuoteChange={setCouponQuote}
+                />
               </div>
             )}
 
@@ -371,7 +401,11 @@ export function CheckoutPanel({
               }}
             >
               {submitting && <Loader2 size={16} className="animate-spin" />}
-              {submitting ? "Redirecting to payment…" : isFree ? "Get it for free" : "Pay Now"}
+                {submitting
+                  ? "Redirecting to payment…"
+                  : isFree || total === 0
+                    ? "Get it for free"
+                    : "Pay Now"}
             </button>
 
             <div className="my-3 flex items-center gap-3">
@@ -384,7 +418,7 @@ export function CheckoutPanel({
 
             <a
               href={`https://wa.me/8801804400070?text=${encodeURIComponent(
-                `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}).`
+                `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}${currentCouponQuote ? ` with coupon ${currentCouponQuote.code}` : ""}).`
               )}`}
               target="_blank"
               rel="noopener noreferrer"

@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Play, Share2, 
 import { useAuth } from "@/lib/auth/auth-context";
 import { ResourceVideoPlayer } from "@/components/resources/resource-video-player";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import {
   fileTypeMeta,
   formatFileSize,
@@ -41,6 +42,8 @@ export function ResourceDetail({
   const [currency, setCurrency] = useState<PickableCurrency>(
     defaultCheckoutCurrency(r.prices)
   );
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
+  const currentCouponQuote = couponQuote?.currency === currency ? couponQuote : null;
   const { user, loading } = useAuth();
   const router = useRouter();
   const meta = fileTypeMeta(r.fileType);
@@ -111,6 +114,7 @@ export function ResourceDetail({
           itemType: "resource",
           itemId: r.id,
           currency,
+          code: currentCouponQuote?.code,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -377,6 +381,24 @@ export function ResourceDetail({
                   value={currency}
                   onChange={setCurrency}
                 />
+                <CouponCodeEntry
+                  itemType="resource"
+                  itemId={r.id}
+                  currency={currency}
+                  onQuoteChange={setCouponQuote}
+                />
+                {currentCouponQuote && (
+                  <div className="space-y-2 rounded-lg border px-4 py-3 text-[12.5px]" style={{ borderColor: "var(--line)" }}>
+                    <div className="flex items-center justify-between" style={{ color: "var(--body)" }}>
+                      <span>Coupon · {currentCouponQuote.code}</span>
+                      <span>&minus;{formatMoney(currentCouponQuote.couponDiscount, currency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t pt-2 font-semibold" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                      <span>Total</span>
+                      <span>{formatMoney(currentCouponQuote.total, currency)}</span>
+                    </div>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleBuy}
@@ -387,7 +409,9 @@ export function ResourceDetail({
                   {submitting && <Loader2 size={15} className="animate-spin" />}
                   {submitting
                     ? "Redirecting to payment…"
-                    : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
+                    : currentCouponQuote?.total === 0
+                      ? "Get it for free"
+                      : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
                 </button>
               </div>
             )}

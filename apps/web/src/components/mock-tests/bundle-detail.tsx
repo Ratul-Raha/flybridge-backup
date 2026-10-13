@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import {
   SKILL_META,
   skillLabel,
@@ -49,6 +50,8 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
   const [currency, setCurrency] = useState<PickableCurrency>(
     defaultCheckoutCurrency(bundle.prices)
   );
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
+  const currentCouponQuote = couponQuote?.currency === currency ? couponQuote : null;
 
   const anyOwned = tests.some((t) => t.owned);
   const isFree = bundle.price <= 0;
@@ -94,6 +97,7 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
           itemType: "mock-bundle",
           itemId: bundle.id,
           currency,
+          code: currentCouponQuote?.code,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -277,6 +281,24 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
                     value={currency}
                     onChange={setCurrency}
                   />
+                  <CouponCodeEntry
+                    itemType="mock-bundle"
+                    itemId={bundle.id}
+                    currency={currency}
+                    onQuoteChange={setCouponQuote}
+                  />
+                  {currentCouponQuote && (
+                    <div className="space-y-2 rounded-xl border p-3 text-[12.5px]" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex items-center justify-between" style={{ color: "var(--body)" }}>
+                        <span>Coupon · {currentCouponQuote.code}</span>
+                        <span>&minus;{formatMoney(currentCouponQuote.couponDiscount, currency)}</span>
+                      </div>
+                      <div className="flex items-center justify-between border-t pt-2 font-semibold" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                        <span>Total</span>
+                        <span>{formatMoney(currentCouponQuote.total, currency)}</span>
+                      </div>
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={purchase}
@@ -287,7 +309,9 @@ export function MockTestBundleDetail({ bundle }: { bundle: PublicBundle }) {
                     {submitting && <Loader2 size={15} className="animate-spin" />}
                     {submitting
                       ? "Redirecting to payment…"
-                      : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
+                      : currentCouponQuote?.total === 0
+                        ? "Get the pack for free"
+                        : `Pay with ${currency === "BDT" ? "EPS" : "Stripe"}`}
                   </button>
                 </div>
               )}

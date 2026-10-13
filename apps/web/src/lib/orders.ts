@@ -13,9 +13,8 @@ import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
 import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
-import { resolveCoursePrice } from "@/lib/course-discount";
-import { resolveWishlistDiscount } from "@/lib/wishlist-discount";
-import { roundMoney } from "@/lib/wishlist";
+import { CouponError } from "@/lib/coupons";
+import { resolveCheckoutPricing } from "@/lib/checkout-pricing";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
 import { isEPSConfigured, createEPSPayment } from "@/lib/payments/eps";
 import type { EventPayload } from "@/lib/events/types";
@@ -265,6 +264,7 @@ export async function createOrder(input: {
   itemType: OrderItemType;
   itemId: string;
   currency?: string;
+  code?: string;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
@@ -288,16 +288,12 @@ export async function createOrder(input: {
       "You have already purchased this with that email. Sign in with it to continue."
     );
   }
-
-  // The course's own discount, if it is running. It has no audience and no
-  // usage cap, so everyone checking out is charged the same price they were
-  // shown, whether or not they were signed in when they saw it.
-  const priced =
-    product.itemType === "course"
-      ? resolveCoursePrice(amount, product.discount)
-      : { price: amount, originalPrice: null, savings: 0, label: null };
+  if (existing?.status === "completed") {
+    return { order: existing as OrderDoc, requiresPayment: false, duplicate: true };
+  }
 
   if (amount === 0) {
+    if (input.code?.trim()) throw new CouponError("Coupons can only be used with paid items.");
     if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
       return { order: null, requiresPayment: false, duplicate: true };
     }
@@ -306,62 +302,46 @@ export async function createOrder(input: {
     return { order: null, requiresPayment: false, duplicate: false };
   }
 
-  if (priced.price === 0) {
-    if (await isAlreadyFulfilled(product.itemType, product.itemId, input.user)) {
-      return { order: null, requiresPayment: false, duplicate: true };
-    }
-    await fulfillFreeItem(product, input.user);
-    return { order: null, requiresPayment: false, duplicate: false };
-  }
-
-  // A waitlist member gets the course's wishlist discount on top of the general
-  // discount. It stacks sequentially: the general discount lowers the list price
-  // first, then the wishlist percent takes a further cut off that price.
-  const wishlist = await resolveWishlistDiscount({
-    itemType: product.itemType,
-    itemId: product.itemId,
-    userId: input.user.id,
-    email: input.user.email,
-    price: priced.price,
+  const resolved = await resolveCheckoutPricing({
+    user: { id: input.user.id, email: input.user.email },
+    product,
+    amount,
+    currency,
+    code: input.code,
+    excludeOrderId: existing?._id.toString(),
   });
-
-  const resolved = {
-    subtotal: amount,
-    discount: roundMoney(priced.savings + (wishlist?.amount ?? 0)),
-    total: wishlist?.price ?? priced.price,
-    label:
-      priced.label && wishlist
-        ? `${priced.label} · Wishlist ${wishlist.percent}%`
-        : wishlist
-          ? `Wishlist ${wishlist.percent}%`
-          : priced.label,
-  };
 
   if (existing) {
     if (existing.status === "pending") {
       const doc = existing as OrderDoc & { save(): Promise<unknown> };
       const item = doc.items[0];
+      const couponId = resolved.couponId?.toString() ?? null;
       if (
         item &&
         (doc.total !== resolved.total ||
           item.price !== resolved.total ||
           (doc.subtotal ?? 0) !== resolved.subtotal ||
-          (doc.discountAmount ?? 0) !== resolved.discount)
+          (doc.discountAmount ?? 0) !== resolved.discount ||
+          (doc.couponId?.toString() ?? null) !== couponId ||
+          (doc.discountCode ?? null) !== resolved.discountCode ||
+          (doc.discountLabel ?? null) !== resolved.discountLabel)
       ) {
         item.title = product.title;
         item.price = resolved.total;
         doc.subtotal = resolved.subtotal;
         doc.discountAmount = resolved.discount;
-        doc.discountCode = undefined;
-        doc.discountLabel = resolved.label;
+        doc.couponId = resolved.couponId ?? null;
+        doc.discountCode = resolved.discountCode ?? undefined;
+        doc.discountLabel = resolved.discountLabel ?? undefined;
         doc.total = resolved.total;
         doc.currency = currency;
         await doc.save();
       }
+      if (resolved.total === 0) await fulfillOrder(doc);
     }
     return {
       order: existing as OrderDoc & { save(): Promise<unknown> },
-      requiresPayment: existing.status === "pending",
+      requiresPayment: existing.status === "pending" && resolved.total > 0,
       duplicate: true,
     };
   }
@@ -381,7 +361,9 @@ export async function createOrder(input: {
       ],
       subtotal: resolved.subtotal,
       discountAmount: resolved.discount,
-      discountLabel: resolved.label ?? undefined,
+      couponId: resolved.couponId ?? undefined,
+      discountCode: resolved.discountCode ?? undefined,
+      discountLabel: resolved.discountLabel ?? undefined,
       total: resolved.total,
       currency,
       status: "pending",
@@ -397,7 +379,7 @@ export async function createOrder(input: {
       if (winner) {
         return {
           order: winner as OrderDoc & { save(): Promise<unknown> },
-          requiresPayment: winner.status === "pending",
+          requiresPayment: winner.status === "pending" && winner.total > 0,
           duplicate: true,
         };
       }
@@ -410,6 +392,11 @@ export async function createOrder(input: {
     order: serializeOrder(order),
     user: userPayload(input.user),
   });
+
+  if (resolved.total === 0) {
+    await fulfillOrder(order as HydratedOrder, input.user);
+    return { order, requiresPayment: false, duplicate: false };
+  }
 
   return { order, requiresPayment: true, duplicate: false };
 }

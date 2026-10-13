@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
+import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
+import { formatMoney } from "@/lib/pricing";
 
 export type SeminarLike = {
   id: string;
@@ -45,7 +47,10 @@ export function SeminarRegisterModal({
   const [currency, setCurrency] = useState<PickableCurrency>(
     defaultCheckoutCurrency(seminar.prices)
   );
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
   const isPaid = seminar.type === "paid";
+  const currentCouponQuote = couponQuote?.currency === currency ? couponQuote : null;
+  const amount = seminar.prices?.[currency] ?? seminar.price ?? 0;
 
   const register = useCallback(
     async (email: string): Promise<"registered" | "paying" | false> => {
@@ -60,7 +65,7 @@ export function SeminarRegisterModal({
         const res = await fetch(`/api/seminars/${seminar.id}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, phone: value, currency }),
+          body: JSON.stringify({ email, phone: value, currency, code: currentCouponQuote?.code }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "Registration failed");
@@ -82,7 +87,7 @@ export function SeminarRegisterModal({
         setSubmitting(false);
       }
     },
-    [seminar, phone, onRegistered, currency]
+    [seminar, phone, onRegistered, currency, currentCouponQuote?.code]
   );
 
   const registerWithGoogle = async () => {
@@ -183,6 +188,20 @@ export function SeminarRegisterModal({
                   value={currency}
                   onChange={setCurrency}
                 />
+                <div className="mt-4 space-y-3 rounded-xl border p-4" style={{ borderColor: "var(--line)" }}>
+                  <CouponCodeEntry
+                    itemType="seminar"
+                    itemId={seminar.id}
+                    currency={currency}
+                    onQuoteChange={setCouponQuote}
+                  />
+                  <div className="flex items-center justify-between border-t pt-3 text-[13px]" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                    <span>{currentCouponQuote ? "Total" : "Price"}</span>
+                    <span className="font-semibold">
+                      {formatMoney(currentCouponQuote?.total ?? amount, currency)}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 

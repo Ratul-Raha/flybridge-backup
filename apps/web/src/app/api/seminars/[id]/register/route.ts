@@ -6,6 +6,7 @@ import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import { createOrder, OrderError } from "@/lib/orders";
+import { CouponError } from "@/lib/coupons";
 import {
   isStripeConfigured,
   createCheckoutSession,
@@ -137,7 +138,7 @@ export async function POST(
       }
     }
 
-    const { order, duplicate } = await createOrder({
+    const { order, duplicate, requiresPayment } = await createOrder({
       user: {
         id: user._id.toString(),
         name: name || user.name,
@@ -147,10 +148,11 @@ export async function POST(
       itemType: "seminar",
       itemId: seminar._id.toString(),
       currency: typeof body.currency === "string" ? body.currency : undefined,
+      code: typeof body.code === "string" ? body.code : undefined,
     });
 
     let paymentUrl: string | null = null;
-    if (order && order.total > 0) {
+    if (order && requiresPayment) {
       const orderDoc = order as OrderDoc & { save(): Promise<unknown> };
       const currency = (order.currency ?? "USD").toUpperCase();
 
@@ -207,12 +209,15 @@ export async function POST(
         alreadyRegistered: duplicate,
         registration,
         orderId: order?._id?.toString() ?? null,
-        requiresPayment: order ? order.total > 0 : false,
+        requiresPayment,
         paymentUrl,
       },
       { status: duplicate ? 200 : 201 }
     );
   } catch (error) {
+    if (error instanceof CouponError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
