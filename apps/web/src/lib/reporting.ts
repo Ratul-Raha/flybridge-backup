@@ -3,7 +3,6 @@ import "server-only";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
-import { Order } from "@/lib/models/order";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { ReadinessRun } from "@/lib/models/readiness-run";
 import { CourseEnrollment } from "@/lib/models/enrollment";
@@ -35,16 +34,12 @@ async function reportOverview() {
   await connectDb();
   const [
     totalUsers,
-    activeSubscriptions,
-    totalOrders,
     courseEnrollment,
     readinessRuns,
     certificatesIssued,
     certificatesDownloaded,
   ] = await Promise.all([
     User.countDocuments(),
-    User.countDocuments({ subscription: "paid" }),
-    Order.countDocuments(),
     CourseEnrollment.countDocuments(),
     ReadinessRun.countDocuments(),
     CourseProgress.countDocuments({ certificateIssued: true }),
@@ -55,8 +50,6 @@ async function reportOverview() {
 
   return {
     totalUsers,
-    activeSubscriptions,
-    totalOrders,
     courseEnrollment,
     readinessRuns,
     certificatesIssued,
@@ -123,15 +116,6 @@ async function reportTopCourses() {
       paid: c.paid,
     })),
   };
-}
-
-async function reportSubscriptionSplit() {
-  await connectDb();
-  const [free, paid] = await Promise.all([
-    User.countDocuments({ subscription: "free" }),
-    User.countDocuments({ subscription: "paid" }),
-  ]);
-  return { free, paid, total: free + paid };
 }
 
 async function reportRecentSignups() {
@@ -241,7 +225,6 @@ export const REPORT_REGISTRY = {
   overview: reportOverview,
   growth: reportGrowth,
   "top-courses": reportTopCourses,
-  "subscription-split": reportSubscriptionSplit,
   "recent-signups": reportRecentSignups,
   "recent-orders": reportRecentOrders,
   "platform-activity": reportPlatformActivity,

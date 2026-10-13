@@ -89,7 +89,11 @@ async function computeOrdersStatsUncached(
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           count: { $sum: 1 },
-          revenue: { $sum: "$total" },
+          revenue: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "completed"] }, "$total", 0],
+            },
+          },
         },
       },
       { $sort: { _id: 1 } },

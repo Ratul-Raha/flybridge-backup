@@ -1,88 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { Users, Crown, ShoppingCart, BookOpen, Gauge, Download, Award, ArrowUpRight } from "lucide-react";
+import {
+  Users,
+  UserPlus,
+  DollarSign,
+  ShoppingCart,
+  BookOpen,
+  Gauge,
+  Download,
+  Award,
+  ArrowUpRight,
+} from "lucide-react";
 import { InlineLoader } from "@/components/dashboard/page-loader";
+import { useCurrency } from "@/components/dashboard/currency-context";
 
 type Overview = {
   totalUsers: number;
-  activeSubscriptions: number;
-  totalOrders: number;
   courseEnrollment: number;
   readinessRuns: number;
   certificatesIssued: number;
   certificatesDownloaded: number;
 };
 
-const CARDS: {
-  key: keyof Overview;
+type Stat = {
+  key: string;
   label: string;
+  value: string | number;
   icon: typeof Users;
   gradient: string;
   href: string;
-  caption: (v: Overview) => string | undefined;
-}[] = [
-  {
-    key: "totalUsers",
-    label: "Total users",
-    icon: Users,
-    gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)",
-    href: "/dashboard/admin/users",
-    caption: () => "All registered members",
-  },
-  {
-    key: "activeSubscriptions",
-    label: "Active subscription",
-    icon: Crown,
-    gradient: "linear-gradient(135deg,#F59E0B,#F97316)",
-    href: "/dashboard/admin/users?subscription=paid",
-    caption: (v) =>
-      v.totalUsers > 0 ? `${Math.round((v.activeSubscriptions / v.totalUsers) * 100)}% of all users` : undefined,
-  },
-  {
-    key: "totalOrders",
-    label: "Total orders",
-    icon: ShoppingCart,
-    gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)",
-    href: "/dashboard/admin/orders",
-    caption: () => "All orders placed",
-  },
-  {
-    key: "courseEnrollment",
-    label: "Course enrollment",
-    icon: BookOpen,
-    gradient: "linear-gradient(135deg,#10B981,#34D399)",
-    href: "/dashboard/courses",
-    caption: () => "Active course enrollments",
-  },
-  {
-    key: "certificatesIssued",
-    label: "Certificates issued",
-    icon: Award,
-    gradient: "linear-gradient(135deg,#7C3AED,#A855F7)",
-    href: "/dashboard/admin/users",
-    caption: () => "Courses fully completed",
-  },
-  {
-    key: "certificatesDownloaded",
-    label: "Certificates downloaded",
-    icon: Download,
-    gradient: "linear-gradient(135deg,#0284C7,#06B6D4)",
-    href: "/dashboard/admin/users?certificateDownloaded=yes",
-    caption: (v) =>
-      v.certificatesIssued > 0
-        ? `${Math.round((v.certificatesDownloaded / v.certificatesIssued) * 100)}% of issued downloaded`
-        : "None downloaded yet",
-  },
-  {
-    key: "readinessRuns",
-    label: "Readiness checks",
-    icon: Gauge,
-    gradient: "linear-gradient(135deg,#F43F5E,#FB7185)",
-    href: "/dashboard/admin/readiness",
-    caption: () => "Study abroad assessments run",
-  },
-];
+  caption?: string;
+};
+
+type OrderSummary = { totalOrders: number; totalRevenue: number };
 
 function StatCard({
   label,
@@ -115,10 +66,16 @@ function StatCard({
       >
         <Icon size={19} strokeWidth={2.2} />
       </div>
-      <p className="font-display text-[26px] font-semibold leading-none transition-colors duration-200 group-hover:text-[var(--brand)]" style={{ color: "var(--ink)" }}>
+      <p
+        className="font-display text-[26px] font-semibold leading-none transition-colors duration-200 group-hover:text-[var(--brand)]"
+        style={{ color: "var(--ink)" }}
+      >
         {value}
       </p>
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2 flex items-center gap-1" style={{ color: "var(--body)" }}>
+      <p
+        className="font-mono text-[10px] uppercase tracking-[0.14em] mt-2 flex items-center gap-1"
+        style={{ color: "var(--body)" }}
+      >
         {label}
         <ArrowUpRight
           size={12}
@@ -139,22 +96,110 @@ function StatCard({
   );
 }
 
-export function StatCards({ data }: { data: Overview | null }) {
+export function StatCards({
+  data,
+  newSignups,
+  orders,
+}: {
+  data: Overview | null;
+  newSignups: number;
+  orders: OrderSummary | null;
+}) {
+  const { fmt } = useCurrency();
+
   if (!data) {
     return <InlineLoader label="Loading…" />;
   }
 
+  const cards: Stat[] = [
+    {
+      key: "totalUsers",
+      label: "Total users",
+      value: data.totalUsers,
+      icon: Users,
+      gradient: "linear-gradient(135deg,#6E4CFF,#8B5CF6)",
+      href: "/dashboard/admin/users",
+      caption: "All registered members",
+    },
+    {
+      key: "newSignups",
+      label: "New signups · 14 days",
+      value: newSignups,
+      icon: UserPlus,
+      gradient: "linear-gradient(135deg,#0284C7,#38BDF8)",
+      href: "/dashboard/admin/users",
+      caption: "Recent member growth",
+    },
+    {
+      key: "revenue",
+      label: "Revenue",
+      value: orders ? fmt(orders.totalRevenue) : "—",
+      icon: DollarSign,
+      gradient: "linear-gradient(135deg,#10B981,#34D399)",
+      href: "/dashboard/admin/orders",
+      caption: "Completed orders · selected currency",
+    },
+    {
+      key: "totalOrders",
+      label: "Total orders",
+      value: orders?.totalOrders ?? "—",
+      icon: ShoppingCart,
+      gradient: "linear-gradient(135deg,#0EA5E9,#38BDF8)",
+      href: "/dashboard/admin/orders",
+      caption: "All statuses · selected currency",
+    },
+    {
+      key: "courseEnrollment",
+      label: "Course enrollments",
+      value: data.courseEnrollment,
+      icon: BookOpen,
+      gradient: "linear-gradient(135deg,#10B981,#34D399)",
+      href: "/dashboard/courses",
+      caption: "Active course enrollments",
+    },
+    {
+      key: "readinessRuns",
+      label: "Readiness checks",
+      value: data.readinessRuns,
+      icon: Gauge,
+      gradient: "linear-gradient(135deg,#F43F5E,#FB7185)",
+      href: "/dashboard/admin/readiness",
+      caption: "Study abroad assessments run",
+    },
+    {
+      key: "certificatesIssued",
+      label: "Certificates issued",
+      value: data.certificatesIssued,
+      icon: Award,
+      gradient: "linear-gradient(135deg,#7C3AED,#A855F7)",
+      href: "/dashboard/admin/users",
+      caption: "Courses fully completed",
+    },
+    {
+      key: "certificatesDownloaded",
+      label: "Certificates downloaded",
+      value: data.certificatesDownloaded,
+      icon: Download,
+      gradient: "linear-gradient(135deg,#0284C7,#06B6D4)",
+      href: "/dashboard/admin/users?certificateDownloaded=yes",
+      caption:
+        data.certificatesIssued > 0
+          ? `${Math.round((data.certificatesDownloaded / data.certificatesIssued) * 100)}% of issued downloaded`
+          : "None downloaded yet",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-      {CARDS.map((c) => (
+      {cards.map((c) => (
         <StatCard
           key={c.key}
           label={c.label}
-          value={data[c.key] === null ? "—" : (data[c.key] as number).toLocaleString()}
+          value={typeof c.value === "number" ? c.value.toLocaleString() : c.value}
           icon={c.icon}
           gradient={c.gradient}
           href={c.href}
-          caption={c.caption(data)}
+          caption={c.caption}
         />
       ))}
     </div>

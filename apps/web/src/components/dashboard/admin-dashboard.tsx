@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCards } from "@/components/dashboard/reports/stat-cards";
 import { GrowthChart } from "@/components/dashboard/reports/growth-chart";
 import { TopCourses } from "@/components/dashboard/reports/top-courses";
-import { SubscriptionPie } from "@/components/dashboard/reports/subscription-pie";
+import { OrderStatusChart } from "@/components/dashboard/reports/order-status-chart";
+import { OrderTrendsChart } from "@/components/dashboard/reports/order-trends-chart";
 import { RecentSignups } from "@/components/dashboard/reports/recent-signups";
 import { PlatformActivity } from "@/components/dashboard/reports/platform-activity";
 import { OrderOverview } from "@/components/dashboard/reports/order-overview";
@@ -19,8 +20,7 @@ export function AdminDashboard({ initial }: { initial: AdminDashboardData }) {
   const { currency } = useCurrency();
 
   // The initial render is server-computed for USD. Switching the admin
-  // currency refetches order stats once and feeds both OrderOverview and
-  // TopCourses from the same payload.
+  // currency refetches the order metrics, charts, and tables together.
   useEffect(() => {
     if (currency === (orders.currency ?? "USD")) return;
     let cancelled = false;
@@ -42,16 +42,29 @@ export function AdminDashboard({ initial }: { initial: AdminDashboardData }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Overview" subtitle="Guardianship of your FlyBridge platform at a glance." />
+      <PageHeader
+        title="Overview"
+        subtitle="Guardianship of your FlyBridge platform at a glance."
+      />
 
-      <StatCards data={initial.overview} />
+      <StatCards
+        data={initial.overview}
+        newSignups={initial.growth.signups.reduce((total, count) => total + count, 0)}
+        orders={ordersLoading ? null : orders}
+      />
 
       <OrderOverview data={ordersLoading ? null : orders} />
 
-      <div className="grid xl:grid-cols-3 gap-5">
+      <div className="grid xl:grid-cols-2 gap-5">
         <GrowthChart data={initial.growth} />
-        <TopCourses items={orders.topItems} loading={ordersLoading} />
-        <SubscriptionPie data={initial.split} />
+        <OrderTrendsChart data={ordersLoading ? null : orders.chart} />
+      </div>
+
+      <div className="grid xl:grid-cols-3 gap-5">
+        <div className="xl:col-span-2">
+          <TopCourses items={orders.topItems} loading={ordersLoading} />
+        </div>
+        <OrderStatusChart data={ordersLoading ? null : orders.statusDistribution} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
