@@ -14,6 +14,7 @@ const links = [
   { label: "Blog", href: "/blogs" },
   { label: "Scholarships", href: "/scholarships" },
   { label: "Partnership", href: "/partnership" },
+  { label: "Affiliate", href: "/affiliate" },
   { label: "Resources", href: "/resources" },
 ];
 

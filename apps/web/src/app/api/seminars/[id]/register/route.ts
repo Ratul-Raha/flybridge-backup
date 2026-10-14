@@ -8,6 +8,7 @@ import { emitEvent } from "@/lib/events/emit";
 import { createOrder, OrderError } from "@/lib/orders";
 import { CouponError } from "@/lib/coupons";
 import { orderAttributionFromRequest } from "@/lib/order-attribution";
+import { affiliateFromRequest } from "@/lib/affiliate-attribution";
 import {
   isStripeConfigured,
   createCheckoutSession,
@@ -151,6 +152,7 @@ export async function POST(
       currency: typeof body.currency === "string" ? body.currency : undefined,
       code: typeof body.code === "string" ? body.code : undefined,
       attribution: orderAttributionFromRequest(request),
+      affiliate: affiliateFromRequest(request),
     });
 
     let paymentUrl: string | null = null;

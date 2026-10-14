@@ -24,6 +24,10 @@ import { MockTest } from "./models/mock-test";
 import { MockTestBundle } from "./models/mock-test-bundle";
 import { MockTestEnrollment } from "./models/mock-test-enrollment";
 import { MockTestAttempt } from "./models/mock-test-attempt";
+import { Affiliate } from "./models/affiliate";
+import { AffiliateClick } from "./models/affiliate-click";
+import { AffiliateConversion } from "./models/affiliate-conversion";
+import { AffiliatePayout } from "./models/affiliate-payout";
 
 void User;
 void Seminar;
@@ -51,6 +55,10 @@ void MockTest;
 void MockTestBundle;
 void MockTestEnrollment;
 void MockTestAttempt;
+void Affiliate;
+void AffiliateClick;
+void AffiliateConversion;
+void AffiliatePayout;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

@@ -285,6 +285,81 @@ export const EVENT_CATALOG: Record<EventName, EventCatalogEntry> = {
       test: { id: "665f1c2a9e3b1c0012ab34cd", title: "IELTS Reading Mock 01", skill: "reading" },
     }),
   },
+  "affiliate.created": {
+    name: "affiliate.created",
+    label: "Affiliate created",
+    description: "Fires when staff adds a new affiliate partner.",
+    fields: ["affiliate.id", "affiliate.name", "affiliate.code", "affiliate.email"],
+    samplePayload: () => ({
+      affiliate: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        name: "Rahim Partners",
+        code: "RAHIM",
+        email: "rahim@example.com",
+      },
+    }),
+  },
+  "affiliate.conversion": {
+    name: "affiliate.conversion",
+    label: "Affiliate conversion",
+    description: "Fires when a referred order is fulfilled and earns a commission.",
+    fields: [
+      "affiliate.id",
+      "affiliate.name",
+      "affiliate.code",
+      "affiliate.email",
+      "conversion.amount",
+      "conversion.currency",
+      "conversion.orderTotal",
+      "conversion.itemTitle",
+    ],
+    samplePayload: () => ({
+      affiliate: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        name: "Rahim Partners",
+        code: "RAHIM",
+        email: "rahim@example.com",
+      },
+      conversion: {
+        id: "665f1c2a9e3b1c0012ab34ce",
+        orderId: "665f1c2a9e3b1c0012ab34cf",
+        amount: 600,
+        currency: "BDT",
+        orderTotal: 3000,
+        itemTitle: "Student Visa Blueprint™",
+      },
+    }),
+  },
+  "affiliate.payout": {
+    name: "affiliate.payout",
+    label: "Affiliate payout",
+    description: "Fires when staff records a payout to an affiliate.",
+    fields: [
+      "affiliate.id",
+      "affiliate.name",
+      "affiliate.code",
+      "affiliate.email",
+      "payout.amount",
+      "payout.currency",
+      "payout.method",
+      "payout.conversions",
+    ],
+    samplePayload: () => ({
+      affiliate: {
+        id: "665f1c2a9e3b1c0012ab34cd",
+        name: "Rahim Partners",
+        code: "RAHIM",
+        email: "rahim@example.com",
+      },
+      payout: {
+        id: "665f1c2a9e3b1c0012ab34ce",
+        amount: 6000,
+        currency: "BDT",
+        method: "bKash",
+        conversions: 4,
+      },
+    }),
+  },
 };
 
 export const EVENT_LIST: EventCatalogEntry[] = EVENT_NAMES.map((name) => EVENT_CATALOG[name]);

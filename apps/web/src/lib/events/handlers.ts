@@ -7,6 +7,7 @@ import { Notification } from "@/lib/models/notification";
 import { BotConfig } from "@/lib/models/bot-config";
 import { notificationUrl, pushToUsers } from "@/lib/push";
 import { sendTelegramMessage, formatEventMessage } from "@/lib/notifications/telegram";
+import { recordAffiliateConversion } from "@/lib/affiliate-commission";
 import type { NotificationType } from "@/lib/models/notification";
 import type { EventName, EventPayload } from "./types";
 import type { EventHandler } from "./registry";
@@ -176,6 +177,16 @@ export const notifyAllOnSeminarCreated: EventHandler = {
       message: `"${seminarTitle}" is now live — check it out and register.`,
       seminar: seminarId,
     });
+  },
+};
+
+export const recordAffiliateCommission: EventHandler = {
+  name: "recordAffiliateCommission",
+  run: async (payload) => {
+    const order = (payload.order ?? {}) as Record<string, unknown>;
+    const orderId = typeof order.id === "string" ? order.id : "";
+    if (!orderId) return;
+    await recordAffiliateConversion(orderId);
   },
 };
 

@@ -26,6 +26,7 @@ import {
   Award,
   Bot,
   Activity,
+  Share2,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -72,8 +73,28 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [signingOut, setSigningOut] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(false);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!user) {
+      setIsAffiliate(false);
+      return;
+    }
+    let active = true;
+    fetch("/api/affiliate/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active) setIsAffiliate(Boolean(data?.affiliate));
+      })
+      .catch(() => {
+        if (active) setIsAffiliate(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -245,6 +266,17 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               icon: ShoppingCart,
               active: pathname.startsWith("/dashboard/orders"),
             },
+            ...(isAffiliate
+              ? [
+                  {
+                    kind: "link" as const,
+                    label: "Affiliate",
+                    href: "/dashboard/affiliate",
+                    icon: Share2,
+                    active: pathname.startsWith("/dashboard/affiliate"),
+                  },
+                ]
+              : []),
             settingsGroup,
           ],
         },
@@ -392,6 +424,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 active: pathname.startsWith("/dashboard/admin/refunds"),
               },
               {
+                label: "Affiliates",
+                href: "/dashboard/admin/affiliates",
+                active: pathname.startsWith("/dashboard/admin/affiliates"),
+              },
+              {
                 label: "Growth & Sales",
                 href: "/dashboard/admin/analytics",
                 active: pathname.startsWith("/dashboard/admin/analytics"),
@@ -446,7 +483,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       });
     }
     return segments;
-  }, [user, pathname]);
+  }, [user, pathname, isAffiliate]);
 
   const pageTitle = useMemo(() => {
     for (const segment of nav) {

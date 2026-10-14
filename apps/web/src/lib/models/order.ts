@@ -28,6 +28,21 @@ const orderMetaSchema = new Schema(
   { _id: false }
 );
 
+/** Snapshot of the affiliate whose link was last clicked before purchase. */
+const orderAffiliateSchema = new Schema(
+  {
+    affiliateId: { type: Schema.Types.ObjectId, ref: "Affiliate", default: null },
+    code: { type: String, trim: true, uppercase: true },
+    clickId: { type: String, trim: true },
+    /**
+     * Percent applied when the order was created. The conversion ledger keeps
+     * its own snapshot too; this is here so the order is self-describing.
+     */
+    commissionPercent: { type: Number, min: 0, default: null },
+  },
+  { _id: false }
+);
+
 const orderSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
@@ -57,6 +72,8 @@ const orderSchema = new Schema(
     /** Meta click ids + request context, captured at order creation so the
      *  Conversions API can match the server-side Purchase to the ad click. */
     attribution: { type: createMarketingAttributionSchema(), default: undefined },
+    /** The affiliate link that earned the sale, if any. */
+    affiliate: { type: orderAffiliateSchema, default: undefined },
     /** Whether the server-side Purchase actually reached Meta, and what it said. */
     meta: { type: orderMetaSchema, default: undefined },
   },
@@ -76,6 +93,7 @@ orderSchema.index(
 orderSchema.index({ currency: 1, status: 1, createdAt: -1 });
 orderSchema.index({ currency: 1, status: 1, completedAt: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ "affiliate.affiliateId": 1, status: 1 });
 
 export type OrderItem = InferSchemaType<typeof orderItemSchema>;
 

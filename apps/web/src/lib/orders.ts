@@ -27,6 +27,12 @@ export type OrderUser = {
   phone?: string | null;
 };
 
+export type OrderAffiliateInput = {
+  affiliateId: string;
+  code: string;
+  clickId?: string;
+};
+
 /**
  * A problem with this order rather than with the server, so API routes can hand
  * the message back to the buyer instead of reporting a failure.
@@ -267,6 +273,7 @@ export async function createOrder(input: {
   currency?: string;
   code?: string;
   attribution?: OrderAttribution;
+  affiliate?: OrderAffiliateInput | null;
 }): Promise<{ order: OrderDoc | null; requiresPayment: boolean; duplicate: boolean }> {
   await connectDb();
 
@@ -344,6 +351,14 @@ export async function createOrder(input: {
         doc.attribution = input.attribution;
         changed = true;
       }
+      if (!doc.affiliate?.affiliateId && input.affiliate) {
+        doc.affiliate = {
+          affiliateId: input.affiliate.affiliateId as never,
+          code: input.affiliate.code,
+          clickId: input.affiliate.clickId,
+        };
+        changed = true;
+      }
       if (changed) {
         await doc.save();
       }
@@ -375,6 +390,13 @@ export async function createOrder(input: {
       discountCode: resolved.discountCode ?? undefined,
       discountLabel: resolved.discountLabel ?? undefined,
       attribution: input.attribution,
+      affiliate: input.affiliate
+        ? {
+            affiliateId: input.affiliate.affiliateId as never,
+            code: input.affiliate.code,
+            clickId: input.affiliate.clickId,
+          }
+        : undefined,
       total: resolved.total,
       currency,
       status: "pending",

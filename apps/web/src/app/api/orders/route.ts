@@ -8,6 +8,7 @@ import { CouponError } from "@/lib/coupons";
 import { isMetaPurchaseEnabled } from "@/lib/meta-capi";
 import { ORDER_ITEM_TYPES } from "@/lib/models/order";
 import { orderAttributionFromRequest } from "@/lib/order-attribution";
+import { affiliateFromRequest } from "@/lib/affiliate-attribution";
 
 function isOrderItemType(value: unknown): value is OrderItemType {
   return typeof value === "string" && (ORDER_ITEM_TYPES as readonly string[]).includes(value);
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
       currency: typeof body.currency === "string" ? body.currency : undefined,
       code: typeof body.code === "string" ? body.code : undefined,
       attribution: orderAttributionFromRequest(request),
+      affiliate: affiliateFromRequest(request),
     });
 
     let paymentUrl: string | null = null;

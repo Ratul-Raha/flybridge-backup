@@ -20,6 +20,7 @@ const footerLinks = [
     links: [
       { label: "About", href: "/about" },
       { label: "Blog", href: "/blogs" },
+      { label: "Affiliate Program", href: "/affiliate" },
     ],
   },
   {

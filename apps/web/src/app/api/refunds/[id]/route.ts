@@ -6,6 +6,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { RefundRequest } from "@/lib/models/refund-request";
 import { refundStripeOrder } from "@/lib/payments/stripe";
+import { reverseAffiliateConversion } from "@/lib/affiliate-commission";
 
 const ACTIONS = ["approve", "decline", "mark_refunded"] as const;
 type Action = (typeof ACTIONS)[number];
@@ -24,6 +25,12 @@ async function revokeAccess(refund: {
   if (order) {
     order.status = "refunded";
     await order.save();
+    // Any affiliate commission earned on this order is voided with it.
+    try {
+      await reverseAffiliateConversion(order._id.toString(), "order refunded");
+    } catch (error) {
+      console.error("affiliate commission reversal error", error);
+    }
   }
   if (!refund.enrollment) return;
 

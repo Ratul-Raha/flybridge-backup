@@ -8,6 +8,7 @@ import {
   notifyAllOnScholarshipCreated,
   notifyStaffOnOrderCreated,
   notifyStaffOnOrderFulfilled,
+  recordAffiliateCommission,
   sendTelegramOnEvent,
   refreshKnowledgeBase,
 } from "./handlers";
@@ -28,6 +29,7 @@ export function registerDefaultHandlers(): void {
   on("scholarship.created", notifyAllOnScholarshipCreated);
   on("order.created", notifyStaffOnOrderCreated);
   on("order.fulfilled", notifyStaffOnOrderFulfilled);
+  on("order.fulfilled", recordAffiliateCommission);
 
   // Telegram channel notifications — subscribe to every event; the handler
   // self-filters using the per-event opt-in list from BotConfig.channels.

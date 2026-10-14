@@ -17,6 +17,9 @@ export const EVENT_NAMES = [
   "mock-bundle.created",
   "mock-bundle.purchased",
   "mock-test.submitted",
+  "affiliate.created",
+  "affiliate.conversion",
+  "affiliate.payout",
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];
@@ -163,6 +166,38 @@ export type EventPayloadMap = {
     user: UserPayload;
     test: { id: string; title: string; skill?: string };
   };
+  "affiliate.created": {
+    affiliate: AffiliatePayload;
+    actor?: ActorPayload;
+  };
+  "affiliate.conversion": {
+    affiliate: AffiliatePayload;
+    conversion: {
+      id: string;
+      orderId: string;
+      amount: number;
+      currency: string;
+      orderTotal: number;
+      itemTitle?: string | null;
+    };
+  };
+  "affiliate.payout": {
+    affiliate: AffiliatePayload;
+    payout: {
+      id: string;
+      amount: number;
+      currency: string;
+      method?: string | null;
+      conversions: number;
+    };
+    actor?: ActorPayload;
+  };
 };
 
+export type AffiliatePayload = {
+  id: string;
+  name: string;
+  code: string;
+  email?: string | null;
+};
 export type EventPayload = Record<string, unknown>;
