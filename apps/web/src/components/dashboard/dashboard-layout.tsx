@@ -25,6 +25,7 @@ import {
   Loader2,
   Award,
   Bot,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -37,6 +38,7 @@ import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 import { InlineLoader } from "@/components/dashboard/page-loader";
 import { OpsBotWidget } from "@/components/ops-bot/ops-bot-widget";
 import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
+import { UsageTracker } from "@/components/dashboard/usage-tracker";
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   admin: { bg: "rgba(111,76,224,0.12)", fg: "#6B4CE0", label: "Administrator" },
@@ -346,6 +348,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             active: pathname === "/dashboard/admin",
           },
           {
+            kind: "link",
+            label: "Usage Analytics",
+            href: "/dashboard/admin/usage",
+            icon: Activity,
+            active: pathname.startsWith("/dashboard/admin/usage"),
+          },
+          {
             kind: "group",
             label: "People",
             icon: Users,
@@ -459,7 +468,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const isFullScreenCourse = /^(\/dashboard\/courses\/[^/]+\/(learn|certificate)|\/dashboard\/mock-tests\/[^/]+\/take)/.test(pathname);
 
   if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
-    return <MobileUserApp>{children}</MobileUserApp>;
+    return (
+      <MobileUserApp>
+        <UsageTracker />
+        {children}
+      </MobileUserApp>
+    );
   }
 
   // The mock-test player runs as its own full-screen, proctored experience,
@@ -733,6 +747,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
         <main className="px-[clamp(20px,4vw,40px)] py-8">
           <PendingOrderBanner />
+          <UsageTracker />
           {children}
         </main>
       </div>

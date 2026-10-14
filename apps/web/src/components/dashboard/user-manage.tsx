@@ -29,6 +29,7 @@ import { CardLoader } from "@/components/dashboard/page-loader";
 import { ScreenError } from "@/components/dashboard/user/ui";
 import { BulkEmailModal } from "@/components/dashboard/user/bulk-email-modal";
 import { useAuth } from "@/lib/auth/auth-context";
+import { csvFilename, downloadCsv } from "@/lib/csv";
 
 type UserRow = {
   id: string;
@@ -487,24 +488,38 @@ export function UserManage() {
   }, [filterParams, pagination.total]);
 
   const exportCsv = useCallback(async () => {
-    if (selected.size === 0) return;
-    let rows = users.filter((u) => selected.has(u.id));
+    let rows: UserRow[] = [];
 
-    // A cross-page selection contains rows that are not loaded right now.
-    if (rows.length < selected.size) {
-      const missing = selected.size - rows.length;
-      const capped = pagination.total > MAX_EXPORT_PAGES * 100;
-      if (
-        !window.confirm(
-          `${missing} of the selected users are not on this page. Load the full result set to export a complete CSV?${capped ? "\n\nOnly the first 2,000 matching users can be loaded." : ""}`
-        )
-      ) {
-        return;
+    if (selected.size > 0) {
+      rows = users.filter((u) => selected.has(u.id));
+
+      // A cross-page selection contains rows that are not loaded right now.
+      if (rows.length < selected.size) {
+        const missing = selected.size - rows.length;
+        const capped = pagination.total > MAX_EXPORT_PAGES * 100;
+        if (
+          !window.confirm(
+            `${missing} of the selected users are not on this page. Load the full result set to export a complete CSV?${capped ? "\n\nOnly the first 2,000 matching users can be loaded." : ""}`
+          )
+        ) {
+          return;
+        }
+        setBulkBusy("Exporting");
+        try {
+          const all = await fetchAllRows();
+          rows = all.filter((u) => selected.has(u.id));
+        } catch (e) {
+          alert(e instanceof Error ? e.message : "Export failed");
+          return;
+        } finally {
+          setBulkBusy(null);
+        }
       }
+    } else {
+      if (pagination.total === 0) return;
       setBulkBusy("Exporting");
       try {
-        const all = await fetchAllRows();
-        rows = all.filter((u) => selected.has(u.id));
+        rows = await fetchAllRows();
       } catch (e) {
         alert(e instanceof Error ? e.message : "Export failed");
         return;
@@ -514,33 +529,24 @@ export function UserManage() {
     }
 
     if (rows.length === 0) return;
-    const esc = (v: string | null | undefined) => `"${(v ?? "").replace(/"/g, '""')}"`;
-    const csv = [
+    downloadCsv(
+      csvFilename("users"),
       ["Name", "Email", "Phone", "Role", "Plan", "Source", "Joined", "Seminars", "Courses", "Files", "Certificates", "Readiness"],
-      ...rows.map((u) => [
-        esc(u.name),
-        esc(u.email),
-        esc(u.phone),
+      rows.map((u) => [
+        u.name,
+        u.email,
+        u.phone,
         u.accountType,
         u.subscription,
         u.signupSource ?? "direct",
         u.createdAt.slice(0, 10),
-        String(u.seminars),
-        String(u.courses),
-        String(u.downloads),
-        String(u.certificates),
-        u.readiness != null ? String(u.readiness) : "",
-      ]),
-    ]
-      .map((r) => r.join(","))
-      .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `flybridge-users-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+        u.seminars,
+        u.courses,
+        u.downloads,
+        u.certificates,
+        u.readiness != null ? u.readiness : "",
+      ])
+    );
   }, [users, selected, pagination.total, fetchAllRows]);
 
   const openDetail = useCallback(async (id: string) => {
@@ -874,6 +880,16 @@ export function UserManage() {
             <option value="name">Name (A–Z)</option>
             <option value="name-desc">Name (Z–A)</option>
           </select>
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={bulkBusy !== null || pagination.total === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+          >
+            {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
+            Export
+          </button>
         </div>
       </div>
 
@@ -985,7 +1001,7 @@ export function UserManage() {
               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             >
               {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
-              Export CSV
+              Export
             </button>
             {isAdmin && (
               <button

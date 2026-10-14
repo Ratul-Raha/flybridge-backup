@@ -22,12 +22,14 @@ import {
   Eye,
   Radio,
   RefreshCw,
+  FileDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
 import { BRAND, AMBER, SKY, EMERALD, ROSE, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "@/components/dashboard/reports/lib";
 import { useCurrency } from "@/components/dashboard/currency-context";
 import { formatMoney, type SupportedCurrency } from "@/lib/pricing";
+import { csvFilename, downloadCsv } from "@/lib/csv";
 
 type OrderItem = { itemType: string; itemId: string; title: string; price: number };
 
@@ -726,6 +728,44 @@ export function OrderManage() {
   };
   const clearSelection = () => setSelected(new Set());
 
+  const exportCsv = () => {
+    const rows = selected.size > 0 ? filtered.filter((o) => selected.has(o.id)) : filtered;
+    if (rows.length === 0) return;
+    downloadCsv(
+      csvFilename("orders"),
+      [
+        "Order ID",
+        "Customer",
+        "Email",
+        "Items",
+        "Item count",
+        "Subtotal",
+        "Discount",
+        "Discount code",
+        "Total",
+        "Currency",
+        "Status",
+        "Gateway",
+        "Placed",
+      ],
+      rows.map((o) => [
+        o.id,
+        o.userName,
+        o.userEmail,
+        o.items.map((i) => i.title).join("; "),
+        o.items.length,
+        o.subtotal,
+        o.discountAmount,
+        o.discountCode ?? "",
+        o.total,
+        o.currency,
+        o.status,
+        o.gateway ?? "",
+        o.createdAt.slice(0, 10),
+      ])
+    );
+  };
+
   const bulkSetStatus = async () => {
     if (selected.size === 0) return;
     setBulkBusy("status");
@@ -873,6 +913,16 @@ export function OrderManage() {
                     </button>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={exportCsv}
+                  disabled={filtered.length === 0}
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-[7px] text-[12px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none sm:ml-auto"
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                >
+                  <FileDown size={14} />
+                  Export
+                </button>
               </div>
             </div>
 

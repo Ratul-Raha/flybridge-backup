@@ -2,7 +2,6 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { REPORT_REGISTRY, requireAdminReport } from "@/lib/reporting";
-import { getOrdersStats, type OrderStats } from "@/lib/admin/orders-stats";
 
 export type AdminSignup = {
   id: string;
@@ -22,27 +21,19 @@ export type AdminActivityItem = {
   at: string;
 };
 
-export type AdminDashboardData = {
-  overview: Awaited<ReturnType<typeof REPORT_REGISTRY.overview>>;
-  growth: Awaited<ReturnType<typeof REPORT_REGISTRY.growth>>;
+export type AdminDashboardActivity = {
   signups: AdminSignup[];
   activity: AdminActivityItem[];
-  orders: OrderStats;
 };
 
-const getCachedAdminDashboardData = unstable_cache(
-  async (): Promise<AdminDashboardData> => {
-    const [overview, growth, signups, activity, orders] = await Promise.all([
-      REPORT_REGISTRY.overview(),
-      REPORT_REGISTRY.growth({ days: 14 }),
+const getCachedAdminDashboardActivity = unstable_cache(
+  async (): Promise<AdminDashboardActivity> => {
+    const [signups, activity] = await Promise.all([
       REPORT_REGISTRY["recent-signups"](),
       REPORT_REGISTRY["platform-activity"](),
-      getOrdersStats("USD"),
     ]);
 
     return {
-      overview,
-      growth,
       signups: signups.signups.map((s) => ({
         ...s,
         createdAt: s.createdAt.toISOString(),
@@ -51,14 +42,13 @@ const getCachedAdminDashboardData = unstable_cache(
         ...a,
         at: a.at.toISOString(),
       })),
-      orders,
     };
   },
-  ["admin", "dashboard"],
+  ["admin", "dashboard-activity"],
   { revalidate: 60 }
 );
 
-export async function getAdminDashboardData(): Promise<AdminDashboardData> {
+export async function getAdminDashboardActivity(): Promise<AdminDashboardActivity> {
   await requireAdminReport();
-  return getCachedAdminDashboardData();
+  return getCachedAdminDashboardActivity();
 }

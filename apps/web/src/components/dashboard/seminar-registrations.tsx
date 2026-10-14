@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Search, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, FileDown, Loader2, Search, Trash2, Users } from "lucide-react";
 import { Avatar } from "@/components/dashboard/avatar";
 import { PageLoader } from "@/components/dashboard/page-loader";
 import { ScreenError } from "@/components/dashboard/user/ui";
 import { useAuth } from "@/lib/auth/auth-context";
+import { csvFilename, downloadCsv } from "@/lib/csv";
 
 type Registration = {
   id: string;
@@ -133,6 +134,15 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
   const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
   const to = Math.min(safePage * perPage, visible.length);
 
+  const exportCsv = () => {
+    if (visible.length === 0) return;
+    downloadCsv(
+      csvFilename("seminar-registrations"),
+      ["Name", "Email", "Phone", "Registered"],
+      visible.map((r) => [r.name, r.email, r.phone ?? "", r.registeredAt])
+    );
+  };
+
   if (loading) return <PageLoader label="Loading registrations…" />;
   if (error) return <ScreenError message={error} />;
 
@@ -212,6 +222,16 @@ export function SeminarRegistrations({ seminarId }: { seminarId: string }) {
           <option value="name-asc">Name (A–Z)</option>
           <option value="name-desc">Name (Z–A)</option>
         </select>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={visible.length === 0}
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border px-3.5 py-[10px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+        >
+          <FileDown size={14} />
+          Export
+        </button>
       </div>
 
       {/* Table */}

@@ -8,7 +8,13 @@ import { BRAND, AXIS_LABEL, SPLIT_LINE, CARD_TOOLTIP } from "./lib";
 
 type Growth = { labels: string[]; signups: number[] };
 
-export function GrowthChart({ data }: { data: Growth | null }) {
+export function GrowthChart({
+  data,
+  subtitle = "New signups per day over the last 14 days",
+}: {
+  data: Growth | null;
+  subtitle?: string;
+}) {
   const option = useMemo<EChartsOption>(() => {
     const signups = data?.signups ?? [];
     const total = signups.reduce((a, b) => a + b, 0);
@@ -82,7 +88,7 @@ export function GrowthChart({ data }: { data: Growth | null }) {
   return (
     <Card
       title="User growth"
-      subtitle="New signups per day over the last 14 days"
+      subtitle={subtitle}
       action={
         data ? (
           <span

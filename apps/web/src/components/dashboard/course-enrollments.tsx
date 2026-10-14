@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  FileDown,
   GraduationCap,
   Loader2,
   Lock,
@@ -22,6 +23,7 @@ import { PageLoader } from "@/components/dashboard/page-loader";
 import { ScreenError, ScreenLoading } from "@/components/dashboard/user/ui";
 import { CertificateFace, type CertificateGrade } from "@/components/dashboard/certificate-face";
 import { qrCodeDataUrl } from "@/lib/qr-code";
+import { csvFilename, downloadCsv } from "@/lib/csv";
 import {
   CERT_CAPTURE_WIDTH,
   downloadCertificatePdf,
@@ -539,6 +541,47 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
   const from = visible.length === 0 ? 0 : (safePage - 1) * perPage + 1;
   const to = Math.min(safePage * perPage, visible.length);
 
+  const exportCsv = () => {
+    if (visible.length === 0) return;
+    downloadCsv(
+      csvFilename(`course-${course?.slug ?? "members"}`),
+      [
+        "Name",
+        "Email",
+        "Phone",
+        "Plan",
+        "Status",
+        "Enrolled",
+        "Lessons completed",
+        "Total lessons",
+        "Lesson progress %",
+        "Quizzes passed",
+        "Total quizzes",
+        "Quiz avg %",
+        "Course completed",
+        "Certificate issued",
+        "Certificate downloads",
+      ],
+      visible.map((m) => [
+        m.name,
+        m.email,
+        m.phone ?? "",
+        m.subscription,
+        m.status,
+        m.enrolledAt.slice(0, 10),
+        m.lessonsCompleted,
+        m.totalLessons,
+        m.lessonProgress,
+        m.completedQuizzes,
+        m.totalQuizzes,
+        m.quizAvg,
+        m.completed ? "yes" : "no",
+        m.certificateIssued ? "yes" : "no",
+        m.certificateDownloadCount,
+      ])
+    );
+  };
+
   if (loading) return <PageLoader label="Loading members…" />;
   if (error) return <ScreenError message={error} />;
 
@@ -674,6 +717,16 @@ export function CourseEnrollments({ courseSlug }: { courseSlug: string }) {
           <option value="lessons">Lessons completed (high → low)</option>
           <option value="quiz">Quiz avg (high → low)</option>
         </select>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={visible.length === 0}
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border px-3.5 py-[10px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+          style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+        >
+          <FileDown size={14} />
+          Export
+        </button>
       </div>
 
       {certError && (

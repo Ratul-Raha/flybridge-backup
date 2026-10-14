@@ -18,6 +18,7 @@ import { LessonQuiz } from "./lesson-quiz";
 import { ProtectedContent } from "./protected-content";
 import { Watermark } from "./watermark";
 import { BengaliText } from "../bengali-text";
+import { trackUsageEvent } from "@/lib/usage/client";
 
 type Lesson = {
   title: string;
@@ -181,6 +182,16 @@ export function LessonPlayer({
     }
     return { moduleIndex: 0, lessonIndex: 0 };
   }, [index, course.modules]);
+
+  useEffect(() => {
+    trackUsageEvent({
+      event: "lesson_view",
+      path: `/dashboard/courses/${course.slug}/learn`,
+      courseSlug: course.slug,
+      moduleIndex,
+      lessonIndex,
+    });
+  }, [course.slug, moduleIndex, lessonIndex]);
 
   useEffect(() => {
     fetch(`/api/courses/${course.id}/progress`)
@@ -566,6 +577,7 @@ export function LessonPlayer({
                 <div className="mt-5">
                   <LessonQuiz
                     courseId={course.id}
+                    courseSlug={course.slug}
                     moduleIndex={moduleIndex}
                     lessonIndex={lessonIndex}
                     skill={current.skill}

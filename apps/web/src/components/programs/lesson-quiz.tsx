@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle, Mic, Volume2, Square } from "lucide-react";
 import { WritingChart } from "@/components/shared/writing-chart";
+import { trackUsageEvent } from "@/lib/usage/client";
 import type { ChartData } from "@/lib/chart-data";
 
 type Question = {
@@ -51,12 +52,14 @@ function isSubjective(r: Result): r is SubjectiveResult {
 
 export function LessonQuiz({
   courseId,
+  courseSlug,
   moduleIndex,
   lessonIndex,
   skill,
   onScoreUpdate,
 }: {
   courseId: string;
+  courseSlug?: string;
   moduleIndex: number;
   lessonIndex: number;
   skill?: string;
@@ -134,6 +137,15 @@ export function LessonQuiz({
   const startQuiz = async () => {
     setPhase("loading");
     setError("");
+    if (courseSlug) {
+      trackUsageEvent({
+        event: "quiz_start",
+        path: `/dashboard/courses/${courseSlug}/learn`,
+        courseSlug,
+        moduleIndex,
+        lessonIndex,
+      });
+    }
     try {
       const res = await fetch(`/api/courses/${courseId}/quiz/generate`, {
         method: "POST",

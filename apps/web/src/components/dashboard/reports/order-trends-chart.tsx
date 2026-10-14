@@ -12,7 +12,13 @@ import { AXIS_LABEL, CARD_TOOLTIP, EMERALD, SKY, SPLIT_LINE } from "./lib";
 type OrderTrend = { labels: string[]; counts: number[]; revenues: number[] };
 type TooltipPoint = { name: string; seriesName: string; value: number };
 
-export function OrderTrendsChart({ data }: { data: OrderTrend | null }) {
+export function OrderTrendsChart({
+  data,
+  subtitle = "Completed revenue and all orders · last 30 days",
+}: {
+  data: OrderTrend | null;
+  subtitle?: string;
+}) {
   const { currency } = useCurrency();
 
   const option = useMemo<EChartsOption>(() => {
@@ -116,7 +122,7 @@ export function OrderTrendsChart({ data }: { data: OrderTrend | null }) {
   return (
     <Card
       title="Orders & revenue trend"
-      subtitle="Completed revenue and all orders · last 30 days"
+      subtitle={subtitle}
       action={
         data ? (
           <span
