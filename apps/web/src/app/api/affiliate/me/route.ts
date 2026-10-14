@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { Affiliate } from "@/lib/models/affiliate";
 import { AffiliateConversion } from "@/lib/models/affiliate-conversion";
 import { AffiliatePayout } from "@/lib/models/affiliate-payout";
-import { affiliateLink, serializeAffiliate } from "@/lib/affiliate";
+import { affiliateLink, findAffiliateForSession, serializeAffiliate } from "@/lib/affiliate";
 import { approveDueConversions } from "@/lib/affiliate-commission";
 import { computeAffiliateTotals, countAffiliateClicks } from "@/lib/affiliate-stats";
 
@@ -16,9 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     await connectDb();
-    const affiliate = await Affiliate.findOne({
-      $or: [{ user: session.userId }, { email: session.email?.toLowerCase() }],
-    }).lean();
+    const affiliate = await findAffiliateForSession(session);
 
     if (!affiliate) {
       return NextResponse.json({ affiliate: null });

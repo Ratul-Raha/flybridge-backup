@@ -21,6 +21,26 @@ export function normalizeAffiliateCode(value: unknown): string {
   return typeof value === "string" ? value.trim().toUpperCase() : "";
 }
 
+export type AffiliateSession = {
+  userId?: string | null;
+  email?: string | null;
+};
+
+/**
+ * Resolves the affiliate a signed-in user belongs to, matching either their
+ * linked account or their email. An affiliate can be external with no login, so
+ * the email match is what lets a partner sign in with the address on file.
+ */
+export async function findAffiliateForSession(session: AffiliateSession) {
+  await connectDb();
+  const or: Record<string, unknown>[] = [];
+  if (session.userId) or.push({ user: session.userId });
+  const email = session.email?.trim().toLowerCase();
+  if (email) or.push({ email });
+  if (or.length === 0) return null;
+  return Affiliate.findOne({ $or: or });
+}
+
 export function newAffiliateClickId(): string {
   return randomUUID();
 }

@@ -76,6 +76,21 @@ type MeResponse = {
   payouts?: Payout[];
 };
 
+type Product = {
+  type: string;
+  id: string;
+  title: string;
+  path: string;
+  paid: boolean;
+};
+
+const PRODUCT_GROUPS: { type: string; label: string }[] = [
+  { type: "course", label: "Courses" },
+  { type: "seminar", label: "Seminars" },
+  { type: "mock-bundle", label: "Mock-test bundles" },
+  { type: "resource", label: "Resources" },
+];
+
 const STATUS_PILL: Record<string, { label: string; fg: string; bg: string }> = {
   pending: { label: "Pending", fg: "#92400E", bg: "rgba(217,119,6,0.12)" },
   approved: { label: "Approved", fg: "#1D4ED8", bg: "rgba(47,95,224,0.12)" },
@@ -231,6 +246,8 @@ export function AffiliateDashboard() {
           Share this link. You earn {affiliate.commissionPercent}% of every completed order it brings in.
         </p>
       </div>
+
+      <LinkBuilder base={data.link ?? ""} code={affiliate.code} />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon={MousePointerClick} label="Clicks" value={String(data.clicks ?? 0)} />
@@ -498,6 +515,117 @@ function PayoutMethodForm({
         {saving && <Loader2 size={14} className="animate-spin" />}
         {saved ? "Saved" : "Save payout method"}
       </button>
+    </div>
+  );
+}
+
+const CUSTOM = "__custom__";
+
+function LinkBuilder({ base, code }: { base: string; code: string }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [path, setPath] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/affiliate/products", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : { products: [] }))
+      .then((data) => {
+        if (active) setProducts(data.products ?? []);
+      })
+      .catch(() => {
+        // The picker is optional — a custom path still works without it.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const groups = PRODUCT_GROUPS.map((group) => ({
+    ...group,
+    items: products.filter((product) => product.type === group.type),
+  })).filter((group) => group.items.length > 0);
+
+  const trimmed = path.trim();
+  const normalized = trimmed ? (trimmed.startsWith("/") ? trimmed : `/${trimmed}`) : "";
+  const link = normalized && normalized !== "/" ? `${base}?to=${encodeURIComponent(normalized)}` : base;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Ignore — the URL is visible for manual copy.
+    }
+  };
+
+  return (
+    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+        Link builder
+      </h2>
+      <p className="mb-4 text-[12.5px]" style={{ color: "var(--body)" }}>
+        Point your link at a specific course, seminar or bundle — targeted links convert better than the
+        homepage.
+      </p>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label className={labelClass} style={{ color: "var(--ink)" }}>
+            Product
+          </label>
+          <select
+            value={products.some((product) => product.path === normalized) ? normalized : CUSTOM}
+            onChange={(e) => setPath(e.target.value === CUSTOM ? "" : e.target.value)}
+            className={inputClass}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+          >
+            <option value={CUSTOM}>Homepage / custom path</option>
+            {groups.map((group) => (
+              <optgroup key={group.type} label={group.label}>
+                {group.items.map((product) => (
+                  <option key={`${group.type}:${product.id}`} value={product.path}>
+                    {product.title}
+                    {product.paid ? "" : " (free)"}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className={labelClass} style={{ color: "var(--ink)" }}>
+            Path
+          </label>
+          <input
+            value={path}
+            onChange={(e) => setPath(e.target.value)}
+            placeholder="/programs/student-visa-blueprint"
+            className={`${inputClass} font-mono`}
+            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <span className="min-w-0 flex-1 break-all font-mono text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
+          {link}
+        </span>
+        <button
+          type="button"
+          onClick={() => void copy()}
+          className="inline-flex items-center gap-1.5 rounded-full px-5 py-[9px] text-[13px] font-medium text-white"
+          style={{ background: "var(--brand)" }}
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+
+      <p className="mt-3 text-[12px]" style={{ color: "var(--body)" }}>
+        {`Prefer a plain URL? Add ?ref=${code} to any FlyBridge link and it works the same.`}
+      </p>
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { Affiliate } from "@/lib/models/affiliate";
-import { parsePayoutDetails } from "@/lib/affiliate";
+import { findAffiliateForSession, parsePayoutDetails } from "@/lib/affiliate";
 
 export async function PATCH(request: NextRequest) {
   const session = await readSession();
@@ -13,9 +12,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     await connectDb();
-    const affiliate = await Affiliate.findOne({
-      $or: [{ user: session.userId }, { email: session.email?.toLowerCase() }],
-    });
+    const affiliate = await findAffiliateForSession(session);
     if (!affiliate) {
       return NextResponse.json({ error: "Affiliate not found" }, { status: 404 });
     }

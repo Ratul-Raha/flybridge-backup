@@ -6,6 +6,7 @@ import "@fontsource-variable/caveat";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { MetaPixel } from "@/components/meta-pixel";
 import { MarketingAttributionCapture } from "@/components/marketing-attribution-capture";
+import { AffiliateRefCapture } from "@/components/affiliate-ref-capture";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import "flag-icons/css/flag-icons.min.css";
@@ -60,6 +61,7 @@ export default function RootLayout({
           <FooterWithRoutes />
           <ReadinessFab />
           <MarketingAttributionCapture />
+          <AffiliateRefCapture />
         </AuthProvider>
       </body>
       {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}

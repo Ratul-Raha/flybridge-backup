@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { Affiliate } from "@/lib/models/affiliate";
 import { AffiliatePayout } from "@/lib/models/affiliate-payout";
+import { findAffiliateForSession } from "@/lib/affiliate";
 
 export async function GET(request: NextRequest) {
   const session = await readSession();
@@ -12,9 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     await connectDb();
-    const affiliate = await Affiliate.findOne({
-      $or: [{ user: session.userId }, { email: session.email?.toLowerCase() }],
-    }).lean();
+    const affiliate = await findAffiliateForSession(session);
     if (!affiliate) return NextResponse.json({ error: "Affiliate not found" }, { status: 404 });
 
     const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
