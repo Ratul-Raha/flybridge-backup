@@ -363,8 +363,7 @@ export function PublicResourceList() {
         <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 items-center gap-10 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-2">
           {/* Description */}
           <p className="max-w-[560px] font-display text-[clamp(22px,2.6vw,32px)] font-semibold leading-[1.3] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
-            Checklists, guides, templates and videos that turn study-abroad plans
-            into action — <span style={{ color: "var(--brand-2)" }}>free, instant downloads.</span>
+            All premium resources you need
           </p>
 
           {/* Search + format filter */}
