@@ -2,15 +2,28 @@ import "server-only";
 
 import { Resend } from "resend";
 
+import { rewriteEmailLinks } from "./email-tracking";
+
 // ---------------------------------------------------------------------------
 // Core send
 // ---------------------------------------------------------------------------
+
+export type EmailTrackingContext = {
+  /** Campaign slug stored on click rows and copied into utm_campaign. */
+  campaign?: string;
+  templateId?: string;
+  /** Set false to leave links untouched (e.g. purely transactional mail). */
+  trackLinks?: boolean;
+};
 
 type SendEmailInput = {
   to: string | string[];
   subject: string;
   html: string;
   from?: string;
+  /** Click-tracking context; same-site links are wrapped in `/e/{token}`
+   *  redirects unless `trackLinks: false` or tracking is unconfigured. */
+  tracking?: EmailTrackingContext;
 };
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -34,6 +47,17 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; e
     return { ok: false, error: "No recipients" };
   }
 
+  const html =
+    input.tracking?.trackLinks === false
+      ? input.html
+      : rewriteEmailLinks(input.html, {
+          campaign: input.tracking?.campaign,
+          templateId: input.tracking?.templateId,
+          // Per-recipient tokens only when a single address is sent; batch
+          // sends share one token so the same HTML works for the whole chunk.
+          recipient: to.length === 1 ? to[0] : undefined,
+        });
+
   try {
     const resend = new Resend(apiKey);
     const results = await Promise.all(
@@ -42,7 +66,7 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; e
           from,
           to: batch,
           subject: input.subject,
-          html: input.html,
+          html,
         })
       )
     );

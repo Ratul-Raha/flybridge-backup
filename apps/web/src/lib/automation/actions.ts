@@ -76,7 +76,15 @@ async function actionSendEmail(node: AutomationNode, payload: EventPayload): Pro
       )
         .replace(/</g, "&lt;")
         .replace(/\n/g, "<br/>")}</div></div>`;
-  const result = await sendEmail({ to: recipients, subject, html });
+  const result = await sendEmail({
+    to: recipients,
+    subject,
+    html,
+    tracking: {
+      campaign: data.templateId ?? "automation",
+      templateId: data.templateId,
+    },
+  });
   if (!result.ok) return { ok: false, error: result.error ?? "Email send failed" };
   return { ok: true, detail: { recipients: recipients.length } };
 }

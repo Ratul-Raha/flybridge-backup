@@ -131,6 +131,7 @@ Current features and flows of the FlyBridge platform (web app in `apps/web`, Nex
 - **Events** (`/dashboard/admin/events`) — event log of all fired events.
 - **Reports** (`/api/admin/reports/[report]`) — prebuilt analytics reports (registrations, users, etc.).
 - **Automations** (`/dashboard/admin/automations`) — visual automation builder, run history.
+- **Email Clicks** (`/dashboard/admin/email-clicks`) — click analytics for links inside outgoing email (clicks, unique recipients, campaign/template/destination breakdowns, daily trend and a recent-click log with CSV export) from the `EmailClick` collection.
 
 ---
 
@@ -163,6 +164,7 @@ Emitted by the app and logged to the event log:
 ## 9. Notifications & email
 
 - **Email (Resend):** seminar registration confirmation (automation), transactional emails, automation-sent campaigns.
+- **Email link tracking:** same-site links in outgoing mail are wrapped in signed `/e/{token}` redirects (`lib/email-tracking.ts`, `app/e/[token]/route.ts`) that log an `EmailClick`, append `utm_source=email`/`utm_medium=email`/`utm_campaign=…` and forward the visitor; external links, `mailto:`/`tel:` and anchors are left untouched and tokens are HMAC-signed so the redirect can never be turned into an open redirect. Enabled whenever `EMAIL_TRACKING_SECRET` (falls back to `AUTH_SECRET`) is set — see `.env.example`; analytics live at `/dashboard/admin/email-clicks`.
 - **In-app notifications:** created by automation actions, listed at `/dashboard/notifications` (read/unread).
 
 ---

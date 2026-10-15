@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
           to: r.email,
           subject: renderEmailSubject(subject, payload),
           html: renderEmailTemplate(html, payload),
+          tracking: { campaign: "admin-bulk" },
         });
         if (!res.ok) failed.push(r.email);
       }
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
           to: batch.map((r) => r.email),
           subject: subject.trim(),
           html,
+          tracking: { campaign: "admin-bulk" },
         });
         if (!res.ok) failed.push(...batch.map((r) => r.email));
       }
