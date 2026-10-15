@@ -115,6 +115,8 @@ const courseSchema = new Schema(
     featured: { type: Boolean, default: false },
     upcoming: { type: Boolean, default: false },
     certificateEnabled: { type: Boolean, default: true },
+    /** Course-wide guideline PDF, rendered inline inside the members dashboard. */
+    guidelinePdfUrl: { type: String, trim: true },
     modules: { type: [moduleSchema], default: [] },
     books: { type: [bookSchema], default: [] },
     averageRating: { type: Number, default: 0 },

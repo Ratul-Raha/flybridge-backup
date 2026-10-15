@@ -58,6 +58,7 @@ type Course = {
   featured: boolean;
   upcoming: boolean;
   certificateEnabled?: boolean;
+  guidelinePdfUrl?: string;
   enrollmentCount?: number;
   wishlistCount?: number;
   modules: Module[];
@@ -89,6 +90,7 @@ type FormState = {
   featured: boolean;
   upcoming: boolean;
   certificateEnabled: boolean;
+  guidelinePdfUrl: string;
   modules: Module[];
   books: Book[];
 };
@@ -121,6 +123,7 @@ const emptyForm: FormState = {
   featured: false,
   upcoming: false,
   certificateEnabled: true,
+  guidelinePdfUrl: "",
   modules: [],
   books: [],
 };
@@ -216,6 +219,7 @@ export function CourseManage() {
       featured: c.featured ?? false,
       upcoming: c.upcoming ?? false,
       certificateEnabled: c.certificateEnabled ?? true,
+      guidelinePdfUrl: c.guidelinePdfUrl ?? "",
       modules: (c.modules ?? []).map((m) => ({
         title: m.title,
         lessons: m.lessons.map((l) => ({
@@ -1101,6 +1105,60 @@ export function CourseManage() {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* ── Course Guideline ── */}
+          <div className="mt-6">
+            <div className="mb-3">
+              <h3 className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                Course Guideline
+              </h3>
+              <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                Upload a guideline PDF shown to enrolled members inside the dashboard
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={form.guidelinePdfUrl}
+                readOnly
+                placeholder="No guideline uploaded"
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft)" }}
+              />
+              <label
+                className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium rounded-lg border px-3 py-[10px] cursor-pointer hover:border-brand-2 hover:text-brand-2 transition-all duration-200 disabled:opacity-60"
+                style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+              >
+                {uploading?.startsWith("guideline") ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Upload size={12} />
+                )}
+                {form.guidelinePdfUrl ? "Replace PDF" : "Upload PDF"}
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) =>
+                    handleFile(e.target.files?.[0] ?? undefined, (url) =>
+                      setForm((f) => ({ ...f, guidelinePdfUrl: url }))
+                    )
+                  }
+                />
+              </label>
+              {form.guidelinePdfUrl && (
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, guidelinePdfUrl: "" }))}
+                  className="shrink-0 p-2 rounded-lg hover:bg-red-50 transition"
+                  style={{ color: "#DC2626" }}
+                  title="Remove guideline"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           </div>
 

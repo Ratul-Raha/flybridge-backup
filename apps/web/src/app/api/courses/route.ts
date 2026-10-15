@@ -94,6 +94,7 @@ const prices = cleanPrices(c.prices);
       description: b.description ?? "",
       ...(includeContent ? { pdfUrl: b.pdfUrl } : {}),
     })),
+    ...(includeContent ? { guidelinePdfUrl: c.guidelinePdfUrl ?? "" } : {}),
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
@@ -232,6 +233,8 @@ export async function POST(request: NextRequest) {
       featured: body.featured === true,
       upcoming: body.upcoming === true,
       certificateEnabled: body.certificateEnabled !== false,
+      guidelinePdfUrl:
+        typeof body.guidelinePdfUrl === "string" ? body.guidelinePdfUrl.trim() : "",
       modules: normalizeModules(body.modules),
       books: normalizeBooks(body.books),
       createdBy: session!.userId,

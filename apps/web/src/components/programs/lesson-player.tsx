@@ -132,6 +132,7 @@ export function LessonPlayer({
     modules: Module[];
     books: { title: string; description: string; pdfUrl: string }[];
     certificateEnabled?: boolean;
+    guidelinePdfUrl?: string | null;
   };
   lessons: FlatLesson[];
   initialIndex: number;
@@ -140,7 +141,7 @@ export function LessonPlayer({
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
-  const [tab, setTab] = useState<"lesson" | "quiz">("lesson");
+  const [tab, setTab] = useState<"lesson" | "quiz" | "guideline">("lesson");
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -437,6 +438,24 @@ export function LessonPlayer({
               </div>
             </div>
           )}
+          {course.guidelinePdfUrl && (
+            <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
+                Course Guideline
+              </p>
+              <button
+                type="button"
+                onClick={() => setTab("guideline")}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left w-full transition-colors hover:bg-black/5"
+                style={tab === "guideline" ? { background: "var(--brand-soft, rgba(107,76,224,0.06))" } : undefined}
+              >
+                <FileText size={15} style={{ color: "var(--brand)" }} />
+                <span className="text-[13px] font-medium truncate flex-1 min-w-0" style={{ color: "var(--ink)" }}>
+                  Read the guideline
+                </span>
+              </button>
+            </div>
+          )}
         </aside>
 
         {/* Overlay for mobile sidebar */}
@@ -527,21 +546,74 @@ export function LessonPlayer({
                     Quiz
                   </button>
                 )}
+                {course.guidelinePdfUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setTab("guideline")}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                    style={
+                      tab === "guideline"
+                        ? { background: "white", color: "var(--ink)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
+                        : { color: "var(--body)" }
+                    }
+                  >
+                    <FileText size={14} />
+                    Guideline
+                  </button>
+                )}
               </div>
 
               {/* Lesson title & meta */}
+              {/* Lesson title & meta */}
               <div className="mt-5">
-                <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                  <BengaliText>{current.title}</BengaliText>
-                </h1>
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
-                  {current.moduleTitle}
-                  {current.duration ? ` · ${current.duration}` : ""}
-                </p>
+                {tab === "guideline" ? (
+                  <>
+                    <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                      Course Guideline
+                    </h1>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
+                      {course.title}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                      <BengaliText>{current.title}</BengaliText>
+                    </h1>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
+                      {current.moduleTitle}
+                      {current.duration ? ` · ${current.duration}` : ""}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Content area */}
-              {tab === "lesson" || !current.quiz ? (
+              {tab === "guideline" && course.guidelinePdfUrl ? (
+                <div className="mt-5 flex flex-col gap-3">
+                  <div
+                    className="rounded-xl border overflow-hidden"
+                    style={{ borderColor: "var(--line)", background: "white" }}
+                  >
+                    <iframe
+                      src={course.guidelinePdfUrl}
+                      title={`${course.title} — course guideline`}
+                      className="w-full"
+                      style={{ height: "78vh" }}
+                    />
+                  </div>
+                  <a
+                    href={course.guidelinePdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="self-start inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13px] font-medium transition-colors hover:bg-black/5"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                  >
+                    <FileText size={14} />
+                    Open guideline in a new tab
+                  </a>
+                </div>
+              ) : tab === "lesson" || !current.quiz ? (
                 <>
                   {current.content && (
                     <div

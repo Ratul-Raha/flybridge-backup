@@ -164,6 +164,8 @@ export default async function LearnPage({ params, searchParams }: Props) {
     }))
   );
 
+  const guidelinePdfUrl = await signMediaUrl(course.guidelinePdfUrl);
+
   return (
     <LessonPlayer
       course={{
@@ -174,6 +176,7 @@ export default async function LearnPage({ params, searchParams }: Props) {
         modules: signedModules,
         books: signedBooks,
         certificateEnabled: course.certificateEnabled,
+        guidelinePdfUrl: guidelinePdfUrl || null,
       }}
       initialIndex={initialIndex}
       lessons={lessons}

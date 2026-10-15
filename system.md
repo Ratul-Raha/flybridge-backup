@@ -89,6 +89,8 @@ Current features and flows of the FlyBridge platform (web app in `apps/web`, Nex
 
 - Static marketing content driven by `src/lib/programs.ts` (slug, badge, title, description, price in BDT, image).
 - Detail page `/programs/[id]` renders the program with an enroll CTA.
+- Course content (modules → lessons with video/PDF/notes, plus course books) is managed in the admin course editor and stored on the `Course` model (`apps/web/src/lib/models/course.ts`).
+- A course can carry a **guideline PDF** (`guidelinePdfUrl`), uploaded in the editor. Enrolled members read it inline in the lesson player — a "Guideline" tab embeds the signed PDF in an iframe (with an "open in new tab" fallback and a sidebar entry).
 - `course.launched` event exists as a manual trigger for automations (announcement emails).
 
 ---

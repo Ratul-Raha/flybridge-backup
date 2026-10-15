@@ -34,6 +34,7 @@ const COURSE_FIELD_LABELS: Record<string, string> = {
   featured: "Featured",
   upcoming: "Upcoming",
   certificateEnabled: "Certificate enabled",
+  guidelinePdfUrl: "Guideline PDF",
   modules: "Modules",
   books: "Books",
 };
@@ -141,6 +142,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.featured === "boolean") course.featured = body.featured;
     if (typeof body.upcoming === "boolean") course.upcoming = body.upcoming;
     if (typeof body.certificateEnabled === "boolean") course.certificateEnabled = body.certificateEnabled;
+    if (typeof body.guidelinePdfUrl === "string") {
+      course.guidelinePdfUrl = body.guidelinePdfUrl.trim() || undefined;
+    }
     if (Array.isArray(body.modules)) {
       course.modules = body.modules as typeof course.modules;
     }
