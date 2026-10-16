@@ -91,8 +91,9 @@ export async function GET(
       "Content-Disposition",
       `${disposition}; filename="${asciiSafe(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
     );
-    headers.set("Cache-Control", "public, max-age=3600");
+    headers.set("Cache-Control", "private, no-store");
     headers.set("Accept-Ranges", "bytes");
+    headers.set("X-Content-Type-Options", "nosniff");
 
     if (session?.userId) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
