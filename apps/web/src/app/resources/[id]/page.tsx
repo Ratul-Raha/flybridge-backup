@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { ResourceComment } from "@/lib/models/resource-comment";
 import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { ResourceDetail } from "@/components/resources/resource-detail";
@@ -45,13 +46,14 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
     const resource = await Resource.findById(params.id);
     if (!resource) notFound();
 
-    const [ownCount, topRows] = await Promise.all([
+    const [ownCount, topRows, commentCount] = await Promise.all([
       ResourceDownload.countDocuments({ resource: resource._id }),
       ResourceDownload.aggregate<{ count: number }>([
         { $group: { _id: "$resource", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 1 },
       ]),
+      ResourceComment.countDocuments({ resource: resource._id }),
     ]);
     const topCount = topRows[0]?.count ?? 0;
     const mostDownloaded = ownCount > 0 && ownCount === topCount;
@@ -70,6 +72,7 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
               wantsDownload={searchParams.download === "1"}
               wantsGet={searchParams.get === "1"}
               mostDownloaded={mostDownloaded}
+              commentCount={commentCount}
               resource={{
                 id: resource._id.toString(),
                 title: resource.title,

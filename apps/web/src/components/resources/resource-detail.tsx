@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Play, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ResourceVideoPlayer } from "@/components/resources/resource-video-player";
+import { ResourceCommentsSection } from "@/components/resources/resource-comments";
 import { MetaProductView } from "@/components/meta-product-view";
 import { trackMetaEvent } from "@/lib/meta-events";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
@@ -31,11 +32,13 @@ export function ResourceDetail({
   wantsDownload = false,
   wantsGet = false,
   mostDownloaded = false,
+  commentCount = 0,
 }: {
   resource: ResourceCardData;
   wantsDownload?: boolean;
   wantsGet?: boolean;
   mostDownloaded?: boolean;
+  commentCount?: number;
 }) {
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
@@ -228,6 +231,7 @@ export function ResourceDetail({
     ...(r.fileName ? [{ label: "File", value: r.fileName }] : []),
     ...(r.fileSize > 0 ? [{ label: "Size", value: formatFileSize(r.fileSize) }] : []),
     ...(isVideo ? [{ label: "Views", value: (r.viewCount ?? 0).toLocaleString() }] : []),
+    ...(isVideo ? [{ label: "Comments", value: commentCount.toLocaleString() }] : []),
     { label: "Published", value: formatResourceDate(r.releaseDate) },
     { label: "Access", value: isPublic ? "Public" : "Members only" },
   ];
@@ -450,6 +454,10 @@ export function ResourceDetail({
           </div>
         </aside>
       </div>
+
+      {isVideo && (
+        <ResourceCommentsSection resourceId={r.id} onChanged={() => router.refresh()} />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Check,
   Download,
+  MessageSquare,
   PlayCircle,
   Search,
   Share2,
@@ -176,11 +177,21 @@ function VideoResourceCard({ r }: { r: ResourceCardData }) {
             {r.category}
           </span>
         </span>
-        <span
-          className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
-          style={{ background: "rgba(107,76,224,0.10)", color: "#6B4CE0" }}
-        >
-          <VideoViews count={r.viewCount ?? 0} /> views
+        <span className="inline-flex shrink-0 items-center gap-2">
+          {(r.commentCount ?? 0) > 0 && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+              style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
+            >
+              <MessageSquare size={9} strokeWidth={2.5} /> {r.commentCount}
+            </span>
+          )}
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+            style={{ background: "rgba(107,76,224,0.10)", color: "#6B4CE0" }}
+          >
+            <VideoViews count={r.viewCount ?? 0} /> views
+          </span>
         </span>
       </div>
 

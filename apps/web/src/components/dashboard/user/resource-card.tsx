@@ -33,6 +33,7 @@ export type ResourceCardData = {
   featured: boolean;
   downloadCount?: number;
   viewCount?: number;
+  commentCount?: number;
 };
 
 const FILE_TYPE_META: Record<string, { icon: LucideIcon; label: string; color: string; bg: string }> = {

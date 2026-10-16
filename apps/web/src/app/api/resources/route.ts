@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
+import { ResourceComment } from "@/lib/models/resource-comment";
 import { isResourceCategory } from "@/lib/resource-categories";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
@@ -24,6 +25,7 @@ type ResourceDto = {
   featured: boolean;
   downloadCount: number;
   viewCount: number;
+  commentCount: number;
 };
 
 function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
@@ -44,17 +46,28 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
     featured: r.featured ?? false,
     downloadCount: 0,
     viewCount: r.viewCount ?? 0,
+    commentCount: 0,
   };
 }
 
 async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false, days?: number): Promise<ResourceDto[]> {
   const match = days && days > 0 ? { createdAt: { $gte: lastNDays(days) } } : {};
-  const rows = await ResourceDownload.aggregate<{ _id: string; count: number }>([
-    { $match: match },
-    { $group: { _id: "$resource", count: { $sum: 1 } } },
+  const [downloadRows, commentRows] = await Promise.all([
+    ResourceDownload.aggregate<{ _id: string; count: number }>([
+      { $match: match },
+      { $group: { _id: "$resource", count: { $sum: 1 } } },
+    ]),
+    ResourceComment.aggregate<{ _id: string; count: number }>([
+      { $group: { _id: "$resource", count: { $sum: 1 } } },
+    ]),
   ]);
-  const counts = new Map(rows.map((r) => [r._id.toString(), r.count]));
-  return resources.map((r) => ({ ...toDto(r, includeUrl), downloadCount: counts.get(r._id.toString()) ?? 0 }));
+  const counts = new Map(downloadRows.map((r) => [r._id.toString(), r.count]));
+  const commentCounts = new Map(commentRows.map((r) => [r._id.toString(), r.count]));
+  return resources.map((r) => ({
+    ...toDto(r, includeUrl),
+    downloadCount: counts.get(r._id.toString()) ?? 0,
+    commentCount: commentCounts.get(r._id.toString()) ?? 0,
+  }));
 }
 
 function lastNDays(n: number) {
