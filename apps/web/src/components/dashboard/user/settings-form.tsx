@@ -1,7 +1,7 @@
 "use client";
 
 import { useProfileForm, ADDRESS_FIELDS } from "@/components/dashboard/use-profile-form";
-import { BD_COUNTRY_CODE } from "@/lib/phone";
+import { PhoneInput } from "@/components/phone-input";
 
 export function SettingsForm() {
   const { user, form, setForm, saved, saving, error, save } = useProfileForm();
@@ -46,31 +46,15 @@ export function SettingsForm() {
           <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
             Phone number <span style={{ color: "#C0392B" }}>*</span>
           </label>
-          <div className="flex">
-            <span
-              className="inline-flex items-center px-3 text-[13px] font-medium rounded-l-xl border border-r-0 bg-[var(--bg-soft)]"
-              style={{ borderColor: "var(--line)", color: "var(--body)" }}
-            >
-              {BD_COUNTRY_CODE}
-            </span>
-            <input
-              type="tel"
-              value={
-                form.phone.startsWith(BD_COUNTRY_CODE)
-                  ? form.phone.slice(BD_COUNTRY_CODE.length)
-                  : ""
-              }
-              onChange={(e) => {
-                const digits = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
-                setForm({ ...form, phone: digits ? `${BD_COUNTRY_CODE}${digits}` : "" });
-              }}
-              placeholder="1XXXXXXXXX"
-              className={inputClass + " !rounded-l-none"}
-              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            />
-          </div>
+          <PhoneInput
+            value={form.phone}
+            onChange={(phone) => setForm({ ...form, phone })}
+            placeholder="Phone number"
+            inputClassName={inputClass + " rounded-r-xl"}
+            inputStyle={{ color: "var(--ink)" }}
+          />
           <p className="text-[11px]" style={{ color: "var(--body)" }}>
-            Country code locked to +88 for Bangladesh (required)
+            Select your country code and enter your number (required)
           </p>
         </div>
 

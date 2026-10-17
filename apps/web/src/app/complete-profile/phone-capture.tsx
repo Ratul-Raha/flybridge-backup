@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
+import { isValidPhone, normalizePhone } from "@/lib/phone";
+import { PhoneInput } from "@/components/phone-input";
 
 export function PhoneCapture({ next }: { next: string }) {
-  const [phone, setPhone] = useState("+8801");
+  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user, refreshSession } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user?.phone && isValidBdPhone(user.phone)) {
+    if (user?.phone && isValidPhone(user.phone)) {
       router.replace(next);
     }
   }, [user, router, next]);
@@ -23,9 +24,9 @@ export function PhoneCapture({ next }: { next: string }) {
     e.preventDefault();
     setError(null);
 
-    const normalized = normalizeBdPhone(phone);
-    if (!isValidBdPhone(normalized)) {
-      setError("Please enter a valid Bangladeshi phone number (e.g., +8801XXXXXXXXX)");
+    const normalized = normalizePhone(phone);
+    if (!isValidPhone(normalized)) {
+      setError("Please enter a valid phone number for your selected country");
       return;
     }
 
@@ -61,7 +62,7 @@ export function PhoneCapture({ next }: { next: string }) {
         className="text-center text-[13.5px] leading-[1.6] mt-2 mb-8"
         style={{ color: "var(--body)" }}
       >
-        A valid phone number is required to continue. For now, we only support Bangladeshi numbers (+88).
+        A valid phone number is required to continue. Select your country and enter your number.
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-6">
@@ -69,16 +70,15 @@ export function PhoneCapture({ next }: { next: string }) {
           <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
             Phone number
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+8801XXXXXXXXX"
-            className="w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 hover:border-brand-2/60"
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            onChange={setPhone}
+            placeholder="1XXX XXXXXXX"
+            inputClassName="w-full text-[14px] border bg-white px-4 py-[11px] rounded-r-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 hover:border-brand-2/60"
+            inputStyle={{ color: "var(--ink)" }}
           />
           <p className="text-[11px]" style={{ color: "var(--body)" }}>
-            Country code locked to +88 for Bangladesh
+            Pick your country code, then enter your number
           </p>
         </div>
 

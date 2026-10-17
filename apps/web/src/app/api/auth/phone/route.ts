@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
-import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
+import { isValidPhone, normalizePhone } from "@/lib/phone";
 
 export async function POST(request: NextRequest) {
   const session = await readSession();
@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const phone = typeof body.phone === "string" ? body.phone : "";
 
-    const normalized = normalizeBdPhone(phone);
-    if (!isValidBdPhone(normalized)) {
+    const normalized = normalizePhone(phone);
+    if (!isValidPhone(normalized)) {
       return NextResponse.json(
-        { error: "Please enter a valid Bangladeshi phone number (e.g., +8801XXXXXXXXX)" },
+        { error: "Please enter a valid phone number for your selected country" },
         { status: 400 }
       );
     }

@@ -1,6 +1,6 @@
 /**
- * One-off migration: normalize existing User.phone values into the
- * canonical Bangladeshi format (+8801XXXXXXXXX) and clear invalid ones.
+ * One-off migration: normalize existing User.phone values into canonical
+ * E.164 form (+<country><number>) and clear anything unusable.
  *
  * Usage:
  *   node scripts/normalize-user-phones.mjs            # dry-run (default)
@@ -19,14 +19,12 @@ if (!uri) {
 
 const client = new MongoClient(uri);
 
-function normalizeBdPhone(input) {
+function normalizePhone(input) {
   if (!input) return "";
-  const cleaned = String(input).trim().replace(/[\s\-()]/g, "");
-  if (/^\+8801\d{9}$/.test(cleaned)) return cleaned;
-  if (/^8801\d{9}$/.test(cleaned)) return "+" + cleaned;
-  if (/^01\d{9}$/.test(cleaned)) return "+88" + cleaned.slice(1);
-  if (/^1\d{9}$/.test(cleaned)) return "+880" + cleaned;
-  return "";
+  const digits = String(input).replace(/\D/g, "");
+  if (!digits) return "";
+  const normalized = "+" + digits;
+  return /^\+[1-9]\d{6,14}$/.test(normalized) ? normalized : "";
 }
 
 async function main() {
@@ -45,7 +43,7 @@ async function main() {
       already++;
       continue;
     }
-    const normalized = normalizeBdPhone(original);
+    const normalized = normalizePhone(original);
     if (!normalized) {
       cleared++;
       if (DRY_RUN) {

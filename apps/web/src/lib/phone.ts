@@ -1,35 +1,73 @@
-export const BD_COUNTRY_CODE = "+880";
+import { DIAL_CODES, type DialCode } from "./dial-codes";
 
-export function normalizeBdPhone(input: string): string {
-  if (!input) return "";
-  const trimmed = input.trim();
-  if (!trimmed) return "";
+export type { DialCode } from "./dial-codes";
+export { DIAL_CODES } from "./dial-codes";
 
-  let cleaned = trimmed.replace(/[\s\-\(\)]/g, "");
+/** Default country when none can be inferred (Bangladesh, +880). */
+export const DEFAULT_COUNTRY_ISO = "BD";
 
-  // +8801XXXXXXXXX (already full)
-  if (/^\+8801\d{9}$/.test(cleaned)) return cleaned;
-
-  // 8801XXXXXXXXX (no +)
-  if (/^8801\d{9}$/.test(cleaned)) return "+" + cleaned;
-
-  // 01XXXXXXXXX (local)
-  if (/^01\d{9}$/.test(cleaned)) return BD_COUNTRY_CODE + cleaned.slice(1);
-
-  // 1XXXXXXXXX (just the national number)
-  if (/^1\d{9}$/.test(cleaned)) return BD_COUNTRY_CODE + cleaned;
-
-  return cleaned;
+export function findCountryByIso(
+  iso: string | null | undefined
+): DialCode | undefined {
+  if (!iso) return undefined;
+  const upper = iso.toUpperCase();
+  return DIAL_CODES.find((c) => c.code === upper);
 }
 
-export function isValidBdPhone(phone: string): boolean {
-  if (!phone) return false;
-  const normalized = normalizeBdPhone(phone);
-  return /^\+8801\d{9}$/.test(normalized);
+export function getDefaultCountry(): DialCode {
+  return (
+    findCountryByIso(DEFAULT_COUNTRY_ISO) ??
+    DIAL_CODES[0]
+  );
 }
 
-export function formatBdPhoneForDisplay(phone: string): string {
-  const normalized = normalizeBdPhone(phone);
-  if (!isValidBdPhone(normalized)) return phone;
-  return normalized.replace(/^(\+880)(1\d{9})$/, "$1 $2");
+/** Strip everything except a leading "+" and digits. */
+export function normalizePhone(input: string): string {
+  const cleaned = (input ?? "").replace(/[^\d+]/g, "");
+  if (!cleaned) return "";
+  const digits = cleaned.replace(/\D/g, "");
+  if (!digits) return "";
+  return "+" + digits;
+}
+
+/**
+ * Split a stored phone number into its country and national part by matching
+ * the longest known dial-code prefix.
+ */
+export function splitPhone(input: string): {
+  country?: DialCode;
+  national: string;
+} {
+  const digits = (input ?? "").replace(/\D/g, "");
+  if (!digits) return { national: "" };
+
+  const byLength = [...DIAL_CODES].sort((a, b) => b.dial.length - a.dial.length);
+  for (const country of byLength) {
+    if (digits.startsWith(country.dial)) {
+      return { country, national: digits.slice(country.dial.length) };
+    }
+  }
+  return { national: digits };
+}
+
+/** Build a normalized E.164 number from a dial code and national number. */
+export function buildPhone(national: string, dial: string): string {
+  const digits = (national ?? "").replace(/\D/g, "");
+  const cleanDial = (dial ?? "").replace(/\D/g, "");
+  if (!cleanDial || !digits) return "";
+  return `+${cleanDial}${digits}`;
+}
+
+/** True when the value is a plausible E.164 number (7–15 digits total). */
+export function isValidPhone(phone: string): boolean {
+  const normalized = normalizePhone(phone);
+  return /^\+[1-9]\d{6,14}$/.test(normalized);
+}
+
+export function formatPhoneForDisplay(phone: string): string {
+  const normalized = normalizePhone(phone);
+  if (!isValidPhone(normalized)) return phone;
+  const { country, national } = splitPhone(normalized);
+  if (!country) return normalized;
+  return `+${country.dial} ${national}`.trim();
 }
