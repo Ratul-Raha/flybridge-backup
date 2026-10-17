@@ -44,13 +44,16 @@ export function ResourceVideoDialog({
       <div className="absolute inset-0 bg-[rgba(10,14,26,0.82)] backdrop-blur-sm" onClick={onClose} />
 
       <div
-        className="relative grid max-h-[92vh] w-full max-w-[980px] grid-cols-1 overflow-y-auto overflow-x-hidden rounded-2xl bg-white lg:h-[min(760px,92vh)] lg:max-h-none lg:grid-cols-[360px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
+        className="relative grid max-h-[92vh] w-full max-w-[940px] grid-cols-1 overflow-y-auto overflow-x-hidden rounded-2xl bg-white lg:h-[min(820px,92vh)] lg:max-h-none lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
         style={{ boxShadow: "0 40px 90px -30px rgba(0,0,0,0.6)" }}
       >
         {/* Media */}
-        <div className="relative flex items-center justify-center bg-black p-2 sm:p-3">
-          <div className="w-full max-w-[320px]">
-            <ResourceVideoPlayer resource={resource} />
+        <div className="relative flex items-center justify-center bg-black p-2 sm:p-3 lg:p-4">
+          <div className="flex h-full w-full items-center justify-center">
+            <ResourceVideoPlayer
+              resource={resource}
+              className="w-full max-w-[380px] lg:h-full lg:w-auto lg:max-w-none"
+            />
           </div>
           <button
             type="button"
@@ -64,7 +67,7 @@ export function ResourceVideoDialog({
 
         {/* Discussion */}
         <div className="flex min-h-0 flex-col">
-          <header className="flex items-start justify-between gap-3 border-b px-5 py-4" style={{ borderColor: "var(--line)" }}>
+          <header className="flex items-start justify-between gap-3 border-b px-4 py-4 sm:px-5" style={{ borderColor: "var(--line)" }}>
             <div className="min-w-0">
               <h2 className="truncate font-display text-[15.5px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
                 {resource.title}
@@ -109,7 +112,7 @@ export function ResourceVideoDialog({
             </button>
           </header>
 
-          <div className="px-5 pb-6 pt-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+          <div className="px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
             <ResourceCommentsSection
               resourceId={resource.id}
               compact
