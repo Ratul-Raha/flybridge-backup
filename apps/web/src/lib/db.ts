@@ -3,6 +3,7 @@ import { User } from "./models/user";
 import { Seminar, SeminarRegistration } from "./models/seminar";
 import { ResourceDownload } from "./models/resource-download";
 import { ResourceComment } from "./models/resource-comment";
+import { ResourceLove } from "./models/resource-love";
 import { Resource } from "./models/resource";
 import { ReadinessRun } from "./models/readiness-run";
 import { Course } from "./models/course";
@@ -36,6 +37,7 @@ void Seminar;
 void SeminarRegistration;
 void ResourceDownload;
 void ResourceComment;
+void ResourceLove;
 void Resource;
 void ReadinessRun;
 void Course;
@@ -111,9 +113,14 @@ export async function connectDb(): Promise<mongoose.Connection> {
   cached.promise ??= mongoose
     .connect(uri, {
       dbName,
-      maxIdleTimeMS: 60_000,
+      // Serverless-friendly pooling: each Vercel function instance opens its
+      // own pool, so keep sockets minimal and release idle ones quickly.
+      maxPoolSize: 2,
+      minPoolSize: 0,
+      maxIdleTimeMS: 10_000,
+      waitQueueTimeoutMS: 10_000,
+      connectTimeoutMS: 10_000,
       serverSelectionTimeoutMS: 10_000,
-      maxPoolSize: 10,
       family: 4,
     })
     .then((m) => m.connection);
