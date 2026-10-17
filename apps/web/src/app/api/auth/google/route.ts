@@ -14,6 +14,7 @@ import {
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
+import { normalizeBdPhone, isValidBdPhone } from "@/lib/phone";
 
 type Claims = Awaited<ReturnType<typeof verifyIdToken>>;
 
@@ -53,7 +54,12 @@ async function loadOrCreateUser(
       name: claims.name?.trim() || email.split("@")[0],
       email,
       avatar: claims.picture,
-      phone: claims.phone_number,
+      phone: (() => {
+        const raw = claims.phone_number;
+        if (!raw) return undefined;
+        const normalized = normalizeBdPhone(raw);
+        return isValidBdPhone(normalized) ? normalized : undefined;
+      })(),
       accountType: "user",
       subscription: "free" as SubscriptionType,
       signupSource: source ?? null,
@@ -158,6 +164,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        phone: user.phone ?? null,
         accountType: user.accountType,
         subscription: user.subscription,
       },

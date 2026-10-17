@@ -11,6 +11,8 @@ import {
   type ReactNode,
 } from "react";
 import type { Auth } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { isValidBdPhone } from "@/lib/phone";
 import type { AccountType, SubscriptionType } from "@/lib/roles";
 
 export type AuthUser = {
@@ -68,6 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     }
   }, []);
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Force phone completion for authenticated users missing/invalid phone
+  useEffect(() => {
+    if (!user || loading) return;
+    if (pathname === "/complete-profile" || pathname === "/login" || pathname === "/logout") return;
+    if (!user.phone || !isValidBdPhone(user.phone)) {
+      const next = encodeURIComponent(pathname || "/dashboard");
+      router.replace(`/complete-profile?next=${next}`);
+    }
+  }, [user, loading, pathname, router]);
 
   useEffect(() => {
     refreshSession().finally(() => setLoading(false));

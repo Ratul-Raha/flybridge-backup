@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from "next/server";
+import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
+import { User } from "@/lib/models/user";
+import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
+
+export async function POST(request: NextRequest) {
+  const session = await readSession();
+  if (!session || !session.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const phone = typeof body.phone === "string" ? body.phone : "";
+
+    const normalized = normalizeBdPhone(phone);
+    if (!isValidBdPhone(normalized)) {
+      return NextResponse.json(
+        { error: "Please enter a valid Bangladeshi phone number (e.g., +8801XXXXXXXXX)" },
+        { status: 400 }
+      );
+    }
+
+    await connectDb();
+    const user = await User.findById(session.userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    user.phone = normalized;
+    await user.save();
+
+    return NextResponse.json({
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        avatar: user.avatar ?? null,
+        accountType: session.role,
+        subscription: user.subscription,
+      },
+    });
+  } catch (error) {
+    console.error("auth/phone error", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}

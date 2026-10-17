@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
 
 export const ADDRESS_FIELDS = [
   { key: "street", label: "Street address", placeholder: "123 Main Street" },
@@ -42,14 +43,22 @@ export function useProfileForm() {
   }, [user]);
 
   const save = async () => {
+    setError(null);
+
+    const normalizedPhone = normalizeBdPhone(form.phone);
+    if (!isValidBdPhone(normalizedPhone)) {
+      setError("A valid Bangladeshi phone number is required (e.g., +8801XXXXXXXXX)");
+      return;
+    }
+
     setSaving(true);
     setSaved(false);
-    setError(null);
     try {
+      const payload = { ...form, phone: normalizedPhone };
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Failed to save");
       await refreshSession();

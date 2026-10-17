@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
+import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
 
 const ADDRESS_KEYS = ["street", "city", "state", "country", "postalCode"] as const;
 
@@ -52,7 +53,14 @@ export async function PATCH(request: NextRequest) {
       user.name = body.name.trim();
     }
     if (typeof body.phone === "string") {
-      user.phone = body.phone.trim() || undefined;
+      const normalized = normalizeBdPhone(body.phone);
+      if (!isValidBdPhone(normalized)) {
+        return NextResponse.json(
+          { error: "A valid Bangladeshi phone number is required (e.g., +8801XXXXXXXXX)" },
+          { status: 400 }
+        );
+      }
+      user.phone = normalized;
     }
     if (typeof body.avatar === "string") {
       user.avatar = body.avatar.trim() || undefined;
