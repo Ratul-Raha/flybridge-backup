@@ -11,7 +11,6 @@ import {
   Search,
   Share2,
   TrendingUp,
-  X,
 } from "lucide-react";
 import { getCategoryColor } from "@/lib/resource-colors";
 import {
@@ -21,7 +20,7 @@ import {
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
 import { ResourceVideoPlayer, VideoViews } from "@/components/resources/resource-video-player";
-import { ResourceCommentsSection } from "@/components/resources/resource-comments";
+import { ResourceVideoDialog } from "@/components/resources/resource-video-dialog";
 import { ResourceLoveButton } from "@/components/resources/resource-love-button";
 
 const FILE_TYPES = [
@@ -143,12 +142,10 @@ function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }
 
 function VideoResourceCard({
   r,
-  commentsOpen = false,
-  onToggleComments,
+  onOpen,
 }: {
   r: ResourceCardData;
-  commentsOpen?: boolean;
-  onToggleComments?: (id: string) => void;
+  onOpen?: (r: ResourceCardData) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const accent = getCategoryColor(r.category);
@@ -170,9 +167,15 @@ function VideoResourceCard({
       className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
     >
-      {/* Portrait player */}
-      <div className="-mx-5 -mt-5 overflow-hidden rounded-t-lg">
+      {/* Portrait player (click opens the watch + comments dialog) */}
+      <div className="-mx-5 -mt-5 relative overflow-hidden rounded-t-lg">
         <ResourceVideoPlayer resource={r} />
+        <button
+          type="button"
+          onClick={() => onOpen?.(r)}
+          aria-label={`Watch ${r.title}`}
+          className="absolute inset-0 cursor-pointer"
+        />
       </div>
 
       {/* Meta row */}
@@ -196,15 +199,11 @@ function VideoResourceCard({
           />
           <button
             type="button"
-            onClick={() => onToggleComments?.(r.id)}
-            title={commentsOpen ? "Hide comments" : "Comment on this video"}
-            aria-label={commentsOpen ? "Hide comments" : "Comment on this video"}
-            aria-expanded={commentsOpen}
+            onClick={() => onOpen?.(r)}
+            title="Watch and comment"
+            aria-label="Watch and comment"
             className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em] transition-all duration-200 hover:scale-105 active:scale-95"
-            style={{
-              background: commentsOpen ? "rgba(15,169,104,0.18)" : "rgba(15,169,104,0.10)",
-              color: "#0FA968",
-            }}
+            style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
           >
             <MessageSquare size={9} strokeWidth={2.5} /> {(r.commentCount ?? 0).toLocaleString()}
           </button>
@@ -218,11 +217,11 @@ function VideoResourceCard({
       </div>
 
       {/* Title */}
-      <Link href={`/resources/${r.id}`} target="_blank" rel="noreferrer">
-        <h3 className="mt-4 line-clamp-2 font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+      <button type="button" onClick={() => onOpen?.(r)} className="mt-4 text-left">
+        <h3 className="line-clamp-2 font-display text-[16px] font-semibold leading-snug transition-opacity hover:opacity-70" style={{ color: "var(--ink)" }}>
           {r.title}
         </h3>
-      </Link>
+      </button>
 
       {/* Description */}
       {r.description && (
@@ -324,9 +323,8 @@ export function PublicResourceList() {
   const [error, setError] = useState<string | null>(null);
   const [fileType, setFileType] = useState<FileTypeFilter>("video");
   const [query, setQuery] = useState("");
-  const [openCommentsId, setOpenCommentsId] = useState<string | null>(null);
+  const [activeVideo, setActiveVideo] = useState<ResourceCardData | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const commentsPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -376,19 +374,6 @@ export function PublicResourceList() {
     !query.trim() && topCount > 0
       ? visible.find((r) => (r.downloadCount ?? 0) === topCount) ?? null
       : null;
-
-  const activeCommentResource = useMemo(
-    () => (openCommentsId ? visible.find((r) => r.id === openCommentsId) ?? null : null),
-    [openCommentsId, visible]
-  );
-
-  useEffect(() => {
-    if (activeCommentResource) {
-      requestAnimationFrame(() =>
-        commentsPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-      );
-    }
-  }, [activeCommentResource]);
 
   const selectFileType = (f: FileTypeFilter) => {
     setFileType(f);
@@ -529,14 +514,7 @@ export function PublicResourceList() {
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visible.map((r) =>
                 r.fileType === "video" ? (
-                  <VideoResourceCard
-                    key={r.id}
-                    r={r}
-                    commentsOpen={openCommentsId === r.id}
-                    onToggleComments={(id) =>
-                      setOpenCommentsId((cur) => (cur === id ? null : id))
-                    }
-                  />
+                  <VideoResourceCard key={r.id} r={r} onOpen={setActiveVideo} />
                 ) : (
                   <ResourceCard key={r.id} r={r} topCount={topCount} />
                 )
@@ -544,37 +522,16 @@ export function PublicResourceList() {
             </div>
           )}
 
-          {/* Inline discussion for the video whose comment button was tapped */}
-          {openCommentsId && activeCommentResource && (
-            <div
-              ref={commentsPanelRef}
-              className="mt-6 rounded-lg border bg-white p-5 sm:p-6"
-              style={{ borderColor: "var(--line)", boxShadow: "0 18px 44px -30px rgba(18,32,67,0.28)" }}
-            >
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="min-w-0 truncate text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
-                  Discussion · {activeCommentResource.title}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setOpenCommentsId(null)}
-                  aria-label="Close comments"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[var(--bg-soft)]"
-                  style={{ color: "var(--body)" }}
-                >
-                  <X size={15} />
-                </button>
-              </div>
-              <ResourceCommentsSection
-                resourceId={activeCommentResource.id}
-                compact
-                onChanged={(t) =>
-                  setResources((prev) =>
-                    prev.map((x) => (x.id === activeCommentResource.id ? { ...x, commentCount: t } : x))
-                  )
-                }
-              />
-            </div>
+          {activeVideo && (
+            <ResourceVideoDialog
+              resource={activeVideo}
+              onClose={() => setActiveVideo(null)}
+              onCommentCountChange={(id, t) =>
+                setResources((prev) =>
+                  prev.map((x) => (x.id === id ? { ...x, commentCount: t } : x))
+                )
+              }
+            />
           )}
         </div>
       </section>
