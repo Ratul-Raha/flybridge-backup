@@ -75,9 +75,11 @@ function Avatar({ name, avatar }: { name: string; avatar?: string | null }) {
 export function ResourceCommentsSection({
   resourceId,
   onChanged,
+  compact = false,
 }: {
   resourceId: string;
-  onChanged?: () => void;
+  onChanged?: (total: number) => void;
+  compact?: boolean;
 }) {
   const { user } = useAuth();
   const [comments, setComments] = useState<CommentItem[]>([]);
@@ -148,7 +150,7 @@ export function ResourceCommentsSection({
       }
       setText("");
       await fetchPage(1);
-      onChanged?.();
+      onChanged?.(total + 1);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -173,7 +175,7 @@ export function ResourceCommentsSection({
       }
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       setTotal((t) => Math.max(0, t - 1));
-      onChanged?.();
+      onChanged?.(Math.max(0, total - 1));
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -188,7 +190,7 @@ export function ResourceCommentsSection({
   };
 
   return (
-    <section id="comments" className="mt-8 scroll-mt-28">
+    <section id={compact ? undefined : "comments"} className={compact ? "scroll-mt-28" : "mt-8 scroll-mt-28"}>
       <div className="flex items-center gap-2.5">
         <span
           className="flex h-9 w-9 items-center justify-center rounded-lg"

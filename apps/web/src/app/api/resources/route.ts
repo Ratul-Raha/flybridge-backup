@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ResourceComment } from "@/lib/models/resource-comment";
+import { ResourceLove } from "@/lib/models/resource-love";
 import { isResourceCategory } from "@/lib/resource-categories";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
@@ -26,6 +27,8 @@ type ResourceDto = {
   downloadCount: number;
   viewCount: number;
   commentCount: number;
+  loveCount: number;
+  lovedByMe: boolean;
 };
 
 function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
@@ -47,12 +50,19 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
     downloadCount: 0,
     viewCount: r.viewCount ?? 0,
     commentCount: 0,
+    loveCount: 0,
+    lovedByMe: false,
   };
 }
 
-async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false, days?: number): Promise<ResourceDto[]> {
+async function withDownloadCounts(
+  resources: ResourceDoc[],
+  includeUrl = false,
+  days?: number,
+  userId?: string
+): Promise<ResourceDto[]> {
   const match = days && days > 0 ? { createdAt: { $gte: lastNDays(days) } } : {};
-  const [downloadRows, commentRows] = await Promise.all([
+  const [downloadRows, commentRows, loveRows] = await Promise.all([
     ResourceDownload.aggregate<{ _id: string; count: number }>([
       { $match: match },
       { $group: { _id: "$resource", count: { $sum: 1 } } },
@@ -60,14 +70,30 @@ async function withDownloadCounts(resources: ResourceDoc[], includeUrl = false, 
     ResourceComment.aggregate<{ _id: string; count: number }>([
       { $group: { _id: "$resource", count: { $sum: 1 } } },
     ]),
+    ResourceLove.aggregate<{ _id: string; count: number }>([
+      { $group: { _id: "$resource", count: { $sum: 1 } } },
+    ]),
   ]);
   const counts = new Map(downloadRows.map((r) => [r._id.toString(), r.count]));
   const commentCounts = new Map(commentRows.map((r) => [r._id.toString(), r.count]));
-  return resources.map((r) => ({
-    ...toDto(r, includeUrl),
-    downloadCount: counts.get(r._id.toString()) ?? 0,
-    commentCount: commentCounts.get(r._id.toString()) ?? 0,
-  }));
+  const loveCounts = new Map(loveRows.map((r) => [r._id.toString(), r.count]));
+
+  let lovedIds = new Set<string>();
+  if (userId) {
+    const mine = await ResourceLove.find({ user: userId }).select("resource").lean();
+    lovedIds = new Set(mine.map((l) => l.resource.toString()));
+  }
+
+  return resources.map((r) => {
+    const id = r._id.toString();
+    return {
+      ...toDto(r, includeUrl),
+      downloadCount: counts.get(id) ?? 0,
+      commentCount: commentCounts.get(id) ?? 0,
+      loveCount: loveCounts.get(id) ?? 0,
+      lovedByMe: lovedIds.has(id),
+    };
+  });
 }
 
 function lastNDays(n: number) {
@@ -97,7 +123,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const resources = await Resource.find().sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources, true, days) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, true, days, session?.userId) });
     }
 
     if (mine) {
@@ -105,11 +131,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
-      return NextResponse.json({ resources: await withDownloadCounts(resources, false, days) });
+      return NextResponse.json({ resources: await withDownloadCounts(resources, false, days, session.userId) });
     }
 
     const resources = await Resource.find().sort({ releaseDate: -1 });
-    return NextResponse.json({ resources: await withDownloadCounts(resources, false, days) });
+    return NextResponse.json({ resources: await withDownloadCounts(resources, false, days, session?.userId) });
   } catch (error) {
     console.error("resources GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

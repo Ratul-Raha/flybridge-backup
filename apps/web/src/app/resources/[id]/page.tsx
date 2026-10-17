@@ -5,6 +5,7 @@ import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ResourceComment } from "@/lib/models/resource-comment";
+import { ResourceLove } from "@/lib/models/resource-love";
 import { cleanPrices } from "@/lib/pricing";
 import { Nav } from "@/components/nav";
 import { ResourceDetail } from "@/components/resources/resource-detail";
@@ -46,7 +47,9 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
     const resource = await Resource.findById(params.id);
     if (!resource) notFound();
 
-    const [ownCount, topRows, commentCount] = await Promise.all([
+    const session = await readSession();
+
+    const [ownCount, topRows, commentCount, loveCount] = await Promise.all([
       ResourceDownload.countDocuments({ resource: resource._id }),
       ResourceDownload.aggregate<{ count: number }>([
         { $group: { _id: "$resource", count: { $sum: 1 } } },
@@ -54,11 +57,15 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
         { $limit: 1 },
       ]),
       ResourceComment.countDocuments({ resource: resource._id }),
+      ResourceLove.countDocuments({ resource: resource._id }),
     ]);
     const topCount = topRows[0]?.count ?? 0;
     const mostDownloaded = ownCount > 0 && ownCount === topCount;
 
-    const session = await readSession();
+    const lovedByMe = session?.userId
+      ? Boolean(await ResourceLove.exists({ resource: resource._id, user: session.userId }))
+      : false;
+
     const isManager =
       session?.role === "admin" || session?.role === "moderator";
     const includeUrl = isManager || resource.access === "public";
@@ -73,6 +80,8 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
               wantsGet={searchParams.get === "1"}
               mostDownloaded={mostDownloaded}
               commentCount={commentCount}
+              loveCount={loveCount}
+              lovedByMe={lovedByMe}
               resource={{
                 id: resource._id.toString(),
                 title: resource.title,

@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Download, ExternalLink, Loader2, Lock, Play, Share2, 
 import { useAuth } from "@/lib/auth/auth-context";
 import { ResourceVideoPlayer } from "@/components/resources/resource-video-player";
 import { ResourceCommentsSection } from "@/components/resources/resource-comments";
+import { ResourceLoveButton } from "@/components/resources/resource-love-button";
 import { MetaProductView } from "@/components/meta-product-view";
 import { trackMetaEvent } from "@/lib/meta-events";
 import { PaymentMethodPicker, defaultCheckoutCurrency, type PickableCurrency } from "@/components/payment/payment-method-picker";
@@ -33,12 +34,16 @@ export function ResourceDetail({
   wantsGet = false,
   mostDownloaded = false,
   commentCount = 0,
+  loveCount = 0,
+  lovedByMe = false,
 }: {
   resource: ResourceCardData;
   wantsDownload?: boolean;
   wantsGet?: boolean;
   mostDownloaded?: boolean;
   commentCount?: number;
+  loveCount?: number;
+  lovedByMe?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [payNote, setPayNote] = useState(false);
@@ -309,6 +314,17 @@ export function ResourceDetail({
                 <>
                   <span>·</span>
                   <span>{formatFileSize(r.fileSize)}</span>
+                </>
+              )}
+              {isVideo && (
+                <>
+                  <span>·</span>
+                  <ResourceLoveButton
+                    resourceId={r.id}
+                    initialCount={loveCount}
+                    initialLoved={lovedByMe}
+                    size="md"
+                  />
                 </>
               )}
             </div>
