@@ -4,8 +4,9 @@ import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { Order } from "@/lib/models/order";
-import { assertSafeFetchUrl, assertSafeRedirectUrl } from "@/lib/url-safety";
-import { isS3Ref, getS3ObjectRange } from "@/lib/storage";
+import { assertSafeRedirectUrl } from "@/lib/url-safety";
+import { isS3Configured } from "@/lib/s3";
+import { isS3Ref, signMediaUrl } from "@/lib/storage";
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -34,6 +35,14 @@ function extOf(name: string) {
 
 function asciiSafe(name: string) {
   return name.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "_");
+}
+
+/** 302 the browser straight to the storage backend so media bytes never
+ *  travel through this Function (proxying them bills every byte twice). */
+function redirectNoStore(url: string) {
+  const res = NextResponse.redirect(url, 302);
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }
 
 export async function GET(
@@ -75,7 +84,7 @@ export async function GET(
       } catch {
         return NextResponse.json({ error: "Unsafe link target" }, { status: 400 });
       }
-      return NextResponse.redirect(resource.fileUrl);
+      return redirectNoStore(resource.fileUrl);
     }
 
     const fileName = resource.fileName || `download.${extOf(resource.fileUrl)}`;
@@ -84,74 +93,46 @@ export async function GET(
     const inlineTypes = new Set(["pdf", "mp3", "wav", "m4a", "mp4", "webm", "mov", "txt"]);
     const forceDownload = _request.nextUrl.searchParams.get("dl") === "1";
     const disposition = forceDownload || !inlineTypes.has(ext) ? "attachment" : "inline";
+    const range = _request.headers.get("range") ?? undefined;
 
-    const headers = new Headers();
-    headers.set("Content-Type", mime);
-    headers.set(
-      "Content-Disposition",
-      `${disposition}; filename="${asciiSafe(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
-    );
-    headers.set("Cache-Control", "private, no-store");
-    headers.set("Accept-Ranges", "bytes");
-    headers.set("X-Content-Type-Options", "nosniff");
-
-    if (session?.userId) {
+    // Count a download once per open/play — ranged follow-ups (video seeking,
+    // metadata probes) belong to the same view, not a new download.
+    if (session?.userId && !range) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
         console.error("resource download tracking error", e)
       );
     }
 
-    const range = _request.headers.get("range") ?? undefined;
-
-    // New private S3 storage — pipe the object stream straight through.
+    // Private S3 storage — sign a short-lived URL and redirect so the object
+    // streams straight from S3 to the browser, off the Vercel bandwidth meter.
     if (isS3Ref(resource.fileUrl)) {
+      if (!isS3Configured()) {
+        return NextResponse.json({ error: "File unavailable" }, { status: 502 });
+      }
       try {
-        const { stream, contentLength, contentType, contentRange, statusCode } =
-          await getS3ObjectRange(resource.fileUrl, range);
-        if (!stream) {
-          return NextResponse.json({ error: "File unavailable" }, { status: 502 });
-        }
-        if (contentType) headers.set("Content-Type", contentType);
-        if (contentLength) headers.set("Content-Length", String(contentLength));
-        if (range && statusCode === 206 && contentRange) {
-          headers.set("Content-Range", contentRange);
-          return new Response(stream, { status: 206, headers });
-        }
-        return new Response(stream, { status: 200, headers });
+        const contentDisposition =
+          disposition === "attachment"
+            ? `attachment; filename="${asciiSafe(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`
+            : undefined;
+        const signed = await signMediaUrl(resource.fileUrl, 60 * 60, {
+          ...(contentDisposition ? { contentDisposition } : {}),
+          contentType: mime,
+        });
+        return redirectNoStore(signed);
       } catch (error) {
-        console.error("resource S3 file GET error", error);
+        console.error("resource S3 file signing error", error);
         return NextResponse.json({ error: "File unavailable" }, { status: 502 });
       }
     }
 
+    // Legacy external URLs (e.g. Cloudinary) — validate and send the browser
+    // there directly instead of streaming through the Function.
     try {
-      await assertSafeFetchUrl(resource.fileUrl);
+      assertSafeRedirectUrl(resource.fileUrl);
     } catch {
       return NextResponse.json({ error: "Unsafe file URL" }, { status: 400 });
     }
-
-    const upstream = await fetch(resource.fileUrl, {
-      cache: "no-store",
-      redirect: "error",
-      headers: range ? { Range: range } : undefined,
-    });
-    if (!upstream.ok && upstream.status !== 206) {
-      return NextResponse.json({ error: "File unavailable" }, { status: 502 });
-    }
-    if (!upstream.body) {
-      return NextResponse.json({ error: "File unavailable" }, { status: 502 });
-    }
-
-    const length = upstream.headers.get("content-length");
-    if (length) headers.set("Content-Length", length);
-
-    const upstreamContentRange = upstream.headers.get("content-range");
-    if (upstreamContentRange) headers.set("Content-Range", upstreamContentRange);
-
-    return new Response(upstream.body, {
-      status: upstream.status === 206 ? 206 : 200,
-      headers,
-    });
+    return redirectNoStore(resource.fileUrl);
   } catch (error) {
     console.error("resource file GET error", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

@@ -122,11 +122,19 @@ export async function presignPutUrl(
 
 export async function presignGetUrl(
   key: string,
-  ttlSeconds = 6 * 60 * 60
+  ttlSeconds = 6 * 60 * 60,
+  options?: { contentDisposition?: string; contentType?: string }
 ): Promise<string> {
   return getSignedUrl(
     s3Client(),
-    new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
+    new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ...(options?.contentDisposition
+        ? { ResponseContentDisposition: options.contentDisposition }
+        : {}),
+      ...(options?.contentType ? { ResponseContentType: options.contentType } : {}),
+    }),
     { expiresIn: ttlSeconds }
   );
 }

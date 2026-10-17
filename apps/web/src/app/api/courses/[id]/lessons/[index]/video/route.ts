@@ -4,7 +4,8 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { recordLessonPlay } from "@/lib/refunds";
-import { isS3Ref, getS3ObjectRange } from "@/lib/storage";
+import { isS3Configured } from "@/lib/s3";
+import { isS3Ref, signMediaUrl } from "@/lib/storage";
 
 function parseIndex(raw: string): number {
   const n = Number.parseInt(raw, 10);
@@ -69,44 +70,26 @@ export async function GET(
       return NextResponse.json({ error: "Lesson has no video" }, { status: 404 });
     }
 
-    // Only private S3 videos are proxied. YouTube / legacy URLs are handled
-    // by the player directly.
+    // Only private S3 videos are redirected here. YouTube / legacy URLs are
+    // handled by the player directly.
     if (!isS3Ref(videoUrl)) {
       return NextResponse.json({ error: "Not a private video" }, { status: 400 });
     }
 
-    const range = request.headers.get("range") ?? undefined;
+    if (!isS3Configured()) {
+      return NextResponse.json({ error: "Video unavailable" }, { status: 502 });
+    }
 
+    // Sign a short-lived S3 URL and redirect so the video streams straight from
+    // S3 to the learner. Proxying it through this Function would bill every byte
+    // twice (Fast Origin Transfer + Fast Data Transfer).
     try {
-      const { stream, contentLength, contentType, contentRange, statusCode } =
-        await getS3ObjectRange(videoUrl, range);
-
-      if (!stream) {
-        return NextResponse.json({ error: "Video unavailable" }, { status: 502 });
-      }
-
-      // S3 returns 206 for ranged requests; treat a non-206 as a full body.
-      const partial = range && statusCode === 206 && contentRange;
-
-      const headers = new Headers();
-      headers.set(
-        "Content-Type",
-        contentType && contentType.startsWith("video/")
-          ? contentType
-          : "video/mp4"
-      );
-      headers.set("Accept-Ranges", "bytes");
-      headers.set("Cache-Control", "private, no-store");
-      headers.set("Content-Disposition", "inline");
-      headers.set("X-Content-Type-Options", "nosniff");
-      if (contentLength) headers.set("Content-Length", String(contentLength));
-      if (partial) {
-        headers.set("Content-Range", contentRange!);
-        return new Response(stream, { status: 206, headers });
-      }
-      return new Response(stream, { status: 200, headers });
+      const signed = await signMediaUrl(videoUrl, 2 * 60 * 60);
+      const res = NextResponse.redirect(signed, 302);
+      res.headers.set("Cache-Control", "no-store");
+      return res;
     } catch (error) {
-      console.error("lesson video stream error", error);
+      console.error("lesson video signing error", error);
       return NextResponse.json({ error: "Video unavailable" }, { status: 502 });
     }
   } catch (error) {

@@ -113,7 +113,7 @@ export function ResourceVideoPlayer({
         disablePictureInPicture
         disableRemotePlayback
         playsInline
-        preload="metadata"
+        preload="none"
         onPlay={handlePlay}
         onPause={() => setPlaying(false)}
         className="h-full w-full object-cover"

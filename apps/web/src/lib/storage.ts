@@ -27,9 +27,13 @@ export function s3KeyOf(ref: string): string {
 }
 
 /** Sign a private S3 ref for playback/download (no-op for legacy http URLs). */
-export async function signMediaUrl(ref?: string | null, ttlSeconds = 6 * 60 * 60): Promise<string> {
+export async function signMediaUrl(
+  ref?: string | null,
+  ttlSeconds = 6 * 60 * 60,
+  options?: { contentDisposition?: string; contentType?: string }
+): Promise<string> {
   if (!ref || !isS3Ref(ref) || !isS3Configured()) return ref ?? "";
-  return presignGetUrl(s3KeyOf(ref), ttlSeconds);
+  return presignGetUrl(s3KeyOf(ref), ttlSeconds, options);
 }
 
 export async function getS3Object(

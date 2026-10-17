@@ -6,6 +6,7 @@ import {
   Check,
   Download,
   MessageSquare,
+  Play,
   Search,
   Share2,
   TrendingUp,
@@ -17,7 +18,7 @@ import {
   formatResourceDate,
   type ResourceCardData,
 } from "@/components/dashboard/user/resource-card";
-import { ResourceVideoPlayer, VideoViews } from "@/components/resources/resource-video-player";
+import { VideoViews } from "@/components/resources/resource-video-player";
 import { ResourceVideoDialog } from "@/components/resources/resource-video-dialog";
 import { ResourceLoveButton } from "@/components/resources/resource-love-button";
 
@@ -205,15 +206,36 @@ function VideoResourceCard({
       className={CARD_SHELL}
       style={{ borderColor: "var(--line)", boxShadow: "0 6px 22px -16px rgba(18,32,67,0.22)" }}
     >
-      {/* Portrait player (click opens the watch + comments dialog) */}
-      <div className="relative overflow-hidden">
-        <ResourceVideoPlayer resource={r} />
+      {/* Portrait poster (click opens the watch + comments dialog). No <video>
+          is mounted here on purpose — a page that autoloaded one player per
+          card was the single biggest bandwidth cost. */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-black">
+        {r.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={r.thumbnail}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(160deg, #1a1f35, #0a0e1a)" }}
+          />
+        )}
         <button
           type="button"
           onClick={() => onOpen?.(r)}
           aria-label={`Watch ${r.title}`}
-          className="absolute inset-0 cursor-pointer"
-        />
+          className="absolute inset-0 flex cursor-pointer items-center justify-center"
+        >
+          <span
+            className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
+            style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
+          >
+            <Play className="ml-1 h-6 w-6" fill="currentColor" strokeWidth={0} />
+          </span>
+        </button>
         {rank !== undefined && (
           <span
             className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full font-display text-[13px] font-bold text-white"
