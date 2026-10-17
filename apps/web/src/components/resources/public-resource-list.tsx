@@ -3,11 +3,9 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import {
-  ArrowUpRight,
   Check,
   Download,
   MessageSquare,
-  PlayCircle,
   Search,
   Share2,
   TrendingUp,
@@ -34,106 +32,157 @@ const FILE_TYPES = [
 
 type FileTypeFilter = (typeof FILE_TYPES)[number]["value"] | "all";
 
-function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }) {
-  const [copied, setCopied] = useState(false);
-  const meta = fileTypeMeta(r.fileType);
-  const Icon = meta.icon;
-  const accent = getCategoryColor(r.category);
+const CARD_SHELL =
+  "group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_55px_-32px_rgba(18,32,67,0.38)]";
 
-  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+function useCopyLink() {
+  const [copied, setCopied] = useState(false);
+  const copyLink = async (e: MouseEvent<HTMLButtonElement>, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/resources/${r.id}`);
+      await navigator.clipboard.writeText(`${window.location.origin}/resources/${id}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       /* ignore */
     }
   };
+  return { copied, copyLink };
+}
+
+function ShareButton({ id }: { id: string }) {
+  const { copied, copyLink } = useCopyLink();
+  return (
+    <button
+      type="button"
+      title={copied ? "Copied!" : "Share link"}
+      aria-label={copied ? "Copied!" : "Share link"}
+      onClick={(e) => copyLink(e, id)}
+      className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+      style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
+    >
+      {copied ? (
+        <Check size={14} style={{ color: "#0FA968" }} strokeWidth={2.5} />
+      ) : (
+        <Share2 size={14} style={{ color: "var(--body)" }} />
+      )}
+    </button>
+  );
+}
+
+function MetaRow({
+  r,
+  accent,
+  metaLabel,
+  trailing,
+}: {
+  r: ResourceCardData;
+  accent: string;
+  metaLabel: string;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="inline-flex min-w-0 items-center gap-2">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+        <span
+          className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
+          style={{ color: accent }}
+        >
+          {r.category}
+        </span>
+        <span
+          className="shrink-0 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold uppercase tracking-[0.08em]"
+          style={{ background: "var(--bg-soft)", color: "var(--body)" }}
+        >
+          {metaLabel}
+        </span>
+      </span>
+      {trailing}
+    </div>
+  );
+}
+
+function ResourceCard({ r }: { r: ResourceCardData }) {
+  const meta = fileTypeMeta(r.fileType);
+  const Icon = meta.icon;
+  const accent = getCategoryColor(r.category);
 
   return (
     <Link
       href={`/resources/${r.id}`}
       target="_blank"
       rel="noreferrer"
-      className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
-      style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
+      className={CARD_SHELL}
+      style={{ borderColor: "var(--line)", boxShadow: "0 6px 22px -16px rgba(18,32,67,0.22)" }}
     >
-      {/* Meta row */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex min-w-0 items-center gap-2">
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
-            style={{ background: `${accent}12`, color: accent }}
-          >
-            <Icon size={14} strokeWidth={2} />
-          </span>
-          <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>
-            {r.category}
-          </span>
+      {/* Header */}
+      <div
+        className="relative flex aspect-[16/10] items-center justify-center overflow-hidden"
+        style={{ background: `linear-gradient(150deg, ${accent}1F, ${accent}08)` }}
+      >
+        <span
+          className="flex h-[68px] w-[68px] items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.06]"
+          style={{ color: accent, boxShadow: "0 18px 34px -20px rgba(18,32,67,0.4)" }}
+        >
+          <Icon size={30} strokeWidth={1.7} />
         </span>
-        <span className="flex shrink-0 items-center gap-1.5">
-          {(r.downloadCount ?? 0) > 0 && (r.downloadCount ?? 0) === topCount && <TrendingUp size={11} style={{ color: "#E08A17" }} />}
-          <span
-            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
-            style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
-            title="Total downloads"
-          >
-            <Download size={9} strokeWidth={2.6} />
-            {(r.downloadCount ?? 0).toLocaleString()}
-          </span>
-          <span
-            className="rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold uppercase tracking-[0.08em]"
-            style={{ background: "var(--bg-soft)", color: "var(--body)" }}
-          >
-            {meta.label}
-          </span>
+        <span
+          className="absolute left-4 top-4 rounded-full px-2.5 py-[3px] font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-white"
+          style={{ background: accent }}
+        >
+          {meta.label}
         </span>
       </div>
 
-      {/* Title */}
-      <h3 className="mt-4 line-clamp-2 font-display text-[16px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-        {r.title}
-      </h3>
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-5">
+        <MetaRow
+          r={r}
+          accent={accent}
+          metaLabel={
+            (r.downloadCount ?? 0) > 0
+              ? `${(r.downloadCount ?? 0).toLocaleString()} downloads`
+              : meta.label
+          }
+        />
 
-      {/* Description */}
-      {r.description && (
-        <p className="mt-1.5 line-clamp-1 text-[12.5px]" style={{ color: "var(--body)" }}>
-          {r.description}
-        </p>
-      )}
+        <h3
+          className="mt-3.5 line-clamp-2 font-display text-[17px] font-semibold leading-[1.35] tracking-[-0.01em]"
+          style={{ color: "var(--ink)" }}
+        >
+          {r.title}
+        </h3>
 
-      {/* Spacer pins footer */}
-      <div className="min-h-[14px] flex-1" />
+        {r.description && (
+          <p className="mt-2 line-clamp-2 text-[13px] leading-[1.55]" style={{ color: "var(--body)" }}>
+            {r.description}
+          </p>
+        )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
-        <span className="truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-          {formatResourceDate(r.releaseDate)}
-          {r.fileSize > 0 && <span> · {formatFileSize(r.fileSize)}</span>}
-        </span>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            title={copied ? "Copied!" : "Share link"}
-            aria-label={copied ? "Copied!" : "Share link"}
-            onClick={copyLink}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-            style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
-          >
-            {copied ? (
-              <Check size={13} style={{ color: "#0FA968" }} strokeWidth={2.5} />
-            ) : (
-              <Share2 size={13} style={{ color: "var(--body)" }} />
-            )}
-          </button>
+        <div className="min-h-[16px] flex-1" />
+
+        <div
+          className="flex items-center justify-between gap-3 border-t pt-3.5"
+          style={{ borderColor: "var(--line)" }}
+        >
           <span
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-white transition-all duration-200 group-hover:translate-x-[2px]"
-            style={{ background: accent }}
+            className="truncate font-mono text-[10px] font-medium uppercase tracking-[0.08em]"
+            style={{ color: "var(--body)" }}
           >
-            <Download size={13} strokeWidth={2.4} />
+            {formatResourceDate(r.releaseDate)}
+            {r.fileSize > 0 && <span> · {formatFileSize(r.fileSize)}</span>}
           </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <ShareButton id={r.id} />
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-transform duration-200 group-hover:translate-x-[2px]"
+              style={{ background: accent }}
+            >
+              <Download size={14} strokeWidth={2.4} />
+            </span>
+          </div>
         </div>
       </div>
     </Link>
@@ -143,32 +192,21 @@ function ResourceCard({ r, topCount }: { r: ResourceCardData; topCount: number }
 function VideoResourceCard({
   r,
   onOpen,
+  rank,
 }: {
   r: ResourceCardData;
   onOpen?: (r: ResourceCardData) => void;
+  rank?: number;
 }) {
-  const [copied, setCopied] = useState(false);
   const accent = getCategoryColor(r.category);
-
-  const copyLink = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/resources/${r.id}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
-  };
 
   return (
     <div
-      className="group flex h-full flex-col rounded-lg border bg-white p-5 transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_22px_44px_-24px_rgba(18,32,67,0.25)]"
-      style={{ borderColor: "var(--line)", boxShadow: "0 4px 18px -12px rgba(18,32,67,0.10)" }}
+      className={CARD_SHELL}
+      style={{ borderColor: "var(--line)", boxShadow: "0 6px 22px -16px rgba(18,32,67,0.22)" }}
     >
       {/* Portrait player (click opens the watch + comments dialog) */}
-      <div className="-mx-5 -mt-5 relative overflow-hidden rounded-t-lg">
+      <div className="relative overflow-hidden">
         <ResourceVideoPlayer resource={r} />
         <button
           type="button"
@@ -176,144 +214,117 @@ function VideoResourceCard({
           aria-label={`Watch ${r.title}`}
           className="absolute inset-0 cursor-pointer"
         />
-      </div>
-
-      {/* Meta row */}
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="inline-flex min-w-0 items-center gap-2">
+        {rank !== undefined && (
           <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
-            style={{ background: `${accent}12`, color: accent }}
+            className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full font-display text-[13px] font-bold text-white"
+            style={{ background: "rgba(10,14,26,0.55)", backdropFilter: "blur(6px)" }}
           >
-            <PlayCircle size={14} strokeWidth={2} />
+            {rank}
           </span>
-          <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>
-            {r.category}
-          </span>
-        </span>
-        <span className="inline-flex shrink-0 items-center gap-2">
-          <ResourceLoveButton
-            resourceId={r.id}
-            initialCount={r.loveCount ?? 0}
-            initialLoved={r.lovedByMe ?? false}
-          />
-          <button
-            type="button"
-            onClick={() => onOpen?.(r)}
-            title="Watch and comment"
-            aria-label="Watch and comment"
-            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em] transition-all duration-200 hover:scale-105 active:scale-95"
-            style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
-          >
-            <MessageSquare size={9} strokeWidth={2.5} /> {(r.commentCount ?? 0).toLocaleString()}
-          </button>
-          <span
-            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
-            style={{ background: "rgba(107,76,224,0.10)", color: "#6B4CE0" }}
-          >
-            <VideoViews count={r.viewCount ?? 0} /> views
-          </span>
-        </span>
-      </div>
-
-      {/* Title */}
-      <button type="button" onClick={() => onOpen?.(r)} className="mt-4 text-left">
-        <h3 className="line-clamp-2 font-display text-[16px] font-semibold leading-snug transition-opacity hover:opacity-70" style={{ color: "var(--ink)" }}>
-          {r.title}
-        </h3>
-      </button>
-
-      {/* Description */}
-      {r.description && (
-        <p className="mt-1.5 line-clamp-1 text-[12.5px]" style={{ color: "var(--body)" }}>
-          {r.description}
-        </p>
-      )}
-
-      {/* Spacer pins footer */}
-      <div className="min-h-[14px] flex-1" />
-
-      {/* Footer */}
-      <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
-        <span className="truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-          {formatResourceDate(r.releaseDate)}
-        </span>
-        <button
-          type="button"
-          title={copied ? "Copied!" : "Share link"}
-          aria-label={copied ? "Copied!" : "Share link"}
-          onClick={copyLink}
-          className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
-          style={{ background: copied ? "rgba(15,169,104,0.12)" : "rgba(18,32,67,0.06)" }}
+        )}
+        <span
+          className="pointer-events-none absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold text-white"
+          style={{ background: "rgba(10,14,26,0.55)", backdropFilter: "blur(6px)" }}
         >
-          {copied ? (
-            <Check size={13} style={{ color: "#0FA968" }} strokeWidth={2.5} />
-          ) : (
-            <Share2 size={13} style={{ color: "var(--body)" }} />
-          )}
+          <VideoViews count={r.viewCount ?? 0} /> views
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-5">
+        <MetaRow
+          r={r}
+          accent={accent}
+          metaLabel="Video"
+          trailing={
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+              style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
+            >
+              <MessageSquare size={9} strokeWidth={2.5} /> {(r.commentCount ?? 0).toLocaleString()}
+            </span>
+          }
+        />
+
+        <button type="button" onClick={() => onOpen?.(r)} className="mt-3.5 text-left">
+          <h3
+            className="line-clamp-2 font-display text-[17px] font-semibold leading-[1.35] tracking-[-0.01em] transition-opacity hover:opacity-70"
+            style={{ color: "var(--ink)" }}
+          >
+            {r.title}
+          </h3>
         </button>
+
+        {r.description && (
+          <p className="mt-2 line-clamp-2 text-[13px] leading-[1.55]" style={{ color: "var(--body)" }}>
+            {r.description}
+          </p>
+        )}
+
+        <div className="min-h-[16px] flex-1" />
+
+        <div
+          className="flex items-center justify-between gap-3 border-t pt-3.5"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <ResourceLoveButton
+              resourceId={r.id}
+              initialCount={r.loveCount ?? 0}
+              initialLoved={r.lovedByMe ?? false}
+            />
+            <button
+              type="button"
+              onClick={() => onOpen?.(r)}
+              className="truncate font-mono text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-[var(--brand-2)]"
+              style={{ color: "var(--body)" }}
+            >
+              {formatResourceDate(r.releaseDate)}
+            </button>
+          </div>
+          <ShareButton id={r.id} />
+        </div>
       </div>
     </div>
   );
 }
 
-function FeaturedBanner({ r }: { r: ResourceCardData }) {
-  const accent = getCategoryColor(r.category);
-  const meta = fileTypeMeta(r.fileType);
-  const Icon = meta.icon;
-
+function MostViewedSection({
+  videos,
+  onOpen,
+}: {
+  videos: ResourceCardData[];
+  onOpen: (r: ResourceCardData) => void;
+}) {
+  if (videos.length === 0) return null;
   return (
-    <Link
-      href={`/resources/${r.id}`}
-      target="_blank"
-      rel="noreferrer"
-      className="group mb-12 grid overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[4px] hover:shadow-[0_30px_60px_-24px_rgba(18,32,67,0.3)] sm:grid-cols-[1fr_240px]"
-      style={{ borderColor: `${accent}22`, boxShadow: "0 10px 30px -18px rgba(18,32,67,0.18)" }}
-    >
-      <div className="flex flex-col items-start p-6 sm:p-8">
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[9.5px] font-bold uppercase tracking-[0.14em] text-white"
-          style={{ background: "#E08A17" }}
-        >
-          <TrendingUp size={10} /> Most downloaded
-        </span>
-        <span className="mt-4 inline-flex items-center gap-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em]" style={{ color: accent }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
-          {r.category}
-        </span>
-        <h2 className="mt-3 font-display text-[clamp(21px,2.4vw,28px)] font-semibold leading-tight tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
-          {r.title}
-        </h2>
-        {r.description && (
-          <p className="mt-3 max-w-[560px] text-[14px] leading-relaxed" style={{ color: "var(--body)" }}>
-            {r.description}
-          </p>
-        )}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+    <div className="mt-10">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
           <span
-            className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[13.5px] font-semibold text-white transition-all duration-200 hover:opacity-90 group-hover:translate-y-[-1px]"
-            style={{ background: accent }}
+            className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]"
+            style={{ color: "#E08A17" }}
           >
-            Open resource
-            <ArrowUpRight size={15} />
+            <TrendingUp size={12} /> Most viewed
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border px-4 py-3 text-[12.5px] font-medium" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
-            {meta.label}
-            {r.fileSize > 0 && <span>· {formatFileSize(r.fileSize)}</span>}
-            {formatResourceDate(r.releaseDate) && <span>· {formatResourceDate(r.releaseDate)}</span>}
-          </span>
+          <h2
+            className="mt-1.5 font-display text-[clamp(21px,2.3vw,27px)] font-semibold leading-tight tracking-[-0.02em]"
+            style={{ color: "var(--ink)" }}
+          >
+            Trending videos right now
+          </h2>
         </div>
+        <p className="max-w-[420px] text-[13px]" style={{ color: "var(--body)" }}>
+          The clips students keep coming back to — watch and join the discussion.
+        </p>
       </div>
-
-      <div
-        className="relative flex min-h-[180px] items-center justify-center overflow-hidden"
-        style={{ background: `linear-gradient(160deg, ${accent}, ${accent}CC)` }}
-      >
-        <span className="z-10 flex h-[84px] w-[84px] items-center justify-center rounded-3xl bg-white/15 backdrop-blur-sm" style={{ color: "#fff", boxShadow: "0 20px 40px -16px rgba(0,0,0,0.25)" }}>
-          <Icon size={36} strokeWidth={1.7} />
-        </span>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {videos.map((r, i) => (
+          <VideoResourceCard key={r.id} r={r} onOpen={onOpen} rank={i + 1} />
+        ))}
       </div>
-    </Link>
+      <div className="mt-12 h-px w-full" style={{ background: "var(--line)" }} />
+    </div>
   );
 }
 
@@ -368,12 +379,19 @@ export function PublicResourceList() {
       });
   }, [resources, fileType, query]);
 
-  const topCount = useMemo(() => resources.reduce((m, r) => Math.max(m, r.downloadCount ?? 0), 0), [resources]);
+  const mostViewed = useMemo(() => {
+    const videos = resources.filter((r) => r.fileType === "video");
+    const ranked = videos.some((r) => (r.viewCount ?? 0) > 0)
+      ? videos.filter((r) => (r.viewCount ?? 0) > 0)
+      : videos;
+    return ranked
+      .slice()
+      .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
+      .slice(0, 4);
+  }, [resources]);
 
-  const topDownloaded =
-    !query.trim() && topCount > 0
-      ? visible.find((r) => (r.downloadCount ?? 0) === topCount) ?? null
-      : null;
+  const showMostViewed =
+    !loading && !query.trim() && (fileType === "all" || fileType === "video") && mostViewed.length > 0;
 
   const selectFileType = (f: FileTypeFilter) => {
     setFileType(f);
@@ -459,12 +477,12 @@ export function PublicResourceList() {
       {/* ===== Library ===== */}
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          {/* Most downloaded banner */}
-          {!loading && topDownloaded && <div className="mt-8"><FeaturedBanner r={topDownloaded} /></div>}
+          {/* Most viewed videos */}
+          {showMostViewed && <MostViewedSection videos={mostViewed} onOpen={setActiveVideo} />}
 
           {/* Header + grid */}
           {!loading && resources.length > 0 && (
-            <div className="mb-8 mt-2">
+            <div className="mb-8 mt-10">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="font-display text-[clamp(24px,2.6vw,32px)] font-medium leading-tight tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
@@ -487,11 +505,11 @@ export function PublicResourceList() {
           {loading ? (
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-lg border bg-white" style={{ borderColor: "var(--line)", height: 220 }} />
+                <div key={i} className="animate-pulse rounded-2xl border bg-white" style={{ borderColor: "var(--line)", height: 240 }} />
               ))}
             </div>
           ) : error ? (
-            <div className="mt-8 rounded-lg border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
+            <div className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
               <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
                 Couldn&apos;t load resources
               </p>
@@ -500,7 +518,7 @@ export function PublicResourceList() {
               </p>
             </div>
           ) : visible.length === 0 ? (
-            <div className="mt-8 rounded-lg border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
+            <div className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
               <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
                 {resources.length === 0 ? "No resources published yet" : "No matches"}
               </p>
@@ -516,7 +534,7 @@ export function PublicResourceList() {
                 r.fileType === "video" ? (
                   <VideoResourceCard key={r.id} r={r} onOpen={setActiveVideo} />
                 ) : (
-                  <ResourceCard key={r.id} r={r} topCount={topCount} />
+                  <ResourceCard key={r.id} r={r} />
                 )
               )}
             </div>
