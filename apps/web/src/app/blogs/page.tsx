@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Guides and insights on studying, working and building a career abroad — visas, scholarships, English, career tips and student life.",
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function BlogsPage() {
   return (

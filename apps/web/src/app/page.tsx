@@ -20,7 +20,9 @@ const IeltsPromoPopup = dynamic(
   { ssr: false, loading: () => null }
 );
 
-export const revalidate = 60;
+// Public landing content is fine to lag a few minutes; longer ISR windows mean
+// far fewer regenerations (and far less Fast Origin Transfer) on a hot route.
+export const revalidate = 300;
 
 export default async function HomePage() {
   const totalUsers = await getTotalUsers();

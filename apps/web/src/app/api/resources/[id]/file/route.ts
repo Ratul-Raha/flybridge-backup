@@ -96,7 +96,9 @@ export async function GET(
     const range = _request.headers.get("range") ?? undefined;
 
     // Count a download once per open/play — ranged follow-ups (video seeking,
-    // metadata probes) belong to the same view, not a new download.
+    // metadata probes) belong to the same view, not a new download. Download
+    // counts are high-frequency, so they rely on the counts cache TTL rather
+    // than invalidating (which would thrash the aggregate).
     if (session?.userId && !range) {
       ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
         console.error("resource download tracking error", e)

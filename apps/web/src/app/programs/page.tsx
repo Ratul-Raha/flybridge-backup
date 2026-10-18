@@ -14,7 +14,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { publicCoursePricing } from "@/lib/course-discount";
 import { courseDetails } from "./[slug]/course-data";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Programs | FlyBridge",

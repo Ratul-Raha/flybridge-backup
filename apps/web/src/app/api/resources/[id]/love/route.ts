@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceLove } from "@/lib/models/resource-love";
+import { RESOURCE_COUNTS_TAG } from "@/lib/resource-counts";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 type RouteContext = { params: { id: string } };
@@ -35,6 +37,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       await ResourceLove.create({ resource: resource._id, user: session.userId });
       loved = true;
     }
+
+    revalidateTag(RESOURCE_COUNTS_TAG);
 
     const loveCount = await ResourceLove.countDocuments({ resource: resource._id });
 

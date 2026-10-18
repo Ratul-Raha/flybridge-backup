@@ -8,7 +8,9 @@ import { NotificationIcon } from "@/components/notifications/notification-icon";
 import { InlineLoader } from "@/components/dashboard/page-loader";
 import { timeAgo } from "@/lib/time";
 
-const POLL_INTERVAL = 60_000;
+// 120s: long enough to keep open tabs from hammering /api/notifications, short
+// enough that new notifications still show up promptly on an active tab.
+const POLL_INTERVAL = 120_000;
 const DROPDOWN_LIMIT = 12;
 
 export function NotificationBell() {

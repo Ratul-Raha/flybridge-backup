@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource, type ResourceDoc } from "@/lib/models/resource";
 import { ResourceDownload } from "@/lib/models/resource-download";
 import { ResourceComment } from "@/lib/models/resource-comment";
 import { ResourceLove } from "@/lib/models/resource-love";
+import { RESOURCE_COUNTS_TAG } from "@/lib/resource-counts";
 import { isResourceCategory } from "@/lib/resource-categories";
 import { sanitizePrices, cleanPrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
@@ -55,28 +57,52 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
   };
 }
 
+/**
+ * Aggregating downloads/comments/loves scans the whole collection on every
+ * listing request. These counts are derived, approximate, and safe to reuse for
+ * a short window, so they're cached and invalidated by the write routes.
+ */
+type ResourceCounts = {
+  downloads: Record<string, number>;
+  comments: Record<string, number>;
+  loves: Record<string, number>;
+};
+
+const getResourceCounts = unstable_cache(
+  async (days?: number): Promise<ResourceCounts> => {
+    await connectDb();
+    const match = days && days > 0 ? { createdAt: { $gte: lastNDays(days) } } : {};
+    const [downloadRows, commentRows, loveRows] = await Promise.all([
+      ResourceDownload.aggregate<{ _id: string; count: number }>([
+        { $match: match },
+        { $group: { _id: "$resource", count: { $sum: 1 } } },
+      ]),
+      ResourceComment.aggregate<{ _id: string; count: number }>([
+        { $group: { _id: "$resource", count: { $sum: 1 } } },
+      ]),
+      ResourceLove.aggregate<{ _id: string; count: number }>([
+        { $group: { _id: "$resource", count: { $sum: 1 } } },
+      ]),
+    ]);
+    return {
+      downloads: Object.fromEntries(
+        downloadRows.map((r) => [r._id.toString(), r.count])
+      ),
+      comments: Object.fromEntries(commentRows.map((r) => [r._id.toString(), r.count])),
+      loves: Object.fromEntries(loveRows.map((r) => [r._id.toString(), r.count])),
+    };
+  },
+  ["resource-counts"],
+  { revalidate: 60, tags: [RESOURCE_COUNTS_TAG] }
+);
+
 async function withDownloadCounts(
   resources: ResourceDoc[],
   includeUrl = false,
   days?: number,
   userId?: string
 ): Promise<ResourceDto[]> {
-  const match = days && days > 0 ? { createdAt: { $gte: lastNDays(days) } } : {};
-  const [downloadRows, commentRows, loveRows] = await Promise.all([
-    ResourceDownload.aggregate<{ _id: string; count: number }>([
-      { $match: match },
-      { $group: { _id: "$resource", count: { $sum: 1 } } },
-    ]),
-    ResourceComment.aggregate<{ _id: string; count: number }>([
-      { $group: { _id: "$resource", count: { $sum: 1 } } },
-    ]),
-    ResourceLove.aggregate<{ _id: string; count: number }>([
-      { $group: { _id: "$resource", count: { $sum: 1 } } },
-    ]),
-  ]);
-  const counts = new Map(downloadRows.map((r) => [r._id.toString(), r.count]));
-  const commentCounts = new Map(commentRows.map((r) => [r._id.toString(), r.count]));
-  const loveCounts = new Map(loveRows.map((r) => [r._id.toString(), r.count]));
+  const counts = await getResourceCounts(days);
 
   let lovedIds = new Set<string>();
   if (userId) {
@@ -88,9 +114,9 @@ async function withDownloadCounts(
     const id = r._id.toString();
     return {
       ...toDto(r, includeUrl),
-      downloadCount: counts.get(id) ?? 0,
-      commentCount: commentCounts.get(id) ?? 0,
-      loveCount: loveCounts.get(id) ?? 0,
+      downloadCount: counts.downloads[id] ?? 0,
+      commentCount: counts.comments[id] ?? 0,
+      loveCount: counts.loves[id] ?? 0,
       lovedByMe: lovedIds.has(id),
     };
   });

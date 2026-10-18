@@ -11,6 +11,11 @@ const nextConfig = {
     removeConsole: { exclude: ["error"] },
   },
   images: {
+    // The Image Optimizer's default minimumCacheTTL is 60s, which re-fetched and
+    // re-encoded the same remote originals far too often. These remotePatterns
+    // (Cloudinary/S3) point at effectively immutable assets, so cache optimized
+    // variants at the edge for a week.
+    minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [
       {
         protocol: "https",

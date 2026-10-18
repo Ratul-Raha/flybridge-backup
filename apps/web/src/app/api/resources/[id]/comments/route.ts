@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceComment } from "@/lib/models/resource-comment";
+import { RESOURCE_COUNTS_TAG } from "@/lib/resource-counts";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 type RouteContext = { params: { id: string } };
@@ -86,6 +88,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       user: session.userId,
       body: text,
     });
+
+    revalidateTag(RESOURCE_COUNTS_TAG);
 
     return NextResponse.json(
       { ok: true, created: true, id: comment._id.toString() },

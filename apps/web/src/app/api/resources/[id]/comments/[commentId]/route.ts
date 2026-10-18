@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
 import { ResourceComment } from "@/lib/models/resource-comment";
+import { RESOURCE_COUNTS_TAG } from "@/lib/resource-counts";
 
 type RouteContext = { params: { id: string; commentId: string } };
 
@@ -35,6 +37,8 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
     if (!deleted) {
       return NextResponse.json({ error: "Comment not found" }, { status: 404 });
     }
+
+    revalidateTag(RESOURCE_COUNTS_TAG);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

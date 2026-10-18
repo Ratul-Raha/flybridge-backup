@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
-import { readSession } from "@/lib/auth/session";
+import { readSession, USER_SNAPSHOT_TAG } from "@/lib/auth/session";
 import { User } from "@/lib/models/user";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     user.phone = normalized;
     await user.save();
+    revalidateTag(USER_SNAPSHOT_TAG);
 
     return NextResponse.json({
       user: {
