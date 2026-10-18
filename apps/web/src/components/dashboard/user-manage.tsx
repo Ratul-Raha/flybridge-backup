@@ -130,7 +130,7 @@ const scoreColor = (score: number): string => {
 };
 
 const selectClass =
-  "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
+  "text-[13px] rounded-xl border bg-white px-3 py-[8.5px] lg:py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
 const GRID_COLS = "lg:grid-cols-[44px_minmax(0,1.4fr)_140px_100px_92px_96px_120px_72px_72px_72px_72px_62px_88px]";
 
@@ -570,6 +570,16 @@ export function UserManage() {
     setDetail(null);
   }, []);
 
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("user");
+    if (!id) return;
+    void openDetail(id);
+    const params = new URLSearchParams(window.location.search);
+    params.delete("user");
+    const qs = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+  }, [openDetail]);
+
   const updateUser = useCallback(
     async (field: "accountType" | "subscription", value: string) => {
       if (!detail) return;
@@ -737,7 +747,7 @@ export function UserManage() {
 
       {/* Toolbar */}
       <div
-        className="rounded-lg border bg-white p-3 flex flex-col lg:flex-row gap-3"
+        className="rounded-lg border bg-white p-2.5 sm:p-3 flex flex-col lg:flex-row gap-2.5 sm:gap-3"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="relative flex-1">
@@ -751,11 +761,11 @@ export function UserManage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name, email or phone…"
-            className="w-full text-[13.5px] rounded-xl border bg-white pl-10 pr-4 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+            className="w-full text-[13.5px] rounded-xl border bg-white pl-10 pr-4 py-[9px] lg:py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
           />
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 lg:gap-3">
           <select
             value={accountType}
             onChange={(e) => {
@@ -884,7 +894,7 @@ export function UserManage() {
             type="button"
             onClick={exportCsv}
             disabled={bulkBusy !== null || pagination.total === 0}
-            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[8.5px] lg:py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
           >
             {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}

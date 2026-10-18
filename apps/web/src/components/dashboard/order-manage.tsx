@@ -516,7 +516,13 @@ function MetaBadge({ meta, status }: { meta: Order["meta"]; status: string }) {
   );
 }
 
-function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
+function RecentActivity({
+  orders,
+  onSelect,
+}: {
+  orders: OrderStats["recentOrders"];
+  onSelect?: (id: string) => void;
+}) {
   if (!orders || orders.length === 0) return null;
   return (
     <div
@@ -543,9 +549,11 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
           else if (mins > 0) ago = `${mins}m ago`;
 
           return (
-            <div
+            <button
               key={o.id}
-              className="flex items-center gap-3 py-3"
+              type="button"
+              onClick={() => onSelect?.(o.id)}
+              className="flex w-full items-center gap-3 py-3 text-left -mx-2 px-2 rounded-lg cursor-pointer transition-colors duration-150 hover:bg-[var(--bg-soft)]"
               style={{ borderBottom: i < orders.length - 1 ? "1px solid var(--line)" : "none" }}
             >
               <div
@@ -568,7 +576,7 @@ function RecentActivity({ orders }: { orders: OrderStats["recentOrders"] }) {
                 </p>
                 <p className="text-[10px]" style={{ color: "var(--body)" }}>{ago}</p>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -596,6 +604,23 @@ export function OrderManage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<"status" | "delete" | null>(null);
   const [bulkStatus, setBulkStatus] = useState("completed");
+  const [focusOrderId, setFocusOrderId] = useState<string | null>(null);
+
+  const focusOrder = useCallback((id: string) => {
+    setSearch("");
+    setStatusFilter("all");
+    setSortKey("date");
+    setSortDir("desc");
+    setFocusOrderId(id);
+    const params = new URLSearchParams(window.location.search);
+    params.set("order", id);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+  }, []);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("order");
+    if (id) focusOrder(id);
+  }, [focusOrder]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -700,6 +725,20 @@ export function OrderManage() {
   const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   useEffect(() => { setPage(1); }, [search, statusFilter, sortKey, sortDir]);
+
+  useEffect(() => {
+    if (!focusOrderId || orders.length === 0) return;
+    const idx = [...orders]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .findIndex((o) => o.id === focusOrderId);
+    if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE) + 1);
+    const timer = setTimeout(() => {
+      document
+        .getElementById(`order-${focusOrderId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [focusOrderId, orders]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
@@ -875,7 +914,7 @@ export function OrderManage() {
           {/* ── Top Items + Recent Activity ── */}
           <div className="grid lg:grid-cols-2 gap-4">
             {stats?.topItems && stats.topItems.length > 0 && <TopItems items={stats.topItems} />}
-            {stats?.recentOrders && <RecentActivity orders={stats.recentOrders} />}
+            {stats?.recentOrders && <RecentActivity orders={stats.recentOrders} onSelect={focusOrder} />}
           </div>
 
           {/* ── Meta Conversions API delivery ── */}
@@ -1046,8 +1085,13 @@ export function OrderManage() {
                       return (
                         <tr
                           key={o.id}
+                          id={`order-${o.id}`}
                           className="group transition-colors hover:bg-[var(--bg-soft)]/50"
-                          style={{ borderBottom: "1px solid var(--line)" }}
+                          style={{
+                            borderBottom: "1px solid var(--line)",
+                            background:
+                              focusOrderId === o.id ? "var(--brand-soft)" : undefined,
+                          }}
                         >
                           <td className="px-5 py-3.5 w-10">
                             <input

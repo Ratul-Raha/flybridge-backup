@@ -48,9 +48,10 @@ export function OverviewRecentOrders({ orders }: { orders: OverviewRecentOrder[]
         {orders.map((order, index) => {
           const dot = STATUS_DOT[order.status] ?? "#6B7280";
           return (
-            <div
+            <Link
               key={order.id}
-              className="flex items-center gap-3 py-2.5"
+              href={`/dashboard/admin/orders?order=${order.id}`}
+              className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-lg cursor-pointer transition-colors duration-150 hover:bg-[var(--bg-soft)]"
               style={{ borderBottom: index < orders.length - 1 ? "1px solid var(--line)" : "none" }}
             >
               <div
@@ -75,7 +76,7 @@ export function OverviewRecentOrders({ orders }: { orders: OverviewRecentOrder[]
                   {timeAgo(order.createdAt)}
                 </p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
