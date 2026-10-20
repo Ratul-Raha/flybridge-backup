@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Resource } from "@/lib/models/resource";
-import { ResourceDownload } from "@/lib/models/resource-download";
 import { Order } from "@/lib/models/order";
+import { trackResourceClick } from "@/lib/resource-click-tracking";
 import { assertSafeRedirectUrl } from "@/lib/url-safety";
 import { isS3Configured } from "@/lib/s3";
 import { isS3Ref, signMediaUrl } from "@/lib/storage";
@@ -92,6 +92,13 @@ export async function GET(
       } catch {
         return NextResponse.json({ error: "Unsafe link target" }, { status: 400 });
       }
+      await trackResourceClick({
+        request: _request,
+        resource,
+        userId: session?.userId,
+        kind: "open",
+        page: `/resources/${resource._id}`,
+      });
       return redirectNoStore(resource.fileUrl);
     }
 
@@ -107,10 +114,14 @@ export async function GET(
     // metadata probes) belong to the same view, not a new download. Download
     // counts are high-frequency, so they rely on the counts cache TTL rather
     // than invalidating (which would thrash the aggregate).
-    if (session?.userId && !range) {
-      ResourceDownload.create({ user: session.userId, resource: resource._id }).catch((e) =>
-        console.error("resource download tracking error", e)
-      );
+    if (!range) {
+      await trackResourceClick({
+        request: _request,
+        resource,
+        userId: session?.userId,
+        kind: "download",
+        page: `/resources/${resource._id}`,
+      });
     }
 
     // Private S3 storage — sign a short-lived URL and redirect so the object

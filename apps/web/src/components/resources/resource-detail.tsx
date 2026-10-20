@@ -21,11 +21,36 @@ import {
 import { getCategoryColor } from "@/lib/resource-colors";
 import { formatMoney } from "@/lib/pricing";
 
-function downloadHref(r: ResourceCardData) {
-  if (r.fileType === "link") {
-    return `/api/resources/${r.id}/file`;
+const TRACKING_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "utm_id",
+  "fbclid",
+  "gclid",
+];
+
+function trackingQuery() {
+  if (typeof window === "undefined") return "";
+  const current = new URLSearchParams(window.location.search);
+  const forwarded = new URLSearchParams();
+  for (const key of TRACKING_KEYS) {
+    const value = current.get(key);
+    if (value) forwarded.set(key, value);
   }
-  return `/api/resources/${r.id}/file?dl=1`;
+  return forwarded.toString();
+}
+
+function downloadHref(r: ResourceCardData) {
+  const base =
+    r.fileType === "link"
+      ? `/api/resources/${r.id}/file`
+      : `/api/resources/${r.id}/file?dl=1`;
+  const tracking = trackingQuery();
+  if (!tracking) return base;
+  return `${base}${base.includes("?") ? "&" : "?"}${tracking}`;
 }
 
 export function ResourceDetail({

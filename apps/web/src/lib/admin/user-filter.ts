@@ -79,7 +79,7 @@ export async function buildUserFilter(searchParams: URLSearchParams): Promise<Re
   }
 
   if (resource === "any" || resource === "none") {
-    const dls = (await ResourceDownload.distinct("user").lean()).map(String);
+    const dls = (await ResourceDownload.distinct("user").lean()).filter(Boolean).map(String);
     (resource === "any" ? addInclude : addExclude)(dls);
   }
 
