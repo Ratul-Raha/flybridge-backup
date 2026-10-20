@@ -5,6 +5,7 @@ import { Eye, Lock, Play, X } from "lucide-react";
 import type { ResourceCardData } from "@/components/dashboard/user/resource-card";
 import { useAuth } from "@/lib/auth/auth-context";
 import { SignInModal } from "@/components/resources/sign-in-modal";
+import { outboundLink } from "@/lib/outbound-link";
 
 export function resourceStreamUrl(id: string) {
   return `/api/resources/${id}/file`;
@@ -108,7 +109,12 @@ export function ResourceVideoPlayer({
   if (resource.youtubeUrl) {
     const openYouTube = () => {
       fireView();
-      window.open(resource.youtubeUrl as string, "_blank", "noopener,noreferrer");
+      window.open(
+        outboundLink(resource.youtubeUrl as string, { label: `resource-youtube:${resource.id}` }) ??
+          (resource.youtubeUrl as string),
+        "_blank",
+        "noopener,noreferrer"
+      );
     };
 
     return (

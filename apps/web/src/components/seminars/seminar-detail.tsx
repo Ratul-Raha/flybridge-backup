@@ -10,6 +10,7 @@ import {
   type SeminarLike,
 } from "@/components/seminars/seminar-register-modal";
 import { formatPriceText } from "@/lib/pricing";
+import { outboundLink } from "@/lib/outbound-link";
 
 export type SeminarData = {
   id: string;
@@ -181,7 +182,7 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
 
             {seminar.url && (
               <a
-                href={seminar.url}
+                href={outboundLink(seminar.url, { label: `seminar:${seminar.id}` }) ?? seminar.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3.5 text-[14px] font-semibold transition-all duration-200 hover:bg-[var(--bg-soft)] active:scale-[0.98]"

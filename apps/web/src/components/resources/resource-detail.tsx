@@ -20,6 +20,7 @@ import {
 } from "@/components/dashboard/user/resource-card";
 import { getCategoryColor } from "@/lib/resource-colors";
 import { formatMoney } from "@/lib/pricing";
+import { outboundLink } from "@/lib/outbound-link";
 
 const TRACKING_KEYS = [
   "utm_source",
@@ -243,7 +244,12 @@ export function ResourceDetail({
         ? r.youtubeUrl
           ? () => {
               fetch(`/api/resources/${r.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
-              window.open(r.youtubeUrl as string, "_blank", "noopener,noreferrer");
+              window.open(
+                outboundLink(r.youtubeUrl as string, { label: `resource-youtube:${r.id}` }) ??
+                  (r.youtubeUrl as string),
+                "_blank",
+                "noopener,noreferrer"
+              );
             }
           : () => document.getElementById("resource-video")?.scrollIntoView({ behavior: "smooth", block: "center" })
         : isFree

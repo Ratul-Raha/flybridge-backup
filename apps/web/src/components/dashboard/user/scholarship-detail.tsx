@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
+import { outboundLink } from "@/lib/outbound-link";
 
 const LEVEL_LABELS: Record<string, string> = {
   any: "Any level",
@@ -210,7 +211,7 @@ export function ScholarshipDetailView({ scholarship: s }: { scholarship: Scholar
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {s.applyUrl ? (
               <a
-                href={s.applyUrl}
+                href={outboundLink(s.applyUrl, { label: `scholarship:${s.id}` }) ?? s.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:opacity-90"

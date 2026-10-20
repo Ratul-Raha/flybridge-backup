@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { ResourceDownload } from "@/lib/models/resource-download";
+import { LinkClick } from "@/lib/models/link-click";
 import { Resource } from "@/lib/models/resource";
 import { User } from "@/lib/models/user";
 import { resolveDashboardRange, type DashboardRangeSelection } from "@/lib/admin/dashboard-range";
@@ -56,6 +56,9 @@ export async function getResourceClickAnalytics(
     clicks,
     linkOpens,
     downloads,
+    outbound,
+    email,
+    affiliate,
     visitorKeys,
     sourceKeys,
     campaignKeys,
@@ -66,13 +69,16 @@ export async function getResourceClickAnalytics(
     pageRows,
     recentRows,
   ] = await Promise.all([
-    ResourceDownload.countDocuments(dateMatch),
-    ResourceDownload.countDocuments({ ...dateMatch, kind: "open" }),
-    ResourceDownload.countDocuments({ ...dateMatch, kind: { $ne: "open" } }),
-    ResourceDownload.distinct("visitorKey", dateMatch),
-    ResourceDownload.distinct("source", { ...dateMatch, source: hasValue }),
-    ResourceDownload.distinct("campaign", { ...dateMatch, campaign: hasValue }),
-    ResourceDownload.aggregate<{ _id: string; clicks: number }>([
+    LinkClick.countDocuments(dateMatch),
+    LinkClick.countDocuments({ ...dateMatch, kind: "resource_open" }),
+    LinkClick.countDocuments({ ...dateMatch, kind: "resource_download" }),
+    LinkClick.countDocuments({ ...dateMatch, kind: "outbound" }),
+    LinkClick.countDocuments({ ...dateMatch, kind: "email" }),
+    LinkClick.countDocuments({ ...dateMatch, kind: "affiliate" }),
+    LinkClick.distinct("visitorKey", dateMatch),
+    LinkClick.distinct("source", { ...dateMatch, source: hasValue }),
+    LinkClick.distinct("campaign", { ...dateMatch, campaign: hasValue }),
+    LinkClick.aggregate<{ _id: string; clicks: number }>([
       { $match: dateMatch },
       {
         $group: {
@@ -87,7 +93,7 @@ export async function getResourceClickAnalytics(
         },
       },
     ]),
-    ResourceDownload.aggregate<{
+    LinkClick.aggregate<{
       _id: { source: string; medium: string };
       clicks: number;
       visitors: string[];
@@ -106,7 +112,7 @@ export async function getResourceClickAnalytics(
       { $sort: { clicks: -1 } },
       { $limit: 10 },
     ]),
-    ResourceDownload.aggregate<{ _id: string; source: string; clicks: number; visitors: string[] }>([
+    LinkClick.aggregate<{ _id: string; source: string; clicks: number; visitors: string[] }>([
       { $match: { ...dateMatch, campaign: hasValue } },
       {
         $group: {
@@ -119,7 +125,7 @@ export async function getResourceClickAnalytics(
       { $sort: { clicks: -1 } },
       { $limit: 8 },
     ]),
-    ResourceDownload.aggregate<{ _id: string; clicks: number; visitors: string[] }>([
+    LinkClick.aggregate<{ _id: string; clicks: number; visitors: string[] }>([
       {
         $match: {
           ...dateMatch,
@@ -138,8 +144,14 @@ export async function getResourceClickAnalytics(
       { $sort: { clicks: -1 } },
       { $limit: 8 },
     ]),
-    ResourceDownload.aggregate<{ _id: Types.ObjectId | null; clicks: number; visitors: string[] }>([
-      { $match: { ...dateMatch, resource: { $ne: null } } },
+    LinkClick.aggregate<{ _id: Types.ObjectId | null; clicks: number; visitors: string[] }>([
+      {
+        $match: {
+          ...dateMatch,
+          resource: { $ne: null },
+          kind: { $in: ["resource_open", "resource_download"] },
+        },
+      },
       {
         $group: {
           _id: "$resource",
@@ -150,16 +162,14 @@ export async function getResourceClickAnalytics(
       { $sort: { clicks: -1 } },
       { $limit: 8 },
     ]),
-    ResourceDownload.find(dateMatch).sort({ createdAt: -1 }).limit(100).lean(),
+    LinkClick.find(dateMatch).sort({ createdAt: -1 }).limit(100).lean(),
   ]);
 
   const resourceIds: Types.ObjectId[] = [
     ...pageRows.flatMap((row) => (row._id ? [row._id] : [])),
     ...recentRows.flatMap((row) => (row.resource ? [row.resource] : [])),
   ];
-  const userIds: Types.ObjectId[] = recentRows.flatMap((row) =>
-    row.user ? [row.user] : []
-  );
+  const userIds: Types.ObjectId[] = recentRows.flatMap((row) => (row.user ? [row.user] : []));
 
   const [resourceDocs, userDocs] = await Promise.all([
     resourceIds.length > 0
@@ -227,12 +237,13 @@ export async function getResourceClickAnalytics(
       adsetId: row.adsetId || "",
       adId: row.adId || "",
       content: row.content || "",
-      kind: row.kind || "download",
-      page: row.page || "",
+      kind: row.kind || "outbound",
+      page: row.page || row.label || "",
       landingPage: row.landingPage || "",
       referrer: row.referrer || "",
       resourceId,
-      resourceTitle: titles.get(resourceId) ?? "Untitled",
+      resourceTitle:
+        titles.get(resourceId) ?? (row.label || row.destination || "Outbound link"),
       visitor: userId ? emails.get(userId) || "Member" : "Guest",
     };
   });
@@ -244,6 +255,9 @@ export async function getResourceClickAnalytics(
       clicks,
       linkOpens,
       downloads,
+      outbound,
+      email,
+      affiliate,
       uniqueVisitors: visitorKeys.filter(Boolean).length,
       sources: sourceKeys.filter(Boolean).length,
       campaigns: campaignKeys.filter(Boolean).length,

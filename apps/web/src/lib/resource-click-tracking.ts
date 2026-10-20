@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import type { Types } from "mongoose";
-import { ResourceDownload } from "@/lib/models/resource-download";
-import { resourceClickAttribution } from "./resource-click-attribution.ts";
+import { trackLinkClick } from "./link-click-tracking.ts";
 
 export async function trackResourceClick({
   request,
@@ -16,17 +15,11 @@ export async function trackResourceClick({
   kind: "open" | "download";
   page: string;
 }) {
-  try {
-    const attribution = resourceClickAttribution(request, page);
-    const visitorKey = userId ? `u:${userId}` : `a:${attribution.ip}|${attribution.userAgent}`;
-    await ResourceDownload.create({
-      user: userId,
-      resource: resource._id,
-      visitorKey,
-      kind,
-      ...attribution,
-    });
-  } catch (error) {
-    console.error("resource click tracking error", error);
-  }
+  await trackLinkClick({
+    request,
+    resource,
+    userId,
+    kind: kind === "open" ? "resource_open" : "resource_download",
+    page,
+  });
 }

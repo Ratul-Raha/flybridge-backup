@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { EmailClick } from "@/lib/models/email-click";
+import { readSession } from "@/lib/auth/session";
+import { trackLinkClick } from "@/lib/link-click-tracking";
 import { classifyClickSource, verifyEmailLink, withEmailUtm } from "@/lib/email-tracking";
 
 export async function GET(
@@ -34,6 +36,18 @@ export async function GET(
     }).catch((error) => {
       // Click tracking must never block the redirect.
       console.error("email click record failed", error);
+    });
+
+    const session = await readSession();
+    await trackLinkClick({
+      request,
+      kind: "email",
+      page: "",
+      userId: session?.userId,
+      emailRecipient: verified.recipient ?? "",
+      templateId: verified.templateId ?? "",
+      destination: destination.slice(0, 500),
+      label: `email:${verified.campaign}`,
     });
   } catch (error) {
     console.error("email redirect error", error);

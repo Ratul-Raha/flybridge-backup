@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/lib/auth/auth-context";
 import { countryByCode } from "@/lib/countries";
 import { PageLoader } from "@/components/dashboard/page-loader";
+import { outboundLink } from "@/lib/outbound-link";
 
 type ScholarshipItem = {
   id: string;
@@ -320,7 +321,7 @@ export function ScholarshipBrowser() {
                   <div className="mt-auto pt-4 flex items-center gap-2 flex-wrap">
                     {s.applyUrl && (
                       <a
-                        href={s.applyUrl}
+                        href={outboundLink(s.applyUrl, { label: `scholarship:${s.id}` }) ?? s.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-full text-white text-[13px] font-medium px-5 py-[10px] transition-all duration-250 hover:translate-y-[-1px]"

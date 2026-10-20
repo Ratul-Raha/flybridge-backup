@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/pricing";
 import { ArrowUpRight, BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import { trackMetaEvent } from "@/lib/meta-events";
+import { outboundLink } from "@/lib/outbound-link";
 
 type Course = {
   courseId: string;
@@ -426,9 +427,14 @@ export function CheckoutPanel({
             </div>
 
             <a
-              href={`https://wa.me/8801804400070?text=${encodeURIComponent(
-                `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}${currentCouponQuote ? ` with coupon ${currentCouponQuote.code}` : ""}).`
-              )}`}
+              href={
+                outboundLink(
+                  `https://wa.me/8801804400070?text=${encodeURIComponent(
+                    `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}${currentCouponQuote ? ` with coupon ${currentCouponQuote.code}` : ""}).`
+                  )}`,
+                  { label: `checkout-whatsapp:${course.slug}` }
+                ) ?? "#"
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 cursor-pointer"

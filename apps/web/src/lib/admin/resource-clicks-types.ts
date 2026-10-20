@@ -7,6 +7,9 @@ export type ResourceClickMetrics = {
   uniqueVisitors: number;
   sources: number;
   campaigns: number;
+  outbound: number;
+  email: number;
+  affiliate: number;
 };
 
 export type ResourceClickSourceRow = {

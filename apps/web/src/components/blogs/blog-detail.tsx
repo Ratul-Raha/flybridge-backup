@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { RichMarkdown } from "./rich-markdown";
 import type { BlogCardData } from "./public-blog-list";
+import { outboundLink } from "@/lib/outbound-link";
 
 export type BlogDetailData = {
   id: string;
@@ -252,7 +253,7 @@ function ShareCard({ blog }: { blog: BlogDetailData }) {
           {socials.map((s) => (
             <a
               key={s.name}
-              href={s.href}
+              href={outboundLink(s.href, { label: `blog-share:${s.name}` }) ?? s.href}
               target="_blank"
               rel="noreferrer"
               title={`Share on ${s.name}`}

@@ -5,7 +5,9 @@ import type { EChartsOption } from "echarts";
 import {
   Download,
   ExternalLink,
+  Mail,
   MousePointerClick,
+  Share2,
   Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -281,13 +283,30 @@ export function ResourceClicksDashboard({
 
   const metrics = analytics.metrics;
 
-  const kindLabel = (kind: string) => (kind === "open" ? "Link open" : "Download");
+  const kindLabel = (kind: string) => {
+    switch (kind) {
+      case "resource_open":
+        return "Link open";
+      case "resource_download":
+        return "Download";
+      case "outbound":
+        return "Outbound";
+      case "email":
+        return "Email";
+      case "affiliate":
+        return "Affiliate";
+      case "open":
+        return "Link open";
+      default:
+        return "Download";
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Resource Traffic"
-        subtitle="Which channels, ads and pages drive link opens and downloads — anonymous clicks included."
+        subtitle="Every tracked link — resource opens/downloads, email, affiliate and outbound CTAs — with channels, ads and pages. Anonymous clicks included."
         action={
           <div className="flex items-center gap-3">
             {loading && <InlineLoader label="Updating…" />}
@@ -337,6 +356,27 @@ export function ResourceClicksDashboard({
           caption={`${metrics.sources} sources · ${metrics.campaigns} campaigns`}
           icon={Users}
           gradient="linear-gradient(135deg,#F59E0B,#F97316)"
+        />
+        <MetricCard
+          label="Outbound"
+          value={metrics.outbound.toLocaleString()}
+          caption="WhatsApp, apply, seminar, shares"
+          icon={Share2}
+          gradient="linear-gradient(135deg,#EC4899,#F472B6)"
+        />
+        <MetricCard
+          label="Email clicks"
+          value={metrics.email.toLocaleString()}
+          caption="Tracked email link opens"
+          icon={Mail}
+          gradient="linear-gradient(135deg,#6366F1,#818CF8)"
+        />
+        <MetricCard
+          label="Affiliate clicks"
+          value={metrics.affiliate.toLocaleString()}
+          caption="Partner link visits"
+          icon={ExternalLink}
+          gradient="linear-gradient(135deg,#14B8A6,#2DD4BF)"
         />
       </div>
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2, Lock, Play, X } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { outboundLink } from "@/lib/outbound-link";
 
 export function SignInModal({
   title = "Sign in to view",
@@ -102,7 +103,7 @@ export function SignInModal({
 
         {youtubeUrl && (
           <a
-            href={youtubeUrl}
+            href={outboundLink(youtubeUrl, { label: "resource-youtube:signin" }) ?? youtubeUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}

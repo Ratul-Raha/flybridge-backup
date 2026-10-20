@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { readSession } from "@/lib/auth/session";
 import { Affiliate } from "@/lib/models/affiliate";
 import { AffiliateClick } from "@/lib/models/affiliate-click";
+import { trackLinkClick } from "@/lib/link-click-tracking";
 import {
   AFFILIATE_COOKIE,
   AFFILIATE_COOKIE_MAX_AGE_SECONDS,
@@ -41,6 +43,7 @@ export async function GET(
     const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const ip = forwardedFor || request.headers.get("x-real-ip")?.trim() || "";
     const params2 = request.nextUrl.searchParams;
+    const session = await readSession();
 
     await AffiliateClick.create({
       affiliate: affiliate._id,
@@ -59,6 +62,16 @@ export async function GET(
     }).catch((error) => {
       // Click tracking must never block the redirect.
       console.error("affiliate click record failed", error);
+    });
+
+    await trackLinkClick({
+      request,
+      kind: "affiliate",
+      page: "",
+      userId: session?.userId,
+      affiliate: { _id: affiliate._id },
+      destination: destination.slice(0, 500),
+      label: `affiliate:${affiliate.code}`,
     });
 
     response.cookies.set(

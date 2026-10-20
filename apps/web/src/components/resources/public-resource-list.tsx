@@ -27,6 +27,7 @@ import { VideoViews } from "@/components/resources/resource-video-player";
 import { ResourceVideoDialog } from "@/components/resources/resource-video-dialog";
 import { ResourceLoveButton } from "@/components/resources/resource-love-button";
 import { SignInModal } from "@/components/resources/sign-in-modal";
+import { outboundLink } from "@/lib/outbound-link";
 
 const FILE_TYPES = [
   { value: "video", label: "Videos" },
@@ -521,7 +522,11 @@ export function PublicResourceList() {
     }
     if (r.youtubeUrl) {
       fetch(`/api/resources/${r.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
-      window.open(r.youtubeUrl, "_blank", "noopener,noreferrer");
+      window.open(
+        outboundLink(r.youtubeUrl, { label: `resource-youtube:${r.id}` }) ?? r.youtubeUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
       return;
     }
     setActiveVideo(r);
