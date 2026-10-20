@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  classifyClickSource,
   isEmailLinkTrackingEnabled,
   rewriteEmailLinks,
   sameSitePath,
@@ -137,4 +138,20 @@ test("rewriteEmailLinks is a no-op when tracking is disabled", () => {
   delete process.env.AUTH_SECRET;
   const html = '<a href="/dashboard">Home</a>';
   assert.equal(rewriteEmailLinks(html), html);
+});
+
+test("classifyClickSource buckets utm + referrer into source/medium", () => {
+  assert.deepEqual(classifyClickSource("/courses?utm_source=email&utm_medium=email", ""), {
+    source: "email",
+    medium: "email",
+  });
+  assert.deepEqual(classifyClickSource("/courses?utm_source=facebook&utm_medium=cpc", ""), {
+    source: "meta",
+    medium: "cpc",
+  });
+  assert.deepEqual(classifyClickSource("/courses?gclid=abc123", ""), {
+    source: "google",
+    medium: "paid_search",
+  });
+  assert.deepEqual(classifyClickSource("/courses", ""), { source: "direct", medium: "direct" });
 });

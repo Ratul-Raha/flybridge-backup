@@ -19,8 +19,10 @@ import type {
   AdminEmailClickAnalytics,
   EmailClickCampaign,
   EmailClickDestination,
+  EmailClickSource,
   EmailClickTemplate,
 } from "@/lib/admin/email-clicks-types";
+import { sourceLabel, sourceStyle } from "@/components/dashboard/email/source-meta";
 
 function MetricCard({
   label,
@@ -118,6 +120,16 @@ function campaignRows(rows: EmailClickCampaign[]) {
   return rows.map((row) => ({
     key: row.campaign,
     label: row.campaign,
+    clicks: row.clicks,
+    recipients: row.recipients,
+  }));
+}
+
+function sourceRows(rows: EmailClickSource[]) {
+  return rows.map((row) => ({
+    key: `${row.source}/${row.medium}`,
+    label: sourceLabel(row.source),
+    sub: row.medium,
     clicks: row.clicks,
     recipients: row.recipients,
   }));
@@ -228,10 +240,12 @@ export function EmailClicksDashboard({
 
   const exportCsv = () => {
     downloadCsv(
-      csvFilename("email-clicks"),
-      ["Date", "Recipient", "Campaign", "Template", "Destination", "Referrer"],
+      csvFilename("traffic-sources"),
+      ["Date", "Source", "Medium", "Recipient", "Campaign", "Template", "Destination", "Referrer"],
       analytics.recent.map((row) => [
         row.createdAt,
+        row.source,
+        row.medium,
         row.recipient,
         row.campaign,
         row.templateId,
@@ -246,8 +260,8 @@ export function EmailClicksDashboard({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Email Clicks"
-        subtitle="Which links inside outgoing email actually get opened — by campaign, template and destination."
+        title="Traffic Sources"
+        subtitle="Which channels and links drive clicks — grouped by source, campaign, template and destination."
         action={
           <div className="flex items-center gap-3">
             {loading && <InlineLoader label="Updating…" />}
@@ -271,23 +285,23 @@ export function EmailClicksDashboard({
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         <MetricCard
-          label="Link clicks"
+          label="Tracked clicks"
           value={metrics.clicks.toLocaleString()}
-          caption={`Tracked through /e/ redirects · ${analytics.range.label}`}
+          caption={`All tracked link clicks · ${analytics.range.label}`}
           icon={MousePointerClick}
           gradient="linear-gradient(135deg,#6E4CFF,#8B5CF6)"
         />
         <MetricCard
-          label="Unique recipients"
+          label="Unique visitors"
           value={metrics.uniqueRecipients.toLocaleString()}
           caption="Distinct people who clicked"
           icon={Users}
           gradient="linear-gradient(135deg,#0EA5E9,#38BDF8)"
         />
         <MetricCard
-          label="Campaigns"
-          value={metrics.uniqueCampaigns.toLocaleString()}
-          caption="Campaigns with clicks"
+          label="Sources"
+          value={analytics.topSources.length.toLocaleString()}
+          caption="Traffic channels with clicks"
           icon={Send}
           gradient="linear-gradient(135deg,#10B981,#34D399)"
         />
@@ -300,7 +314,7 @@ export function EmailClicksDashboard({
         />
       </div>
 
-      <Card title="Click trend" subtitle={`Tracked email clicks per day · ${analytics.range.label}`}>
+      <Card title="Click trend" subtitle={`Tracked clicks per day by source · ${analytics.range.label}`}>
         {analytics.trend.labels.length > 0 ? (
           <Chart option={option} height={300} />
         ) : (
@@ -308,10 +322,11 @@ export function EmailClicksDashboard({
         )}
       </Card>
 
-      <div className="grid xl:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <RankingCard title="Top sources" subtitle="Clicks by traffic channel" rows={sourceRows(analytics.topSources)} />
         <RankingCard title="Top campaigns" subtitle="Click volume by campaign" rows={campaignRows(analytics.topCampaigns)} />
         <RankingCard title="Top templates" subtitle="Automation templates that drive clicks" rows={templateRows(analytics.topTemplates)} />
-        <RankingCard title="Top destinations" subtitle="Where recipients clicked through to" rows={destinationRows(analytics.topDestinations)} />
+        <RankingCard title="Top destinations" subtitle="Where visitors clicked through to" rows={destinationRows(analytics.topDestinations)} />
       </div>
 
       <Card
@@ -332,8 +347,8 @@ export function EmailClicksDashboard({
       >
         {analytics.recent.length === 0 ? (
           <p className="text-[13.5px] text-center py-12" style={{ color: "var(--body)" }}>
-            No tracked clicks yet. Set <span className="font-mono">EMAIL_TRACKING_SECRET</span> and
-            send email with same-site links to start collecting clicks.
+            No tracked clicks yet. Send email with same-site links, or use tracked
+            redirect links, to start collecting traffic sources.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -341,6 +356,7 @@ export function EmailClicksDashboard({
               <thead>
                 <tr style={{ color: "var(--body)" }}>
                   <th className="py-2 pr-4 font-mono text-[10px] uppercase tracking-[0.12em]">When</th>
+                  <th className="py-2 pr-4 font-mono text-[10px] uppercase tracking-[0.12em]">Source</th>
                   <th className="py-2 pr-4 font-mono text-[10px] uppercase tracking-[0.12em]">Recipient</th>
                   <th className="py-2 pr-4 font-mono text-[10px] uppercase tracking-[0.12em]">Campaign</th>
                   <th className="py-2 pr-4 font-mono text-[10px] uppercase tracking-[0.12em]">Template</th>
@@ -352,6 +368,19 @@ export function EmailClicksDashboard({
                   <tr key={row.id}>
                     <td className="py-2.5 pr-4 whitespace-nowrap" style={{ color: "var(--body)" }}>
                       {timeAgo(row.createdAt)}
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      {(() => {
+                        const style = sourceStyle(row.source);
+                        return (
+                          <span
+                            className="rounded-full px-2 py-[3px] text-[10.5px] font-semibold whitespace-nowrap"
+                            style={{ background: style.bg, color: style.color }}
+                          >
+                            {sourceLabel(row.source)}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-2.5 pr-4 font-medium" style={{ color: "var(--ink)" }}>
                       {row.recipient || <span style={{ color: "var(--body)" }}>—</span>}

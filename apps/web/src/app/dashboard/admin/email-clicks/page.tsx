@@ -5,7 +5,7 @@ import { EmailClicksDashboard } from "@/components/dashboard/email/email-clicks-
 import { getEmailClickAnalytics } from "@/lib/admin/email-clicks";
 
 export const metadata: Metadata = {
-  title: "Email Clicks | FlyBridge",
+  title: "Traffic Sources | FlyBridge",
 };
 
 export default async function EmailClicksPage() {

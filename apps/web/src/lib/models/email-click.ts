@@ -1,12 +1,16 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
 /**
- * One row per click through a tracked email link (`/e/{token}`). Used for
- * click counts and to see which template/campaign a visit came from; the
- * landing page also carries utm_* params so GA4 attributes the session.
+ * One row per click through a tracked link (`/e/{token}`). Used for click
+ * counts and to see which source/channel, campaign and template a visit came
+ * from; the landing page also carries utm_* params so GA4 attributes it.
  */
 const emailClickSchema = new Schema(
   {
+    /** Traffic source bucket: email, meta, google, referral, direct, … */
+    source: { type: String, trim: true, lowercase: true, default: "email" },
+    /** Traffic medium: email, paid_social, paid_search, cpc, referral, direct, … */
+    medium: { type: String, trim: true, lowercase: true, default: "email" },
     /** Campaign slug (template id, "automation", "admin-bulk", …). */
     campaign: { type: String, trim: true, lowercase: true, default: "email" },
     templateId: { type: String, trim: true },
@@ -23,6 +27,7 @@ const emailClickSchema = new Schema(
 
 emailClickSchema.index({ campaign: 1, createdAt: -1 });
 emailClickSchema.index({ recipient: 1, createdAt: -1 });
+emailClickSchema.index({ source: 1, createdAt: -1 });
 emailClickSchema.index({ createdAt: -1 });
 
 export type EmailClickDoc = InferSchemaType<typeof emailClickSchema> & {

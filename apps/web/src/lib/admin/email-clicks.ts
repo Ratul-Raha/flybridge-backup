@@ -9,6 +9,7 @@ import type {
   EmailClickCampaign,
   EmailClickDestination,
   EmailClickRow,
+  EmailClickSource,
   EmailClickTemplate,
 } from "@/lib/admin/email-clicks-types";
 
@@ -43,7 +44,7 @@ export async function getEmailClickAnalytics(
   const { start, end } = range;
   const dateMatch = { createdAt: { $gte: start, $lt: end } };
 
-  const [clicks, uniqueRecipients, uniqueCampaigns, uniqueDestinations, trendRows, campaignRows, templateRows, destinationRows, recentRows] =
+  const [clicks, uniqueRecipients, uniqueCampaigns, uniqueDestinations, trendRows, sourceRows, campaignRows, templateRows, destinationRows, recentRows] =
     await Promise.all([
       EmailClick.countDocuments(dateMatch),
       EmailClick.distinct("recipient", { ...dateMatch, recipient: { $nin: ["", null] } }),
@@ -63,6 +64,21 @@ export async function getEmailClickAnalytics(
             clicks: { $sum: 1 },
           },
         },
+      ]),
+      EmailClick.aggregate<{ _id: { source: string; medium: string }; clicks: number; members: string[] }>([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: {
+              source: { $ifNull: ["$source", "email"] },
+              medium: { $ifNull: ["$medium", "email"] },
+            },
+            clicks: { $sum: 1 },
+            members: { $addToSet: "$recipient" },
+          },
+        },
+        { $sort: { clicks: -1 } },
+        { $limit: 10 },
       ]),
       EmailClick.aggregate<{ _id: string; clicks: number; members: string[] }>([
         { $match: dateMatch },
@@ -108,12 +124,18 @@ export async function getEmailClickAnalytics(
   const { keys, labels } = daySeries(start, end);
   const trendByKey = new Map(trendRows.map((row) => [row._id, number(row.clicks)]));
 
+  const topSources: EmailClickSource[] = sourceRows.map((row) => ({
+    source: row._id.source || "email",
+    medium: row._id.medium || "email",
+    clicks: number(row.clicks),
+    recipients: new Set(row.members.filter(Boolean)).size,
+  }));
+
   const topCampaigns: EmailClickCampaign[] = campaignRows.map((row) => ({
     campaign: row._id || "email",
     clicks: number(row.clicks),
     recipients: new Set(row.members.filter(Boolean)).size,
   }));
-
   const topTemplates: EmailClickTemplate[] = templateRows.map((row) => ({
     templateId: row._id,
     clicks: number(row.clicks),
@@ -128,6 +150,8 @@ export async function getEmailClickAnalytics(
 
   const recent: EmailClickRow[] = recentRows.map((row) => ({
     id: (row as { _id: unknown })._id?.toString() ?? "",
+    source: row.source || "email",
+    medium: row.medium || "email",
     campaign: row.campaign || "email",
     templateId: row.templateId ?? "",
     recipient: row.recipient ?? "",
@@ -150,6 +174,7 @@ export async function getEmailClickAnalytics(
       labels,
       clicks: keys.map((key) => trendByKey.get(key) ?? 0),
     },
+    topSources,
     topCampaigns,
     topTemplates,
     topDestinations,

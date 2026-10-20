@@ -8,6 +8,13 @@ export type EmailClickMetrics = {
   clicksPerRecipient: number;
 };
 
+export type EmailClickSource = {
+  source: string;
+  medium: string;
+  clicks: number;
+  recipients: number;
+};
+
 export type EmailClickCampaign = {
   campaign: string;
   clicks: number;
@@ -28,6 +35,8 @@ export type EmailClickDestination = {
 
 export type EmailClickRow = {
   id: string;
+  source: string;
+  medium: string;
   campaign: string;
   templateId: string;
   recipient: string;
@@ -41,6 +50,7 @@ export type AdminEmailClickAnalytics = {
   range: { from: string; to: string; days: number; label: string };
   metrics: EmailClickMetrics;
   trend: { labels: string[]; clicks: number[] };
+  topSources: EmailClickSource[];
   topCampaigns: EmailClickCampaign[];
   topTemplates: EmailClickTemplate[];
   topDestinations: EmailClickDestination[];

@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 
+import { marketingTouchFromUrl } from "./marketing-attribution.ts";
+
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com").replace(/\/+$/, "");
 
 const MAX_DESTINATION = 1800;
@@ -127,6 +129,21 @@ export function withEmailUtm(destination: string, campaign: string): string {
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return destination;
+  }
+}
+
+/** Classify a tracked click into a traffic source/medium bucket. Falls back to
+ *  the email channel when the click carries no attributable signal. */
+export function classifyClickSource(
+  destination: string,
+  referrer: string,
+): { source: string; medium: string } {
+  try {
+    const url = new URL(destination, SITE_URL);
+    const touch = marketingTouchFromUrl(url, referrer);
+    return { source: touch.source, medium: touch.medium };
+  } catch {
+    return { source: "email", medium: "email" };
   }
 }
 
