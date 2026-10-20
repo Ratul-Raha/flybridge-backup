@@ -120,16 +120,16 @@ test("rewriteEmailLinks wraps same-site hrefs only", (t) => {
   const out = rewriteEmailLinks(html, { campaign: "welcome" });
   const hrefs = [...out.matchAll(/href=(["'])([^"']+)\1/g)].map((m) => m[2]);
 
-  assert.ok(hrefs[0].startsWith("/e/"));
-  assert.ok(hrefs[1].startsWith("/e/"));
+  assert.ok(hrefs[0].startsWith(`${SITE_URL}/e/`));
+  assert.ok(hrefs[1].startsWith(`${SITE_URL}/e/`));
   assert.equal(hrefs[2], "https://youtube.com/watch?v=x");
   assert.equal(hrefs[3], "mailto:hi@example.com");
   assert.equal(hrefs[4], "#top");
-  assert.ok(hrefs[5].startsWith("/e/"));
+  assert.ok(hrefs[5].startsWith(`${SITE_URL}/e/`));
 
   // Every wrapped token resolves back to its original same-site destination.
-  assert.equal(verifyEmailLink(hrefs[0].slice(3))?.destination, "/dashboard");
-  assert.equal(verifyEmailLink(hrefs[5].slice(3))?.destination, "/seminars");
+  assert.equal(verifyEmailLink(hrefs[0].slice(`${SITE_URL}/e/`.length))?.destination, "/dashboard");
+  assert.equal(verifyEmailLink(hrefs[5].slice(`${SITE_URL}/e/`.length))?.destination, "/seminars");
 });
 
 test("rewriteEmailLinks is a no-op when tracking is disabled", () => {

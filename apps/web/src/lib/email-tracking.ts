@@ -139,6 +139,6 @@ export function rewriteEmailLinks(html: string, meta: EmailLinkMeta = {}): strin
     if (!trimmed || trimmed.startsWith("#") || /^(mailto:|tel:|data:)/i.test(trimmed)) return match;
     const token = signEmailLink(trimmed, meta);
     if (!token) return match;
-    return `${attr}${quote}/e/${token}${quote}`;
+    return `${attr}${quote}${SITE_URL}/e/${token}${quote}`;
   });
 }
