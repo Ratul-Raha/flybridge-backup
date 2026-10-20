@@ -27,6 +27,8 @@ import {
   Star,
   Eye,
   EyeOff,
+  Globe,
+  Users,
   Loader2,
   type LucideIcon,
 } from "lucide-react";
@@ -202,7 +204,9 @@ export function ResourceManage() {
   const [period, setPeriod] = useState<"all" | "7" | "30" | "90">("all");
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkBusy, setBulkBusy] = useState<"publish" | "unpublish" | "delete" | null>(null);
+  const [bulkBusy, setBulkBusy] = useState<
+    "publish" | "unpublish" | "delete" | "public" | "members" | null
+  >(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const headerCheckRef = useRef<HTMLInputElement>(null);
 
@@ -328,7 +332,7 @@ export function ResourceManage() {
 
   const clearSelection = () => setSelected(new Set());
 
-  const runBulk = async (action: "publish" | "unpublish" | "delete") => {
+  const runBulk = async (action: "publish" | "unpublish" | "delete" | "public" | "members") => {
     if (selected.size === 0 || bulkBusy) return;
     if (
       action === "delete" &&
@@ -1144,6 +1148,26 @@ export function ResourceManage() {
                     Clear
                   </button>
                   <div className="ml-auto flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => runBulk("public")}
+                      disabled={bulkBusy !== null}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-[7px] text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    >
+                      {bulkBusy === "public" ? <Loader2 size={13} className="animate-spin" /> : <Globe size={13} />}
+                      Make public
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runBulk("members")}
+                      disabled={bulkBusy !== null}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-[7px] text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    >
+                      {bulkBusy === "members" ? <Loader2 size={13} className="animate-spin" /> : <Users size={13} />}
+                      Members only
+                    </button>
                     <button
                       type="button"
                       onClick={() => runBulk("publish")}

@@ -7,7 +7,7 @@ import { deleteMediaRef } from "@/lib/storage";
 
 const MAX_RESOURCES = 500;
 
-type BulkAction = "publish" | "unpublish" | "delete";
+type BulkAction = "publish" | "unpublish" | "delete" | "public" | "members";
 
 function isManager(session: { role: string } | null) {
   return session && (session.role === "admin" || session.role === "moderator");
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const action = body.action as BulkAction;
-    if (!["publish", "unpublish", "delete"].includes(action)) {
+    if (!["publish", "unpublish", "delete", "public", "members"].includes(action)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
@@ -60,6 +60,15 @@ export async function POST(request: NextRequest) {
         );
       }
       return NextResponse.json({ ok: true, deleted: foundIds.length });
+    }
+
+    if (action === "public" || action === "members") {
+      const update =
+        action === "public"
+          ? { $set: { access: "public" as const, price: 0 }, $unset: { prices: "" } }
+          : { $set: { access: "members" as const } };
+      const result = await Resource.updateMany({ _id: { $in: resourceIds } }, update);
+      return NextResponse.json({ ok: true, updated: result.modifiedCount });
     }
 
     const published = action === "publish";
