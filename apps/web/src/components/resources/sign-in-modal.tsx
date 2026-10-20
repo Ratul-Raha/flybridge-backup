@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Lock, X } from "lucide-react";
+import { Loader2, Lock, Play, X } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 
 export function SignInModal({
   title = "Sign in to view",
   message = "This video is for FlyBridge members. Sign in with Google to watch it — your free account is created automatically if you're new.",
+  youtubeUrl,
   onClose,
 }: {
   title?: string;
   message?: string;
+  youtubeUrl?: string | null;
   onClose: () => void;
 }) {
   const { signInWithGoogle } = useAuth();
@@ -96,6 +98,20 @@ export function SignInModal({
           <p className="mt-3 text-center text-[12.5px]" style={{ color: "#C0392B" }}>
             {error}
           </p>
+        )}
+
+        {youtubeUrl && (
+          <a
+            href={youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="mt-2.5 flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-[12px] text-[13.5px] font-semibold text-white transition-all duration-200 hover:opacity-90"
+            style={{ background: "#FF0000" }}
+          >
+            <Play size={15} fill="currentColor" strokeWidth={0} />
+            Watch on YouTube instead
+          </a>
         )}
 
         <p className="mt-4 text-center text-[11.5px]" style={{ color: "var(--body)" }}>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Check,
   Download,
+  Lock,
   MessageSquare,
   Play,
   Search,
@@ -12,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { getCategoryColor } from "@/lib/resource-colors";
+import { useAuth } from "@/lib/auth/auth-context";
 import {
   fileTypeMeta,
   formatFileSize,
@@ -21,6 +23,7 @@ import {
 import { VideoViews } from "@/components/resources/resource-video-player";
 import { ResourceVideoDialog } from "@/components/resources/resource-video-dialog";
 import { ResourceLoveButton } from "@/components/resources/resource-love-button";
+import { SignInModal } from "@/components/resources/sign-in-modal";
 
 const FILE_TYPES = [
   { value: "video", label: "Videos" },
@@ -250,6 +253,14 @@ function VideoResourceCard({
         >
           <VideoViews count={r.viewCount ?? 0} /> views
         </span>
+        {r.access === "members" && (
+          <span
+            className="pointer-events-none absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold text-white"
+            style={{ background: "rgba(107,76,224,0.9)", backdropFilter: "blur(6px)" }}
+          >
+            <Lock size={10} /> Members
+          </span>
+        )}
       </div>
 
       {/* Body */}
@@ -351,12 +362,14 @@ function MostViewedSection({
 }
 
 export function PublicResourceList() {
+  const { user } = useAuth();
   const [resources, setResources] = useState<ResourceCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fileType, setFileType] = useState<FileTypeFilter>("video");
   const [query, setQuery] = useState("");
   const [activeVideo, setActiveVideo] = useState<ResourceCardData | null>(null);
+  const [lockedVideo, setLockedVideo] = useState<ResourceCardData | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -421,6 +434,10 @@ export function PublicResourceList() {
   };
 
   const openVideo = (r: ResourceCardData) => {
+    if (r.access === "members" && !user) {
+      setLockedVideo(r);
+      return;
+    }
     if (r.youtubeUrl) {
       fetch(`/api/resources/${r.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
       window.open(r.youtubeUrl, "_blank", "noopener,noreferrer");
@@ -580,6 +597,15 @@ export function PublicResourceList() {
                   prev.map((x) => (x.id === id ? { ...x, commentCount: t } : x))
                 )
               }
+            />
+          )}
+
+          {lockedVideo && (
+            <SignInModal
+              title="Sign in to watch this video"
+              message="This video is for FlyBridge members. Sign in with Google to watch it — your free account is created automatically if you're new."
+              youtubeUrl={lockedVideo.youtubeUrl}
+              onClose={() => setLockedVideo(null)}
             />
           )}
         </div>

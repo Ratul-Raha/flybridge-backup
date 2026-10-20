@@ -93,7 +93,14 @@ export function ResourceVideoPlayer({
             </span>
           </button>
         </div>
-        {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+        {showSignIn && (
+          <SignInModal
+            title="Sign in to watch this video"
+            message="This video is for FlyBridge members. Sign in with Google to watch it — your free account is created automatically if you're new."
+            youtubeUrl={resource.youtubeUrl}
+            onClose={() => setShowSignIn(false)}
+          />
+        )}
       </>
     );
   }
