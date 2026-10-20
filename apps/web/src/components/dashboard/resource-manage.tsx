@@ -25,6 +25,8 @@ import {
   Search,
   Folder,
   Star,
+  Eye,
+  EyeOff,
   Loader2,
   type LucideIcon,
 } from "lucide-react";
@@ -44,7 +46,10 @@ type ResourceItem = {
   price: number;
   prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
+  published: boolean;
+  youtubeUrl: string | null;
   downloadCount: number;
+  viewCount: number;
 };
 
 type UploadedFile = {
@@ -64,8 +69,10 @@ type FormState = {
   price: string;
   bdtPrice: string;
   featured: boolean;
-  mode: "file" | "link";
+  published: boolean;
+  mode: "file" | "link" | "youtube";
   linkUrl: string;
+  youtubeUrl: string;
   file: UploadedFile | null;
   thumbnail: UploadedFile | null;
 };
@@ -79,8 +86,10 @@ const emptyForm: FormState = {
   price: "",
   bdtPrice: "",
   featured: false,
+  published: true,
   mode: "file",
   linkUrl: "",
+  youtubeUrl: "",
   file: null,
   thumbnail: null,
 };
@@ -166,7 +175,7 @@ function isValidUrl(url: string) {
 const selectClass =
   "text-[13px] rounded-xl border bg-white px-3 py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 cursor-pointer";
 
-const GRID_COLS = "grid-cols-[minmax(0,1fr)_92px_80px_108px_84px_72px_auto]";
+const GRID_COLS = "grid-cols-[28px_minmax(0,1fr)_64px_64px_64px_92px_84px_auto]";
 
 export function ResourceManage() {
   const { user } = useAuth();
@@ -191,6 +200,11 @@ export function ResourceManage() {
   const [accessFilter, setAccessFilter] = useState("all");
   const [sort, setSort] = useState("newest");
   const [period, setPeriod] = useState<"all" | "7" | "30" | "90">("all");
+
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<"publish" | "unpublish" | "delete" | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const headerCheckRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -264,11 +278,101 @@ export function ResourceManage() {
       case "downloads":
         arr.sort((a, b) => b.downloadCount - a.downloadCount);
         break;
+      case "views":
+        arr.sort((a, b) => b.viewCount - a.viewCount);
+        break;
       default:
         arr.sort((a, b) => +new Date(b.releaseDate) - +new Date(a.releaseDate));
     }
     return arr;
   }, [filtered, sort]);
+
+  const allOnPage = visible.length > 0 && visible.every((r) => selected.has(r.id));
+  const someOnPage = visible.some((r) => selected.has(r.id));
+
+  useEffect(() => {
+    if (headerCheckRef.current) {
+      headerCheckRef.current.indeterminate = someOnPage && !allOnPage;
+    }
+  }, [someOnPage, allOnPage]);
+
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const existing = new Set(resources.map((r) => r.id));
+      const next = new Set([...prev].filter((id) => existing.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [resources]);
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPage) {
+        for (const r of visible) next.delete(r.id);
+      } else {
+        for (const r of visible) next.add(r.id);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelected(new Set());
+
+  const runBulk = async (action: "publish" | "unpublish" | "delete") => {
+    if (selected.size === 0 || bulkBusy) return;
+    if (
+      action === "delete" &&
+      !confirm(`Delete ${selected.size} resource${selected.size === 1 ? "" : "s"}? This cannot be undone.`)
+    ) {
+      return;
+    }
+    setError(null);
+    setBulkBusy(action);
+    try {
+      const res = await fetch("/api/resources/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resourceIds: [...selected], action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Bulk action failed");
+      clearSelection();
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk action failed");
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+  const togglePublished = async (r: ResourceItem) => {
+    setError(null);
+    setTogglingId(r.id);
+    try {
+      const res = await fetch(`/api/resources/${r.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published: !r.published }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Update failed");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -280,6 +384,7 @@ export function ResourceManage() {
   const openEdit = (r: ResourceItem) => {
     setEditingId(r.id);
     const isLink = r.fileType === "link";
+    const isYouTubeOnly = Boolean(r.youtubeUrl) && (!r.fileUrl || r.fileUrl === r.youtubeUrl);
     setForm({
       title: r.title,
       description: r.description ?? "",
@@ -289,9 +394,11 @@ export function ResourceManage() {
       price: r.price ? String(r.price) : "",
       bdtPrice: r.prices?.BDT ? String(r.prices.BDT) : "",
       featured: r.featured,
-      mode: isLink ? "link" : "file",
+      published: r.published !== false,
+      mode: isYouTubeOnly ? "youtube" : isLink ? "link" : "file",
       linkUrl: isLink ? r.fileUrl : "",
-      file: isLink
+      youtubeUrl: r.youtubeUrl ?? "",
+      file: isLink || isYouTubeOnly
         ? null
         : {
             url: r.fileUrl,
@@ -337,8 +444,17 @@ export function ResourceManage() {
         setError("Enter a valid link URL (starting with http:// or https://)");
         return;
       }
+    } else if (form.mode === "youtube") {
+      if (!isValidUrl(form.youtubeUrl)) {
+        setError("Enter a valid YouTube URL (starting with http:// or https://)");
+        return;
+      }
     } else if (!form.file) {
       setError("A file must be uploaded");
+      return;
+    }
+    if (form.mode === "file" && form.youtubeUrl.trim() && !isValidUrl(form.youtubeUrl)) {
+      setError("Enter a valid YouTube URL or leave it empty");
       return;
     }
 
@@ -360,12 +476,25 @@ export function ResourceManage() {
             BDT: form.access === "members" ? Math.max(0, Number(form.bdtPrice) || 0) : 0,
           },
           featured: form.featured,
-          fileUrl: form.mode === "link" ? form.linkUrl.trim() : form.file?.url,
-          publicId: form.mode === "link" ? "" : form.file?.publicId,
+          published: form.published,
+          youtubeUrl:
+            form.mode === "youtube" || form.mode === "file" ? form.youtubeUrl.trim() : "",
+          fileUrl:
+            form.mode === "link"
+              ? form.linkUrl.trim()
+              : form.mode === "youtube"
+                ? form.youtubeUrl.trim()
+                : form.file?.url,
+          publicId: form.mode === "file" ? form.file?.publicId : "",
           fileName:
-            form.mode === "link" ? domainOf(form.linkUrl) || null : form.file?.fileName,
-          fileSize: form.mode === "link" ? 0 : form.file?.fileSize,
-          fileType: form.mode === "link" ? "link" : form.file?.fileType,
+            form.mode === "link"
+              ? domainOf(form.linkUrl) || null
+              : form.mode === "youtube"
+                ? "YouTube"
+                : form.file?.fileName,
+          fileSize: form.mode === "file" ? form.file?.fileSize : 0,
+          fileType:
+            form.mode === "link" ? "link" : form.mode === "youtube" ? "video" : form.file?.fileType,
           thumbnail: form.thumbnail?.url,
           thumbnailPublicId: form.thumbnail?.publicId,
         }),
@@ -537,7 +666,7 @@ export function ResourceManage() {
 
           {/* Resource type toggle */}
           <div className="flex gap-1 rounded-full border p-1 w-fit mb-5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
-            {(["file", "link"] as const).map((m) => (
+            {(["file", "link", "youtube"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
@@ -549,7 +678,7 @@ export function ResourceManage() {
                     : { color: "var(--body)" }
                 }
               >
-                {m === "file" ? "Upload file" : "Add link"}
+                {m === "file" ? "Upload file" : m === "link" ? "Add link" : "YouTube video"}
               </button>
             ))}
           </div>
@@ -681,6 +810,25 @@ export function ResourceManage() {
               </div>
             )}
 
+            {form.mode === "youtube" && (
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                  YouTube URL *
+                </label>
+                <input
+                  type="url"
+                  value={form.youtubeUrl}
+                  onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=…"
+                  className={inputClass}
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                />
+                <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                  Visitors are sent to YouTube to watch, so video streaming never hits our servers.
+                </p>
+              </div>
+            )}
+
             {form.mode === "file" && (
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
@@ -737,6 +885,24 @@ export function ResourceManage() {
                     <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
                       {uploadProgress}%
                     </span>
+                  </div>
+                )}
+                {form.file?.fileType === "video" && (
+                  <div className="mt-1 flex flex-col gap-2">
+                    <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
+                      YouTube URL (optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={form.youtubeUrl}
+                      onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=…"
+                      className={inputClass}
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    />
+                    <p className="text-[12px]" style={{ color: "var(--body)" }}>
+                      If set, visitors watch on YouTube instead of streaming the uploaded file.
+                    </p>
                   </div>
                 )}
               </div>
@@ -796,6 +962,18 @@ export function ResourceManage() {
               />
               <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
                 Featured on the resources page
+              </span>
+            </label>
+
+            <label className="flex items-center gap-2 md:col-span-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.published}
+                onChange={(e) => setForm({ ...form, published: e.target.checked })}
+                className="w-4 h-4 accent-[var(--brand)]"
+              />
+              <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>
+                Published — visible on the public resources page
               </span>
             </label>
           </div>
@@ -943,13 +1121,78 @@ export function ResourceManage() {
                     <option value="name-desc">Name (Z–A)</option>
                     <option value="largest">Largest first</option>
                     <option value="downloads">Most downloaded</option>
+                    <option value="views">Most viewed</option>
                   </select>
                 </div>
               </div>
 
+              {selected.size > 0 && (
+                <div
+                  className="rounded-lg border px-4 py-2.5 flex flex-wrap items-center gap-2.5"
+                  style={{ borderColor: "rgba(47,95,224,0.25)", background: "rgba(47,95,224,0.06)" }}
+                >
+                  <span className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+                    {selected.size} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    disabled={bulkBusy !== null}
+                    className="text-[12.5px] font-medium underline-offset-2 hover:underline disabled:opacity-50"
+                    style={{ color: "var(--body)" }}
+                  >
+                    Clear
+                  </button>
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => runBulk("publish")}
+                      disabled={bulkBusy !== null}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-[7px] text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    >
+                      {bulkBusy === "publish" ? <Loader2 size={13} className="animate-spin" /> : <Eye size={13} />}
+                      Publish
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runBulk("unpublish")}
+                      disabled={bulkBusy !== null}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-[7px] text-[12.5px] font-medium transition-colors hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    >
+                      {bulkBusy === "unpublish" ? <Loader2 size={13} className="animate-spin" /> : <EyeOff size={13} />}
+                      Unpublish
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runBulk("delete")}
+                      disabled={bulkBusy !== null}
+                      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-[7px] text-[12.5px] font-medium transition-colors hover:bg-[#FDF1F0] disabled:opacity-50"
+                      style={{ borderColor: "rgba(192,57,43,0.3)", color: "#C0392B" }}
+                    >
+                      {bulkBusy === "delete" ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* List */}
               <div className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
                 <div className={`hidden md:grid gap-3 px-4 py-2.5 border-b bg-[var(--bg-soft)] ${GRID_COLS}`} style={{ borderColor: "var(--line)" }}>
+                  <span className="flex items-center">
+                    <input
+                      ref={headerCheckRef}
+                      type="checkbox"
+                      checked={allOnPage}
+                      disabled={visible.length === 0}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all resources matching the current filters"
+                      className="w-4 h-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ accentColor: "var(--brand)" }}
+                    />
+                  </span>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                     Name
                   </span>
@@ -957,16 +1200,16 @@ export function ResourceManage() {
                     Type
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                    Size
-                  </span>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                    Published
-                  </span>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                    Access
+                    Views
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                     Downloads
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    Status
+                  </span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+                    Access
                   </span>
                   <span />
                 </div>
@@ -983,11 +1226,23 @@ export function ResourceManage() {
                       return (
                         <div
                           key={r.id}
-                          className={`group md:grid items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${idx > 0 ? "border-t" : ""} ${GRID_COLS}`}
+                          className={`group flex md:grid items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[var(--bg-soft)] ${idx > 0 ? "border-t" : ""} ${GRID_COLS}`}
                           style={{ borderColor: "var(--line)" }}
                         >
+                          {/* Selection */}
+                          <span className="flex shrink-0 items-center">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(r.id)}
+                              onChange={() => toggleSelect(r.id)}
+                              aria-label={`Select ${r.title}`}
+                              className="w-4 h-4 cursor-pointer"
+                              style={{ accentColor: "var(--brand)" }}
+                            />
+                          </span>
+
                           {/* Name cell */}
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex flex-1 md:flex-none items-center gap-3 min-w-0">
                             <a
                               href={fileHref(r)}
                               target="_blank"
@@ -1004,6 +1259,9 @@ export function ResourceManage() {
                               <span className="min-w-0">
                                 <span className="text-[14px] font-semibold truncate flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
                                   {r.title}
+                                  {r.youtubeUrl && (
+                                    <Video size={13} className="shrink-0" style={{ color: "#FF0000" }} />
+                                  )}
                                   {r.featured && (
                                     <Star size={12} className="shrink-0" style={{ color: "#E08A17" }} fill="#E08A17" />
                                   )}
@@ -1012,20 +1270,29 @@ export function ResourceManage() {
                                   <Folder size={11} className="shrink-0" />
                                   {r.category}
                                   {r.fileName && <span className="truncate">· {r.fileName}</span>}
+                                  <span className="shrink-0">· {formatDate(r.releaseDate)}</span>
                                 </span>
                                 <span className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
                                   <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
                                     {meta.label}
                                   </span>
-                                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                                    {formatBytes(r.fileSize)}
-                                  </span>
-                                  <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                                    {formatDate(r.releaseDate)}
+                                  <span className="text-[11.5px] flex items-center gap-1" style={{ color: "var(--body)" }}>
+                                    <Eye size={11} />
+                                    {r.viewCount}
                                   </span>
                                   <span className="text-[11.5px] flex items-center gap-1" style={{ color: "var(--body)" }}>
                                     <Download size={11} />
                                     {r.downloadCount}
+                                  </span>
+                                  <span
+                                    className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
+                                    style={
+                                      r.published
+                                        ? { background: "rgba(15,169,104,0.12)", color: "#0FA968" }
+                                        : { background: "rgba(160,174,192,0.18)", color: "#6B7280" }
+                                    }
+                                  >
+                                    {r.published ? "Published" : "Draft"}
                                   </span>
                                   <span
                                     className="text-[11px] font-semibold rounded-full px-2.5 py-[3px]"
@@ -1045,11 +1312,36 @@ export function ResourceManage() {
                           <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
                             {meta.label}
                           </span>
-                          <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
-                            {formatBytes(r.fileSize)}
+                          <span className="hidden md:flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--body)" }}>
+                            <Eye size={13} />
+                            {(r.viewCount ?? 0).toLocaleString()}
                           </span>
-                          <span className="hidden md:block text-[12.5px]" style={{ color: "var(--body)" }}>
-                            {formatDate(r.releaseDate)}
+                          <span className="hidden md:flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--body)" }}>
+                            <Download size={13} />
+                            {r.downloadCount.toLocaleString()}
+                          </span>
+                          <span className="hidden md:inline-block">
+                            <button
+                              type="button"
+                              onClick={() => togglePublished(r)}
+                              disabled={togglingId === r.id}
+                              title={r.published ? "Unpublish resource" : "Publish resource"}
+                              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11px] font-semibold transition-opacity hover:opacity-75 disabled:opacity-50"
+                              style={
+                                r.published
+                                  ? { background: "rgba(15,169,104,0.12)", color: "#0FA968" }
+                                  : { background: "rgba(160,174,192,0.18)", color: "#6B7280" }
+                              }
+                            >
+                              {togglingId === r.id ? (
+                                <Loader2 size={10} className="animate-spin" />
+                              ) : r.published ? (
+                                <Eye size={10} />
+                              ) : (
+                                <EyeOff size={10} />
+                              )}
+                              {r.published ? "Published" : "Draft"}
+                            </button>
                           </span>
                           <span className="hidden md:inline-block">
                             <span
@@ -1062,11 +1354,6 @@ export function ResourceManage() {
                             >
                               {r.access === "members" ? "Members" : "Public"}
                             </span>
-                          </span>
-
-                          <span className="hidden md:flex items-center gap-1.5 text-[12.5px]" style={{ color: "var(--body)" }}>
-                            <Download size={13} />
-                            {r.downloadCount}
                           </span>
 
                           {/* Actions */}

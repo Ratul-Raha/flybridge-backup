@@ -31,6 +31,8 @@ export type ResourceCardData = {
   price: number;
   prices?: { USD?: number; BDT?: number } | null;
   featured: boolean;
+  published?: boolean;
+  youtubeUrl?: string | null;
   downloadCount?: number;
   viewCount?: number;
   commentCount?: number;

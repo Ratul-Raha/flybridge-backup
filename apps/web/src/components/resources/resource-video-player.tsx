@@ -98,6 +98,54 @@ export function ResourceVideoPlayer({
     );
   }
 
+  if (resource.youtubeUrl) {
+    const openYouTube = () => {
+      fireView();
+      window.open(resource.youtubeUrl as string, "_blank", "noopener,noreferrer");
+    };
+
+    return (
+      <div
+        className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
+        onContextMenu={blockContext}
+        onDragStart={(e) => e.preventDefault()}
+      >
+        {resource.thumbnail ? (
+          <img
+            src={resource.thumbnail}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(160deg, #1a1f35, #0a0e1a)" }}
+          />
+        )}
+        <div className="absolute inset-0 bg-black/35" />
+        <button
+          type="button"
+          onClick={openYouTube}
+          aria-label={`Watch ${resource.title} on YouTube`}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+        >
+          <span
+            className="flex h-[56px] w-[56px] items-center justify-center rounded-full text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
+            style={{ background: "#FF0000", boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
+          >
+            <Play className="ml-0.5 h-6 w-6" fill="currentColor" strokeWidth={0} />
+          </span>
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white"
+            style={{ background: "rgba(0,0,0,0.45)" }}
+          >
+            Watch on YouTube
+          </span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}

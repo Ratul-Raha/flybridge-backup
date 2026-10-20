@@ -26,6 +26,8 @@ type ResourceDto = {
   price: number;
   prices: { USD?: number; BDT?: number };
   featured: boolean;
+  published: boolean;
+  youtubeUrl: string | null;
   downloadCount: number;
   viewCount: number;
   commentCount: number;
@@ -49,6 +51,8 @@ function toDto(r: ResourceDoc, includeUrl = false): ResourceDto {
     price: r.price ?? 0,
     prices: cleanPrices(r.prices),
     featured: r.featured ?? false,
+    published: r.published !== false,
+    youtubeUrl: r.youtubeUrl ?? null,
     downloadCount: 0,
     viewCount: r.viewCount ?? 0,
     commentCount: 0,
@@ -156,11 +160,11 @@ export async function GET(request: NextRequest) {
       if (!session || !session.userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      const resources = await Resource.find({ access: "members" }).sort({ releaseDate: -1 });
+      const resources = await Resource.find({ access: "members", published: { $ne: false } }).sort({ releaseDate: -1 });
       return NextResponse.json({ resources: await withDownloadCounts(resources, false, days, session.userId) });
     }
 
-    const resources = await Resource.find().sort({ releaseDate: -1 });
+    const resources = await Resource.find({ published: { $ne: false } }).sort({ releaseDate: -1 });
     return NextResponse.json({ resources: await withDownloadCounts(resources, false, days, session?.userId) });
   } catch (error) {
     console.error("resources GET error", error);
@@ -194,6 +198,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid published date" }, { status: 400 });
     }
 
+    const published = body.published !== false;
+    const youtubeUrl =
+      typeof body.youtubeUrl === "string" ? body.youtubeUrl.trim() : "";
+
     const resource = await Resource.create({
       title,
       description: typeof body.description === "string" ? body.description.trim() : "",
@@ -214,6 +222,9 @@ export async function POST(request: NextRequest) {
       price: access === "members" ? Math.max(0, Number(body.price) || 0) : 0,
       prices: access === "members" ? sanitizePrices(body.prices) : undefined,
       featured: body.featured === true,
+      published,
+      publishedAt: published ? new Date() : undefined,
+      youtubeUrl: youtubeUrl || undefined,
       createdBy: session!.userId,
     });
 

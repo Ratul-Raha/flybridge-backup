@@ -420,6 +420,15 @@ export function PublicResourceList() {
     requestAnimationFrame(() => gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
+  const openVideo = (r: ResourceCardData) => {
+    if (r.youtubeUrl) {
+      fetch(`/api/resources/${r.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
+      window.open(r.youtubeUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setActiveVideo(r);
+  };
+
   const activeFileTypeLabel = FILE_TYPES.find((t) => t.value === fileType)?.label;
 
   const gridTitle =
@@ -500,7 +509,7 @@ export function PublicResourceList() {
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
           {/* Most viewed videos */}
-          {showMostViewed && <MostViewedSection videos={mostViewed} onOpen={setActiveVideo} />}
+          {showMostViewed && <MostViewedSection videos={mostViewed} onOpen={openVideo} />}
 
           {/* Header + grid */}
           {!loading && resources.length > 0 && (
@@ -554,7 +563,7 @@ export function PublicResourceList() {
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visible.map((r) =>
                 r.fileType === "video" ? (
-                  <VideoResourceCard key={r.id} r={r} onOpen={setActiveVideo} />
+                  <VideoResourceCard key={r.id} r={r} onOpen={openVideo} />
                 ) : (
                   <ResourceCard key={r.id} r={r} />
                 )

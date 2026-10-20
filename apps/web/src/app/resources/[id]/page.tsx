@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   try {
     await connectDb();
     const resource = await Resource.findById(params.id);
-    if (!resource) return {};
+    if (!resource || resource.published === false) return {};
     const title = `${resource.title} | FlyBridge Education Group`;
     const description = resource.description ?? undefined;
     return {
@@ -48,6 +48,10 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
     if (!resource) notFound();
 
     const session = await readSession();
+    const isManager =
+      session?.role === "admin" || session?.role === "moderator";
+
+    if (resource.published === false && !isManager) notFound();
 
     const [ownCount, topRows, commentCount, loveCount] = await Promise.all([
       ResourceDownload.countDocuments({ resource: resource._id }),
@@ -66,8 +70,6 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
       ? Boolean(await ResourceLove.exists({ resource: resource._id, user: session.userId }))
       : false;
 
-    const isManager =
-      session?.role === "admin" || session?.role === "moderator";
     const includeUrl = isManager || resource.access === "public";
 
     return (
@@ -97,6 +99,8 @@ export default async function ResourceDetailPage({ params, searchParams }: Param
                 price: resource.price ?? 0,
                 prices: cleanPrices(resource.prices),
                 featured: resource.featured ?? false,
+                published: resource.published !== false,
+                youtubeUrl: resource.youtubeUrl ?? null,
                 viewCount: resource.viewCount ?? 0,
               }}
             />

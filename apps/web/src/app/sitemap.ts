@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .lean(),
       Seminar.find().select("_id updatedAt").lean(),
       Scholarship.find({ active: true }).select("_id").lean(),
-      Resource.find().select("_id").lean(),
+      Resource.find({ published: { $ne: false } }).select("_id").lean(),
     ]);
 
     for (const p of programs) {

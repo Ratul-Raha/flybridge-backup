@@ -8,8 +8,8 @@ export async function POST(
 ) {
   try {
     await connectDb();
-    const resource = await Resource.findByIdAndUpdate(
-      params.id,
+    const resource = await Resource.findOneAndUpdate(
+      { _id: params.id, published: { $ne: false } },
       { $inc: { viewCount: 1 } },
       { new: true }
     ).select("viewCount");

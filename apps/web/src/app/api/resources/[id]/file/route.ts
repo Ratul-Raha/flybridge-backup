@@ -37,6 +37,10 @@ function asciiSafe(name: string) {
   return name.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "_");
 }
 
+function isManager(session: { role: string } | null) {
+  return session && (session.role === "admin" || session.role === "moderator");
+}
+
 /** 302 the browser straight to the storage backend so media bytes never
  *  travel through this Function (proxying them bills every byte twice). */
 function redirectNoStore(url: string) {
@@ -60,6 +64,10 @@ export async function GET(
     }
 
     const session = await readSession();
+
+    if (resource.published === false && !isManager(session)) {
+      return NextResponse.json({ error: "Resource not found" }, { status: 404 });
+    }
 
     if (resource.access !== "public") {
       if (!session?.userId) {

@@ -195,7 +195,9 @@ export function ResourceDetail({
         ? "Sign in to watch"
         : "Sign in to download"
       : isVideo
-        ? "Watch now"
+        ? r.youtubeUrl
+          ? "Watch on YouTube"
+          : "Watch now"
         : isFree
           ? submitting
             ? "Processing…"
@@ -213,7 +215,12 @@ export function ResourceDetail({
     : needsLogin
       ? () => router.push(loginNext)
       : isVideo
-        ? () => document.getElementById("resource-video")?.scrollIntoView({ behavior: "smooth", block: "center" })
+        ? r.youtubeUrl
+          ? () => {
+              fetch(`/api/resources/${r.id}/view`, { method: "POST", keepalive: true }).catch(() => {});
+              window.open(r.youtubeUrl as string, "_blank", "noopener,noreferrer");
+            }
+          : () => document.getElementById("resource-video")?.scrollIntoView({ behavior: "smooth", block: "center" })
         : isFree
           ? () => (isPublic ? triggerDownload() : handleGetForFree())
           : triggerDownload;
@@ -225,7 +232,9 @@ export function ResourceDetail({
         ? "Free for FlyBridge members — sign in to watch it."
         : "Free for FlyBridge members — sign in to download it."
       : isVideo
-        ? "Watch online — videos can\u2019t be downloaded."
+        ? r.youtubeUrl
+          ? "Hosted on YouTube — opens in a new tab."
+          : "Watch online — videos can\u2019t be downloaded."
         : isPublic
           ? "Free download · sign up required"
           : "Members-only · yours to keep once you\u2019re in";

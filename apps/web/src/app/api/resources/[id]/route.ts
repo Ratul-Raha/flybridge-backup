@@ -21,6 +21,9 @@ export async function GET(
       return NextResponse.json({ error: "Resource not found" }, { status: 404 });
     }
     const session = await readSession();
+    if (resource.published === false && !isManager(session)) {
+      return NextResponse.json({ error: "Resource not found" }, { status: 404 });
+    }
     const includeUrl = isManager(session) || resource.access === "public";
     return NextResponse.json({
       resource: {
@@ -38,6 +41,8 @@ export async function GET(
         price: resource.price ?? 0,
         prices: cleanPrices(resource.prices),
         featured: resource.featured ?? false,
+        published: resource.published !== false,
+        youtubeUrl: resource.youtubeUrl ?? null,
         viewCount: resource.viewCount ?? 0,
       },
     });
@@ -116,6 +121,13 @@ export async function PATCH(
     }
     if (typeof body.featured === "boolean") {
       resource.featured = body.featured;
+    }
+    if (typeof body.published === "boolean") {
+      resource.published = body.published;
+      resource.publishedAt = body.published ? new Date() : undefined;
+    }
+    if (typeof body.youtubeUrl === "string") {
+      resource.youtubeUrl = body.youtubeUrl.trim() || undefined;
     }
 
     await resource.save();
