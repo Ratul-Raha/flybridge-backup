@@ -5,12 +5,15 @@ import Link from "next/link";
 import {
   Check,
   Download,
+  Film,
+  FolderOpen,
   Lock,
   MessageSquare,
   Play,
   Search,
   Share2,
   TrendingUp,
+  type LucideIcon,
 } from "lucide-react";
 import { getCategoryColor } from "@/lib/resource-colors";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -37,7 +40,7 @@ const FILE_TYPES = [
 type FileTypeFilter = (typeof FILE_TYPES)[number]["value"] | "all";
 
 const CARD_SHELL =
-  "group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_55px_-32px_rgba(18,32,67,0.38)]";
+  "group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_34px_60px_-34px_rgba(18,32,67,0.4)]";
 
 function useCopyLink() {
   const [copied, setCopied] = useState(false);
@@ -75,35 +78,50 @@ function ShareButton({ id }: { id: string }) {
   );
 }
 
-function MetaRow({
-  r,
-  accent,
-  metaLabel,
-  trailing,
+function SectionHeading({
+  icon: Icon,
+  eyebrow,
+  title,
+  subtitle,
+  count,
+  accent = "var(--brand)",
 }: {
-  r: ResourceCardData;
-  accent: string;
-  metaLabel: string;
-  trailing?: React.ReactNode;
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  count?: number;
+  accent?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="inline-flex min-w-0 items-center gap-2">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
         <span
-          className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
+          className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]"
           style={{ color: accent }}
         >
-          {r.category}
+          <Icon size={12} /> {eyebrow}
         </span>
+        <h2
+          className="mt-1.5 font-display text-[clamp(21px,2.3vw,27px)] font-semibold leading-tight tracking-[-0.02em]"
+          style={{ color: "var(--ink)" }}
+        >
+          {title}
+        </h2>
+      </div>
+      {count !== undefined && (
         <span
-          className="shrink-0 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold uppercase tracking-[0.08em]"
+          className="rounded-full px-3 py-[5px] font-mono text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ background: "var(--bg-soft)", color: "var(--body)" }}
         >
-          {metaLabel}
+          {count} {count === 1 ? "item" : "items"}
         </span>
-      </span>
-      {trailing}
+      )}
+      {subtitle && (
+        <p className="w-full max-w-[460px] text-[13px] leading-relaxed sm:w-auto" style={{ color: "var(--body)" }}>
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
@@ -119,18 +137,17 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
       target="_blank"
       rel="noreferrer"
       className={CARD_SHELL}
-      style={{ borderColor: "var(--line)", boxShadow: "0 6px 22px -16px rgba(18,32,67,0.22)" }}
+      style={{ borderColor: "var(--line)", boxShadow: "0 8px 26px -20px rgba(18,32,67,0.28)" }}
     >
-      {/* Header */}
       <div
-        className="relative flex aspect-[16/10] items-center justify-center overflow-hidden"
-        style={{ background: `linear-gradient(150deg, ${accent}1F, ${accent}08)` }}
+        className="relative flex aspect-[16/9] items-center justify-center overflow-hidden"
+        style={{ background: `linear-gradient(150deg, ${accent}20, ${accent}07)` }}
       >
         <span
-          className="flex h-[68px] w-[68px] items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.06]"
+          className="flex h-[62px] w-[62px] items-center justify-center rounded-2xl bg-white/85 backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.06]"
           style={{ color: accent, boxShadow: "0 18px 34px -20px rgba(18,32,67,0.4)" }}
         >
-          <Icon size={30} strokeWidth={1.7} />
+          <Icon size={28} strokeWidth={1.7} />
         </span>
         <span
           className="absolute left-4 top-4 rounded-full px-2.5 py-[3px] font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-white"
@@ -138,22 +155,27 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
         >
           {meta.label}
         </span>
+        <span
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-white transition-transform duration-200 group-hover:translate-x-[2px]"
+          style={{ background: accent }}
+        >
+          <Download size={14} strokeWidth={2.4} />
+        </span>
       </div>
 
-      {/* Body */}
       <div className="flex flex-1 flex-col p-5">
-        <MetaRow
-          r={r}
-          accent={accent}
-          metaLabel={
-            (r.downloadCount ?? 0) > 0
-              ? `${(r.downloadCount ?? 0).toLocaleString()} downloads`
-              : meta.label
-          }
-        />
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+          <span
+            className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
+            style={{ color: accent }}
+          >
+            {r.category}
+          </span>
+        </div>
 
         <h3
-          className="mt-3.5 line-clamp-2 font-display text-[17px] font-semibold leading-[1.35] tracking-[-0.01em]"
+          className="mt-3 line-clamp-2 font-display text-[17px] font-semibold leading-[1.35] tracking-[-0.01em]"
           style={{ color: "var(--ink)" }}
         >
           {r.title}
@@ -178,15 +200,7 @@ function ResourceCard({ r }: { r: ResourceCardData }) {
             {formatResourceDate(r.releaseDate)}
             {r.fileSize > 0 && <span> · {formatFileSize(r.fileSize)}</span>}
           </span>
-          <div className="flex shrink-0 items-center gap-2">
-            <ShareButton id={r.id} />
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-transform duration-200 group-hover:translate-x-[2px]"
-              style={{ background: accent }}
-            >
-              <Download size={14} strokeWidth={2.4} />
-            </span>
-          </div>
+          <ShareButton id={r.id} />
         </div>
       </div>
     </Link>
@@ -207,18 +221,16 @@ function VideoResourceCard({
   return (
     <div
       className={CARD_SHELL}
-      style={{ borderColor: "var(--line)", boxShadow: "0 6px 22px -16px rgba(18,32,67,0.22)" }}
+      style={{ borderColor: "var(--line)", boxShadow: "0 8px 26px -20px rgba(18,32,67,0.28)" }}
     >
-      {/* Portrait poster (click opens the watch + comments dialog). No <video>
-          is mounted here on purpose — a page that autoloaded one player per
-          card was the single biggest bandwidth cost. */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-black">
+      {/* Poster only — never mount a player per card in the list. */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-black">
         {r.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={r.thumbnail}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <div
@@ -226,6 +238,8 @@ function VideoResourceCard({
             style={{ background: "linear-gradient(160deg, #1a1f35, #0a0e1a)" }}
           />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/25" />
+
         <button
           type="button"
           onClick={() => onOpen?.(r)}
@@ -233,12 +247,13 @@ function VideoResourceCard({
           className="absolute inset-0 flex cursor-pointer items-center justify-center"
         >
           <span
-            className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
+            className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 group-hover:scale-110"
             style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
           >
             <Play className="ml-1 h-6 w-6" fill="currentColor" strokeWidth={0} />
           </span>
         </button>
+
         {rank !== undefined && (
           <span
             className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full font-display text-[13px] font-bold text-white"
@@ -253,31 +268,26 @@ function VideoResourceCard({
         >
           <VideoViews count={r.viewCount ?? 0} /> views
         </span>
-        {r.access === "members" && (
-          <span
-            className="pointer-events-none absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold text-white"
-            style={{ background: "rgba(107,76,224,0.9)", backdropFilter: "blur(6px)" }}
-          >
-            <Lock size={10} /> Members
-          </span>
-        )}
       </div>
 
-      {/* Body */}
       <div className="flex flex-1 flex-col p-5">
-        <MetaRow
-          r={r}
-          accent={accent}
-          metaLabel="Video"
-          trailing={
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
             <span
-              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
-              style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
+              className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
+              style={{ color: accent }}
             >
-              <MessageSquare size={9} strokeWidth={2.5} /> {(r.commentCount ?? 0).toLocaleString()}
+              {r.category}
             </span>
-          }
-        />
+          </span>
+          <span
+            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[2px] font-mono text-[9px] font-semibold tracking-[0.04em]"
+            style={{ background: "rgba(15,169,104,0.10)", color: "#0FA968" }}
+          >
+            <MessageSquare size={9} strokeWidth={2.5} /> {(r.commentCount ?? 0).toLocaleString()}
+          </span>
+        </div>
 
         <button type="button" onClick={() => onOpen?.(r)} className="mt-3.5 text-left">
           <h3
@@ -322,6 +332,61 @@ function VideoResourceCard({
   );
 }
 
+function CompactVideoCard({
+  r,
+  onOpen,
+}: {
+  r: ResourceCardData;
+  onOpen: (r: ResourceCardData) => void;
+}) {
+  const accent = getCategoryColor(r.category);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(r)}
+      className="group flex w-full items-center gap-3 rounded-xl border bg-white p-2.5 text-left transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_18px_34px_-24px_rgba(18,32,67,0.4)]"
+      style={{ borderColor: "var(--line)" }}
+    >
+      <span className="relative h-[64px] w-[52px] shrink-0 overflow-hidden rounded-lg bg-black">
+        {r.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={r.thumbnail} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(160deg, #1a1f35, #0a0e1a)" }}
+          />
+        )}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
+            <Play className="ml-[1px] h-3 w-3" fill="currentColor" strokeWidth={0} />
+          </span>
+        </span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className="line-clamp-2 font-display text-[12.5px] font-semibold leading-[1.35]"
+          style={{ color: "var(--ink)" }}
+        >
+          {r.title}
+        </span>
+        <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium" style={{ color: "var(--body)" }}>
+          <span className="inline-flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
+            <span className="truncate font-mono uppercase tracking-[0.08em]" style={{ color: accent }}>
+              {r.category}
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <VideoViews count={r.viewCount ?? 0} />
+          </span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
 function MostViewedSection({
   videos,
   onOpen,
@@ -331,26 +396,14 @@ function MostViewedSection({
 }) {
   if (videos.length === 0) return null;
   return (
-    <div className="mt-10">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <span
-            className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: "#E08A17" }}
-          >
-            <TrendingUp size={12} /> Most viewed
-          </span>
-          <h2
-            className="mt-1.5 font-display text-[clamp(21px,2.3vw,27px)] font-semibold leading-tight tracking-[-0.02em]"
-            style={{ color: "var(--ink)" }}
-          >
-            Trending videos right now
-          </h2>
-        </div>
-        <p className="max-w-[420px] text-[13px]" style={{ color: "var(--body)" }}>
-          The clips students keep coming back to — watch and join the discussion.
-        </p>
-      </div>
+    <div className="mt-6">
+      <SectionHeading
+        icon={TrendingUp}
+        eyebrow="Most viewed"
+        title="Trending videos right now"
+        subtitle="The clips students keep coming back to — watch and join the discussion."
+        accent="#E08A17"
+      />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {videos.map((r, i) => (
           <VideoResourceCard key={r.id} r={r} onOpen={onOpen} rank={i + 1} />
@@ -402,6 +455,15 @@ export function PublicResourceList() {
     return map;
   }, [resources]);
 
+  const stats = useMemo(
+    () => ({
+      videos: resources.filter((r) => r.fileType === "video").length,
+      files: resources.filter((r) => r.fileType !== "video").length,
+      views: resources.reduce((sum, r) => sum + (r.viewCount ?? 0), 0),
+    }),
+    [resources]
+  );
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return resources
@@ -414,8 +476,27 @@ export function PublicResourceList() {
       });
   }, [resources, fileType, query]);
 
+  const newestFirst = (a: ResourceCardData, b: ResourceCardData) =>
+    new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
+
+  const publicVideos = useMemo(
+    () => visible.filter((r) => r.fileType === "video" && r.access !== "members").sort(newestFirst),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible]
+  );
+  const memberVideos = useMemo(
+    () => visible.filter((r) => r.fileType === "video" && r.access === "members").sort(newestFirst),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible]
+  );
+  const otherResources = useMemo(
+    () => visible.filter((r) => r.fileType !== "video").sort(newestFirst),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible]
+  );
+
   const mostViewed = useMemo(() => {
-    const videos = resources.filter((r) => r.fileType === "video");
+    const videos = resources.filter((r) => r.fileType === "video" && r.access !== "members");
     const ranked = videos.some((r) => (r.viewCount ?? 0) > 0)
       ? videos.filter((r) => (r.viewCount ?? 0) > 0)
       : videos;
@@ -448,75 +529,129 @@ export function PublicResourceList() {
 
   const activeFileTypeLabel = FILE_TYPES.find((t) => t.value === fileType)?.label;
 
-  const gridTitle =
-    fileType !== "all" ? activeFileTypeLabel ?? "Resources" : "Latest resources";
-  const gridSub =
-    fileType !== "all"
-      ? `Browse the latest ${(activeFileTypeLabel ?? "resources").toLowerCase()} — added as we publish.`
-      : "Fresh guides, checklists and templates — added as we publish.";
+  const libraryTitle = query.trim()
+    ? `Results for “${query.trim()}”`
+    : fileType !== "all"
+      ? (activeFileTypeLabel ?? "Resources")
+      : "Latest resources";
+  const librarySub = query.trim()
+    ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} in the library.`
+    : "Fresh videos, guides, checklists and templates — added as we publish.";
+
+  const hasResults = publicVideos.length + memberVideos.length + otherResources.length > 0;
 
   return (
     <div>
       {/* ===== Hero ===== */}
-      <section className="pt-[clamp(120px,15vh,150px)] pb-[clamp(32px,4vw,48px)]">
-        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 items-center gap-10 px-[clamp(20px,4.5vw,56px)] lg:grid-cols-2">
-          {/* Description */}
-          <p className="max-w-[560px] font-display text-[clamp(22px,2.6vw,32px)] font-semibold leading-[1.3] tracking-[-0.01em]" style={{ color: "var(--ink)" }}>
-            All premium resources you need
-          </p>
+      <section className="relative overflow-hidden pt-[clamp(118px,15vh,150px)] pb-[clamp(28px,4vw,46px)]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(900px 340px at 15% 0%, rgba(47,95,224,0.10), transparent 70%), radial-gradient(760px 320px at 88% 8%, rgba(107,76,224,0.12), transparent 72%)",
+          }}
+        />
+        <div className="relative mx-auto w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
+          <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <span
+                className="inline-flex items-center gap-2 rounded-full px-3 py-[6px] font-mono text-[10px] font-bold uppercase tracking-[0.2em]"
+                style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+              >
+                <FolderOpen size={12} /> Resource library
+              </span>
+              <h1
+                className="mt-4 max-w-[640px] font-display text-[clamp(30px,4.4vw,48px)] font-semibold leading-[1.08] tracking-[-0.03em]"
+                style={{ color: "var(--ink)" }}
+              >
+                Everything you need to{" "}
+                <span
+                  style={{
+                    background: "linear-gradient(120deg, var(--brand), var(--brand-2))",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  move forward
+                </span>
+              </h1>
+              <p className="mt-4 max-w-[520px] text-[15px] leading-[1.75]" style={{ color: "var(--body)" }}>
+                Watch expert videos, grab ready-to-use templates, and study the guides that get
+                students from application to arrival.
+              </p>
 
-          {/* Search + format filter */}
-          <div>
-            <div className="relative">
-              <Search size={18} className="absolute left-[20px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
-                className="w-full rounded-full border bg-white pl-12 pr-5 py-[16px] text-[15px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
-                style={{ borderColor: "var(--line)", color: "var(--ink)", boxShadow: "0 18px 44px -26px rgba(18,32,67,0.35)" }}
-              />
+              <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+                {[
+                  { label: "Videos", value: stats.videos },
+                  { label: "Files & guides", value: stats.files },
+                  { label: "Total views", value: stats.views },
+                ].map((s) => (
+                  <div key={s.label} className="flex items-baseline gap-2">
+                    <span className="font-display text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
+                      {s.value.toLocaleString()}
+                    </span>
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Format filter */}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="mr-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--body)" }}>
-                Format
-              </span>
-              <button
-                type="button"
-                onClick={() => selectFileType("all")}
-                className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                style={{
-                  background: fileType === "all" ? "var(--brand)" : "transparent",
-                  borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
-                  color: fileType === "all" ? "#fff" : "var(--ink)",
-                }}
-              >
-                All formats{loading ? "" : ` · ${resources.length}`}
-              </button>
+            {/* Search + format filter */}
+            <div
+              className="rounded-2xl border bg-white/90 p-4 backdrop-blur-sm"
+              style={{ borderColor: "var(--line)", boxShadow: "0 24px 60px -40px rgba(18,32,67,0.4)" }}
+            >
+              <div className="relative">
+                <Search size={18} className="absolute left-[18px] top-1/2 -translate-y-1/2" style={{ color: "var(--body)" }} />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search “cover letter”, “IELTS”, “visa checklist”…"
+                  className="w-full rounded-xl border bg-white pl-12 pr-5 py-[14px] text-[14px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                  style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                />
+              </div>
 
-              {FILE_TYPES.map((t) => {
-                const count = formatCounts.get(t.value) ?? 0;
-                if (count === 0 && fileType !== t.value) return null;
-                const active = fileType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => selectFileType(t.value)}
-                    className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
-                    style={{
-                      background: active ? "var(--brand)" : "transparent",
-                      borderColor: active ? "var(--brand)" : "var(--line)",
-                      color: active ? "#fff" : "var(--ink)",
-                    }}
-                  >
-                    {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
-                  </button>
-                );
-              })}
+              <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => selectFileType("all")}
+                  className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                  style={{
+                    background: fileType === "all" ? "var(--brand)" : "transparent",
+                    borderColor: fileType === "all" ? "var(--brand)" : "var(--line)",
+                    color: fileType === "all" ? "#fff" : "var(--ink)",
+                  }}
+                >
+                  All{loading ? "" : ` · ${resources.length}`}
+                </button>
+
+                {FILE_TYPES.map((t) => {
+                  const count = formatCounts.get(t.value) ?? 0;
+                  if (count === 0 && fileType !== t.value) return null;
+                  const active = fileType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => selectFileType(t.value)}
+                      className="shrink-0 rounded-full border px-3.5 py-[7px] text-[12.5px] font-medium transition-colors duration-200 hover:border-brand-2/50 hover:text-[var(--brand-2)]"
+                      style={{
+                        background: active ? "var(--brand)" : "transparent",
+                        borderColor: active ? "var(--brand)" : "var(--line)",
+                        color: active ? "#fff" : "var(--ink)",
+                      }}
+                    >
+                      {t.label} <span style={{ opacity: 0.6 }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -525,39 +660,47 @@ export function PublicResourceList() {
       {/* ===== Library ===== */}
       <section className="pb-[110px]">
         <div ref={gridRef} className="mx-auto scroll-mt-[110px] w-full max-w-[1320px] px-[clamp(20px,4.5vw,56px)]">
-          {/* Most viewed videos */}
           {showMostViewed && <MostViewedSection videos={mostViewed} onOpen={openVideo} />}
 
-          {/* Header + grid */}
           {!loading && resources.length > 0 && (
             <div className="mb-8 mt-10">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <h2 className="font-display text-[clamp(24px,2.6vw,32px)] font-medium leading-tight tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-                    {query.trim() ? `Results for “${query.trim()}”` : gridTitle}
+                  <h2
+                    className="font-display text-[clamp(23px,2.6vw,31px)] font-medium leading-tight tracking-[-0.02em]"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {libraryTitle}
                   </h2>
                   <p className="mt-[6px] text-[14px]" style={{ color: "var(--body)" }}>
-                    {query.trim()
-                      ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} in the library.`
-                      : gridSub}
+                    {librarySub}
                   </p>
                 </div>
-                <span className="rounded-full px-3.5 py-[7px] font-mono text-[10.5px] font-medium uppercase tracking-[0.25em]" style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}>
+                <span
+                  className="rounded-full px-3.5 py-[7px] font-mono text-[10.5px] font-medium uppercase tracking-[0.25em]"
+                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
+                >
                   {visible.length} {visible.length === 1 ? "item" : "items"}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Grid / states */}
           {loading ? (
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-2xl border bg-white" style={{ borderColor: "var(--line)", height: 240 }} />
+                <div
+                  key={i}
+                  className="animate-pulse rounded-2xl border bg-white"
+                  style={{ borderColor: "var(--line)", height: 260 }}
+                />
               ))}
             </div>
           ) : error ? (
-            <div className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
+            <div
+              className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center"
+              style={{ borderColor: "var(--line)" }}
+            >
               <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
                 Couldn&apos;t load resources
               </p>
@@ -565,8 +708,11 @@ export function PublicResourceList() {
                 {error}
               </p>
             </div>
-          ) : visible.length === 0 ? (
-            <div className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center" style={{ borderColor: "var(--line)" }}>
+          ) : !hasResults ? (
+            <div
+              className="mt-8 rounded-2xl border bg-white px-6 py-16 text-center"
+              style={{ borderColor: "var(--line)" }}
+            >
               <p className="font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
                 {resources.length === 0 ? "No resources published yet" : "No matches"}
               </p>
@@ -577,13 +723,76 @@ export function PublicResourceList() {
               </p>
             </div>
           ) : (
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {visible.map((r) =>
-                r.fileType === "video" ? (
-                  <VideoResourceCard key={r.id} r={r} onOpen={openVideo} />
-                ) : (
-                  <ResourceCard key={r.id} r={r} />
-                )
+            <div className="mt-8 flex flex-col gap-14">
+              {/* Public videos */}
+              {publicVideos.length > 0 && (
+                <section>
+                  <SectionHeading
+                    icon={Film}
+                    eyebrow="Watch now"
+                    title={query.trim() ? "Videos" : "Latest videos"}
+                    count={publicVideos.length}
+                  />
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {publicVideos.map((r) => (
+                      <VideoResourceCard key={r.id} r={r} onOpen={openVideo} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Members-only videos — smaller, grouped */}
+              {memberVideos.length > 0 && (
+                <section
+                  className="overflow-hidden rounded-2xl border p-[clamp(16px,2.5vw,26px)]"
+                  style={{
+                    borderColor: "rgba(107,76,224,0.18)",
+                    background:
+                      "linear-gradient(135deg, rgba(107,76,224,0.07), rgba(47,95,224,0.035) 60%, rgba(255,255,255,0.6))",
+                  }}
+                >
+                  <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <span
+                        className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]"
+                        style={{ color: "#6B4CE0" }}
+                      >
+                        <Lock size={12} /> Members only
+                      </span>
+                      <h2
+                        className="mt-1.5 font-display text-[clamp(19px,2.1vw,24px)] font-semibold leading-tight tracking-[-0.02em]"
+                        style={{ color: "var(--ink)" }}
+                      >
+                        Member video library
+                      </h2>
+                    </div>
+                    <p className="max-w-[420px] text-[12.5px] leading-relaxed" style={{ color: "var(--body)" }}>
+                      Included with your FlyBridge account — sign in to watch. Short previews below.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {memberVideos.map((r) => (
+                      <CompactVideoCard key={r.id} r={r} onOpen={openVideo} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Documents & files */}
+              {otherResources.length > 0 && (
+                <section>
+                  <SectionHeading
+                    icon={FolderOpen}
+                    eyebrow="Read & download"
+                    title={query.trim() ? "Files & guides" : "Guides & templates"}
+                    count={otherResources.length}
+                  />
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {otherResources.map((r) => (
+                      <ResourceCard key={r.id} r={r} />
+                    ))}
+                  </div>
+                </section>
               )}
             </div>
           )}
