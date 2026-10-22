@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
 const nextConfig = {
   transpilePackages: ["@flybridge/ui", "@flybridge/config"],
   experimental: {
@@ -6,6 +10,7 @@ const nextConfig = {
     // server bundle instead of pulling google-gax (and its package.json lookup)
     // through webpack.
     serverComponentsExternalPackages: ["@google-analytics/data"],
+    optimizePackageImports: ["lucide-react"],
   },
   compiler: {
     removeConsole: { exclude: ["error"] },
@@ -43,4 +48,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

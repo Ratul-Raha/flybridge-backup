@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { SeminarRegistration } from "@/lib/models/seminar";
 import { Notification } from "@/lib/models/notification";
 
@@ -25,6 +26,7 @@ export async function DELETE(
     }
 
     await Notification.deleteMany({ registration: registration._id });
+    revalidateUserDashboard();
 
     return NextResponse.json({ ok: true });
   } catch (error) {

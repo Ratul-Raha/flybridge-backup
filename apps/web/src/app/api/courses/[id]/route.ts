@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Course, isCourseCategory } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { sanitizePrices } from "@/lib/pricing";
@@ -181,6 +182,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
     await CourseEnrollment.deleteMany({ course: course._id });
+    revalidateUserDashboard();
     await Course.findByIdAndDelete(course._id);
     await emitEvent("course.deleted", {
       course: { id: course._id.toString(), slug: course.slug, title: course.title },

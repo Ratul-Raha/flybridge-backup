@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Order } from "@/lib/models/order";
 import { User } from "@/lib/models/user";
 import { Course } from "@/lib/models/course";
@@ -65,6 +66,7 @@ export async function POST(
       },
       { upsert: true, new: true }
     );
+    revalidateUserDashboard();
 
     return NextResponse.json({
       ok: true,

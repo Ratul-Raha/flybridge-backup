@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Notification } from "@/lib/models/notification";
 
 export async function PATCH(
@@ -25,6 +26,7 @@ export async function PATCH(
 
     notification.read = true;
     await notification.save();
+    revalidateUserDashboard();
 
     return NextResponse.json({ ok: true, id: notification._id.toString() });
   } catch (error) {

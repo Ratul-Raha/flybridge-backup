@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Notification } from "@/lib/models/notification";
 
 export async function GET(request: Request) {
@@ -54,6 +55,7 @@ export async function POST() {
       { recipient: session.userId, read: false },
       { $set: { read: true } }
     );
+    revalidateUserDashboard();
     return NextResponse.json({ ok: true, modified: result.modifiedCount });
   } catch (error) {
     console.error("notifications mark all read error", error);

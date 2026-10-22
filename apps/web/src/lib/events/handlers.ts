@@ -2,6 +2,7 @@ import "server-only";
 
 import mongoose from "mongoose";
 import { reloadKnowledgeBase } from "@/lib/ai/knowledge";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { User } from "@/lib/models/user";
 import { Notification } from "@/lib/models/notification";
 import { BotConfig } from "@/lib/models/bot-config";
@@ -43,6 +44,7 @@ async function insertNotifications(
       courseSlug: fields.courseSlug,
     })),
   );
+  revalidateUserDashboard();
 
   const userIds = recipients.map((r) => r._id as mongoose.Types.ObjectId);
   void pushToUsers(userIds, {

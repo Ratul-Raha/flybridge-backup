@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -37,9 +38,14 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { PushEnabler } from "@/components/notifications/push-enabler";
 import { MobileUserApp } from "@/components/dashboard/user/mobile-user-app";
 import { InlineLoader } from "@/components/dashboard/page-loader";
-import { OpsBotWidget } from "@/components/ops-bot/ops-bot-widget";
 import { PendingOrderBanner } from "@/components/payment/pending-order-banner";
 import { UsageTracker } from "@/components/dashboard/usage-tracker";
+import type { UserDashboardData } from "@/lib/dashboard/user";
+
+const OpsBotWidget = dynamic(
+  () => import("@/components/ops-bot/ops-bot-widget").then((m) => m.OpsBotWidget),
+  { ssr: false }
+);
 
 const ROLE_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   admin: { bg: "rgba(111,76,224,0.12)", fg: "#6B4CE0", label: "Administrator" },
@@ -66,7 +72,13 @@ type NavItem = NavLink | NavGroup;
 
 type NavSegment = { title: string; items: NavItem[] };
 
-export function DashboardLayout({ children }: { children: ReactNode }) {
+export function DashboardLayout({
+  children,
+  dashboardInitial = null,
+}: {
+  children: ReactNode;
+  dashboardInitial?: UserDashboardData | null;
+}) {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -516,7 +528,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (isMobile && user?.accountType === "user" && !isFullScreenCourse) {
     return (
-      <MobileUserApp>
+      <MobileUserApp initial={dashboardInitial}>
         <UsageTracker />
         {children}
       </MobileUserApp>

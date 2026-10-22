@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { QuizAttempt } from "@/lib/models/quiz-attempt";
@@ -320,6 +321,7 @@ export async function POST(
         },
         { upsert: true }
       );
+      revalidateUserDashboard();
 
       void emitEvent(
         "course.progress_updated",

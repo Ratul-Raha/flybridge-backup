@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { sanitizePrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
@@ -110,6 +111,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
     await SeminarRegistration.deleteMany({ seminar: seminar._id });
+    revalidateUserDashboard();
     await emitEvent("seminar.deleted", {
       seminar: { id: seminar._id.toString(), title: seminar.title },
       actor: { name: session?.name, email: session?.email, userId: session?.userId },

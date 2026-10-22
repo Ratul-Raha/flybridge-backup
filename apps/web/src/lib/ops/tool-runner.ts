@@ -1,6 +1,7 @@
 import "server-only";
 
 import { connectDb } from "@/lib/db";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { User } from "@/lib/models/user";
 import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
@@ -894,6 +895,7 @@ async function sendNotification(
 
   if (notifications.length > 0) {
     await Notification.insertMany(notifications);
+    revalidateUserDashboard();
     void pushToUsers(
       users.map((u) => u._id),
       { title, body: message, url: "/dashboard/notifications" },

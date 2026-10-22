@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { User } from "@/lib/models/user";
 import { Notification } from "@/lib/models/notification";
 import { connectDb } from "@/lib/db";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { resolvePath } from "./conditions";
 import { renderEmailTemplate, renderEmailSubject } from "./render";
 import { renderTemplate } from "./template";
@@ -119,6 +120,7 @@ async function actionSendNotification(
       message,
     })),
   );
+  revalidateUserDashboard();
   void pushToUsers(
     recipients.map((r) => r._id),
     { title, body: message, url: "/dashboard/notifications" },

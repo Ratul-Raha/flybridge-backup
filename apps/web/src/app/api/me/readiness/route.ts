@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import {
   computeReadiness,
   isReadinessAnswer,
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
+    revalidateUserDashboard();
     return NextResponse.json({ assessment: serializeReadinessRun(run) }, { status: 201 });
   } catch (error) {
     console.error("readiness run save error", error);

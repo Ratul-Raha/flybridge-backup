@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseProgress } from "@/lib/models/course-progress";
@@ -125,6 +126,7 @@ export async function PUT(
       },
       { upsert: true, new: true }
     );
+    revalidateUserDashboard();
 
     const grade = calculateGrade(
       progress.quizScores as { score: number }[],

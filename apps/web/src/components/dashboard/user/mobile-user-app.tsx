@@ -27,6 +27,7 @@ import { ScholarshipBrowser } from "./scholarship-browser";
 import { SopGenerator } from "./sop-generator";
 import { MobileSettings } from "./mobile-settings";
 import { SectionTabs, type SectionParent } from "./section-tabs";
+import type { UserDashboardData } from "@/lib/dashboard/user";
 
 type TabId = "dashboard" | "seminars" | "courses" | "resources" | "scholarships" | "sop" | "settings";
 
@@ -63,7 +64,13 @@ function subFromPath(pathname: string, tab: TabId): "all" | "mine" | null {
   return pathname.endsWith("/mine") ? "mine" : "all";
 }
 
-export function MobileUserApp({ children }: { children: ReactNode }) {
+export function MobileUserApp({
+  children,
+  initial = null,
+}: {
+  children: ReactNode;
+  initial?: UserDashboardData | null;
+}) {
   const pathname = usePathname();
   const { user, loading } = useAuth();
 
@@ -113,7 +120,7 @@ export function MobileUserApp({ children }: { children: ReactNode }) {
           <div>{children}</div>
         ) : (
           <>
-            {tab === "dashboard" && <MobileDashboardHome />}
+            {tab === "dashboard" && <MobileDashboardHome initial={initial} />}
 
             {subParent && tab !== "resources" && (
               <div className="mb-6">

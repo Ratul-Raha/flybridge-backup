@@ -7,6 +7,7 @@ import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { RefundRequest } from "@/lib/models/refund-request";
 import { refundStripeOrder } from "@/lib/payments/stripe";
 import { reverseAffiliateConversion } from "@/lib/affiliate-commission";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 
 const ACTIONS = ["approve", "decline", "mark_refunded"] as const;
 type Action = (typeof ACTIONS)[number];
@@ -41,6 +42,7 @@ async function revokeAccess(refund: {
     return;
   }
   await CourseEnrollment.findByIdAndUpdate(refund.enrollment, { status: "expired" });
+  revalidateUserDashboard();
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {

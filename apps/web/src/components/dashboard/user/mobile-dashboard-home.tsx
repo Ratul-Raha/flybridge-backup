@@ -31,18 +31,19 @@ function scoreColor(score: number): string {
   return "#E0572E";
 }
 
-export function MobileDashboardHome() {
+export function MobileDashboardHome({ initial = null }: { initial?: UserDashboardData | null }) {
   const { user } = useAuth();
-  const [data, setData] = useState<UserDashboardData | null>(null);
-  const [settled, setSettled] = useState(false);
+  const [data, setData] = useState<UserDashboardData | null>(initial);
+  const [settled, setSettled] = useState(initial !== null);
 
   useEffect(() => {
+    if (initial !== null) return;
     fetch("/api/me/dashboard", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => setData(d))
       .catch(() => setData(null))
       .finally(() => setSettled(true));
-  }, []);
+  }, [initial]);
 
   if (!settled) {
     return <PageLoader label="Loading dashboard…" />;

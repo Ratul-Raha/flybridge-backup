@@ -1,6 +1,8 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
+import { USER_DASHBOARD_TAG } from "@/lib/dashboard/tags";
 import {
   ReadinessRun,
   serializeReadinessRun,
@@ -52,7 +54,7 @@ export type UserDashboardData = {
   rank: MyRankResult | null;
 };
 
-export async function getUserDashboardData(
+async function getUserDashboardDataUncached(
   userId: string,
   email: string
 ): Promise<UserDashboardData> {
@@ -151,3 +153,9 @@ export async function getUserDashboardData(
     rank,
   };
 }
+
+export const getUserDashboardData = unstable_cache(
+  async (userId: string, email: string) => getUserDashboardDataUncached(userId, email),
+  ["user-dashboard-data"],
+  { revalidate: 60, tags: [USER_DASHBOARD_TAG] }
+);

@@ -13,11 +13,13 @@ export function AllSeminars() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/seminars", { cache: "no-store" });
+      const [res, mine] = await Promise.all([
+        fetch("/api/seminars", { cache: "no-store" }),
+        fetch("/api/me/seminars", { cache: "no-store" }).catch(() => null),
+      ]);
       const data = await res.json();
       setSeminars(data.seminars ?? []);
 
-      const mine = await fetch("/api/me/seminars", { cache: "no-store" }).catch(() => null);
       if (mine && mine.ok) {
         const mineData = await mine.json();
         setRegisteredIds(new Set((mineData.seminars ?? []).map((s: { id: string }) => s.id)));

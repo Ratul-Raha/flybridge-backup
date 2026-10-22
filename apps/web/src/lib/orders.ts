@@ -12,6 +12,7 @@ import { MockTestBundle } from "@/lib/models/mock-test-bundle";
 import { MockTestEnrollment } from "@/lib/models/mock-test-enrollment";
 import { emitEvent } from "@/lib/events/emit";
 import { isMetaPurchaseEnabled, sendMetaPurchase } from "@/lib/meta-capi";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { resolveProduct, priceInCurrency, type Product } from "@/lib/products";
 import { CouponError } from "@/lib/coupons";
 import { resolveCheckoutPricing } from "@/lib/checkout-pricing";
@@ -115,7 +116,10 @@ export async function deleteOrdersWithCascade(orderIds: mongoose.Types.ObjectId[
       SeminarRegistration.deleteMany({ user: p.user, seminar: p.seminar })
     );
   }
-  if (cascades.length > 0) await Promise.all(cascades);
+  if (cascades.length > 0) {
+    await Promise.all(cascades);
+    revalidateUserDashboard();
+  }
 
   await Order.deleteMany({ _id: { $in: orderIds } });
 }
@@ -263,6 +267,10 @@ export async function fulfillFreeItem(
         price: bundle.price,
       },
     });
+  }
+
+  if (product.itemType === "course" || product.itemType === "seminar") {
+    revalidateUserDashboard();
   }
 }
 
@@ -650,6 +658,10 @@ export async function fulfillOrder(
   order.completedAt = order.completedAt ?? new Date();
   await order.save();
 
+  if (item.itemType === "course" || item.itemType === "seminar") {
+    revalidateUserDashboard();
+  }
+
   const fulfilledPayload: EventPayload = {
     order: serializeOrder(order),
     user: userPayload(buyer),
@@ -705,6 +717,7 @@ export async function backfillMissingEnrollments(order: HydratedOrder): Promise<
   if (order.status !== "completed" || !order.user) return;
 
   const email = order.email ?? "";
+  let changed = false;
 
   for (const item of order.items ?? []) {
     if (item.itemType === "course") {
@@ -725,6 +738,7 @@ export async function backfillMissingEnrollments(order: HydratedOrder): Promise<
           refundForfeitedAt: null,
           refundForfeitedReason: null,
         });
+        changed = true;
       }
     } else if (item.itemType === "seminar") {
       const exists = await SeminarRegistration.findOne({
@@ -740,6 +754,7 @@ export async function backfillMissingEnrollments(order: HydratedOrder): Promise<
           phone: "",
           email,
         });
+        changed = true;
       }
     } else if (item.itemType === "mock-bundle") {
       const exists = await MockTestEnrollment.findOne({
@@ -759,6 +774,8 @@ export async function backfillMissingEnrollments(order: HydratedOrder): Promise<
       }
     }
   }
+
+  if (changed) revalidateUserDashboard();
 }
 
 /**

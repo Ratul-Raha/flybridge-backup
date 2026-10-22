@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { readSession, USER_SNAPSHOT_TAG } from "@/lib/auth/session";
+import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { User } from "@/lib/models/user";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 
@@ -77,6 +78,7 @@ export async function PATCH(request: NextRequest) {
 
     await user.save();
     revalidateTag(USER_SNAPSHOT_TAG);
+    revalidateUserDashboard();
 
     return NextResponse.json({
       user: {
