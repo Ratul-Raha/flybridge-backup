@@ -7,6 +7,18 @@ const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 
+/**
+ * Resolve the model to use, ignoring model ids that clearly belong to another
+ * provider (e.g. `gemini-*` / `grok-*`) so switching `AI_PROVIDER` never leaks
+ * a foreign model name into Groq.
+ */
+function resolveModel(model?: string): string {
+  if (model && !model.startsWith("gemini-") && !model.startsWith("grok-")) {
+    return model;
+  }
+  return process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL;
+}
+
 export const groqProvider: AiProvider = {
   id: "groq",
 
@@ -19,7 +31,7 @@ export const groqProvider: AiProvider = {
     return streamOpenAiCompatible({
       url: GROQ_API,
       apiKey,
-      model: model || DEFAULT_MODEL,
+      model: resolveModel(model),
       system,
       messages,
       signal,

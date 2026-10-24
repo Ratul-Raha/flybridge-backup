@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { answers?: unknown } = {};
+  let body: { answers?: unknown; provider?: unknown } = {};
   try {
-    body = (await request.json()) as { answers?: unknown };
+    body = (await request.json()) as { answers?: unknown; provider?: unknown };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = computeReadiness(body.answers);
-    const reportStream = await generateReadinessReport(result);
+    const provider = typeof body.provider === "string" ? body.provider : undefined;
+    const reportStream = await generateReadinessReport(result, provider);
 
     const encoder = new TextEncoder();
     const sse = new ReadableStream({

@@ -51,6 +51,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined> =
       body.answers && typeof body.answers === "object" ? body.answers : {};
 
+    const aiProvider = typeof body.provider === "string" ? body.provider : undefined;
+
     const result = await judgeMockTestAttempt({
       skill: test.skill,
       title: test.title,
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       })),
       answerKey: test.answerKey ?? "",
       answers,
-    });
+    }, aiProvider);
 
     const finished =
       attempt ??

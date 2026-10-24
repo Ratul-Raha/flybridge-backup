@@ -91,11 +91,12 @@ export async function POST(
     const isStaff = session.role === "admin" || session.role === "moderator";
 
     const body = await request.json();
-    const { moduleIndex, lessonIndex, quizId, answers } = body as {
+    const { moduleIndex, lessonIndex, quizId, answers, provider } = body as {
       moduleIndex: number;
       lessonIndex: number;
       quizId: string;
       answers: SubmittedAnswer[];
+      provider?: unknown;
     };
 
     if (
@@ -152,6 +153,8 @@ export async function POST(
 
     const questions = pending.questions as QuizQuestion[];
 
+    const aiProvider = typeof provider === "string" ? provider : undefined;
+
     const answerMap = new Map<string, string>();
     for (const a of answers) {
       answerMap.set(a.questionId, a.answer);
@@ -167,7 +170,8 @@ export async function POST(
       const results = await judgeWrittenAnswers(
         questions,
         Object.fromEntries(answerMap.entries()),
-        lessonSkill
+        lessonSkill,
+        aiProvider
       );
       const bands = results.map((r) => r.bandScore).filter((b) => b > 0);
       const overallBand =
@@ -208,7 +212,8 @@ export async function POST(
         const feedback = await judgeObjectiveAnswers(
           questions,
           Object.fromEntries(answerMap.entries()),
-          lessonSkill
+          lessonSkill,
+          aiProvider
         );
         const feedbackMap = new Map(feedback.map((f) => [f.questionId, f]));
         for (const r of results) {

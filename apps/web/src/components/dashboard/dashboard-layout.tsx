@@ -145,6 +145,11 @@ export function DashboardLayout({
         href: "/dashboard/settings/payments",
         active: pathname.startsWith("/dashboard/settings/payments"),
       });
+      settingsChildren.push({
+        label: "AI Provider",
+        href: "/dashboard/settings/ai",
+        active: pathname.startsWith("/dashboard/settings/ai"),
+      });
     }
     const settingsGroup: NavGroup = {
       kind: "group",

@@ -33,8 +33,11 @@ export type QuizTopic = {
 export type QuizPromptOptions = {
   category?: string | null;
   skill?: string | null;
+  slug?: string | null;
   lessonContent?: string;
   topics?: { description?: string; items?: QuizTopic[] };
+  /** Optional AI provider override (e.g. "groq" | "gemini"). */
+  provider?: string | null;
 };
 
 const ALLOWED_TYPES: QuizQuestionType[] = [
@@ -73,6 +76,22 @@ function formatTopics(topics?: QuizPromptOptions["topics"]): string[] {
 /** True when this lesson should be answered in the student's own words. */
 export function isSubjectiveLesson(category: string | null | undefined, skill: string | null | undefined): boolean {
   return category === COURSE_CATEGORIES[0] && (skill === "speaking" || skill === "writing");
+}
+
+/**
+ * True when the course teaches English as a language (the "Spoken English"
+ * category, or a legacy course whose category was never set but whose slug/title
+ * clearly marks it as spoken English). These courses quiz the language itself,
+ * never etiquette or social rules.
+ */
+export function isLanguageCourse(
+  category: string | null | undefined,
+  slug?: string | null,
+  title?: string | null
+): boolean {
+  if (category === COURSE_CATEGORIES[1]) return true;
+  const haystack = `${slug ?? ""} ${title ?? ""}`.toLowerCase();
+  return /\bspoken english\b|spoken-english/.test(haystack);
 }
 
 /**
@@ -159,6 +178,19 @@ export function buildQuizPrompt(
       moduleTitle,
       lessonTitle,
       skill,
+      content,
+      topics,
+    });
+  }
+
+  // Spoken English is a language course — quiz the language itself, not the
+  // situation's social rules, so use the language-focused prompt. Detected from
+  // the category or, for legacy courses with an unset category, the slug/title.
+  if (isLanguageCourse(opts.category, opts.slug, courseTitle)) {
+    return buildLanguagePrompt({
+      courseTitle,
+      moduleTitle,
+      lessonTitle,
       content,
       topics,
     });
@@ -316,6 +348,70 @@ function buildIeltsObjectivePrompt(opts: {
   ].join("\n");
 
   return { system, user };
+}
+
+/* --------------------------- Spoken English ------------------------ */
+
+function buildLanguagePrompt(opts: {
+  courseTitle: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  content: string;
+  topics: string[];
+}): { system: string; user: string } {
+  const system = [
+    "You are a quiz generator for FlyBridge Education Group. Create a short LANGUAGE",
+    "quiz for a spoken-English lesson that tests the student's English — never",
+    "etiquette, manners or social customs.",
+    "",
+    "## Treat the lesson title as the language target",
+    "A functional title like \"Saying sorry in different ways\" or \"How to thank",
+    "someone\" means: quiz the English phrases that express it (e.g. \"I'm sorry\",",
+    "\"My apologies\", \"I didn't mean to\") — their meaning, formality and correct use.",
+    "Never ask whether/when the action is polite.",
+    "",
+    "## Question types",
+    "- Vocabulary: what a word or phrase means.",
+    "- Grammar: tense, agreement, preposition or word order.",
+    "- Word choice / collocation: the word that naturally completes a phrase.",
+    "- Natural phrasing, or formal vs informal register.",
+    "",
+    baseOutputFormat(
+      ["mcq", "true-false", "short-answer"],
+      [
+        '  "options":     array of answer strings (ONLY for type "mcq", omit for others)',
+        '  "correctAnswer": the correct answer (mcq: exact option text; true-false: "True" or "False"; short-answer: a short reference answer)',
+        '  "explanation": a one-sentence explanation of the language point',
+      ]
+    ),
+    "## Quiz composition",
+    "- Generate exactly 5 questions.",
+    '- 2 questions of type "mcq" (4 options each, one correct).',
+    '- 2 questions of type "true-false".',
+    '- 1 question of type "short-answer".',
+    "",
+    "## Rules",
+    "- Ground every question in the lesson's target phrases and grammar.",
+    "- The correctAnswer for mcq must exactly match one of the options.",
+    "- Keep explanations to one short sentence.",
+    "- Return ONLY the JSON array, nothing else.",
+  ].join("\n");
+
+  const userLines = [
+    `Course: ${opts.courseTitle}`,
+    `Module: ${opts.moduleTitle}`,
+    `Lesson: ${opts.lessonTitle}`,
+    "",
+  ];
+  if (opts.content) {
+    userLines.push("## Lesson text", opts.content, "");
+  }
+  userLines.push(...opts.topics);
+  userLines.push(
+    "Generate a 5-question language quiz for this lesson (test vocabulary, grammar, word choice or phrasing — not etiquette)."
+  );
+
+  return { system, user: userLines.join("\n") };
 }
 
 /* ----------------------------- Non-IELTS --------------------------- */
@@ -513,13 +609,13 @@ export async function generateQuiz(
 ): Promise<QuizQuestion[]> {
   const { system, user } = buildQuizPrompt(courseTitle, moduleTitle, lessonTitle, opts);
 
-  const provider = await getProvider();
+  const provider = await getProvider(opts.provider);
   const stream = await provider.streamChat({
     model: QUIZ_MODEL,
     system,
     messages: [{ role: "user", content: user }],
     jsonMode: true,
-    maxTokens: 4096,
+    maxTokens: 1024,
   });
 
   const reader = stream.getReader();

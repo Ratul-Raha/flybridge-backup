@@ -9,6 +9,7 @@ export const maxDuration = 60;
 type SopBody = {
   details?: unknown;
   options?: unknown;
+  provider?: unknown;
 };
 
 const LEVELS = new Set([
@@ -82,7 +83,8 @@ export async function POST(request: NextRequest) {
   const sopOptions: SopOptions = { tone: tone as SopOptions["tone"], length: length as SopOptions["length"] };
 
   try {
-    const stream = await generateSop(sopDetails, sopOptions);
+    const provider = typeof body.provider === "string" ? body.provider : undefined;
+    const stream = await generateSop(sopDetails, sopOptions, provider);
 
     const encoder = new TextEncoder();
     const sse = stream.pipeThrough(

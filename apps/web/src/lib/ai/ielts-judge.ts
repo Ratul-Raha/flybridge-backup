@@ -390,12 +390,12 @@ export async function judgeMockTestAttempt(opts: {
   }[];
   answerKey?: string;
   answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined>;
-}): Promise<JudgeResult> {
-  const provider = await getProvider();
+}, provider?: string | null): Promise<JudgeResult> {
+  const activeProvider = await getProvider(provider);
 
   const run = async () => {
     const { system, user } = buildJudgePrompt(opts);
-    const stream = await provider.streamChat({
+    const stream = await activeProvider.streamChat({
       model: process.env.AI_MODEL ?? "",
       system,
       messages: [{ role: "user", content: user }],

@@ -19,9 +19,10 @@ export async function POST(
     const isStaff = session.role === "admin" || session.role === "moderator";
 
     const body = await request.json();
-    const { moduleIndex, lessonIndex } = body as {
+    const { moduleIndex, lessonIndex, provider } = body as {
       moduleIndex: number;
       lessonIndex: number;
+      provider?: unknown;
     };
 
     if (typeof moduleIndex !== "number" || typeof lessonIndex !== "number") {
@@ -73,7 +74,9 @@ export async function POST(
       {
         category: course.category ?? null,
         skill: resolveLessonSkill(lesson.skill, lesson.topics),
+        slug: course.slug,
         lessonContent: lesson.content ?? "",
+        provider: typeof provider === "string" ? provider : undefined,
         topics: {
           description: lesson.topics?.description ?? "",
           items: (lesson.topics?.items ?? []).map((t) => ({

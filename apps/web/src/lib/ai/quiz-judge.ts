@@ -151,11 +151,12 @@ function extractGrades(raw: unknown): Record<string, unknown>[] {
  */
 async function runJudge(
   system: string,
-  user: string
+  user: string,
+  provider?: string | null
 ): Promise<Record<string, unknown>[]> {
-  const provider = await getProvider();
+  const activeProvider = await getProvider(provider);
 
-  const stream = await provider.streamChat({
+  const stream = await activeProvider.streamChat({
     model: QUIZ_MODEL,
     system,
     messages: [{ role: "user", content: user }],
@@ -199,16 +200,17 @@ async function runJudgeWithRetry(
     skill: string;
     questions: QuizQuestion[];
     answers: Record<string, string>;
-  }) => { system: string; user: string }
+  }) => { system: string; user: string },
+  provider?: string | null
 ): Promise<Record<string, unknown>[]> {
   const { system, user } = buildPrompt({ skill, questions, answers });
-  let list = await runJudge(system, user);
+  let list = await runJudge(system, user, provider);
 
   const gradedIds = new Set(list.map((r) => r.questionId));
   const missing = questions.filter((q) => !gradedIds.has(q.id));
   if (missing.length > 0 && missing.length < questions.length) {
     const retryPrompt = buildPrompt({ skill, questions: missing, answers });
-    list = list.concat(await runJudge(retryPrompt.system, retryPrompt.user));
+    list = list.concat(await runJudge(retryPrompt.system, retryPrompt.user, provider));
   }
 
   return list;
@@ -217,9 +219,10 @@ async function runJudgeWithRetry(
 export async function judgeWrittenAnswers(
   questions: QuizQuestion[],
   answers: Record<string, string>,
-  skill: string
+  skill: string,
+  provider?: string | null
 ): Promise<WrittenFeedback[]> {
-  const list = await runJudgeWithRetry(questions, answers, skill, buildJudgePrompt);
+  const list = await runJudgeWithRetry(questions, answers, skill, buildJudgePrompt, provider);
 
   return list.map((r) => ({
     questionId: typeof r.questionId === "string" ? r.questionId : "",
@@ -291,13 +294,15 @@ function buildObjectiveJudgePrompt(opts: {
 export async function judgeObjectiveAnswers(
   questions: QuizQuestion[],
   answers: Record<string, string>,
-  skill: string
+  skill: string,
+  provider?: string | null
 ): Promise<ObjectiveFeedback[]> {
   const list = await runJudgeWithRetry(
     questions,
     answers,
     skill,
-    buildObjectiveJudgePrompt
+    buildObjectiveJudgePrompt,
+    provider
   );
 
   return list.map((r) => ({

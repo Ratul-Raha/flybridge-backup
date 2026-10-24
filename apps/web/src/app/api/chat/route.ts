@@ -8,6 +8,7 @@ export const maxDuration = 60;
 
 type ChatBody = {
   messages?: unknown;
+  provider?: unknown;
 };
 
 export async function POST(request: NextRequest) {
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { stream, sources } = await streamChatReply(messages);
+    const provider = typeof body.provider === "string" ? body.provider : undefined;
+    const { stream, sources } = await streamChatReply(messages, provider);
 
     const encoder = new TextEncoder();
     const sse = stream.pipeThrough(

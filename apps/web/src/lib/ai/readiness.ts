@@ -62,12 +62,13 @@ export function buildReadinessPrompt(
 }
 
 export async function generateReadinessReport(
-  result: ReadinessResult
+  result: ReadinessResult,
+  provider?: string | null
 ): Promise<ReadableStream<AiStreamChunk>> {
   const { system, user } = buildReadinessPrompt(result);
 
-  const provider = await getProvider();
-  return provider.streamChat({
+  const activeProvider = await getProvider(provider);
+  return activeProvider.streamChat({
     model: process.env.AI_MODEL ?? "",
     system,
     messages: [{ role: "user", content: user }],

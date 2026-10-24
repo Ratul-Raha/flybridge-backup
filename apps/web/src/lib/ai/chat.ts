@@ -53,7 +53,8 @@ export async function buildSystemPrompt(query: string): Promise<{
 }
 
 export async function streamChatReply(
-  messages: ChatRequestMessage[]
+  messages: ChatRequestMessage[],
+  provider?: string | null
 ): Promise<ChatStreamResult> {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const query = lastUser?.content.trim() ?? "";
@@ -64,8 +65,8 @@ export async function streamChatReply(
     .slice(-MAX_HISTORY)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const provider = await getProvider();
-  const stream = await provider.streamChat({
+  const activeProvider = await getProvider(provider);
+  const stream = await activeProvider.streamChat({
     model: process.env.AI_MODEL ?? "",
     system,
     messages: history,

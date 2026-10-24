@@ -86,12 +86,13 @@ export function buildSopPrompt(details: SopDetails, options: SopOptions): { syst
 
 export async function generateSop(
   details: SopDetails,
-  options: SopOptions
+  options: SopOptions,
+  provider?: string | null
 ): Promise<ReadableStream<AiStreamChunk>> {
   const { system, user } = buildSopPrompt(details, options);
 
-  const provider = await getProvider();
-  return provider.streamChat({
+  const activeProvider = await getProvider(provider);
+  return activeProvider.streamChat({
     model: process.env.AI_MODEL ?? "",
     system,
     messages: [{ role: "user", content: user }],
