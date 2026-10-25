@@ -21,6 +21,19 @@ type Part2Phase = "idle" | "prep" | "talk" | "done";
 
 type SpeechConfigData = { token: string; region: string; locale: string; voice: string };
 
+export type PronunciationAssessmentData = {
+  accuracyScore?: number;
+  fluencyScore?: number;
+  completenessScore?: number;
+  pronunciationScore?: number;
+  prosodyScore?: number;
+  words?: Array<{
+    word?: string;
+    accuracyScore?: number;
+    errorType?: string;
+  }>;
+};
+
 function fmtClock(totalSeconds: number): string {
   const m = Math.floor(Math.max(0, totalSeconds) / 60);
   const s = Math.max(0, totalSeconds) % 60;
@@ -57,7 +70,11 @@ export function SpeakingTestPlayer({
 }: {
   sections: SpeakingSection[];
   answers: Record<string, AnswerValue>;
-  onTextChange: (qid: string, text: string) => void;
+  onTextChange: (
+    qid: string,
+    text: string,
+    pronunciation?: import("@/lib/mock-test-ui").PronunciationAssessmentData
+  ) => void;
   onFinish: () => void;
   submitting: boolean;
 }) {
@@ -128,7 +145,31 @@ export function SpeakingTestPlayer({
         if (mySession !== sessionRef.current) return;
         const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(config.token, config.region);
         speechConfig.speechRecognitionLanguage = config.locale;
+
+        // Try to enable Pronunciation Assessment for better pronunciation feedback
         const recognizer = new sdk.SpeechRecognizer(speechConfig);
+        try {
+          const partQuestions = part?.questions ?? [];
+          const refText = partQuestions
+            .map((q) => q.prompt ?? "")
+            .filter((t) => t.trim())
+            .join(" . ");
+          const reference = refText.trim() || (typeof answers[qid]?.text === "string" ? answers[qid].text : "");
+          if (reference.trim()) {
+            const pronunciationAssessmentConfig = new sdk.PronunciationAssessmentConfig(
+              reference.trim(),
+              sdk.PronunciationAssessmentGradingSystem.FivePoint,
+              sdk.PronunciationAssessmentGranularity.Phoneme,
+              false
+            );
+            try {
+              (pronunciationAssessmentConfig as any).enableProsodyAssessment = true;
+            } catch {}
+            (pronunciationAssessmentConfig as any).applyTo(recognizer);
+          }
+        } catch {
+          // Fall back to plain speech recognition if pronunciation assessment isn't supported
+        }
 
         let finalText = typeof answers[qid]?.text === "string" ? answers[qid].text : "";
         recognizer.recognizing = (_sender, event) => {
@@ -139,6 +180,27 @@ export function SpeakingTestPlayer({
             finalText = (finalText.trim() ? `${finalText.trim()} ` : "") + event.result.text.trim();
             onTextChange(qid, finalText);
             setInterim("");
+            try {
+              const pronResult = sdk.PronunciationAssessmentResult.fromResult(event.result);
+              const detail = pronResult.detailResult;
+              const words = Array.isArray(detail?.Words)
+                ? detail.Words.slice(0, 50).map((w: any) => ({
+                    word: w?.Word,
+                    accuracyScore: w?.PronunciationAssessment?.AccuracyScore,
+                    errorType: w?.ErrorType,
+                  }))
+                : undefined;
+              onTextChange(qid, finalText, {
+                accuracyScore: pronResult.accuracyScore,
+                fluencyScore: pronResult.fluencyScore,
+                completenessScore: pronResult.completenessScore,
+                pronunciationScore: pronResult.pronunciationScore,
+                prosodyScore: pronResult.prosodyScore,
+                words,
+              } as any);
+            } catch {
+              // Ignore pronunciation assessment parsing errors
+            }
           }
         };
 

@@ -431,8 +431,22 @@ export function MockTestPlayer({
       return { ...prev, [qid]: { choices: next, text: undefined } };
     });
 
-  const setText = (key: string, value: string) =>
-    setAnswers((prev) => ({ ...prev, [key]: { text: value, choice: undefined } }));
+  const setText = (
+    key: string,
+    value: string,
+    pronunciation?: import("@/lib/mock-test-ui").PronunciationAssessmentData
+  ) =>
+    setAnswers((prev) => ({
+      ...prev,
+      [key]: {
+        ...(prev[key] ?? {}),
+        text: value,
+        choice: undefined,
+        choices: undefined,
+        gaps: undefined,
+        ...(pronunciation ? { pronunciation } : {}),
+      },
+    }));
 
   const setGap = (qid: string, index: number, value: string) =>
     setAnswers((prev) => {

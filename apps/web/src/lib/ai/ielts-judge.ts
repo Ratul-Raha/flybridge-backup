@@ -59,7 +59,24 @@ export function buildJudgePrompt(opts: {
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined>;
+  answers: Record<
+    string,
+    | {
+        choice?: number;
+        choices?: number[];
+        text?: string;
+        gaps?: string[];
+        pronunciation?: {
+          accuracyScore?: number;
+          fluencyScore?: number;
+          completenessScore?: number;
+          pronunciationScore?: number;
+          prosodyScore?: number;
+          words?: Array<{ word?: string; accuracyScore?: number; errorType?: string }>;
+        };
+      }
+    | undefined
+  >;
 }): { system: string; user: string } {
   const isWriting = opts.skill === "writing";
   const isSpeaking = opts.skill === "speaking";
@@ -184,8 +201,12 @@ export function buildJudgePrompt(opts: {
           "  Grammatical Range and Accuracy, Pronunciation) for each part, and",
           "  summarise them in \"comments\" as e.g. \"FC 6.5 · LR 6 · GR 6 · P 7\"",
           "  followed by a short 1-2 sentence note.",
-          "- Grade from the transcript only; do not penalise a blank part beyond",
-          "  recording that no response was captured there.",
+          "- Do not penalise natural accent features; focus on intelligibility, stress/intonation",
+          "  patterns, and errors that impede communication or deviate from standard forms.",
+          "- If AzurePronunciation scores are provided, factor them into Pronunciation, but",
+          "  still judge against IELTS descriptors holistically.",
+          "- Grade from the transcript and any provided pronunciation metrics; do not penalise",
+          "  a blank part beyond recording that no response was captured there.",
           "- Be strict and realistic; a typical learner lands between 5.0 and 7.5.",
           "- Band must be in 0.5 increments (no 6.25 etc).",
         ].join("\n")
@@ -269,7 +290,21 @@ type SpeakingJudgeOpts = {
     talkMinutes?: number | null;
     questions: { qid?: string | null; prompt?: string | null }[];
   }[];
-  answers: Record<string, { text?: string } | undefined>;
+  answers: Record<
+    string,
+    | {
+        text?: string;
+        pronunciation?: {
+          accuracyScore?: number;
+          fluencyScore?: number;
+          completenessScore?: number;
+          pronunciationScore?: number;
+          prosodyScore?: number;
+          words?: Array<{ word?: string; accuracyScore?: number; errorType?: string }>;
+        };
+      }
+    | undefined
+  >;
   title: string;
 };
 
@@ -313,8 +348,34 @@ function buildSpeakingUserLines(opts: SpeakingJudgeOpts): string[] {
 
     for (const q of s.questions ?? []) {
       lines.push(`Q: ${q.prompt ?? ""}`);
-      const text = opts.answers[q.qid ?? ""]?.text ?? "";
+      const ans = opts.answers[q.qid ?? ""];
+      const text = ans?.text ?? "";
       lines.push(`Candidate: ${text.trim() || "(no answer)"}`);
+      const p = ans?.pronunciation;
+      if (
+        p &&
+        (p.pronunciationScore !== undefined ||
+          p.accuracyScore !== undefined ||
+          p.fluencyScore !== undefined ||
+          p.completenessScore !== undefined ||
+          p.prosodyScore !== undefined)
+      ) {
+        const parts = [
+          p.pronunciationScore !== undefined ? `Pron=${p.pronunciationScore}` : null,
+          p.accuracyScore !== undefined ? `Acc=${p.accuracyScore}` : null,
+          p.fluencyScore !== undefined ? `Flu=${p.fluencyScore}` : null,
+          p.completenessScore !== undefined ? `Comp=${p.completenessScore}` : null,
+          p.prosodyScore !== undefined ? `Prosody=${p.prosodyScore}` : null,
+        ].filter(Boolean);
+        if (parts.length) lines.push(`AzurePronunciation: ${parts.join(" ")}`);
+      }
+      const weak = Array.isArray(p?.words)
+        ? p.words
+            .filter((w: any) => typeof w.accuracyScore === "number" && w.accuracyScore < 80 && w.word)
+            .slice(0, 10)
+            .map((w: any) => `${w.word}(${w.accuracyScore}${w.errorType ? `:${w.errorType}` : ""})`)
+        : [];
+      if (weak.length) lines.push(`PotentialPronIssues: ${weak.join(", ")}`);
     }
   });
   return lines;
@@ -389,7 +450,24 @@ export async function judgeMockTestAttempt(opts: {
     }[];
   }[];
   answerKey?: string;
-  answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined>;
+  answers: Record<
+    string,
+    | {
+        choice?: number;
+        choices?: number[];
+        text?: string;
+        gaps?: string[];
+        pronunciation?: {
+          accuracyScore?: number;
+          fluencyScore?: number;
+          completenessScore?: number;
+          pronunciationScore?: number;
+          prosodyScore?: number;
+          words?: Array<{ word?: string; accuracyScore?: number; errorType?: string }>;
+        };
+      }
+    | undefined
+  >;
 }, provider?: string | null): Promise<JudgeResult> {
   const activeProvider = await getProvider(provider);
 

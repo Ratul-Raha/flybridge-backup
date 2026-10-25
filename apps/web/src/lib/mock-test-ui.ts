@@ -116,7 +116,26 @@ export type AttemptListItem = {
   submittedAt: string | null;
 };
 
-export type AnswerValue = { choice?: number; choices?: number[]; text?: string; gaps?: string[] };
+export type PronunciationAssessmentData = {
+  accuracyScore?: number;
+  fluencyScore?: number;
+  completenessScore?: number;
+  pronunciationScore?: number;
+  prosodyScore?: number;
+  words?: Array<{
+    word?: string;
+    accuracyScore?: number;
+    errorType?: string;
+  }>;
+};
+
+export type AnswerValue = {
+  choice?: number;
+  choices?: number[];
+  text?: string;
+  gaps?: string[];
+  pronunciation?: PronunciationAssessmentData;
+};
 
 export type AttemptDetail = {
   id: string;

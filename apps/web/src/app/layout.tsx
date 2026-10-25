@@ -9,6 +9,7 @@ import { MarketingAttributionCapture } from "@/components/marketing-attribution-
 import { AffiliateRefCapture } from "@/components/affiliate-ref-capture";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { PWAServiceWorker } from "@/components/pwa-service-worker";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 
@@ -29,6 +30,13 @@ export const metadata: Metadata = {
   title: "FlyBridge Education Group",
   description:
     "Practical, self-paced video courses that walk you through studying, working, and building a career abroad — one confident step at a time.",
+  manifest: "/manifest.json",
+  themeColor: "#6B4CE0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FlyBridge",
+  },
   openGraph: {
     type: "website",
     siteName: "FlyBridge Education Group",
@@ -43,6 +51,14 @@ export const metadata: Metadata = {
     description:
       "Practical, self-paced video courses that walk you through studying, working, and building a career abroad — one confident step at a time.",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -54,8 +70,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="application-name" content="FlyBridge" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="FlyBridge" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body>
         <AuthProvider>
+          <PWAServiceWorker />
           <NavigationProgress />
           {children}
           <FooterWithRoutes />

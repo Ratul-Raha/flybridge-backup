@@ -48,8 +48,24 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const answers: Record<string, { choice?: number; choices?: number[]; text?: string; gaps?: string[] } | undefined> =
-      body.answers && typeof body.answers === "object" ? body.answers : {};
+    const answers: Record<
+      string,
+      | {
+          choice?: number;
+          choices?: number[];
+          text?: string;
+          gaps?: string[];
+          pronunciation?: {
+            accuracyScore?: number;
+            fluencyScore?: number;
+            completenessScore?: number;
+            pronunciationScore?: number;
+            prosodyScore?: number;
+            words?: Array<{ word?: string; accuracyScore?: number; errorType?: string }>;
+          };
+        }
+      | undefined
+    > = body.answers && typeof body.answers === "object" ? body.answers : {};
 
     const aiProvider = typeof body.provider === "string" ? body.provider : undefined;
 
