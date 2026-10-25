@@ -1,12 +1,17 @@
-/* FlyBridge push notification service worker.
- * Handles incoming Web Push payloads and shows Chrome notifications that
- * deep-link back into the site. */
+/* FlyBridge service worker.
+ * Handles PWA installability and push notifications. */
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+// Required for PWA installability in Chromium browsers
+self.addEventListener("fetch", (event) => {
+  // Pass-through all requests
+  event.respondWith(fetch(event.request).catch(() => new Response("", { status: 503 })));
 });
 
 self.addEventListener("push", (event) => {

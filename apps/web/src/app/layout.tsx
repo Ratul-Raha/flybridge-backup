@@ -10,6 +10,7 @@ import { AffiliateRefCapture } from "@/components/affiliate-ref-capture";
 import { FooterWithRoutes } from "@/components/footer-with-routes";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { PWAServiceWorker } from "@/components/pwa-service-worker";
+import { PWAInstallButton } from "@/components/pwa-install-button";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 
@@ -84,6 +85,7 @@ export default function RootLayout({
           {children}
           <FooterWithRoutes />
           <ReadinessFab />
+          <PWAInstallButton />
           <MarketingAttributionCapture />
           <AffiliateRefCapture />
         </AuthProvider>
