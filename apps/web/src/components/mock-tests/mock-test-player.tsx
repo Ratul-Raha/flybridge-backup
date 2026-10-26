@@ -1330,7 +1330,7 @@ export function MockTestPlayer({
           </div>
         )}
 
-        {/* Speaking test: parts 1-3 with Azure speech */}
+        {/* Speaking test: parts 1-3 with Meta Muse transcription */}
         {isSpeaking && (
           <SpeakingTestPlayer
             sections={test?.content?.sections ?? []}

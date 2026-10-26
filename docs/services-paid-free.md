@@ -16,7 +16,8 @@ Prices checked Oct 2026 — always confirm your current plan in the provider das
 | **Resend** | All transactional + automation email | Free 3,000/mo (100/day) → Pro $20/mo = 50,000/mo, overage $0.90/1k | Automation email fan-outs (welcome, seminar confirmations, campaigns) burn volume fast |
 | **Groq** (`GROQ_API_KEY`) | Default AI provider — chat widget, SOP generator, quizzes, grading, blog, ops bot | Free dev tier with rate limits → paid usage-based for production | Highest risk of silent cost/limit issues: AI is called on many user-facing paths |
 | **x.ai (Grok)** (`GROK_API_KEY`) | Alternate AI provider (`lib/ai/grok.ts`) | Paid credits | Wired as placeholder/fallback, not the default |
-| **Azure Speech** | IELTS speaking practice — speech-to-text + text-to-speech | Free F0 tier (~500k chars/mo) → paid per 1M chars | `microsoft-cognitiveservices-speech-sdk`, `/api/speech-token` |
+| **Meta Muse Voice Transcribe** (`META_MODEL_API_KEY`) | Speech-to-text for IELTS speaking tests, speaking quizzes and Practice Speaking | Usage-based — confirm current quota/pricing in the Meta model dashboard | `lib/speech/meta.ts`, `/api/transcribe`; mono 16/24 kHz WAV, ≤2 min per answer |
+| **Azure Speech** | Read-aloud (text-to-speech) prompts only | Free F0 tier (~500k chars/mo) → paid per 1M chars | `microsoft-cognitiveservices-speech-sdk`, `/api/speech-token` |
 | **Cloudinary** | Legacy media (avatars, seminar images, old resource files) | Free ~25 monthly credits → paid | `.env.example`: "legacy only"; new uploads go to S3 |
 | **Domain (flybridgeedu.com)** | Production domain | Paid renewal (yearly) | Referenced as canonical `SITE_URL` throughout |
 

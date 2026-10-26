@@ -6,9 +6,11 @@ import {
   Bot,
   Check,
   Loader2,
+  Mic,
   RefreshCw,
   Save,
   Sparkles,
+  Volume2,
   Zap,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -19,6 +21,11 @@ type SettingsData = {
   provider: ProviderId;
   source: "dashboard" | "env" | "auto";
   configured: Record<ProviderId, boolean>;
+  transcription: {
+    provider: "meta";
+    model: string;
+    configured: boolean;
+  };
 };
 
 const PROVIDERS: {
@@ -246,6 +253,74 @@ export function AiSettingsManage() {
             environment.
           </p>
         )}
+      </div>
+
+      <div className="rounded-lg border bg-white p-6" style={{ borderColor: "var(--line)" }}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>Speech to text</h3>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--body)" }}>
+              Powers speaking tests, speaking quizzes and the Practice Speaking tool.
+            </p>
+          </div>
+          <span
+            className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-2.5 py-[4px]"
+            style={{ background: "rgba(107,76,224,0.1)", color: "var(--brand)" }}
+          >
+            Transcribe only
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border p-4" style={{ borderColor: "var(--line)" }}>
+            <div className="flex items-center justify-between">
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-lg"
+                style={{ background: "rgba(107,76,224,0.12)", color: "var(--brand)" }}
+              >
+                <Mic size={17} />
+              </span>
+              <StatusDot
+                ok={data?.transcription?.configured ?? false}
+                label={data?.transcription?.configured ? "API key configured" : "No API key"}
+                hint={data?.transcription?.configured ? undefined : "missing"}
+              />
+            </div>
+            <p className="mt-3 text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+              Meta Muse Voice Transcribe
+            </p>
+            <p className="mt-0.5 font-mono text-[11.5px]" style={{ color: "var(--body)" }}>
+              {data?.transcription?.model ?? "muse-voice-transcribe-1.0"}
+            </p>
+          </div>
+
+          <div className="rounded-xl border p-4" style={{ borderColor: "var(--line)" }}>
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-lg"
+              style={{ background: "rgba(15,169,104,0.12)", color: "#0FA968" }}
+            >
+              <Volume2 size={17} />
+            </span>
+            <p className="mt-3 text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+              Azure Speech (read aloud)
+            </p>
+            <p className="mt-0.5 text-[11.5px]" style={{ color: "var(--body)" }}>
+              Still used for text-to-speech prompts. Not part of transcription.
+            </p>
+          </div>
+        </div>
+
+        {data && !data.transcription?.configured && (
+          <p className="mt-4 flex items-start gap-1.5 text-[12px] font-medium" style={{ color: "#B45309" }}>
+            <AlertTriangle size={13} className="mt-[1px] shrink-0" />
+            META_MODEL_API_KEY is missing — speaking recordings cannot be transcribed until it is added to the
+            environment.
+          </p>
+        )}
+        <p className="mt-3 text-[11.5px]" style={{ color: "var(--body)" }}>
+          Recordings must be mono 16 kHz or 24 kHz WAV, under 2 minutes per answer (about 4.5 MB upload limit).
+          Muse handles transcription only; there is no pronunciation scoring on this path.
+        </p>
       </div>
 
       <div className="flex items-center gap-3">

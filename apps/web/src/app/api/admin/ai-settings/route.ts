@@ -6,6 +6,7 @@ import {
   saveAiSettings,
 } from "@/lib/ai/settings";
 import { isAiProviderId } from "@/lib/ai/provider";
+import { museConfigured, museTranscribeModel } from "@/lib/speech/meta";
 
 function keyConfigured(value: string | undefined): boolean {
   return !!value && !value.includes("placeholder");
@@ -25,6 +26,11 @@ export async function GET() {
         groq: keyConfigured(process.env.GROQ_API_KEY),
         gemini: keyConfigured(process.env.GEMINI_API_KEY),
         grok: keyConfigured(process.env.GROK_API_KEY),
+      },
+      transcription: {
+        provider: "meta" as const,
+        model: museTranscribeModel(),
+        configured: museConfigured(),
       },
     });
   } catch (error) {

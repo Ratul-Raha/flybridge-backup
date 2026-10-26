@@ -13,6 +13,7 @@ import {
   Volume2,
 } from "lucide-react";
 import type { AnswerValue, TestDetail } from "@/lib/mock-test-ui";
+import { useMuseRecorder } from "@/lib/audio/use-muse-recorder";
 
 type SpeakingSection = TestDetail["content"]["sections"][number];
 type SpeakingQuestion = SpeakingSection["questions"][number];
@@ -98,13 +99,22 @@ export function SpeakingTestPlayer({
 
   /* ----------------------------- speech ----------------------------- */
 
-  const recognizerRef = useRef<{ close: () => void; stop: () => Promise<void> } | null>(null);
   const activeQidRef = useRef<string | null>(null);
-  const sessionRef = useRef(0);
+  const answersRef = useRef(answers);
   const [recordingQid, setRecordingQid] = useState<string | null>(null);
-  const [interim, setInterim] = useState("");
+  const [transcribingQid, setTranscribingQid] = useState<string | null>(null);
   const [speechBusy, setSpeechBusy] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState("");
+  const {
+    transcribing,
+    error: recorderError,
+    start: startMic,
+    stop: stopMic,
+  } = useMuseRecorder();
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   const getSpeechConfig = async (): Promise<SpeechConfigData> => {
     const res = await fetch("/api/speech-token", { cache: "no-store" });
@@ -114,171 +124,43 @@ export function SpeakingTestPlayer({
   };
 
   const stopRecording = useCallback(async () => {
-    sessionRef.current++;
-    const active = recognizerRef.current;
-    recognizerRef.current = null;
+    const qid = activeQidRef.current;
     activeQidRef.current = null;
-    setInterim("");
     setRecordingQid(null);
-    if (!active) return;
-    try {
-      await active.stop();
-    } catch {
-      // recognizer may already be stopped
+    if (!qid) {
+      await stopMic();
+      return;
     }
-    try {
-      active.close();
-    } catch {
-      // ignore close errors
-    }
-  }, []);
+
+    setTranscribingQid(qid);
+    const transcript = await stopMic();
+    setTranscribingQid(null);
+    if (!transcript) return;
+
+    const existing =
+      typeof answersRef.current[qid]?.text === "string"
+        ? answersRef.current[qid].text
+        : "";
+    onTextChange(
+      qid,
+      existing.trim() ? `${existing.trim()} ${transcript}` : transcript
+    );
+  }, [onTextChange, stopMic]);
 
   const startRecording = useCallback(
     async (qid: string) => {
       setSpeechError("");
-      if (recognizerRef.current) await stopRecording();
-      const mySession = sessionRef.current;
-      try {
-        const config = await getSpeechConfig();
-        if (mySession !== sessionRef.current) return;
-        const sdk = await import("microsoft-cognitiveservices-speech-sdk");
-        if (mySession !== sessionRef.current) return;
-        const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(config.token, config.region);
-        speechConfig.speechRecognitionLanguage = config.locale;
-
-        // Try to enable Pronunciation Assessment for better pronunciation feedback
-        const recognizer = new sdk.SpeechRecognizer(speechConfig);
-        try {
-          const partQuestions = part?.questions ?? [];
-          const refText = partQuestions
-            .map((q) => q.prompt ?? "")
-            .filter((t) => t.trim())
-            .join(" . ");
-          const reference = refText.trim() || (typeof answers[qid]?.text === "string" ? answers[qid].text : "");
-          if (reference.trim()) {
-            const pronunciationAssessmentConfig = new sdk.PronunciationAssessmentConfig(
-              reference.trim(),
-              sdk.PronunciationAssessmentGradingSystem.FivePoint,
-              sdk.PronunciationAssessmentGranularity.Phoneme,
-              false
-            );
-            try {
-              (pronunciationAssessmentConfig as any).enableProsodyAssessment = true;
-            } catch {}
-            (pronunciationAssessmentConfig as any).applyTo(recognizer);
-          }
-        } catch {
-          // Fall back to plain speech recognition if pronunciation assessment isn't supported
-        }
-
-        let finalText = typeof answers[qid]?.text === "string" ? answers[qid].text : "";
-        recognizer.recognizing = (_sender, event) => {
-          if (event?.result?.text) setInterim(event.result.text);
-        };
-        recognizer.recognized = (_sender, event) => {
-          if (event.result.reason === sdk.ResultReason.RecognizedSpeech && event.result.text) {
-            finalText = (finalText.trim() ? `${finalText.trim()} ` : "") + event.result.text.trim();
-            onTextChange(qid, finalText);
-            setInterim("");
-            try {
-              const pronResult = sdk.PronunciationAssessmentResult.fromResult(event.result);
-              const detail = pronResult.detailResult;
-              const words = Array.isArray(detail?.Words)
-                ? detail.Words.slice(0, 50).map((w: any) => ({
-                    word: w?.Word,
-                    accuracyScore: w?.PronunciationAssessment?.AccuracyScore,
-                    errorType: w?.ErrorType,
-                  }))
-                : undefined;
-              onTextChange(qid, finalText, {
-                accuracyScore: pronResult.accuracyScore,
-                fluencyScore: pronResult.fluencyScore,
-                completenessScore: pronResult.completenessScore,
-                pronunciationScore: pronResult.pronunciationScore,
-                prosodyScore: pronResult.prosodyScore,
-                words,
-              } as any);
-            } catch {
-              // Ignore pronunciation assessment parsing errors
-            }
-          }
-        };
-
-        // Azure ends the recognition session after a few seconds of silence.
-        // Restart it so a pause between sentences doesn't stop the recording.
-        let restarting = false;
-        let failedRestarts = 0;
-        const restartListening = () => {
-          if (restarting) return;
-          if (sessionRef.current !== mySession) return;
-          if (failedRestarts >= 5) {
-            setSpeechError(
-              "The microphone kept stopping. Check your microphone and try recording again."
-            );
-            void stopRecording();
-            return;
-          }
-          restarting = true;
-          try {
-            recognizer.startContinuousRecognitionAsync(
-              () => {
-                restarting = false;
-                failedRestarts = 0;
-              },
-              () => {
-                restarting = false;
-                failedRestarts++;
-                window.setTimeout(() => restartListening(), 300);
-              }
-            );
-          } catch {
-            restarting = false;
-          }
-        };
-        recognizer.sessionStopped = () => restartListening();
-        recognizer.canceled = () => restartListening();
-
-        recognizerRef.current = {
-          stop: () =>
-            new Promise<void>((resolve) => {
-              recognizer.stopContinuousRecognitionAsync(
-                () => resolve(),
-                () => resolve()
-              );
-            }),
-          close: () => {
-            try {
-              recognizer.close();
-            } catch {
-              // ignore
-            }
-          },
-        };
-        activeQidRef.current = qid;
-
-        await new Promise<void>((resolve, reject) => {
-          recognizer.startContinuousRecognitionAsync(
-            () => resolve(),
-            (error) => reject(new Error(typeof error === "string" ? error : "Could not start the microphone"))
-          );
-        });
-        if (mySession !== sessionRef.current) {
-          recognizerRef.current = null;
-          activeQidRef.current = null;
-          recognizer.close();
-          return;
-        }
-        setRecordingQid(qid);
-      } catch (e) {
-        if (mySession !== sessionRef.current) return;
-        recognizerRef.current = null;
+      if (recordingQid) await stopRecording();
+      activeQidRef.current = qid;
+      const started = await startMic();
+      if (!started) {
         activeQidRef.current = null;
-        setRecordingQid(null);
-        setSpeechError(e instanceof Error ? e.message : "Could not use the microphone");
+        return;
       }
+      setRecordingQid(qid);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [answers, stopRecording]
+    [recordingQid, startMic, stopRecording]
   );
 
   const readAloud = async (text: string, busyKey: string) => {
@@ -301,13 +183,6 @@ export function SpeakingTestPlayer({
     }
   };
 
-  // Cleanup recognizer on unmount
-  useEffect(() => {
-    return () => {
-      void stopRecording();
-    };
-  }, [stopRecording]);
-
   /* ----------------------------- timers ----------------------------- */
 
   const [part2Phase, setPart2Phase] = useState<Part2Phase>("idle");
@@ -327,13 +202,11 @@ export function SpeakingTestPlayer({
     void stopRecording();
     setActivePart(i);
     setPart2Phase("idle");
-    setInterim("");
     setSpeechError("");
   };
 
   useEffect(() => {
     setPart2Phase("idle");
-    setInterim("");
     setSpeechError("");
     if (!isPart2) setPartSeconds(talkMinutes * 60);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -420,13 +293,8 @@ export function SpeakingTestPlayer({
     onFinish();
   };
 
-  const liveText = (qid: string): string => {
-    const base = typeof answers[qid]?.text === "string" ? answers[qid].text : "";
-    if (recordingQid === qid && interim) {
-      return base.trim() ? `${base.trim()} ${interim}` : interim;
-    }
-    return base;
-  };
+  const liveText = (qid: string): string =>
+    typeof answers[qid]?.text === "string" ? answers[qid].text : "";
 
   /* ------------------------------- UI ------------------------------- */
 
@@ -628,11 +496,22 @@ export function SpeakingTestPlayer({
                 <textarea
                   value={liveText(part2Qid)}
                   onChange={(e) => onTextChange(part2Qid, e.target.value)}
-                  placeholder="Your spoken answer appears here. You can fix any words the microphone misheard before submitting."
+                  disabled={transcribingQid === part2Qid}
+                  placeholder={
+                    transcribingQid === part2Qid
+                      ? "Transcribing your answer…"
+                      : "Your spoken answer appears here. You can fix any words the microphone misheard before submitting."
+                  }
                   rows={4}
-                  className="mx-auto mt-4 w-full max-w-[560px] select-text resize-y rounded-xl border bg-[#FBFBFD] px-4 py-3 text-[13px] leading-[1.7] focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+                  className="mx-auto mt-4 w-full max-w-[560px] select-text resize-y rounded-xl border bg-[#FBFBFD] px-4 py-3 text-[13px] leading-[1.7] focus:outline-none focus:ring-2 focus:ring-brand-2/30 disabled:opacity-70"
                   style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                 />
+              )}
+              {part2Qid && transcribingQid === part2Qid && (
+                <p className="mt-3 inline-flex items-center gap-2 text-[12.5px]" style={{ color: "var(--body)" }}>
+                  <Loader2 size={13} className="animate-spin" />
+                  Transcribing with Meta Muse…
+                </p>
               )}
             </div>
           )}
@@ -658,6 +537,7 @@ export function SpeakingTestPlayer({
           {(part.questions ?? []).map((q, qi) => {
             const qid = questionQid(q, activePart, qi);
             const recording = recordingQid === qid;
+            const transcribingThis = transcribingQid === qid;
             return (
               <div
                 key={qid}
@@ -688,7 +568,7 @@ export function SpeakingTestPlayer({
                   <button
                     type="button"
                     onClick={() => toggleQuestionRecording(qid)}
-                    disabled={speechBusy !== null || (recordingQid !== null && recordingQid !== qid)}
+                    disabled={speechBusy !== null || transcribingThis || (recordingQid !== null && recordingQid !== qid)}
                     className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold disabled:opacity-50"
                     style={
                       recording
@@ -696,7 +576,13 @@ export function SpeakingTestPlayer({
                         : { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
                     }
                   >
-                    {recording ? <><Square size={12} /> Stop recording</> : <><Mic size={13} /> Record answer</>}
+                    {recording ? (
+                      <><Square size={12} /> Stop recording</>
+                    ) : transcribingThis ? (
+                      <><Loader2 size={13} className="animate-spin" /> Transcribing…</>
+                    ) : (
+                      <><Mic size={13} /> Record answer</>
+                    )}
                   </button>
                   {recording && (
                     <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: "#C0392B" }}>
@@ -712,8 +598,14 @@ export function SpeakingTestPlayer({
                   <textarea
                     value={liveText(qid)}
                     onChange={(e) => onTextChange(qid, e.target.value)}
-                    disabled={recording}
-                    placeholder={recording ? "Listening…" : "Press \"Record answer\" and speak — your transcript appears here automatically."}
+                    disabled={recording || transcribingThis}
+                    placeholder={
+                      recording
+                        ? "Listening… stop recording when you're done."
+                        : transcribingThis
+                          ? "Transcribing your answer…"
+                          : "Press \"Record answer\" and speak — your transcript appears here automatically."
+                    }
                     rows={3}
                     className="w-full select-text resize-y rounded-xl border bg-[#FBFBFD] px-4 py-3 text-[13px] leading-[1.7] focus:outline-none focus:ring-2 focus:ring-brand-2/30 disabled:opacity-80"
                     style={{ borderColor: "var(--line)", color: "var(--ink)" }}
@@ -725,9 +617,9 @@ export function SpeakingTestPlayer({
         </div>
       )}
 
-      {speechError && (
+      {(speechError || recorderError) && (
         <p className="rounded-xl border px-4 py-3 text-[12.5px]" style={{ color: "#C0392B", borderColor: "rgba(192,57,43,0.25)", background: "rgba(192,57,43,0.06)" }}>
-          {speechError}
+          {speechError || recorderError}
         </p>
       )}
 
@@ -757,7 +649,7 @@ export function SpeakingTestPlayer({
         <button
           type="button"
           onClick={() => void finishTest()}
-          disabled={submitting || recordingQid !== null || part2Phase === "prep" || part2Phase === "talk"}
+          disabled={submitting || recordingQid !== null || transcribing || part2Phase === "prep" || part2Phase === "talk"}
           className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-[14px] font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg disabled:opacity-50"
           style={{
             background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)",
@@ -773,6 +665,12 @@ export function SpeakingTestPlayer({
         <p className="flex items-center justify-center gap-2 text-[12px]" style={{ color: "var(--body)" }}>
           <AlertTriangle size={13} style={{ color: "#F59E0B" }} />
           Stop recording before finishing the test.
+        </p>
+      )}
+      {transcribing && (
+        <p className="flex items-center justify-center gap-2 text-[12px]" style={{ color: "var(--body)" }}>
+          <Loader2 size={13} className="animate-spin" />
+          Transcribing your last answer with Meta Muse…
         </p>
       )}
     </div>

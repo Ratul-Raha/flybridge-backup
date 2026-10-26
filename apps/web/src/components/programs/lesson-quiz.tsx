@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, RotateCcw, XCircle, AlertTriangle, Mic, Volume2, Square } from "lucide-react";
 import { WritingChart } from "@/components/shared/writing-chart";
 import { trackUsageEvent } from "@/lib/usage/client";
+import { useMuseRecorder } from "@/lib/audio/use-muse-recorder";
 import type { ChartData } from "@/lib/chart-data";
 
 type Question = {
@@ -74,6 +75,14 @@ export function LessonQuiz({
   const [showRetakeWarning, setShowRetakeWarning] = useState(false);
   const [speechBusy, setSpeechBusy] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState("");
+  const [recordingId, setRecordingId] = useState<string | null>(null);
+  const {
+    recording,
+    transcribing,
+    error: recorderError,
+    start: startMic,
+    stop: stopMic,
+  } = useMuseRecorder();
 
   const useSpeech = skill === "speaking";
 
@@ -106,32 +115,18 @@ export function LessonQuiz({
 
   const recordAnswer = async (question: Question) => {
     setSpeechError("");
-    setSpeechBusy(`record-${question.id}`);
-    try {
-      const config = await getSpeechConfig();
-      const sdk = await import("microsoft-cognitiveservices-speech-sdk");
-      const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(config.token, config.region);
-      speechConfig.speechRecognitionLanguage = config.locale;
-      const recognizer = new sdk.SpeechRecognizer(speechConfig);
-      const transcript = await new Promise<string>((resolve, reject) => {
-        recognizer.recognizeOnceAsync(
-          (result) => {
-            recognizer.close();
-            if (result.reason === sdk.ResultReason.RecognizedSpeech) resolve(result.text);
-            else reject(new Error("Azure could not understand that answer. Please try again."));
-          },
-          (error) => {
-            recognizer.close();
-            reject(new Error(typeof error === "string" ? error : "Microphone recognition failed"));
-          }
-        );
-      });
-      setAnswers((prev) => ({ ...prev, [question.id]: transcript }));
-    } catch (e) {
-      setSpeechError(e instanceof Error ? e.message : "Could not use the microphone");
-    } finally {
-      setSpeechBusy(null);
+    if (recordingId === question.id && recording) {
+      const transcript = await stopMic();
+      setRecordingId(null);
+      if (transcript) {
+        setAnswers((prev) => ({ ...prev, [question.id]: transcript }));
+      }
+      return;
     }
+    if (recordingId !== null && recordingId !== question.id) return;
+    if (recordingId === question.id) setRecordingId(null);
+    const started = await startMic();
+    if (started) setRecordingId(question.id);
   };
 
   const startQuiz = async () => {
@@ -514,7 +509,7 @@ export function LessonQuiz({
               <button
                 type="button"
                 onClick={() => readPrompt(q)}
-                disabled={speechBusy !== null}
+                disabled={speechBusy !== null || recording || transcribing}
                 className="inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-medium disabled:opacity-50"
                 style={{ color: "var(--body)", borderColor: "var(--line)" }}
               >
@@ -524,11 +519,25 @@ export function LessonQuiz({
               <button
                 type="button"
                 onClick={() => recordAnswer(q)}
-                disabled={speechBusy !== null}
+                disabled={
+                  speechBusy !== null ||
+                  (recordingId !== null && recordingId !== q.id) ||
+                  (recordingId === q.id && transcribing)
+                }
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold disabled:opacity-50"
-                style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+                style={
+                  recordingId === q.id && recording
+                    ? { background: "#C0392B", color: "#fff" }
+                    : { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
+                }
               >
-                {speechBusy === `record-${q.id}` ? <><Square size={12} /> Listening…</> : <><Mic size={13} /> Record answer</>}
+                {recordingId === q.id && recording ? (
+                  <><Square size={12} /> Stop recording</>
+                ) : recordingId === q.id && transcribing ? (
+                  <><Loader2 size={13} className="animate-spin" /> Transcribing…</>
+                ) : (
+                  <><Mic size={13} /> Record answer</>
+                )}
               </button>
             </div>
           )}
@@ -624,21 +633,27 @@ export function LessonQuiz({
           {error}
         </p>
       )}
-      {speechError && (
+      {(speechError || recorderError) && (
         <p className="text-[13px] text-center px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626" }}>
-          {speechError}
+          {speechError || recorderError}
         </p>
       )}
 
-      <div className="flex justify-center pt-2">
+      <div className="flex flex-col items-center gap-2 pt-2">
         <button
           type="button"
           onClick={submitQuiz}
-          className="inline-flex items-center gap-2 rounded-full px-8 py-[12px] text-[14px] font-semibold transition-opacity hover:opacity-90"
+          disabled={recording || transcribing}
+          className="inline-flex items-center gap-2 rounded-full px-8 py-[12px] text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ background: "var(--brand)", color: "#fff" }}
         >
           Submit Answers
         </button>
+        {(recording || transcribing) && (
+          <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+            {recording ? "Stop recording before submitting." : "Transcribing your last answer…"}
+          </p>
+        )}
       </div>
     </div>
   );

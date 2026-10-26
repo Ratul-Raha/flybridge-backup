@@ -11,10 +11,12 @@ import {
   CheckCircle2,
   HelpCircle,
   Award,
+  Mic,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 import { LessonQuiz } from "./lesson-quiz";
+import { SpeakingPractice } from "./speaking-practice";
 import { ProtectedContent } from "./protected-content";
 import { Watermark } from "./watermark";
 import { BengaliText } from "../bengali-text";
@@ -129,6 +131,7 @@ export function LessonPlayer({
     slug: string;
     title: string;
     image: string | null;
+    category?: string | null;
     modules: Module[];
     books: { title: string; description: string; pdfUrl: string }[];
     certificateEnabled?: boolean;
@@ -141,7 +144,7 @@ export function LessonPlayer({
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
-  const [tab, setTab] = useState<"lesson" | "quiz" | "guideline">("lesson");
+  const [tab, setTab] = useState<"lesson" | "quiz" | "guideline" | "practice">("lesson");
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -517,7 +520,7 @@ export function LessonPlayer({
               )}
 
               {/* Tabs */}
-              <div className="flex gap-1 mt-5 p-1 rounded-xl w-fit" style={{ background: "var(--bg-soft, rgba(0,0,0,0.03))" }}>
+              <div className="flex flex-wrap gap-1 mt-5 p-1 rounded-xl w-fit max-w-full" style={{ background: "var(--bg-soft, rgba(0,0,0,0.03))" }}>
                 <button
                   type="button"
                   onClick={() => setTab("lesson")}
@@ -544,6 +547,21 @@ export function LessonPlayer({
                   >
                     <HelpCircle size={14} />
                     Quiz
+                  </button>
+                )}
+                {course.category === "Spoken English" && (
+                  <button
+                    type="button"
+                    onClick={() => setTab("practice")}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                    style={
+                      tab === "practice"
+                        ? { background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }
+                        : { color: "var(--body)" }
+                    }
+                  >
+                    <Mic size={14} />
+                    Practice Speaking
                   </button>
                 )}
                 {course.guidelinePdfUrl && (
@@ -575,6 +593,15 @@ export function LessonPlayer({
                       {course.title}
                     </p>
                   </>
+                ) : tab === "practice" ? (
+                  <>
+                    <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                      Practice Speaking
+                    </h1>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-1" style={{ color: "var(--body)" }}>
+                      {course.title}
+                    </p>
+                  </>
                 ) : (
                   <>
                     <h1 className="font-display text-[19px] sm:text-[22px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
@@ -589,7 +616,9 @@ export function LessonPlayer({
               </div>
 
               {/* Content area */}
-              {tab === "guideline" && course.guidelinePdfUrl ? (
+              {tab === "practice" ? (
+                <SpeakingPractice courseId={course.id} courseTitle={course.title} />
+              ) : tab === "guideline" && course.guidelinePdfUrl ? (
                 <div className="mt-5 flex flex-col gap-3">
                   <div
                     className="rounded-xl border overflow-hidden"
