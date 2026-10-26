@@ -173,7 +173,6 @@ export default async function LearnPage({ params, searchParams }: Props) {
         slug: course.slug,
         title: course.title,
         image: course.image ?? null,
-        category: course.category ?? null,
         modules: signedModules,
         books: signedBooks,
         certificateEnabled: course.certificateEnabled,

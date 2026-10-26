@@ -260,7 +260,7 @@ export function AiSettingsManage() {
           <div>
             <h3 className="text-[14.5px] font-semibold" style={{ color: "var(--ink)" }}>Speech to text</h3>
             <p className="text-[12px] mt-0.5" style={{ color: "var(--body)" }}>
-              Powers speaking tests, speaking quizzes and the Practice Speaking tool.
+              Powers IELTS speaking tests and speaking quizzes.
             </p>
           </div>
           <span
