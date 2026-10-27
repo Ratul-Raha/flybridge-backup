@@ -208,10 +208,10 @@ export function ResourceCommentsSection({
 
       <form
         onSubmit={handlePost}
-        className="mt-4 rounded-lg border bg-white p-4 sm:p-5"
+        className="mt-4 rounded-2xl border bg-white p-3.5 shadow-[0_1px_1px_rgba(15,10,40,0.01)] sm:p-4"
         style={{ borderColor: "var(--line)" }}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2.5 sm:gap-3">
           <Avatar
             name={user?.name ?? "Guest"}
             avatar={user?.avatar ?? null}
@@ -221,32 +221,35 @@ export function ResourceCommentsSection({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={
-                user ? "Share your thoughts on this video…" : "Sign in to join the conversation"
+                user ? "Add a comment..." : "Sign in to join the conversation"
               }
               maxLength={1000}
-              rows={3}
-              className="w-full resize-none rounded-lg border px-3.5 py-2.5 text-[13.5px] leading-[1.65] outline-none transition-colors focus:border-[#0FA968]"
-              style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg)" }}
+              rows={compact ? 2 : 3}
+              className="w-full resize-none rounded-xl border px-3 py-2 text-[13px] leading-[1.7] outline-none transition-all focus:border-[#6B4CE0]/60 focus:ring-2 focus:ring-[#6B4CE0]/10 sm:px-3.5 sm:py-2.5 sm:text-[13.5px]"
+              style={{ borderColor: "var(--line)", color: "var(--ink)", background: "var(--bg-soft, #f8f9fc)" }}
             />
-            <div className="mt-1.5 flex items-center justify-between gap-3">
-              <span className="text-[11.5px] tabular-nums font-medium" style={{ color: text.length > 900 ? "#B45309" : "var(--body)" }}>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[11px] tabular-nums font-medium sm:text-[11.5px]" style={{ color: text.length > 900 ? "#B45309" : "var(--body)" }}>
                 {text.length}/1000
               </span>
               <button
                 type="submit"
                 disabled={posting || !text.trim()}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed"
-                style={{ background: "var(--brand)" }}
+                className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-[12.5px] font-semibold text-white shadow-sm transition-all hover:shadow-md hover:brightness-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none sm:px-5 sm:py-2 sm:text-[13px]"
+                style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)" }}
               >
-                {posting && <Loader2 size={14} className="animate-spin" />}
-                <Send size={14} />
-                {user ? "Post comment" : "Sign in to comment"}
+                {posting ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Send size={13} />
+                )}
+                {user ? "Post" : "Sign in"}
               </button>
             </div>
           </div>
         </div>
         {error && (
-          <p className="mt-2 text-[12.5px]" style={{ color: "#C0392B" }}>
+          <p className="mt-2 text-[12px] sm:text-[12.5px]" style={{ color: "#C0392B" }}>
             {error}
           </p>
         )}
@@ -259,29 +262,32 @@ export function ResourceCommentsSection({
             <span className="text-[13px]">Loading comments…</span>
           </div>
         ) : comments.length === 0 ? (
-          <div className="rounded-lg border border-dashed px-6 py-10 text-center" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-2xl border border-dashed px-5 py-9 text-center" style={{ borderColor: "var(--line)" }}>
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-soft)]">
+              <MessageSquare size={18} style={{ color: "var(--body)" }} />
+            </div>
             <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
               No comments yet
             </p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>
-              Be the first to share what you thought of this video.
+              Be the first to share your thoughts
             </p>
           </div>
         ) : (
           comments.map((c) => (
             <article
               key={c.id}
-              className="rounded-lg border bg-white p-4 sm:p-5"
+              className="rounded-2xl border bg-white p-3.5 shadow-[0_1px_1px_rgba(15,10,40,0.01)] transition-shadow hover:shadow-[0_4px_24px_-12px_rgba(15,10,40,0.4)] sm:p-4"
               style={{ borderColor: "var(--line)" }}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2.5 sm:gap-3">
                 <Avatar name={c.userName} avatar={c.userAvatar} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    <span className="text-[13.5px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[13px] font-semibold leading-tight sm:text-[13.5px]" style={{ color: "var(--ink)" }}>
                       {c.userName}
                     </span>
-                    <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                    <span className="text-[11px] sm:text-[11.5px]" style={{ color: "var(--body)" }}>
                       {formatDate(c.createdAt)}
                     </span>
                     {c.canDelete && (
@@ -290,19 +296,19 @@ export function ResourceCommentsSection({
                         onClick={() => handleDelete(c.id)}
                         disabled={deletingId === c.id}
                         aria-label="Delete comment"
-                        className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors hover:bg-[#FDECEC] disabled:opacity-50"
-                        style={{ color: "#DC3545" }}
+                        className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-medium transition-colors hover:bg-[#FEF2F2] disabled:opacity-50"
+                        style={{ color: "#DC2626" }}
                       >
                         {deletingId === c.id ? (
-                          <Loader2 size={13} className="animate-spin" />
+                          <Loader2 size={12} className="animate-spin" />
                         ) : (
-                          <Trash2 size={13} />
+                          <Trash2 size={12} />
                         )}
                         Delete
                       </button>
                     )}
                   </div>
-                  <p className="mt-2 whitespace-pre-line break-words text-[14px] leading-[1.7]" style={{ color: "var(--body)" }}>
+                  <p className="mt-1.5 whitespace-pre-line break-words text-[13.5px] leading-[1.8] sm:text-[14px]" style={{ color: "var(--body)" }}>
                     {c.body}
                   </p>
                 </div>

@@ -50,14 +50,14 @@ export function ResourceVideoPlayer({
   };
 
   if (isMembersOnly && loading) {
-    return <div className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`} />;
+    return <div className={`relative h-full w-full overflow-hidden bg-black ${className}`} />;
   }
 
   if (isMembersOnly && !user) {
     return (
       <>
         <div
-          className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
+          className={`relative h-full w-full overflow-hidden bg-black ${className}`}
           onContextMenu={blockContext}
           onDragStart={(e) => e.preventDefault()}
         >
@@ -74,25 +74,24 @@ export function ResourceVideoPlayer({
             />
           )}
           <div className="absolute inset-0 bg-black/30" />
-          <button
-            type="button"
-            onClick={() => setShowSignIn(true)}
-            aria-label="Sign in to view"
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+        <button
+          type="button"
+          onClick={openYouTube}
+          aria-label="Watch on YouTube"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+        >
+          <span
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-[0_40px_80px_-30px_rgba(220,38,38,0.9)] transition-all duration-200 hover:scale-105"
           >
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105"
-              style={{ boxShadow: "0 18px 40px -14px rgba(0,0,0,0.5)" }}
-            >
-              <Play className="ml-1 h-5 w-5" fill="currentColor" strokeWidth={0} />
-            </span>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold text-white"
-              style={{ background: "rgba(0,0,0,0.45)" }}
-            >
-              <Lock size={11} /> Sign in to view
-            </span>
-          </button>
+            <Play className="ml-1 h-6 w-6" fill="currentColor" strokeWidth={0} />
+          </span>
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold text-white ring-1 ring-white/20"
+            style={{ background: "rgba(10,10,20,0.6)", backdropFilter: "blur(8px)" }}
+          >
+            Watch on YouTube
+          </span>
+        </button>
         </div>
         {showSignIn && (
           <SignInModal
@@ -119,7 +118,7 @@ export function ResourceVideoPlayer({
 
     return (
       <div
-        className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
+        className={`relative h-full w-full overflow-hidden bg-black ${className}`}
         onContextMenu={blockContext}
         onDragStart={(e) => e.preventDefault()}
       >
@@ -161,7 +160,7 @@ export function ResourceVideoPlayer({
 
   return (
     <div
-      className={`relative aspect-[3/4] overflow-hidden bg-black ${className}`}
+      className={`relative h-full w-full overflow-hidden bg-black ${className}`}
       onContextMenu={blockContext}
       onDragStart={(e) => e.preventDefault()}
     >
@@ -177,7 +176,7 @@ export function ResourceVideoPlayer({
         preload="none"
         onPlay={handlePlay}
         onPause={() => setPlaying(false)}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
         onContextMenu={blockContext}
       />
 

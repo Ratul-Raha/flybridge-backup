@@ -300,25 +300,11 @@ export function DashboardLayout({
       ] satisfies NavSegment[];
     }
 
-    const segments: NavSegment[] = [
-      {
-        title: "Overview",
-        items: [
-          {
-            kind: "link",
-            label: "Dashboard",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-            active: pathname === "/dashboard",
-          },
-        ],
-      },
-    ];
+    const segments: NavSegment[] = [];
     if (user.accountType === "moderator" || user.accountType === "admin") {
-      segments.push({
+      segments.unshift({
         title: "Workspace",
         items: [
-          {
             kind: "group",
             label: "Content",
             icon: FolderOpen,
@@ -374,7 +360,6 @@ export function DashboardLayout({
       segments.push({
         title: "Account",
         items: [
-          {
             kind: "link",
             label: "Notifications",
             href: "/dashboard/notifications",
@@ -391,7 +376,7 @@ export function DashboardLayout({
         items: [
           {
             kind: "link",
-            label: "Overview",
+            label: "Dashboard",
             href: "/dashboard/admin",
             icon: LayoutDashboard,
             active: pathname === "/dashboard/admin",
@@ -473,14 +458,9 @@ export function DashboardLayout({
                 active: pathname.startsWith("/dashboard/admin/email-templates"),
               },
               {
-                label: "Traffic Sources",
-                href: "/dashboard/admin/email-clicks",
-                active: pathname.startsWith("/dashboard/admin/email-clicks"),
-              },
-              {
-                label: "Resource Traffic",
-                href: "/dashboard/admin/resource-clicks",
-                active: pathname.startsWith("/dashboard/admin/resource-clicks"),
+                label: "Traffic Analytics",
+                href: "/dashboard/admin/traffic-analytics",
+                active: pathname.startsWith("/dashboard/admin/traffic-analytics"),
               },
               {
                 label: "Event Log",
