@@ -53,6 +53,17 @@ export function ResourceVideoPlayer({
     return <div className={`relative h-full w-full overflow-hidden bg-black ${className}`} />;
   }
 
+  const openYouTube = () => {
+    if (!resource.youtubeUrl) return;
+    fireView();
+    window.open(
+      outboundLink(resource.youtubeUrl as string, { label: `resource-youtube:${resource.id}` }) ??
+        (resource.youtubeUrl as string),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   if (isMembersOnly && !user) {
     return (
       <>
@@ -106,16 +117,6 @@ export function ResourceVideoPlayer({
   }
 
   if (resource.youtubeUrl) {
-    const openYouTube = () => {
-      fireView();
-      window.open(
-        outboundLink(resource.youtubeUrl as string, { label: `resource-youtube:${resource.id}` }) ??
-          (resource.youtubeUrl as string),
-        "_blank",
-        "noopener,noreferrer"
-      );
-    };
-
     return (
       <div
         className={`relative h-full w-full overflow-hidden bg-black ${className}`}

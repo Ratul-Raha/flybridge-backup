@@ -305,6 +305,7 @@ export function DashboardLayout({
       segments.unshift({
         title: "Workspace",
         items: [
+          {
             kind: "group",
             label: "Content",
             icon: FolderOpen,
@@ -360,6 +361,7 @@ export function DashboardLayout({
       segments.push({
         title: "Account",
         items: [
+          {
             kind: "link",
             label: "Notifications",
             href: "/dashboard/notifications",

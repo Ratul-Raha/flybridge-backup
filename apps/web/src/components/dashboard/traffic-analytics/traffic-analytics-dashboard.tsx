@@ -129,10 +129,15 @@ export function TrafficAnalyticsDashboard({
   initialResourceAnalytics: AdminResourceClickAnalytics;
 }) {
   const [tab, setTab] = useState<Tab>("overview");
-  const [range, setRange] = useState<DashboardRangeSelection>({
-    period: initialEmailAnalytics.period,
-    from: initialEmailAnalytics.range.from,
-    to: initialEmailAnalytics.range.to,
+  const [range, setRange] = useState<DashboardRangeSelection>(() => {
+    if (initialEmailAnalytics.period === "custom") {
+      return {
+        period: "custom",
+        from: initialEmailAnalytics.range.from,
+        to: initialEmailAnalytics.range.to,
+      };
+    }
+    return { period: initialEmailAnalytics.period };
   });
   const [emailAnalytics, setEmailAnalytics] = useState(initialEmailAnalytics);
   const [resourceAnalytics, setResourceAnalytics] = useState(initialResourceAnalytics);
@@ -164,11 +169,13 @@ export function TrafficAnalyticsDashboard({
   );
 
   useEffect(() => {
-    if (range.period === initialEmailAnalytics.period && range.from === initialEmailAnalytics.range.from && range.to === initialEmailAnalytics.range.to) {
-      return;
-    }
+    const initial: DashboardRangeSelection =
+      initialEmailAnalytics.period === "custom"
+        ? { period: "custom", from: initialEmailAnalytics.range.from, to: initialEmailAnalytics.range.to }
+        : { period: initialEmailAnalytics.period };
+    if (dashboardRangeQuery(range) === dashboardRangeQuery(initial)) return;
     fetchAnalytics(range);
-  }, [fetchAnalytics, initialEmailAnalytics.period, initialEmailAnalytics.range.from, initialEmailAnalytics.range.to, range]);
+  }, [fetchAnalytics, initialEmailAnalytics, range]);
 
   const rangeLabel = useMemo(() => resolveDashboardRange(range).label, [range]);
 
@@ -198,9 +205,7 @@ export function TrafficAnalyticsDashboard({
       xAxis: {
         type: "category",
         data: labels,
-        axisLine: { lineStyle: { color:
-        SPLIT_LINE
-        },
+        axisLine: { lineStyle: { color: SPLIT_LINE } },
         axisTick: { show: false },
         axisLabel: { color: AXIS_LABEL, fontSize: 11 },
       },
@@ -237,7 +242,8 @@ export function TrafficAnalyticsDashboard({
   }, [combinedTrend, emailAnalytics.trend, resourceAnalytics.trend, tab]);
 
   const exportCsv = () => {
-    const rows: string[][] = [["type", "when", "source", "campaign", "page/resource", "destination/action", "visitor/recipient"]];
+    const headers = ["type", "when", "source", "campaign", "page/resource", "destination/action", "visitor/recipient"];
+    const rows: string[][] = [];
     if (tab === "email" || tab === "overview") {
       for (const row of emailAnalytics.recent) {
         rows.push(["email", row.createdAt, row.source, row.campaign, row.destination, row.templateId || "", row.recipient]);
@@ -248,7 +254,7 @@ export function TrafficAnalyticsDashboard({
         rows.push(["resource", row.createdAt, row.source, row.campaign, row.resourceTitle, row.kind, row.visitor]);
       }
     }
-    downloadCsv(csvFilename("traffic-analytics"), rows);
+    downloadCsv(csvFilename("traffic-analytics"), headers, rows);
   };
 
   return (
