@@ -460,6 +460,11 @@ export function DashboardLayout({
                 active: pathname.startsWith("/dashboard/admin/email-templates"),
               },
               {
+                label: "Emails",
+                href: "/dashboard/admin/emails",
+                active: pathname.startsWith("/dashboard/admin/emails"),
+              },
+              {
                 label: "Traffic Analytics",
                 href: "/dashboard/admin/traffic-analytics",
                 active: pathname.startsWith("/dashboard/admin/traffic-analytics"),

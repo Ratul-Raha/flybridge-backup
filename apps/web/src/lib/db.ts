@@ -32,6 +32,7 @@ import { AffiliateClick } from "./models/affiliate-click";
 import { AffiliateConversion } from "./models/affiliate-conversion";
 import { AffiliatePayout } from "./models/affiliate-payout";
 import { EmailClick } from "./models/email-click";
+import { EmailSend } from "./models/email-send";
 
 void User;
 void Seminar;
@@ -67,6 +68,7 @@ void AffiliateClick;
 void AffiliateConversion;
 void AffiliatePayout;
 void EmailClick;
+void EmailSend;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

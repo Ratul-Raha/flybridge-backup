@@ -14,6 +14,10 @@ export type EmailTrackingContext = {
   templateId?: string;
   /** Set false to leave links untouched (e.g. purely transactional mail). */
   trackLinks?: boolean;
+  /** Send origin recorded on the EmailSend log row (bulk/automation/…). */
+  kind?: "bulk" | "automation" | "transactional" | "test";
+  /** User id of the admin who triggered the send (for the audit trail). */
+  triggeredBy?: string;
 };
 
 type SendEmailInput = {
@@ -73,11 +77,40 @@ export async function sendEmail(input: SendEmailInput): Promise<{ ok: boolean; e
     const firstError = results.find((r) => r.error);
     if (firstError?.error) {
       console.error("email send error", firstError.error);
+      await logSend(input, to.length, "failed", firstError.error.message);
       return { ok: false, error: firstError.error.message };
     }
+    await logSend(input, to.length, "sent");
     return { ok: true };
   } catch (e) {
     console.error("email send exception", e);
+    await logSend(input, to.length, "failed", e instanceof Error ? e.message : "Unknown error");
     return { ok: false, error: e instanceof Error ? e.message : "Unknown error" };
+  }
+}
+
+async function logSend(
+  input: SendEmailInput,
+  recipients: number,
+  status: "sent" | "failed",
+  error?: string,
+): Promise<void> {
+  try {
+    const { connectDb } = await import("./db");
+    await connectDb();
+    const { EmailSend } = await import("./models/email-send");
+    await EmailSend.create({
+      kind: input.tracking?.kind ?? "transactional",
+      campaign: input.tracking?.campaign ?? "email",
+      templateId: input.tracking?.templateId,
+      subject: input.subject.slice(0, 300),
+      recipients,
+      status,
+      error,
+      triggeredBy: input.tracking?.triggeredBy,
+    });
+  } catch (logError) {
+    // Logging must never break the send itself.
+    console.error("email send logging error", logError);
   }
 }

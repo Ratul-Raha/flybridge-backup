@@ -84,6 +84,7 @@ async function actionSendEmail(node: AutomationNode, payload: EventPayload): Pro
     tracking: {
       campaign: data.templateId ?? "automation",
       templateId: data.templateId,
+      kind: "automation",
     },
   });
   if (!result.ok) return { ok: false, error: result.error ?? "Email send failed" };
