@@ -23,6 +23,7 @@ import {
   Radio,
   RefreshCw,
   FileDown,
+  MessageCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Chart } from "@/components/dashboard/reports/echart";
@@ -37,6 +38,7 @@ type Order = {
   id: string;
   userName: string;
   userEmail: string;
+  userPhone: string | null;
   items: OrderItem[];
   total: number;
   currency: string;
@@ -111,6 +113,12 @@ const GATEWAY_OPTIONS = [
 const PAGE_SIZE = 10;
 type SortKey = "date" | "total" | "status";
 type SortDir = "asc" | "desc";
+
+function whatsappLink(phone: string | null | undefined): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  return `https://wa.me/${digits}`;
+}
 
 function MetricCard({
   label,
@@ -1126,6 +1134,19 @@ export function OrderManage() {
                                 <div className="text-[11px] truncate max-w-[160px]" style={{ color: "var(--body)" }}>
                                   {o.userEmail}
                                 </div>
+                                {o.userPhone && whatsappLink(o.userPhone) && (
+                                  <a
+                                    href={whatsappLink(o.userPhone)!}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={`WhatsApp ${o.userPhone}`}
+                                    className="inline-flex items-center gap-1 mt-0.5 text-[11px] font-medium transition-colors hover:underline"
+                                    style={{ color: "#0FA968" }}
+                                  >
+                                    <MessageCircle size={12} />
+                                    {o.userPhone}
+                                  </a>
+                                )}
                               </div>
                             </div>
                           </td>

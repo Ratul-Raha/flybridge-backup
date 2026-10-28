@@ -32,9 +32,9 @@ export async function GET() {
     await connectDb();
     const orders = (await Order.find()
       .sort({ createdAt: -1 })
-      .populate("user", "name email")
+      .populate("user", "name email phone")
       .lean()) as unknown as (OrderDoc & {
-      user?: { name?: string; email?: string };
+      user?: { name?: string; email?: string; phone?: string };
     })[];
 
     return NextResponse.json({
@@ -42,6 +42,7 @@ export async function GET() {
         id: o._id.toString(),
         userName: o.user?.name ?? "",
         userEmail: o.user?.email ?? o.email ?? "",
+        userPhone: o.user?.phone ?? null,
         items: o.items.map((i) => ({
           itemType: i.itemType,
           itemId: i.itemId,
