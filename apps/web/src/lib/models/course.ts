@@ -36,6 +36,8 @@ const lessonSchema = new Schema(
       default: "reading",
     },
     quiz: { type: Boolean, default: true },
+    /** When true, signed-in users without an enrollment can play this lesson. */
+    freePreview: { type: Boolean, default: false },
     topics: { type: lessonTopicsSchema, default: () => ({ description: "", items: [] }) },
   },
   { _id: false }

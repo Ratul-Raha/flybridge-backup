@@ -7,6 +7,7 @@ import { readSession } from "@/lib/auth/session";
 import { signMediaUrl, isS3Ref } from "@/lib/storage";
 import { recordLessonPlay } from "@/lib/refunds";
 import { resolveLessonSkill } from "@/lib/ai/quiz";
+import { freeLessonIndices } from "@/lib/course-preview";
 import { LessonPlayer } from "@/components/programs/lesson-player";
 
 function videoPlaybackUrl(courseId: string, videoUrl?: string | null, flatIndex?: number): string {
@@ -98,7 +99,13 @@ export default async function LearnPage({ params, searchParams }: Props) {
     );
   }
 
-  if (!enrolled && !isStaff) {
+  // Signed-in users without an enrollment still get the player, but only the
+  // lessons the course marks as free preview are playable.
+  const previewMode = !enrolled && !isStaff;
+  const freeIndices = previewMode ? freeLessonIndices(course) : [];
+  const freeSet = new Set(freeIndices);
+
+  if (previewMode && freeIndices.length === 0) {
     return (
       <LockedScreen
         title="You&apos;re not enrolled in this course yet"
@@ -116,13 +123,14 @@ export default async function LearnPage({ params, searchParams }: Props) {
     (course.modules ?? []).flatMap((m) =>
       (m.lessons ?? []).map(async (l) => {
         const idx = flatIndex++;
+        const accessible = !previewMode || freeSet.has(idx);
         return {
           moduleTitle: m.title,
           title: l.title,
           duration: l.duration ?? "",
-          videoUrl: videoPlaybackUrl(courseId, l.videoUrl, idx),
-          pdfUrl: await signMediaUrl(l.pdfUrl),
-          content: l.content ?? "",
+          videoUrl: accessible ? videoPlaybackUrl(courseId, l.videoUrl, idx) : "",
+          pdfUrl: accessible ? await signMediaUrl(l.pdfUrl) : "",
+          content: accessible ? (l.content ?? "") : "",
           quiz: l.quiz !== false,
           skill: resolveLessonSkill(l.skill, l.topics),
         };
@@ -131,7 +139,10 @@ export default async function LearnPage({ params, searchParams }: Props) {
   );
 
   const raw = Number.parseInt(searchParams.lesson ?? "0", 10);
-  const initialIndex = Number.isNaN(raw) ? 0 : Math.min(Math.max(raw, 0), Math.max(lessons.length - 1, 0));
+  let initialIndex = Number.isNaN(raw) ? 0 : Math.min(Math.max(raw, 0), Math.max(lessons.length - 1, 0));
+  if (previewMode && !freeSet.has(initialIndex)) {
+    initialIndex = freeIndices[0] ?? 0;
+  }
 
   // Opening a lesson counts as playing it. Past the limit this forfeits the
   // 3-day refund — it never blocks the lesson itself.
@@ -139,32 +150,39 @@ export default async function LearnPage({ params, searchParams }: Props) {
     await recordLessonPlay({ userId: session.userId, courseId, flatIndex: initialIndex });
   }
 
+  let signedFlat = 0;
   const signedModules = await Promise.all(
     (course.modules ?? []).map(async (m) => ({
       title: m.title,
       lessons: await Promise.all(
-        (m.lessons ?? []).map(async (l) => ({
-          title: l.title,
-          duration: l.duration ?? "",
-          videoUrl: videoPlaybackUrl(courseId, l.videoUrl),
-          pdfUrl: await signMediaUrl(l.pdfUrl),
-          content: l.content ?? "",
-          quiz: l.quiz !== false,
-          skill: resolveLessonSkill(l.skill, l.topics),
-        }))
+        (m.lessons ?? []).map(async (l) => {
+          const idx = signedFlat++;
+          const accessible = !previewMode || freeSet.has(idx);
+          return {
+            title: l.title,
+            duration: l.duration ?? "",
+            videoUrl: accessible ? videoPlaybackUrl(courseId, l.videoUrl) : "",
+            pdfUrl: accessible ? await signMediaUrl(l.pdfUrl) : "",
+            content: accessible ? (l.content ?? "") : "",
+            quiz: l.quiz !== false,
+            skill: resolveLessonSkill(l.skill, l.topics),
+          };
+        })
       ),
     }))
   );
 
-  const signedBooks = await Promise.all(
-    (course.books ?? []).map(async (b) => ({
-      title: b.title,
-      description: b.description ?? "",
-      pdfUrl: await signMediaUrl(b.pdfUrl),
-    }))
-  );
+  const signedBooks = previewMode
+    ? []
+    : await Promise.all(
+        (course.books ?? []).map(async (b) => ({
+          title: b.title,
+          description: b.description ?? "",
+          pdfUrl: await signMediaUrl(b.pdfUrl),
+        }))
+      );
 
-  const guidelinePdfUrl = await signMediaUrl(course.guidelinePdfUrl);
+  const guidelinePdfUrl = previewMode ? "" : await signMediaUrl(course.guidelinePdfUrl);
 
   return (
     <LessonPlayer
@@ -184,6 +202,9 @@ export default async function LearnPage({ params, searchParams }: Props) {
         name: session.name,
         email: session.email,
       }}
+      previewMode={previewMode}
+      freeLessonIndices={freeIndices}
+      checkoutUrl={`/programs/${params.slug}/checkout`}
     />
   );
 }

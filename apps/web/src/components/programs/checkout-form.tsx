@@ -25,6 +25,7 @@ type Props = {
   language: string;
   pace: string;
   upcoming: boolean;
+  hasFreePreview?: boolean;
 };
 
 export function CheckoutForm({ course }: { course: Props }) {
@@ -272,6 +273,16 @@ export function CheckoutForm({ course }: { course: Props }) {
               ? "Get it for free"
               : "Pay with EPS"}
         </button>
+      )}
+
+      {course.hasFreePreview && !isUpcoming && (
+        <a
+          href={`/dashboard/courses/${course.slug}/learn`}
+          className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-semibold border transition-colors hover:bg-black/5"
+          style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+        >
+          Start free trial
+        </a>
       )}
 
       <div

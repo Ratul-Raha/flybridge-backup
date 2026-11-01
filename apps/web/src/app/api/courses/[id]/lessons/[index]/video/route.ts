@@ -6,6 +6,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { recordLessonPlay } from "@/lib/refunds";
 import { isS3Configured } from "@/lib/s3";
 import { isS3Ref, signMediaUrl } from "@/lib/storage";
+import { isFreeLesson, lessonAtFlatIndex } from "@/lib/course-preview";
 
 function parseIndex(raw: string): number {
   const n = Number.parseInt(raw, 10);
@@ -34,35 +35,37 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (!isStaff) {
-      const enrolled = await CourseEnrollment.exists({
-        user: session.userId,
-        course: course._id,
-        status: "active",
-      });
-      if (!enrolled) {
-        return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
-      }
-    }
-
     const flatIndex = parseIndex(params.index);
     if (flatIndex < 0) {
       return NextResponse.json({ error: "Invalid lesson" }, { status: 400 });
     }
 
-    // Backstop for the learn page counter: the very first request for a lesson
-    // counts as playing it. Range follow-ups are skipped so streaming stays cheap.
-    if (!isStaff && session.userId && !request.headers.get("range")) {
-      await recordLessonPlay({ userId: session.userId, courseId: course._id.toString(), flatIndex });
+    const lesson = lessonAtFlatIndex<{ videoUrl?: string | null; freePreview?: boolean | null }>(
+      course,
+      flatIndex
+    );
+
+    const enrolled = isStaff
+      ? true
+      : Boolean(
+          await CourseEnrollment.exists({
+            user: session.userId,
+            course: course._id,
+            status: "active",
+          })
+        );
+
+    // Free-preview lessons are playable by any signed-in user; everything else
+    // still needs an active enrollment.
+    if (!enrolled && !isFreeLesson(lesson)) {
+      return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
     }
 
-    let lesson: { videoUrl?: string | null } | undefined;
-    let cursor = 0;
-    for (const mod of course.modules ?? []) {
-      for (const l of mod.lessons ?? []) {
-        if (cursor === flatIndex) lesson = l;
-        cursor++;
-      }
+    // Backstop for the learn page counter: the very first request for a lesson
+    // counts as playing it. Range follow-ups are skipped so streaming stays cheap.
+    // Preview access never touches refund usage.
+    if (enrolled && !isStaff && session.userId && !request.headers.get("range")) {
+      await recordLessonPlay({ userId: session.userId, courseId: course._id.toString(), flatIndex });
     }
 
     const videoUrl = lesson?.videoUrl;

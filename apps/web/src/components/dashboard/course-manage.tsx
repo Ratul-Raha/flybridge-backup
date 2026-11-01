@@ -21,6 +21,7 @@ type Lesson = {
   content: string;
   skill: Skill;
   quiz: boolean;
+  freePreview: boolean;
   topics?: LessonTopics;
 };
 type Module = { title: string; lessons: Lesson[] };
@@ -129,7 +130,7 @@ const emptyForm: FormState = {
 };
 
 function emptyLesson(): Lesson {
-  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", skill: "reading", quiz: true, topics: { description: "", items: [] } };
+  return { title: "", duration: "", videoUrl: "", pdfUrl: "", content: "", skill: "reading", quiz: true, freePreview: false, topics: { description: "", items: [] } };
 }
 
 /** `datetime-local` wants a local `YYYY-MM-DDTHH:mm`, not an ISO string. */
@@ -230,6 +231,7 @@ export function CourseManage() {
           content: l.content ?? "",
           skill: (l.skill ?? "reading") as Lesson["skill"],
           quiz: l.quiz !== false,
+          freePreview: l.freePreview === true,
           topics: {
             description: l.topics?.description ?? "",
             items: Array.isArray(l.topics?.items)
@@ -936,6 +938,21 @@ export function CourseManage() {
                               />
                               <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--body)" }}>
                                 Quiz
+                              </span>
+                            </label>
+                            <label
+                              className="flex items-center gap-1.5 shrink-0 cursor-pointer"
+                              title="Let signed-in users without an enrollment play this lesson"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={l.freePreview}
+                                onChange={(e) => updateLesson(mi, li, { freePreview: e.target.checked })}
+                                className="w-4 h-4"
+                                style={{ accentColor: "var(--brand)" }}
+                              />
+                              <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--body)" }}>
+                                Free preview
                               </span>
                             </label>
                             <button

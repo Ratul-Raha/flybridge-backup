@@ -15,6 +15,7 @@ import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
 import { priceTextFor, cleanPrices, formatMoney } from "@/lib/pricing";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { hasFreePreview } from "@/lib/course-preview";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
@@ -60,6 +61,7 @@ type CourseCta = {
   enrolled: boolean;
   paid: boolean;
   hasDb?: boolean;
+  hasFreePreview?: boolean;
 };
 
 const getReviewsCached = unstable_cache(
@@ -433,14 +435,25 @@ function CourseHero({
                 {play}
               </Link>
             ) : cta?.hasDb ? (
-              <Link
-                href={`/programs/${cta.slug}/checkout`}
-                className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
-                style={{ background: "var(--brand)" }}
-              >
-                Enroll now
-                {arrow}
-              </Link>
+              <>
+                <Link
+                  href={`/programs/${cta.slug}/checkout`}
+                  className="browse-btn inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] text-white rounded-full px-[30px] py-[15px] flex-1 sm:flex-none sm:min-w-[190px]"
+                  style={{ background: "var(--brand)" }}
+                >
+                  Enroll now
+                  {arrow}
+                </Link>
+                {cta.hasFreePreview && (
+                  <Link
+                    href={`/dashboard/courses/${cta.slug}/learn`}
+                    className="inline-flex items-center justify-center gap-[9px] font-semibold text-[15px] rounded-full px-[26px] py-[15px] border transition-colors hover:bg-black/5 flex-1 sm:flex-none"
+                    style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                  >
+                    Free trial
+                  </Link>
+                )}
+              </>
             ) : heroCta ? (
               <a
                 href={heroCta.href}
@@ -1150,6 +1163,7 @@ function DbCoursePage({
     upcoming: course.upcoming === true,
     waitlistEnabled: course.waitlistEnabled === true,
     wishlistDiscountPercent: course.wishlistDiscountPercent ?? 0,
+    hasFreePreview: (pricing.price ?? 0) > 0 && hasFreePreview(course),
   };
 
   return (
@@ -1642,12 +1656,14 @@ export default async function ProgramPage({ params }: Props) {
         course: course._id,
         status: "active",
       }));
+    const coursePricing = publicCoursePricing(course);
     cta = {
       courseId: course._id.toString(),
       slug: course.slug,
       enrolled: Boolean(enrolled),
-      paid: (course.price ?? 0) > 0,
+      paid: (coursePricing.price ?? 0) > 0,
       hasDb: true,
+      hasFreePreview: (coursePricing.price ?? 0) > 0 && hasFreePreview(course),
     };
   }
 

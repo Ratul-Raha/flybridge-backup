@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   HelpCircle,
   Award,
+  Lock,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -118,11 +119,47 @@ function VideoPlayer({ url, watermark }: { url: string; watermark?: string }) {
   );
 }
 
+function LockedLessonPanel({
+  title,
+  checkoutUrl,
+}: {
+  title: string;
+  checkoutUrl?: string;
+}) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 py-24 px-6 text-center">
+      <span
+        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+        style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))" }}
+      >
+        <Lock size={28} style={{ color: "var(--brand)" }} />
+      </span>
+      <p className="font-display text-[20px] font-semibold" style={{ color: "var(--ink)" }}>
+        <BengaliText>{title}</BengaliText>
+      </p>
+      <p className="text-[14px] max-w-[420px]" style={{ color: "var(--body)" }}>
+        This lesson is part of the full course. Complete your purchase to unlock every video,
+        quiz and resource.
+      </p>
+      <a
+        href={checkoutUrl ?? "#"}
+        className="rounded-full text-white text-[14px] font-semibold px-6 py-[11px] hover:opacity-90 transition-opacity"
+        style={{ background: "var(--brand)" }}
+      >
+        Unlock full access
+      </a>
+    </div>
+  );
+}
+
 export function LessonPlayer({
   course,
   lessons,
   initialIndex,
   user,
+  previewMode = false,
+  freeLessonIndices = [],
+  checkoutUrl,
 }: {
   course: {
     id: string;
@@ -137,9 +174,14 @@ export function LessonPlayer({
   lessons: FlatLesson[];
   initialIndex: number;
   user?: { name?: string; email?: string } | null;
+  previewMode?: boolean;
+  freeLessonIndices?: number[];
+  checkoutUrl?: string;
 }) {
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
+  const freeSet = useMemo(() => new Set(freeLessonIndices), [freeLessonIndices]);
+  const isLocked = (i: number) => previewMode && !freeSet.has(i);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
   const [tab, setTab] = useState<"lesson" | "quiz" | "guideline">("lesson");
   const [grade, setGrade] = useState<GradeData | null>(null);
@@ -153,6 +195,7 @@ export function LessonPlayer({
   }, [user]);
 
   const current = lessons[index];
+  const currentLocked = isLocked(index);
 
   const completedLessons = useMemo(() => {
     const completed = new Set<number>();
@@ -185,6 +228,7 @@ export function LessonPlayer({
   }, [index, course.modules]);
 
   useEffect(() => {
+    if (previewMode) return;
     trackUsageEvent({
       event: "lesson_view",
       path: `/dashboard/courses/${course.slug}/learn`,
@@ -192,9 +236,10 @@ export function LessonPlayer({
       moduleIndex,
       lessonIndex,
     });
-  }, [course.slug, moduleIndex, lessonIndex]);
+  }, [course.slug, moduleIndex, lessonIndex, previewMode]);
 
   useEffect(() => {
+    if (previewMode) return;
     fetch(`/api/courses/${course.id}/progress`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -204,7 +249,7 @@ export function LessonPlayer({
         }
       })
       .catch(() => {});
-  }, [course.id]);
+  }, [course.id, previewMode]);
 
   const goTo = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
@@ -267,7 +312,7 @@ export function LessonPlayer({
               </div>
               <span className="font-mono text-[10px] font-semibold" style={{ color: "var(--body)" }}>{progressPct}%</span>
             </div>
-            {course.certificateEnabled !== false && (
+            {!previewMode && course.certificateEnabled !== false && (
               <Link
                 href={`/dashboard/courses/${course.slug}/certificate`}
                 className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-black/5"
@@ -296,35 +341,52 @@ export function LessonPlayer({
         >
           {/* Progress summary */}
           <div className="px-4 py-4 border-b sticky top-0 bg-white z-10" style={{ borderColor: "var(--line)" }}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
-                Course Progress
-              </span>
-              <span className="font-mono text-[12px] font-semibold" style={{ color: grade?.passed ? "#16a34a" : "var(--brand)" }}>
-                {progressPct}%
-              </span>
-            </div>
-            <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${progressPct}%`,
-                  background: grade?.passed
-                    ? "linear-gradient(90deg, #2EE6A8, #34D399)"
-                    : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
-                }}
-              />
-            </div>
-            <p className="text-[11px] mt-1.5" style={{ color: "var(--body)" }}>
-              {completedCount}/{totalLessons} lessons completed
-              {grade && grade.completedQuizzes > 0 && (
-                <>
-                  {" "}
-                  · Avg: {grade.percentage}%
-                  {grade.performance ? ` · ${grade.performance}` : ""}
-                </>
-              )}
-            </p>
+            {previewMode ? (
+              <>
+                <span
+                  className="inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] rounded-full px-2.5 py-1"
+                  style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+                >
+                  <Lock size={10} />
+                  Free preview
+                </span>
+                <p className="text-[11px] mt-2 leading-relaxed" style={{ color: "var(--body)" }}>
+                  Free lessons are unlocked. Purchase the course to open the rest.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
+                    Course Progress
+                  </span>
+                  <span className="font-mono text-[12px] font-semibold" style={{ color: grade?.passed ? "#16a34a" : "var(--brand)" }}>
+                    {progressPct}%
+                  </span>
+                </div>
+                <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${progressPct}%`,
+                      background: grade?.passed
+                        ? "linear-gradient(90deg, #2EE6A8, #34D399)"
+                        : "linear-gradient(90deg, #6B4CE0, #A78BFA)",
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] mt-1.5" style={{ color: "var(--body)" }}>
+                  {completedCount}/{totalLessons} lessons completed
+                  {grade && grade.completedQuizzes > 0 && (
+                    <>
+                      {" "}
+                      · Avg: {grade.percentage}%
+                      {grade.performance ? ` · ${grade.performance}` : ""}
+                    </>
+                  )}
+                </p>
+              </>
+            )}
           </div>
 
           <div className="px-4 py-4 flex flex-col gap-1">
@@ -370,7 +432,9 @@ export function LessonPlayer({
                                 : { background: "transparent" }
                             }
                           >
-                            {isCompleted ? (
+                            {isLocked(globalIndex) ? (
+                              <Lock size={15} style={{ color: "var(--body)" }} />
+                            ) : isCompleted ? (
                               <CheckCircle2 size={15} style={{ color: "#16a34a" }} />
                             ) : (
                               <PlayCircle
@@ -469,6 +533,9 @@ export function LessonPlayer({
         {/* Player */}
         <main className="flex-1 min-w-0 flex flex-col">
           {current ? (
+            currentLocked ? (
+              <LockedLessonPanel title={current.title} checkoutUrl={checkoutUrl} />
+            ) : (
             <div className="px-4 sm:px-8 py-6 flex flex-col">
               {/* Video player at top */}
               {tab === "lesson" && current.videoUrl && (
@@ -670,6 +737,7 @@ export function LessonPlayer({
                 </div>
               )}
             </div>
+            )
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 py-24 px-6 text-center">
               <p className="text-[15px]" style={{ color: "var(--body)" }}>

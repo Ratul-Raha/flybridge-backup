@@ -6,6 +6,7 @@ import { Nav } from "@/components/nav";
 import { getProgram, programs } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { hasFreePreview } from "@/lib/course-preview";
 import { resolveWishlistDiscount } from "@/lib/wishlist-discount";
 import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
@@ -89,6 +90,7 @@ export default async function CheckoutPage({ params }: Props) {
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",
     upcoming: course.upcoming === true,
+    hasFreePreview: (pricing.price ?? 0) > 0 && hasFreePreview(course),
   };
 
   return (

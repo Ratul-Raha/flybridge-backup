@@ -78,6 +78,7 @@ const prices = cleanPrices(c.prices);
               content: l.content ?? "",
               skill: l.skill ?? "reading",
               quiz: l.quiz !== false,
+              freePreview: l.freePreview === true,
               topics: {
                 description: l.topics?.description ?? "",
                 items: (l.topics?.items ?? []).map((t) => ({
@@ -271,6 +272,7 @@ function normalizeModules(
     content?: string;
     skill?: string;
     quiz?: boolean;
+    freePreview?: boolean;
     topics?: { description: string; items: { skill: string; text: string }[] };
   }[];
 }[] {
@@ -292,6 +294,7 @@ function normalizeModules(
                 content: typeof lesson.content === "string" ? lesson.content.trim() : "",
                 skill: normalizeSkill(lesson.skill),
                 quiz: lesson.quiz !== false,
+                freePreview: lesson.freePreview === true,
                 ...(topics ? { topics } : {}),
               };
             })

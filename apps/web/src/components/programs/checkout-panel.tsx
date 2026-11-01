@@ -26,6 +26,8 @@ type Course = {
   wishlistDiscountPercent?: number;
   wishlistDiscountAmount?: number;
   upcoming: boolean;
+  /** Whether at least one lesson is marked free preview. */
+  hasFreePreview?: boolean;
 };
 
 /**
@@ -417,6 +419,16 @@ export function CheckoutPanel({
                     ? "Get it for free"
                     : "Pay Now"}
             </button>
+
+            {course.hasFreePreview && (
+              <a
+                href={`/dashboard/courses/${course.slug}/learn`}
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-semibold border transition-colors hover:bg-black/5"
+                style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+              >
+                Start free trial
+              </a>
+            )}
 
             <div className="my-3 flex items-center gap-3">
               <span className="h-px flex-1" style={{ background: "var(--line)" }} />

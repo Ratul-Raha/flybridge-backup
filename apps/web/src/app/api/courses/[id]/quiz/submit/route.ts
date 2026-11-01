@@ -11,6 +11,7 @@ import { CourseProgress } from "@/lib/models/course-progress";
 import { isSubjectiveLesson, resolveLessonSkill, type QuizQuestion } from "@/lib/ai/quiz";
 import { judgeObjectiveAnswers, judgeWrittenAnswers } from "@/lib/ai/quiz-judge";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
+import { isFreeLesson } from "@/lib/course-preview";
 import { emitEvent } from "@/lib/events/emit";
 
 /* ------------------------------------------------------------------ */
@@ -119,13 +120,20 @@ export async function POST(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
+    const lesson = course.modules?.[moduleIndex]?.lessons?.[lessonIndex];
+
+    // Preview users may submit a quiz for a free lesson; their result is graded
+    // and returned but never persisted as progress.
+    let isEnrolled = isStaff;
     if (!isStaff) {
-      const enrolled = await CourseEnrollment.exists({
-        user: session.userId,
-        course: course._id,
-        status: "active",
-      });
-      if (!enrolled) {
+      isEnrolled = Boolean(
+        await CourseEnrollment.exists({
+          user: session.userId,
+          course: course._id,
+          status: "active",
+        })
+      );
+      if (!isEnrolled && !isFreeLesson(lesson)) {
         return NextResponse.json({ error: "Not enrolled" }, { status: 403 });
       }
     }
@@ -161,7 +169,6 @@ export async function POST(
     }
 
     const isIelts = course.category === COURSE_CATEGORIES[0];
-    const lesson = course.modules?.[moduleIndex]?.lessons?.[lessonIndex];
     const lessonSkill = resolveLessonSkill(lesson?.skill, lesson?.topics);
 
     // Speaking/writing IELTS lessons are graded by the AI judge and never saved.
@@ -237,7 +244,8 @@ export async function POST(
     await QuizPending.deleteOne({ _id: pending._id });
 
     // IELTS practice is not tracked: submit -> instant feedback, nothing saved.
-    if (!isIelts) {
+    // Preview (unenrolled) submissions are graded but likewise not persisted.
+    if (!isIelts && isEnrolled) {
       await QuizAttempt.create({
         user: session.userId,
         course: course._id,
