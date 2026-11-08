@@ -9,7 +9,7 @@ for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
 }
 
 await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.MONGODB_DB });
-
+ //comment
 const Resource =
   mongoose.models.Resource ?? mongoose.model("Resource", new mongoose.Schema({}, { strict: false }));
 
