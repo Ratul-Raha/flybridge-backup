@@ -19,25 +19,34 @@ jobs:
     steps:
       - name: Prepare SSH authentication
         env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_SSH_KEY_B64: ${{ secrets.VPS_SSH_KEY_B64 }}
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
+          set -e
+
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/flybridge_key
+          printf '%s' "$VPS_SSH_KEY_B64" | base64 --decode > ~/.ssh/flybridge_key
           chmod 600 ~/.ssh/flybridge_key
 
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
+
+          echo "Validating SSH private key..."
+          ssh-keygen -y -f ~/.ssh/flybridge_key > /dev/null
+          echo "SSH private key is valid."
 
       - name: Deploy application
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
+          set -e
+
           ssh \
             -i ~/.ssh/flybridge_key \
+            -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile=~/.ssh/known_hosts \
             -o ConnectTimeout=15 \
@@ -46,4 +55,5 @@ jobs:
 
       - name: Clean up SSH credentials
         if: always()
-        run: rm -f ~/.ssh/flybridge_key
+        run: |
+          rm -f ~/.ssh/flybridge_key
