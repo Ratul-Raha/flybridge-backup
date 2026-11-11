@@ -2,7 +2,7 @@
 name: Deploy FlyBridge to VPS
 
 on:
-push:
+  push:
     branches:
       - main
   workflow_dispatch:
