@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
 import { createSession, SESSION_COOKIE } from "@/lib/auth/session";
-import {
-  DEVICE_COOKIE,
-  MAX_DEVICES,
-  newDeviceId,
-  describeDevice,
-  registerDevice,
-  touchDevice,
-  deviceCookieAttrs,
-} from "@/lib/auth/devices";
+import { newSessionId, registerSession } from "@/lib/auth/sessions";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
 import type { SubscriptionType } from "@/lib/roles";
@@ -126,27 +118,18 @@ export async function POST(request: NextRequest) {
     }
 
     const ua = request.headers.get("user-agent") ?? null;
-    let deviceId = request.cookies.get(DEVICE_COOKIE)?.value ?? null;
-
     const isStaff = user.accountType === "admin" || user.accountType === "moderator";
 
+    let sessionId: string | undefined;
     if (!isStaff) {
-      if (!deviceId) deviceId = newDeviceId();
-      const outcome = await registerDevice(
-        user._id.toString(),
-        deviceId,
-        describeDevice(ua),
-        ua
-      );
-      if (!outcome.allowed) {
-        return NextResponse.json(
-          {
-            error: `You've reached the ${MAX_DEVICES}-device limit for your account. Remove an old device from Account Settings to continue.`,
-          },
-          { status: 403 }
-        );
+      sessionId = newSessionId();
+      try {
+        await registerSession(user._id.toString(), sessionId, ua);
+      } catch (error) {
+        console.error("session registration error", error);
+        // Fail open: a tracking hiccup shouldn't block sign-in.
+        sessionId = undefined;
       }
-      await touchDevice(user._id.toString(), deviceId, describeDevice(ua), ua);
     }
 
     const session = await createSession({
@@ -157,6 +140,7 @@ export async function POST(request: NextRequest) {
       avatar: user.avatar,
       role: user.accountType,
       subscription: user.subscription,
+      sessionId,
     });
 
     const res = NextResponse.json({
@@ -176,9 +160,6 @@ export async function POST(request: NextRequest) {
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
-    if (deviceId) {
-      res.cookies.set(DEVICE_COOKIE, deviceId, deviceCookieAttrs());
-    }
     return res;
   } catch (error) {
     console.error("auth/google error", error);

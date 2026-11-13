@@ -37,6 +37,7 @@ import { Lead } from "./models/lead";
 import { LeadList } from "./models/lead-list";
 import { LeadField } from "./models/lead-field";
 import { GoogleFormIntegration } from "./models/google-form-integration";
+import { Session } from "./models/session";
 
 void User;
 void Seminar;
@@ -77,6 +78,7 @@ void Lead;
 void LeadList;
 void LeadField;
 void GoogleFormIntegration;
+void Session;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

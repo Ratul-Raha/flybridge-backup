@@ -27,6 +27,7 @@ export type SessionUser = {
   phone?: string | null;
   address?: Record<string, string>;
   createdAt?: string;
+  sessionId?: string;
 };
 
 function getSecret(): Uint8Array {
@@ -43,6 +44,7 @@ export async function createSession(user: SessionUser): Promise<string> {
     role: user.role,
     subscription: user.subscription,
     userId: user.userId,
+    sessionId: user.sessionId ?? null,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.uid)
@@ -64,7 +66,18 @@ export async function readSession(): Promise<SessionUser | null> {
       avatar: (payload.avatar as string | null) ?? null,
       role: payload.role as AccountType,
       subscription: payload.subscription as SubscriptionType,
+      sessionId: (payload.sessionId as string | null) ?? undefined,
     };
+    // Sessions older than the current schema have no sessionId and remain valid.
+    if (base.userId && base.sessionId) {
+      const { verifySession } = await import("@/lib/auth/sessions");
+      try {
+        const active = await verifySession(base.userId, base.sessionId);
+        if (!active) return null;
+      } catch {
+        // Fail open on transient errors — don't log users out on DB hiccups.
+      }
+    }
     return await applyLiveUser(base);
   } catch {
     return null;
