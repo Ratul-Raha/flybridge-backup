@@ -6,6 +6,7 @@ import { Course } from "@/lib/models/course";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { User } from "@/lib/models/user";
 import { orderAttributionFromRequest } from "@/lib/order-attribution";
+import { upsertLeadFromSignal } from "@/lib/leads";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -82,6 +83,24 @@ export async function POST(request: NextRequest) {
         attribution,
         discountPercent,
       });
+    }
+
+    try {
+      await upsertLeadFromSignal({
+        name,
+        email: email || null,
+        phone: phone || null,
+        userId: session.userId,
+        source: "waitlist",
+        attribution,
+        interest: {
+          itemType: "course",
+          itemId: courseId.toString(),
+          title: course.title ?? null,
+        },
+      });
+    } catch (leadError) {
+      console.error("lead upsert (waitlist) error", leadError);
     }
 
     return NextResponse.json(

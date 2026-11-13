@@ -20,6 +20,7 @@ import {
 import type { OrderDoc } from "@/lib/models/order";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import type { SubscriptionType } from "@/lib/roles";
+import { upsertLeadFromSignal } from "@/lib/leads";
 
 type RegistrationBody = {
   name?: string;
@@ -206,6 +207,24 @@ export async function POST(
       seminar: seminar._id,
       email,
     });
+
+    try {
+      await upsertLeadFromSignal({
+        name,
+        email: email || null,
+        phone: phone || null,
+        userId: user._id.toString(),
+        source: "seminar",
+        attribution: orderAttributionFromRequest(request),
+        interest: {
+          itemType: "seminar",
+          itemId: seminar._id.toString(),
+          title: seminar.title ?? null,
+        },
+      });
+    } catch (leadError) {
+      console.error("lead upsert (seminar) error", leadError);
+    }
 
     return NextResponse.json(
       {
