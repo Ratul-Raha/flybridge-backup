@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin";
-import { Lead, LEAD_STATUSES } from "@/lib/models/lead";
-import { getLeadDetail, serializeLead } from "@/lib/leads";
+import { Lead, LEAD_STATUSES, LEAD_PRIORITIES } from "@/lib/models/lead";
+import { getLeadDetail, sanitizeCustomFields, serializeLead } from "@/lib/leads";
 import type { LeadDoc } from "@/lib/models/lead";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +52,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       lead.status = body.status as never;
       if (body.status === "converted" && !lead.convertedAt) lead.convertedAt = new Date();
       if (body.status !== "converted") lead.convertedAt = null;
+    }
+
+    if (typeof body.priority === "string" && (LEAD_PRIORITIES as readonly string[]).includes(body.priority)) {
+      lead.priority = body.priority as never;
+    }
+
+    if (body.customFields && typeof body.customFields === "object") {
+      lead.customFields = { ...(lead.customFields as Record<string, unknown>), ...sanitizeCustomFields(body.customFields) };
     }
 
     if (body.owner === null || typeof body.owner === "string") {

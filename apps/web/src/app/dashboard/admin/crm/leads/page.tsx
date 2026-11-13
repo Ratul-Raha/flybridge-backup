@@ -4,10 +4,10 @@ import { readSession } from "@/lib/auth/session";
 import { LeadManage } from "@/components/dashboard/leads/lead-manage";
 
 export const metadata: Metadata = {
-  title: "Leads | FlyBridge",
+  title: "CRM · Leads | FlyBridge",
 };
 
-export default async function LeadsPage() {
+export default async function CrmLeadsPage() {
   const session = await readSession();
   if (!session) redirect("/login");
   if (session.role !== "admin") redirect("/dashboard/profile");

@@ -35,6 +35,8 @@ import { EmailClick } from "./models/email-click";
 import { EmailSend } from "./models/email-send";
 import { Lead } from "./models/lead";
 import { LeadList } from "./models/lead-list";
+import { LeadField } from "./models/lead-field";
+import { GoogleFormIntegration } from "./models/google-form-integration";
 
 void User;
 void Seminar;
@@ -73,6 +75,8 @@ void EmailClick;
 void EmailSend;
 void Lead;
 void LeadList;
+void LeadField;
+void GoogleFormIntegration;
 
 const uri = process.env.MONGODB_URI ?? "";
 const dbName = process.env.MONGODB_DB ?? "flybridge";

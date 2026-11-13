@@ -2,7 +2,7 @@ import "server-only";
 
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { Lead, LEAD_SOURCES, type LeadDoc, type LeadSource } from "@/lib/models/lead";
+import { Lead, LEAD_PRIORITIES, LEAD_SOURCES, type LeadDoc, type LeadPriority, type LeadSource } from "@/lib/models/lead";
 import { LeadList } from "@/lib/models/lead-list";
 import { Order } from "@/lib/models/order";
 import { CourseWishlist } from "@/lib/models/wishlist";
@@ -23,6 +23,8 @@ export type LeadSignal = {
   source?: LeadSource;
   attribution?: Record<string, unknown> | null;
   interest?: LeadInterestInput | null;
+  priority?: LeadPriority | null;
+  customFields?: Record<string, unknown> | null;
   /** The list the lead should belong to. Falls back to the default list. */
   listId?: string | null;
 };
@@ -58,6 +60,21 @@ export function isLeadSource(value: unknown): value is LeadSource {
   return typeof value === "string" && (LEAD_SOURCES as readonly string[]).includes(value);
 }
 
+/** Whitelists primitive custom-field values coming from an untrusted payload. */
+export function sanitizeCustomFields(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const key = k.trim().slice(0, 60);
+    if (!key) continue;
+    if (v === null || v === undefined || v === "") continue;
+    if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      out[key] = typeof v === "string" ? v.slice(0, 2000) : v;
+    }
+  }
+  return out;
+}
+
 /**
  * Creates or updates a lead from a business signal (waitlist, seminar
  * registration, inquiry, checkout, signup). A lead is anchored to an email or a
@@ -84,6 +101,9 @@ export async function upsertLeadFromSignal(signal: LeadSignal): Promise<void> {
       ? { ...signal.interest, createdAt: new Date() }
       : null;
     const list = await resolveLeadList(signal.listId);
+    const priority = signal.priority && (LEAD_PRIORITIES as readonly string[]).includes(signal.priority)
+      ? signal.priority
+      : "medium";
     await Lead.create({
       user: userId,
       list,
@@ -92,6 +112,8 @@ export async function upsertLeadFromSignal(signal: LeadSignal): Promise<void> {
       phone: signal.phone?.trim() || undefined,
       status: "new",
       source: signal.source ?? "manual",
+      priority,
+      customFields: sanitizeCustomFields(signal.customFields),
       attribution: signal.attribution ?? undefined,
       interests: interest ? [interest] : [],
       lastActivityAt: new Date(),
@@ -106,6 +128,13 @@ export async function upsertLeadFromSignal(signal: LeadSignal): Promise<void> {
   if (signal.name?.trim() && !existing.name) set.name = signal.name.trim();
   if (signal.phone?.trim() && !existing.phone) set.phone = signal.phone.trim();
   if (!existing.attribution && signal.attribution) set.attribution = signal.attribution;
+  if (signal.priority && (LEAD_PRIORITIES as readonly string[]).includes(signal.priority)) set.priority = signal.priority;
+  if (signal.customFields) {
+    set.customFields = {
+      ...(existing.customFields as Record<string, unknown> | null | undefined),
+      ...sanitizeCustomFields(signal.customFields),
+    };
+  }
   if (!existing.list) {
     const list = await resolveLeadList(signal.listId);
     if (list) set.list = list;
@@ -146,6 +175,8 @@ export function serializeLead(doc: LeadRecord) {
     phone: doc.phone ?? "",
     status: doc.status,
     source: doc.source,
+    priority: doc.priority ?? "medium",
+    customFields: (doc.customFields as Record<string, unknown> | null | undefined) ?? {},
     owner: doc.owner ? String(doc.owner) : null,
     interests: (doc.interests ?? []).map((i) => ({
       itemType: i.itemType ?? "",

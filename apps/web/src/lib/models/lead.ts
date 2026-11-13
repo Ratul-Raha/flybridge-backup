@@ -18,9 +18,13 @@ export const LEAD_SOURCES = [
   "inquiry",
   "checkout",
   "signup",
+  "form",
   "manual",
 ] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
+
+export const LEAD_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 
 const leadInterestSchema = new Schema(
   {
@@ -51,8 +55,11 @@ const leadSchema = new Schema(
     phone: { type: String, trim: true },
     status: { type: String, enum: LEAD_STATUSES, default: "new", index: true },
     source: { type: String, enum: LEAD_SOURCES, default: "manual", index: true },
+    priority: { type: String, enum: LEAD_PRIORITIES, default: "medium", index: true },
     /** Admin team member responsible for following up. */
     owner: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+    /** Values for admin-defined custom fields (LeadField), keyed by field name. */
+    customFields: { type: Schema.Types.Mixed, default: {} },
     attribution: { type: createMarketingAttributionSchema(), default: undefined },
     interests: { type: [leadInterestSchema], default: [] },
     notes: { type: [leadNoteSchema], default: [] },

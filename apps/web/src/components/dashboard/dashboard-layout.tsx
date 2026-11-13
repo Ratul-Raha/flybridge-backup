@@ -396,9 +396,9 @@ export function DashboardLayout({
             icon: Users,
             children: [
               {
-                label: "Leads",
-                href: "/dashboard/admin/leads",
-                active: pathname.startsWith("/dashboard/admin/leads"),
+                label: "CRM",
+                href: "/dashboard/admin/crm",
+                active: pathname.startsWith("/dashboard/admin/crm"),
               },
               {
                 label: "Users",

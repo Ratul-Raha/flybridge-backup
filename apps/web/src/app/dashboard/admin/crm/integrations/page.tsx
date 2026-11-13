@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSession } from "@/lib/auth/session";
-import { LeadDetail } from "@/components/dashboard/leads/lead-detail";
+import { GoogleFormsIntegrations } from "@/components/dashboard/leads/google-forms-integrations";
 
 export const metadata: Metadata = {
-  title: "Lead | FlyBridge",
+  title: "CRM · Integrations | FlyBridge",
 };
 
-export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+export default async function CrmIntegrationsPage() {
   const session = await readSession();
   if (!session) redirect("/login");
   if (session.role !== "admin") redirect("/dashboard/profile");
-  return <LeadDetail id={params.id} />;
+  return <GoogleFormsIntegrations />;
 }

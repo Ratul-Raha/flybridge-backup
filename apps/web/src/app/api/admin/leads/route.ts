@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin";
-import { Lead, LEAD_STATUSES, LEAD_SOURCES } from "@/lib/models/lead";
+import { Lead, LEAD_STATUSES, LEAD_SOURCES, LEAD_PRIORITIES } from "@/lib/models/lead";
+import { LeadList } from "@/lib/models/lead-list";
+import { LeadField } from "@/lib/models/lead-field";
 import { Order } from "@/lib/models/order";
 import { User } from "@/lib/models/user";
-import { isLeadSource, serializeLead } from "@/lib/leads";
+import { isLeadSource, resolveLeadList, sanitizeCustomFields, serializeLead } from "@/lib/leads";
 import type { LeadDoc } from "@/lib/models/lead";
 
 type LeadRow = ReturnType<typeof serializeLead>;
@@ -44,6 +46,18 @@ export async function GET(request: NextRequest) {
       filter.source = source;
     }
 
+    const priority = sp.get("priority");
+    if (priority && (LEAD_PRIORITIES as readonly string[]).includes(priority)) {
+      filter.priority = priority;
+    }
+
+    const list = sp.get("list");
+    if (list === "unlisted") {
+      filter.list = null;
+    } else if (list && Types.ObjectId.isValid(list)) {
+      filter.list = new Types.ObjectId(list);
+    }
+
     const owner = sp.get("owner");
     if (owner === "unassigned") {
       filter.owner = null;
@@ -77,7 +91,7 @@ export async function GET(request: NextRequest) {
           ? { createdAt: 1 }
           : { createdAt: -1 };
 
-    const [total, leads, statusRows, overdue, unassigned] = await Promise.all([
+    const [total, leads, statusRows, overdue, unassigned, lists, fields] = await Promise.all([
       Lead.countDocuments(filter),
       Lead.find(filter)
         .sort(sort)
@@ -89,6 +103,8 @@ export async function GET(request: NextRequest) {
       ]),
       Lead.countDocuments({ followUpAt: { $lt: now }, status: { $nin: ["converted", "not-interested", "unqualified"] } }),
       Lead.countDocuments({ owner: null }),
+      LeadList.find().sort({ isDefault: -1, name: 1 }).lean(),
+      LeadField.find({ isActive: true }).sort({ sortOrder: 1, createdAt: 1 }).lean(),
     ]);
 
     const statusCounts: Record<string, number> = {};
@@ -136,6 +152,22 @@ export async function GET(request: NextRequest) {
         unassigned,
       },
       leads: rows,
+      lists: lists.map((l) => ({
+        id: l._id.toString(),
+        name: l.name,
+        description: l.description ?? "",
+        isDefault: Boolean(l.isDefault),
+      })),
+      fields: fields.map((f) => ({
+        id: f._id.toString(),
+        name: f.name,
+        label: f.label,
+        type: f.type,
+        placeholder: f.placeholder ?? "",
+        options: (f.options ?? []).map((o) => ({ value: o.value ?? "", label: o.label ?? o.value ?? "" })),
+        isRequired: Boolean(f.isRequired),
+        sortOrder: f.sortOrder ?? 0,
+      })),
       pagination: { page, perPage, total },
     });
   } catch (error) {
@@ -181,6 +213,21 @@ export async function POST(request: NextRequest) {
         ? new Types.ObjectId(body.owner)
         : null;
 
+    let listId: Types.ObjectId | null = null;
+    if (typeof body.listId === "string" && Types.ObjectId.isValid(body.listId)) {
+      const listDoc = await LeadList.findById(body.listId).select("_id").lean();
+      if (listDoc) listId = listDoc._id;
+    }
+    if (!listId) {
+      listId = await resolveLeadList();
+    }
+
+    const priority = (LEAD_PRIORITIES as readonly string[]).includes(String(body.priority))
+      ? (body.priority as never)
+      : "medium";
+
+    const customFields = sanitizeCustomFields(body.customFields);
+
     const lead = await Lead.create({
       user: userId,
       name,
@@ -188,7 +235,10 @@ export async function POST(request: NextRequest) {
       phone: phone || undefined,
       status: "new",
       source: isLeadSource(body.source) ? body.source : "manual",
+      priority,
+      list: listId,
       owner,
+      customFields,
       interests:
         body.interest && typeof body.interest === "object"
           ? [
