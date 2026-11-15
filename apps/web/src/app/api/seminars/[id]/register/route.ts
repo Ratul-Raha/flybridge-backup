@@ -53,6 +53,29 @@ export async function POST(
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
 
+    const requestedCurrency =
+      typeof body.currency === "string" ? body.currency.trim().toUpperCase() : "";
+    const usdPrice =
+      typeof seminar.price === "number" && seminar.price > 0 ? seminar.price : undefined;
+    const bdtPrice =
+      typeof seminar.prices?.BDT === "number" && seminar.prices.BDT > 0
+        ? seminar.prices.BDT
+        : undefined;
+    let currency = requestedCurrency;
+    if (seminar.type === "paid") {
+      const requestedAmount =
+        currency === "BDT" ? bdtPrice : currency === "USD" ? usdPrice : undefined;
+      if (requestedAmount === undefined) {
+        currency = usdPrice !== undefined ? "USD" : bdtPrice !== undefined ? "BDT" : "";
+      }
+      if (!currency) {
+        return NextResponse.json(
+          { error: "This seminar is not open for registration yet. Please try again later." },
+          { status: 400 }
+        );
+      }
+    }
+
     const phone = body.phone?.trim() ?? "";
     if (!phone) {
       return NextResponse.json(
@@ -150,7 +173,7 @@ export async function POST(
       },
       itemType: "seminar",
       itemId: seminar._id.toString(),
-      currency: typeof body.currency === "string" ? body.currency : undefined,
+      currency: currency || undefined,
       code: typeof body.code === "string" ? body.code : undefined,
       attribution: orderAttributionFromRequest(request),
       affiliate: affiliateFromRequest(request),

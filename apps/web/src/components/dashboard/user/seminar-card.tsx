@@ -5,6 +5,8 @@ import Link from "next/link";
 import { CalendarDays, CheckCircle2, UserPlus, Loader2, Users, ArrowRight } from "lucide-react";
 import { formatDateTime, type DashboardSeminar } from "./seminar-types";
 import { useAuth } from "@/lib/auth/auth-context";
+import { formatPriceText } from "@/lib/pricing";
+import { defaultCheckoutCurrency } from "@/components/payment/payment-method-picker";
 
 export function SeminarCard({
   seminar,
@@ -24,6 +26,7 @@ export function SeminarCard({
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const isPaid = seminar.type === "paid";
+  const priceText = formatPriceText(seminar);
 
   const register = async () => {
     const p = (phone || user?.phone || "").trim();
@@ -41,11 +44,21 @@ export function SeminarCard({
           name: user?.name,
           email: user?.email,
           phone: p,
-          currency: "USD",
+          currency: defaultCheckoutCurrency(seminar.prices),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Registration failed");
+      if (data.requiresPayment) {
+        if (data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+        } else {
+          throw new Error(
+            "Registration is saved but payment could not be started. Please try again."
+          );
+        }
+        return;
+      }
       setIsRegistered(true);
       setNeedPhone(false);
       onRegistered?.(seminar.id);
@@ -66,11 +79,11 @@ export function SeminarCard({
         <img
           src={seminar.image}
           alt={seminar.title}
-          className="w-full h-[150px] object-cover"
+          className="block w-full h-auto"
         />
       ) : (
         <div
-          className="w-full h-[150px] flex items-center justify-center font-display text-[14px] text-white"
+          className="w-full aspect-[16/9] flex items-center justify-center font-display text-[14px] text-white"
           style={{
             background:
               seminar.type === "paid"
@@ -92,7 +105,9 @@ export function SeminarCard({
                 : { background: "var(--brand-soft)", color: "var(--brand)" }
             }
           >
-            {seminar.type === "paid" ? `Paid${seminar.price ? ` · $${seminar.price}` : ""}` : "Free"}
+            {seminar.type === "paid"
+              ? `Paid${priceText === "Free" ? "" : ` · ${priceText}`}`
+              : "Free"}
           </span>
           {isRegistered ? (
             <span
@@ -189,7 +204,13 @@ export function SeminarCard({
                 style={{ background: "var(--brand)" }}
               >
                 {busy ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
-                {busy ? "Registering…" : "Register now"}
+                {busy
+                  ? isPaid
+                    ? "Redirecting…"
+                    : "Registering…"
+                  : isPaid
+                    ? "Pay & register"
+                    : "Register now"}
               </button>
             )}
 

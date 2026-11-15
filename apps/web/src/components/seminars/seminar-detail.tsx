@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft, Calendar, Check, Clock, Share2, Users } from "lucide-react";
 import {
   SeminarRegisterModal,
@@ -60,15 +59,14 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
         className="mt-6 overflow-hidden rounded-lg border bg-white"
         style={{ borderColor: "var(--line)" }}
       >
-        <div className="relative h-[220px] sm:h-[280px] overflow-hidden">
+        <div className="relative w-full overflow-hidden bg-[var(--bg-soft)]">
           {seminar.image ? (
             <>
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={seminar.image}
                 alt={seminar.title}
-                fill
-                sizes="(max-width: 640px) 100vw, 1320px"
-                className="absolute inset-0 w-full h-full object-cover"
+                className="block h-auto w-full"
               />
               <div
                 className="absolute inset-0"
@@ -80,7 +78,7 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
             </>
           ) : (
             <div
-              className="absolute inset-0 flex items-center justify-center font-display text-[16px] text-white"
+              className="relative flex aspect-[16/9] w-full items-center justify-center font-display text-[16px] text-white"
               style={{
                 background: paid
                   ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
@@ -99,7 +97,9 @@ export function SeminarDetail({ seminar: initial }: { seminar: SeminarData }) {
                 : { background: "var(--brand-soft)", color: "var(--brand)" }
             }
           >
-            {paid ? `Paid · ${formatPriceText(seminar)}` : "Free"}
+            {paid
+              ? `Paid${formatPriceText(seminar) === "Free" ? "" : ` · ${formatPriceText(seminar)}`}`
+              : "Free"}
           </span>
           <span
             className="absolute right-5 top-5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] rounded-full px-[12px] py-[6px]"

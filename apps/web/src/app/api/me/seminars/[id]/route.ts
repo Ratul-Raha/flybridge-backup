@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
+import { cleanPrices } from "@/lib/pricing";
 
 export async function GET(
   _request: NextRequest,
@@ -44,6 +45,7 @@ export async function GET(
         image: seminar.image ?? null,
         type: seminar.type,
         price: seminar.price,
+        prices: cleanPrices(seminar.prices),
         url: seminar.url ?? null,
         duration: seminar.duration ?? null,
         registrations,

@@ -13,6 +13,7 @@ import {
   Video,
 } from "lucide-react";
 import { formatDateTime } from "./seminar-types";
+import { formatPriceText } from "@/lib/pricing";
 import { EmptyState, ScreenError, ScreenLoading } from "./ui";
 
 type SeminarDetailData = {
@@ -24,6 +25,7 @@ type SeminarDetailData = {
     image: string | null;
     type: "free" | "paid";
     price: number;
+    prices?: { USD?: number; BDT?: number } | null;
     url: string | null;
     duration: string | null;
     registrations: number;
@@ -89,7 +91,9 @@ export function SeminarDetail({ seminarId }: { seminarId: string }) {
                   : { background: "var(--brand-soft)", color: "var(--brand)" }
               }
             >
-              {s.type === "paid" ? `Paid${s.price ? ` · $${s.price}` : ""}` : "Free"}
+              {s.type === "paid"
+                ? `Paid${formatPriceText(s) === "Free" ? "" : ` · ${formatPriceText(s)}`}`
+                : "Free"}
             </span>
             <span
               className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-3 py-[5px] inline-flex items-center gap-1"
@@ -134,10 +138,10 @@ export function SeminarDetail({ seminarId }: { seminarId: string }) {
       >
         {s.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={s.image} alt={s.title} className="w-full h-[220px] object-cover" />
+          <img src={s.image} alt={s.title} className="block w-full h-auto" />
         ) : (
           <div
-            className="w-full h-[220px] flex items-center justify-center font-display text-[16px] text-white"
+            className="w-full aspect-[16/9] flex items-center justify-center font-display text-[16px] text-white"
             style={{
               background:
                 s.type === "paid"

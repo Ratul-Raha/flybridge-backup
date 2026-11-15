@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
+import { formatPriceText } from "@/lib/pricing";
 
 type Seminar = {
   id: string;
@@ -121,6 +122,8 @@ export function SeminarManage() {
       return;
     }
     const url = editingId ? `/api/seminars/${editingId}` : "/api/seminars";
+    const usdPrice = form.price.trim();
+    const bdtPrice = form.bdtPrice.trim();
     setSaving(true);
     try {
       const res = await fetch(url, {
@@ -128,10 +131,14 @@ export function SeminarManage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          prices: {
-            USD: form.type === "paid" ? Math.max(0, Number(form.price) || 0) : 0,
-            BDT: form.type === "paid" ? Math.max(0, Number(form.bdtPrice) || 0) : 0,
-          },
+          dateTime: form.dateTime ? new Date(form.dateTime).toISOString() : "",
+          prices:
+            form.type === "paid"
+              ? {
+                  ...(usdPrice !== "" ? { USD: Math.max(0, Number(usdPrice) || 0) } : {}),
+                  ...(bdtPrice !== "" ? { BDT: Math.max(0, Number(bdtPrice) || 0) } : {}),
+                }
+              : {},
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -421,7 +428,9 @@ export function SeminarManage() {
                         : { background: "var(--brand-soft)", color: "var(--brand)" }
                     }
                   >
-                    {s.type === "paid" ? `Paid · $${s.price}` : "Free"}
+                    {s.type === "paid"
+                      ? `Paid${formatPriceText(s) === "Free" ? "" : ` · ${formatPriceText(s)}`}`
+                      : "Free"}
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
                     {new Date(s.dateTime).toLocaleDateString()}

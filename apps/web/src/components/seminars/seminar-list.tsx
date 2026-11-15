@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Calendar, Check, Clock, Share2, Users, Video } from "lucide-react";
 import {
   SeminarRegisterModal,
@@ -148,15 +147,14 @@ export function SeminarList() {
       className="group flex flex-col overflow-hidden rounded-lg border bg-white transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_24px_48px_-20px_rgba(18,32,67,0.22)]"
       style={{ borderColor: "var(--line)", boxShadow: "0 6px 24px -14px rgba(18,32,67,0.1)" }}
     >
-      <div className="relative h-[174px] overflow-hidden">
+      <div className="relative w-full overflow-hidden bg-[var(--bg-soft)]">
         {s.image ? (
           <>
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={s.image}
               alt={s.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="block h-auto w-full transition-transform duration-500 group-hover:scale-[1.04]"
             />
             <div
               className="absolute inset-0"
@@ -168,7 +166,7 @@ export function SeminarList() {
           </>
         ) : (
           <div
-            className="absolute inset-0 flex items-center justify-center"
+            className="relative flex aspect-[16/9] w-full items-center justify-center"
             style={{
               background: s.type === "paid"
                 ? "linear-gradient(135deg,#6B4CE0,#2F5FE0)"
@@ -184,15 +182,33 @@ export function SeminarList() {
           </div>
         )}
 
-        <span
-          className="absolute left-3.5 top-3.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-[11px] py-[5px]"
+        <div
+          className="absolute bottom-3.5 left-3.5 inline-flex items-center gap-2 rounded-full px-3 py-[6px]"
           style={{
-            background: "rgba(255,255,255,0.92)",
-            color: s.type === "paid" ? "#6B4CE0" : "var(--brand-2)",
+            background: "rgba(255,255,255,0.95)",
+            boxShadow: "0 10px 24px -12px rgba(18,32,67,0.55)",
+            backdropFilter: "blur(6px)",
           }}
         >
-          {s.type === "paid" ? `Paid · ${formatPriceText(s)}` : "Free"}
-        </span>
+          <span
+            className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: s.type === "paid" ? "#6B4CE0" : "#0A7D55" }}
+          >
+            {s.type === "paid" ? "Paid" : "Free"}
+          </span>
+          {s.type === "paid" && formatPriceText(s) !== "Free" && (
+            <>
+              <span className="h-3.5 w-px" style={{ background: "var(--line)" }} />
+              <span
+                className="text-[13px] font-bold leading-none"
+                style={{ color: "var(--ink)" }}
+              >
+                {formatPriceText(s)}
+              </span>
+            </>
+          )}
+        </div>
+
         <span
           className="absolute right-3.5 top-3.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] rounded-full px-[9px] py-[5px]"
           style={{

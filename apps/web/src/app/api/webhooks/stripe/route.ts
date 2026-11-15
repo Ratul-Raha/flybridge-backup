@@ -43,8 +43,19 @@ export async function POST(request: Request) {
 
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object;
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as {
+          metadata?: { orderId?: string };
+          client_reference_id?: string | null;
+          payment_status?: string;
+        };
+        // With delayed payment methods Stripe sends `completed` before the money
+        // has settled. Wait for async_payment_succeeded in that case so access is
+        // never granted for an unpaid session.
+        if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
+          break;
+        }
         const orderId = session.metadata?.orderId ?? session.client_reference_id;
         if (!orderId) break;
         await connectDb();
@@ -55,6 +66,7 @@ export async function POST(request: Request) {
         break;
       }
       case "checkout.session.expired":
+      case "checkout.session.async_payment_failed":
       case "payment_intent.payment_failed": {
         const obj = event.data.object as { metadata?: { orderId?: string }; client_reference_id?: string | null };
         const orderId = obj.metadata?.orderId ?? obj.client_reference_id;

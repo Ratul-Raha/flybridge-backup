@@ -6,6 +6,7 @@ export type DashboardSeminar = {
   image: string | null;
   type: "free" | "paid";
   price: number;
+  prices?: { USD?: number; BDT?: number } | null;
   url: string | null;
   duration: string | null;
   registrations?: number;

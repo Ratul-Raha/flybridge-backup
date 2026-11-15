@@ -530,12 +530,19 @@ export async function fulfillOrder(
   const item = order.items[0];
   if (!item) return;
 
-  const buyer = user ?? {
-    id: order.user.toString(),
-    name: order.email?.split("@")[0] ?? "",
-    email: order.email ?? "",
-    phone: null,
-  };
+  const buyer =
+    user ??
+    (await (async () => {
+      const owner = await User.findById(order.user)
+        .select("name email phone")
+        .lean<{ name?: string; email?: string; phone?: string } | null>();
+      return {
+        id: order.user.toString(),
+        name: owner?.name || order.email?.split("@")[0] || "",
+        email: owner?.email || order.email || "",
+        phone: owner?.phone ?? null,
+      };
+    })());
 
   let purchasedContent: { id: string; title?: string } | null = null;
 

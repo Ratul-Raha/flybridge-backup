@@ -80,8 +80,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         if (!isNaN(price) && price >= 0) {
           seminar.price = price;
         }
-        const prices = sanitizePrices(body.prices);
-        if (prices) seminar.prices = prices;
+        seminar.prices = sanitizePrices(body.prices);
       }
       if (body.type === "free") {
         seminar.price = 0;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { SeminarRegistration, type SeminarDoc } from "@/lib/models/seminar";
+import { cleanPrices } from "@/lib/pricing";
 
 export async function GET() {
   const session = await readSession();
@@ -29,6 +30,7 @@ export async function GET() {
           image: r.seminar.image ?? null,
           type: r.seminar.type,
           price: r.seminar.price,
+          prices: cleanPrices(r.seminar.prices),
           url: r.seminar.url ?? null,
           duration: r.seminar.duration ?? null,
           registeredAt: r.createdAt,
