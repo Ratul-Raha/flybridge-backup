@@ -11,6 +11,7 @@ const seminarSchema = new Schema(
     description: { type: String, trim: true },
     dateTime: { type: Date, required: true, index: true },
     image: { type: String },
+    imagePublicId: { type: String, trim: true },
     type: { type: String, enum: ["free", "paid"], default: "free" },
     price: { type: Number, min: 0, default: 0 },
     prices: { type: pricesSchema },

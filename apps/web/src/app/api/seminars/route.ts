@@ -16,6 +16,7 @@ async function withCounts(seminars: SeminarDocLike[], includeUrl = false) {
     description: s.description,
     dateTime: s.dateTime,
     image: s.image ?? null,
+    imagePublicId: includeUrl ? (s.imagePublicId ?? null) : null,
     type: s.type,
     price: s.price,
     prices: cleanPrices(s.prices),
@@ -31,6 +32,7 @@ type SeminarDocLike = {
   description?: string;
   dateTime: Date;
   image?: string | null;
+  imagePublicId?: string | null;
   type: string;
   price?: number;
   prices?: Record<string, number> | null;
@@ -88,6 +90,8 @@ export async function POST(request: NextRequest) {
       description: typeof body.description === "string" ? body.description.trim() : "",
       dateTime,
       image: typeof body.image === "string" ? body.image.trim() || undefined : undefined,
+      imagePublicId:
+        typeof body.imagePublicId === "string" ? body.imagePublicId.trim() || undefined : undefined,
       type,
       price: type === "paid" ? Number(body.price) || 0 : 0,
       prices: type === "paid" ? sanitizePrices(body.prices) : undefined,

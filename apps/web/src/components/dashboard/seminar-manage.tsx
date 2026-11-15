@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, UploadCloud, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { uploadToStorage } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 
@@ -13,6 +14,7 @@ type Seminar = {
   description: string;
   dateTime: string;
   image: string | null;
+  imagePublicId: string | null;
   type: "free" | "paid";
   price: number;
   prices?: { USD?: number; BDT?: number } | null;
@@ -33,6 +35,7 @@ const emptyForm = {
   price: "",
   bdtPrice: "",
   image: "",
+  imagePublicId: "",
   url: "",
 };
 
@@ -47,6 +50,9 @@ export function SeminarManage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,6 +74,7 @@ export function SeminarManage() {
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setUploadProgress(0);
     setFormOpen(true);
   };
 
@@ -82,15 +89,35 @@ export function SeminarManage() {
       price: s.price ? String(s.price) : "",
       bdtPrice: s.prices?.BDT ? String(s.prices.BDT) : "",
       image: s.image ?? "",
+      imagePublicId: s.imagePublicId ?? "",
       url: s.url ?? "",
     });
+    setUploadProgress(0);
     setFormOpen(true);
+  };
+
+  const runImageUpload = async (file: File) => {
+    setError(null);
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const uploaded = await uploadToStorage(file, "seminars", "file", setUploadProgress);
+      setForm((f) => ({ ...f, image: uploaded.ref, imagePublicId: uploaded.key }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const save = async () => {
     setError(null);
     if (!form.title.trim()) {
       setError("Title is required");
+      return;
+    }
+    if (uploading) {
+      setError("Please wait for the image upload to finish");
       return;
     }
     const url = editingId ? `/api/seminars/${editingId}` : "/api/seminars";
@@ -272,16 +299,53 @@ export function SeminarManage() {
 
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                Image URL
+                Image
               </label>
               <input
-                type="text"
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="https://…"
-                className={inputClass}
-                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) runImageUpload(f);
+                  e.target.value = "";
+                }}
+                className="hidden"
               />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => imageInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-full border px-5 py-[10px] text-[13.5px] font-medium transition-all duration-200 hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+                  style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+                >
+                  <UploadCloud size={15} />
+                  {form.image ? "Replace image" : "Upload image"}
+                </button>
+                {form.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.image}
+                    alt="Seminar preview"
+                    className="h-14 w-14 rounded-lg object-cover border"
+                    style={{ borderColor: "var(--line)" }}
+                  />
+                )}
+              </div>
+              {uploading && (
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 flex-1 rounded-full" style={{ background: "var(--bg-soft)" }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-200"
+                      style={{ width: `${uploadProgress}%`, background: "var(--brand)" }}
+                    />
+                  </div>
+                  <span className="font-mono text-[11px]" style={{ color: "var(--body)" }}>
+                    {uploadProgress}%
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 md:col-span-2">
@@ -303,7 +367,7 @@ export function SeminarManage() {
             <button
               type="button"
               onClick={save}
-              disabled={saving}
+              disabled={saving || uploading}
               className="flex items-center gap-2 rounded-full text-white text-[14px] font-medium px-7 py-[11px] transition-all duration-250 hover:translate-y-[-1px] hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
               style={{ background: "var(--brand)" }}
             >

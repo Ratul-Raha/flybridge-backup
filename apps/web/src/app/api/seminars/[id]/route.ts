@@ -5,6 +5,7 @@ import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
 import { sanitizePrices } from "@/lib/pricing";
 import { emitEvent } from "@/lib/events/emit";
+import { deleteMediaRef } from "@/lib/storage";
 
 function isManager(
   session: { role: string; userId?: string; name?: string; email?: string } | null,
@@ -58,7 +59,19 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       if (!isNaN(dateTime.getTime())) seminar.dateTime = dateTime;
     }
     if (typeof body.image === "string") {
-      seminar.image = body.image.trim() || undefined;
+      const nextImage = body.image.trim() || undefined;
+      const previousImageId = seminar.imagePublicId;
+      seminar.image = nextImage;
+      if (typeof body.imagePublicId === "string") {
+        seminar.imagePublicId = body.imagePublicId.trim() || undefined;
+      }
+      if (previousImageId && previousImageId !== seminar.imagePublicId) {
+        await deleteMediaRef(previousImageId).catch((err) =>
+          console.error("seminars image cleanup error", err)
+        );
+      }
+    } else if (typeof body.imagePublicId === "string") {
+      seminar.imagePublicId = body.imagePublicId.trim() || undefined;
     }
     if (body.type === "free" || body.type === "paid") {
       seminar.type = body.type;
@@ -111,6 +124,11 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
     }
     await SeminarRegistration.deleteMany({ seminar: seminar._id });
+    if (seminar.imagePublicId) {
+      await deleteMediaRef(seminar.imagePublicId).catch((err) =>
+        console.error("seminars image cleanup error", err)
+      );
+    }
     revalidateUserDashboard();
     await emitEvent("seminar.deleted", {
       seminar: { id: seminar._id.toString(), title: seminar.title },
