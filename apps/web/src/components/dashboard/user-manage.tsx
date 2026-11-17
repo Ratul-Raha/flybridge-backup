@@ -16,9 +16,11 @@ import {
   Loader2,
   Mail,
   Phone,
+  RotateCcw,
   Search,
   Send,
   Shield,
+  SlidersHorizontal,
   Trash2,
   UserPlus,
   Users,
@@ -639,6 +641,23 @@ export function UserManage() {
   const from = pagination.total === 0 ? 0 : (safePage - 1) * pagination.perPage + 1;
   const to = Math.min(safePage * pagination.perPage, pagination.total);
 
+  const activeFilterCount =
+    [accountType, subscription, certificateDownloaded, course, seminar, resource, scoreMin].filter(Boolean).length +
+    (sort !== "newest" ? 1 : 0);
+
+  const resetFilters = () => {
+    setQuery("");
+    setAccountType("");
+    setSubscription("");
+    setCertificateDownloaded("");
+    setCourse("");
+    setSeminar("");
+    setResource("");
+    setScoreMin("");
+    setSort("newest");
+    setPage(1);
+  };
+
   if (error) return <ScreenError message={error} />;
 
   return (
@@ -745,12 +764,51 @@ export function UserManage() {
         )
       )}
 
-      {/* Toolbar */}
+      {/* Filters */}
       <div
-        className="rounded-lg border bg-white p-2.5 sm:p-3 flex flex-col lg:flex-row gap-2.5 sm:gap-3"
+        className="rounded-xl border bg-white p-3 sm:p-4"
         style={{ borderColor: "var(--line)" }}
       >
-        <div className="relative flex-1">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={15} style={{ color: "var(--brand)" }} />
+            <span className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
+              Filters
+            </span>
+            {activeFilterCount > 0 && (
+              <span
+                className="rounded-full px-2 py-[2px] text-[10.5px] font-semibold"
+                style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
+              >
+                {activeFilterCount} active
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-[7px] text-[12px] font-semibold transition-colors hover:bg-[var(--bg-soft)]"
+                style={{ color: "var(--body)" }}
+              >
+                <RotateCcw size={13} /> Reset
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={bulkBusy !== null || pagination.total === 0}
+              className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[8px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            >
+              {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
+              Export
+            </button>
+          </div>
+        </div>
+
+        <div className="relative mb-3">
           <Search
             size={15}
             className="absolute left-3.5 top-1/2 -translate-y-1/2"
@@ -761,145 +819,183 @@ export function UserManage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name, email or phone…"
-            className="w-full text-[13.5px] rounded-xl border bg-white pl-10 pr-4 py-[9px] lg:py-[10px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
+            className="w-full rounded-xl border bg-white pl-10 pr-4 py-[10px] text-[13.5px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30"
             style={{ borderColor: "var(--line)", color: "var(--ink)" }}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2.5 lg:gap-3">
-          <select
-            value={accountType}
-            onChange={(e) => {
-              setAccountType(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by role"
-          >
-            <option value="">All roles</option>
-            <option value="admin">Admins</option>
-            <option value="moderator">Moderators</option>
-            <option value="user">Members</option>
-          </select>
-          <select
-            value={subscription}
-            onChange={(e) => {
-              setSubscription(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by subscription"
-          >
-            <option value="">All plans</option>
-            <option value="paid">Paid</option>
-            <option value="free">Free</option>
-          </select>
-          <select
-            value={certificateDownloaded}
-            onChange={(e) => {
-              setCertificateDownloaded(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by certificate download"
-          >
-            <option value="">Any certificate</option>
-            <option value="yes">Downloaded a certificate</option>
-            <option value="only">Only downloaded certificates</option>
-          </select>
-          <select
-            value={course}
-            onChange={(e) => {
-              setCourse(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by course purchase"
-          >
-            <option value="">Any course</option>
-            <option value="none">No course</option>
-            <option value="any">Purchased any course</option>
-            {availableCourses.length > 0 && (
-              <optgroup label="Purchased a specific course">
-                {availableCourses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-          <select
-            value={seminar}
-            onChange={(e) => {
-              setSeminar(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by seminar registration"
-          >
-            <option value="">Any seminar</option>
-            <option value="none">Never registered</option>
-            <option value="any">Registered for a seminar</option>
-          </select>
-          <select
-            value={resource}
-            onChange={(e) => {
-              setResource(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by resource download"
-          >
-            <option value="">Any resource</option>
-            <option value="none">No downloads</option>
-            <option value="any">Downloaded a resource</option>
-          </select>
-          <select
-            value={scoreMin}
-            onChange={(e) => {
-              setScoreMin(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Filter by readiness score"
-          >
-            <option value="">Any readiness</option>
-            <option value="80">Readiness ≥ 80</option>
-            <option value="60">Readiness ≥ 60</option>
-            <option value="40">Readiness ≥ 40</option>
-          </select>
-          <select
-            value={sort}
-            onChange={(e) => {
-              setSort(e.target.value);
-              setPage(1);
-            }}
-            className={selectClass}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            aria-label="Sort users"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="name">Name (A–Z)</option>
-            <option value="name-desc">Name (Z–A)</option>
-          </select>
-          <button
-            type="button"
-            onClick={exportCsv}
-            disabled={bulkBusy !== null || pagination.total === 0}
-            className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-[8.5px] lg:py-[9px] text-[12.5px] font-semibold transition-colors duration-150 hover:bg-[var(--bg-soft)] disabled:opacity-50 disabled:pointer-events-none"
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-          >
-            {bulkBusy === "Exporting" ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
-            Export
-          </button>
+
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Role
+            </label>
+            <select
+              value={accountType}
+              onChange={(e) => {
+                setAccountType(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by role"
+            >
+              <option value="">All roles</option>
+              <option value="admin">Admins</option>
+              <option value="moderator">Moderators</option>
+              <option value="user">Members</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Plan
+            </label>
+            <select
+              value={subscription}
+              onChange={(e) => {
+                setSubscription(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by subscription"
+            >
+              <option value="">All plans</option>
+              <option value="paid">Paid</option>
+              <option value="free">Free</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Certificate
+            </label>
+            <select
+              value={certificateDownloaded}
+              onChange={(e) => {
+                setCertificateDownloaded(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by certificate download"
+            >
+              <option value="">Any certificate</option>
+              <option value="yes">Downloaded a certificate</option>
+              <option value="only">Only downloaded certificates</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Course
+            </label>
+            <select
+              value={course}
+              onChange={(e) => {
+                setCourse(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by course purchase"
+            >
+              <option value="">Any course</option>
+              <option value="none">No course</option>
+              <option value="any">Purchased any course</option>
+              {availableCourses.length > 0 && (
+                <optgroup label="Purchased a specific course">
+                  {availableCourses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Seminar
+            </label>
+            <select
+              value={seminar}
+              onChange={(e) => {
+                setSeminar(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by seminar registration"
+            >
+              <option value="">Any seminar</option>
+              <option value="none">Never registered</option>
+              <option value="any">Registered for a seminar</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Resource
+            </label>
+            <select
+              value={resource}
+              onChange={(e) => {
+                setResource(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by resource download"
+            >
+              <option value="">Any resource</option>
+              <option value="none">No downloads</option>
+              <option value="any">Downloaded a resource</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Readiness
+            </label>
+            <select
+              value={scoreMin}
+              onChange={(e) => {
+                setScoreMin(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Filter by readiness score"
+            >
+              <option value="">Any readiness</option>
+              <option value="80">Readiness ≥ 80</option>
+              <option value="60">Readiness ≥ 60</option>
+              <option value="40">Readiness ≥ 40</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
+              Sort by
+            </label>
+            <select
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value);
+                setPage(1);
+              }}
+              className={selectClass + " w-full"}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              aria-label="Sort users"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name (A–Z)</option>
+              <option value="name-desc">Name (Z–A)</option>
+            </select>
+          </div>
         </div>
       </div>
 

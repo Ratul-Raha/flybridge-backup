@@ -373,7 +373,7 @@ export function DashboardLayout({
       });
     }
     if (user.accountType === "admin") {
-      segments.push({
+      segments.unshift({
         title: "Administration",
         items: [
           {

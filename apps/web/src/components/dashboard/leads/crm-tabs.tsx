@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plug, Users } from "lucide-react";
+import { FileText, Plug, Users } from "lucide-react";
 
 const TABS = [
   { href: "/dashboard/admin/crm/leads", label: "Leads", icon: Users },
+  { href: "/dashboard/admin/crm/forms", label: "Forms", icon: FileText },
   { href: "/dashboard/admin/crm/integrations", label: "Integrations", icon: Plug },
 ];
 

@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin";
 import { LeadList } from "@/lib/models/lead-list";
 import { Lead } from "@/lib/models/lead";
+import { generateLeadFormSlug } from "@/lib/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,16 @@ export async function GET() {
 
   try {
     await connectDb();
-    const lists = await LeadList.find().sort({ isDefault: -1, name: 1 }).lean();
+    const lists = await LeadList.find().sort({ isDefault: -1, name: 1 });
+
+    // Lists created before public forms existed get a slug on first load.
+    for (const list of lists) {
+      if (!list.formSlug) {
+        list.formSlug = await generateLeadFormSlug(list.name);
+        await list.save();
+      }
+    }
+
     const counts = await Lead.aggregate<{ _id: unknown; count: number }>([
       { $group: { _id: "$list", count: { $sum: 1 } } },
     ]);
@@ -26,6 +36,8 @@ export async function GET() {
         name: l.name,
         description: l.description ?? "",
         isDefault: Boolean(l.isDefault),
+        formSlug: l.formSlug ?? "",
+        formEnabled: l.formEnabled !== false,
         leadCount: countMap.get(l._id.toString()) ?? 0,
       })),
     });
@@ -53,10 +65,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "A list with that name already exists" }, { status: 409 });
     }
 
-    const list = await LeadList.create({ name, description, isDefault: false });
+    const list = await LeadList.create({
+      name,
+      description,
+      isDefault: false,
+      formSlug: await generateLeadFormSlug(name),
+      formEnabled: true,
+    });
 
     return NextResponse.json(
-      { list: { id: list._id.toString(), name: list.name, description: list.description ?? "", isDefault: false } },
+      {
+        list: {
+          id: list._id.toString(),
+          name: list.name,
+          description: list.description ?? "",
+          isDefault: false,
+          formSlug: list.formSlug ?? "",
+          formEnabled: list.formEnabled !== false,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {

@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin";
 import { LeadList } from "@/lib/models/lead-list";
 import { Lead } from "@/lib/models/lead";
-import { resolveLeadList } from "@/lib/leads";
+import { generateLeadFormSlug, resolveLeadList } from "@/lib/leads";
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await requireAdmin();
@@ -21,6 +21,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.description === "string") {
       list.description = body.description.trim().slice(0, 300);
     }
+    if (typeof body.formEnabled === "boolean") {
+      list.formEnabled = body.formEnabled;
+    }
+    if (!list.formSlug) {
+      list.formSlug = await generateLeadFormSlug(list.name);
+    }
     if (typeof body.isDefault === "boolean") {
       if (body.isDefault) {
         await LeadList.updateMany({ _id: { $ne: list._id } }, { $set: { isDefault: false } });
@@ -32,7 +38,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     await list.save();
 
     return NextResponse.json({
-      list: { id: list._id.toString(), name: list.name, description: list.description ?? "", isDefault: Boolean(list.isDefault) },
+      list: {
+        id: list._id.toString(),
+        name: list.name,
+        description: list.description ?? "",
+        isDefault: Boolean(list.isDefault),
+        formSlug: list.formSlug ?? "",
+        formEnabled: list.formEnabled !== false,
+      },
     });
   } catch (error) {
     if ((error as { code?: number })?.code === 11000) {

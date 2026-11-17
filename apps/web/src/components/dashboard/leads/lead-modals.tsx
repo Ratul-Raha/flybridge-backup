@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Trash2, Upload, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
 import { parseCsv } from "@/lib/csv";
 import { PRIORITY_META, SOURCE_LABEL } from "@/components/dashboard/leads/lead-meta";
 
@@ -675,6 +675,8 @@ export function CreateListModal({ onClose, onCreated }: { onClose: () => void; o
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<{ id: string; slug: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const create = async () => {
     if (!name.trim()) {
@@ -691,14 +693,92 @@ export function CreateListModal({ onClose, onCreated }: { onClose: () => void; o
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to create list");
+      setCreated({ id: data.list?.id ?? "", slug: data.list?.formSlug ?? "" });
       onCreated(data.list?.id ?? "");
-      onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create list");
     } finally {
       setBusy(false);
     }
   };
+
+  const formUrl =
+    created?.slug && typeof window !== "undefined"
+      ? `${window.location.origin}/forms/${created.slug}`
+      : "";
+
+  const copyUrl = async () => {
+    if (!formUrl) return;
+    try {
+      await navigator.clipboard.writeText(formUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  if (created) {
+    return (
+      <ModalShell title="List created" subtitle="A public form was created automatically" onClose={onClose}>
+        <div className="flex flex-col gap-4">
+          <div
+            className="rounded-xl border px-4 py-3.5"
+            style={{ borderColor: "rgba(15,169,104,0.25)", background: "rgba(15,169,104,0.06)" }}
+          >
+            <p className="text-[13px] font-semibold" style={{ color: "#065F46" }}>
+              Form ready to share
+            </p>
+            <p className="mt-1 text-[12.5px] leading-[1.6]" style={{ color: "var(--body)" }}>
+              Leads submitted through this link will land in this list. There is no public menu
+              link — share the URL directly.
+            </p>
+          </div>
+
+          {formUrl ? (
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={formUrl}
+                onFocus={(e) => e.currentTarget.select()}
+                className="min-w-0 flex-1 rounded-xl border bg-[var(--bg-soft)] px-3.5 py-[9px] font-mono text-[12px] outline-none"
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                aria-label="Public form URL"
+              />
+              <button
+                type="button"
+                onClick={copyUrl}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--bg-soft)]"
+                style={{ borderColor: "var(--line)", color: copied ? "#0FA968" : "var(--body)" }}
+                aria-label="Copy form URL"
+              >
+                {copied ? <Check size={15} /> : <Copy size={15} />}
+              </button>
+              <a
+                href={formUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors hover:bg-[var(--bg-soft)]"
+                style={{ borderColor: "var(--line)", color: "var(--body)" }}
+                aria-label="Open form"
+              >
+                <ExternalLink size={15} />
+              </a>
+            </div>
+          ) : (
+            <p className="text-[12.5px]" style={{ color: "var(--body)" }}>
+              Open the Forms tab to copy this list&apos;s form URL.
+            </p>
+          )}
+        </div>
+        <div className="mt-6 flex items-center gap-3">
+          <button type="button" onClick={onClose} className="rounded-full px-6 py-[10px] text-[13.5px] font-medium text-white" style={{ background: "var(--brand)" }}>
+            Done
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
 
   return (
     <ModalShell title="Create lead list" subtitle="Lists group related leads" onClose={onClose}>
@@ -712,6 +792,9 @@ export function CreateListModal({ onClose, onCreated }: { onClose: () => void; o
           <label className={labelClass} style={{ color: "var(--ink)" }}>Description</label>
           <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
         </div>
+        <p className="text-[12px] leading-[1.6]" style={{ color: "var(--body)" }}>
+          A public form will be created automatically for this list.
+        </p>
       </div>
       <div className="mt-6 flex items-center gap-3">
         <button type="button" onClick={create} disabled={busy} className="inline-flex items-center gap-2 rounded-full px-6 py-[10px] text-[13.5px] font-medium text-white disabled:opacity-60" style={{ background: "var(--brand)" }}>

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomBytes } from "crypto";
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Lead, LEAD_PRIORITIES, LEAD_SOURCES, type LeadDoc, type LeadPriority, type LeadSource } from "@/lib/models/lead";
@@ -37,6 +38,43 @@ function toObjectId(value: string | null | undefined): Types.ObjectId | null {
   return value && Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : null;
 }
 
+function slugifyName(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+/**
+ * Creates a unique, human-friendly public form slug for a lead list. The slug
+ * stays stable when the list is renamed so previously shared links keep working.
+ */
+export async function generateLeadFormSlug(name: string): Promise<string> {
+  const base = slugifyName(name) || "form";
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const slug = `${base}-${randomBytes(4).toString("hex")}`;
+    if (!(await LeadList.exists({ formSlug: slug }))) return slug;
+  }
+  return `${base}-${randomBytes(8).toString("hex")}`;
+}
+
+/**
+ * Finds a lead list behind a public form URL. Slugs are the canonical lookup;
+ * a raw list id is also accepted so legacy/id-based links keep working.
+ */
+export async function findLeadListByFormSlug(slug: string) {
+  await connectDb();
+  const clean = decodeURIComponent(slug).trim().toLowerCase();
+  if (!clean) return null;
+  const bySlug = await LeadList.findOne({ formSlug: clean });
+  if (bySlug) return bySlug;
+  if (Types.ObjectId.isValid(slug)) return LeadList.findById(slug);
+  return null;
+}
+
 /**
  * Resolves the list a new lead should land in: an explicit list when given,
  * otherwise the default list. Creates a "General" default list on first use so
@@ -48,9 +86,10 @@ export async function resolveLeadList(listId?: string | null): Promise<Types.Obj
     if (list) return list._id;
   }
   await connectDb();
+  const formSlug = await generateLeadFormSlug("General");
   const existing = await LeadList.findOneAndUpdate(
     { isDefault: true },
-    { $setOnInsert: { name: "General", isDefault: true } },
+    { $setOnInsert: { name: "General", isDefault: true, formSlug } },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   return existing._id;
