@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { connectDb } from "@/lib/db";
-import { readSession, USER_SNAPSHOT_TAG } from "@/lib/auth/session";
+import {
+  readSession,
+  syncSessionPhone,
+  USER_SNAPSHOT_TAG,
+} from "@/lib/auth/session";
 import { revalidateUserDashboard } from "@/lib/dashboard/tags";
 import { User } from "@/lib/models/user";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
@@ -77,6 +81,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     await user.save();
+    if (typeof body.phone === "string") {
+      await syncSessionPhone(user.phone ?? null);
+    }
     revalidateTag(USER_SNAPSHOT_TAG);
     revalidateUserDashboard();
 

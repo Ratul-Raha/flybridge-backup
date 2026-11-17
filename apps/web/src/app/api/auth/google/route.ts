@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { verifyIdToken } from "@/lib/auth/token";
-import { createSession, SESSION_COOKIE } from "@/lib/auth/session";
+import { createSession } from "@/lib/auth/session";
+import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth/constants";
 import { newSessionId, registerSession } from "@/lib/auth/sessions";
 import { User } from "@/lib/models/user";
 import { emitEvent } from "@/lib/events/emit";
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
       avatar: user.avatar,
       role: user.accountType,
       subscription: user.subscription,
+      phone: user.phone ?? null,
       sessionId,
     });
 
@@ -153,13 +155,7 @@ export async function POST(request: NextRequest) {
         subscription: user.subscription,
       },
     });
-    res.cookies.set(SESSION_COOKIE, session, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    res.cookies.set(SESSION_COOKIE, session, sessionCookieOptions());
     return res;
   } catch (error) {
     console.error("auth/google error", error);

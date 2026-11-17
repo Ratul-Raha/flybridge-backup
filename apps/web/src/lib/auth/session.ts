@@ -4,7 +4,14 @@ import { cookies } from "next/headers";
 import { unstable_cache } from "next/cache";
 import { SignJWT, jwtVerify } from "jose";
 import { connectDb } from "@/lib/db";
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+  sessionCookieOptions,
+} from "@/lib/auth/constants";
 import type { AccountType, SubscriptionType } from "@/lib/roles";
+
+export { SESSION_COOKIE };
 
 /**
  * Tag used to invalidate every cached user snapshot. Profile/role writes call
@@ -12,9 +19,6 @@ import type { AccountType, SubscriptionType } from "@/lib/roles";
  * waiting for the TTL.
  */
 export const USER_SNAPSHOT_TAG = "user-snapshot";
-
-export const SESSION_COOKIE = "flybridge_session";
-const SESSION_DURATION = 60 * 60 * 24 * 30;
 
 export type SessionUser = {
   uid: string;
@@ -36,21 +40,55 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSession(user: SessionUser): Promise<string> {
+type SessionClaims = SessionUser;
+
+async function signSession(claims: SessionClaims): Promise<string> {
   return new SignJWT({
-    name: user.name,
-    email: user.email,
-    avatar: user.avatar ?? null,
-    role: user.role,
-    subscription: user.subscription,
-    userId: user.userId,
-    sessionId: user.sessionId ?? null,
+    name: claims.name,
+    email: claims.email,
+    avatar: claims.avatar ?? null,
+    role: claims.role,
+    subscription: claims.subscription,
+    userId: claims.userId,
+    sessionId: claims.sessionId ?? null,
+    phone: claims.phone ?? null,
   })
     .setProtectedHeader({ alg: "HS256" })
-    .setSubject(user.uid)
+    .setSubject(claims.uid)
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_DURATION}s`)
+    .setExpirationTime(`${SESSION_MAX_AGE}s`)
     .sign(getSecret());
+}
+
+export async function createSession(user: SessionUser): Promise<string> {
+  return signSession(user);
+}
+
+/**
+ * Re-sign the active cookie after a phone write so middleware sees the latest
+ * value without waiting for the next full sign-in. No-op when signed out.
+ */
+export async function syncSessionPhone(phone: string | null): Promise<void> {
+  const token = cookies().get(SESSION_COOKIE)?.value;
+  if (!token) return;
+  let payload;
+  try {
+    ({ payload } = await jwtVerify(token, getSecret()));
+  } catch {
+    return;
+  }
+  const next = await signSession({
+    uid: payload.sub as string,
+    userId: payload.userId as string | undefined,
+    name: payload.name as string,
+    email: payload.email as string,
+    avatar: (payload.avatar as string | null) ?? null,
+    role: payload.role as AccountType,
+    subscription: payload.subscription as SubscriptionType,
+    sessionId: (payload.sessionId as string | null) ?? undefined,
+    phone,
+  });
+  cookies().set(SESSION_COOKIE, next, sessionCookieOptions());
 }
 
 export async function readSession(): Promise<SessionUser | null> {
@@ -66,6 +104,7 @@ export async function readSession(): Promise<SessionUser | null> {
       avatar: (payload.avatar as string | null) ?? null,
       role: payload.role as AccountType,
       subscription: payload.subscription as SubscriptionType,
+      phone: (payload.phone as string | null) ?? null,
       sessionId: (payload.sessionId as string | null) ?? undefined,
     };
     // Sessions older than the current schema have no sessionId and remain valid.

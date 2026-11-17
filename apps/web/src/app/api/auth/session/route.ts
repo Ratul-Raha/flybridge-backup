@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { readSession, getUserSnapshot } from "@/lib/auth/session";
+import {
+  readSession,
+  getUserSnapshot,
+  syncSessionPhone,
+} from "@/lib/auth/session";
 
 export async function GET() {
   const session = await readSession();
@@ -22,6 +26,8 @@ export async function GET() {
       createdAt = snapshot.createdAt;
     }
   }
+
+  await syncSessionPhone(phone);
 
   return NextResponse.json({
     user: {

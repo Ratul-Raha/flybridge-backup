@@ -1,7 +1,7 @@
-import { DIAL_CODES, type DialCode } from "./dial-codes";
+import { DIAL_CODES, type DialCode } from "./dial-codes.ts";
 
-export type { DialCode } from "./dial-codes";
-export { DIAL_CODES } from "./dial-codes";
+export type { DialCode } from "./dial-codes.ts";
+export { DIAL_CODES } from "./dial-codes.ts";
 
 /** Default country when none can be inferred (Bangladesh, +880). */
 export const DEFAULT_COUNTRY_ISO = "BD";
