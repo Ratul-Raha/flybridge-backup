@@ -41,8 +41,12 @@ export async function POST(request: NextRequest) {
       typeof body.listId === "string" ? body.listId : null
     );
 
-    const fieldDocs = await LeadField.find({ isActive: true }).lean();
-    const knownCustomNames = new Set(fieldDocs.map((f) => f.name.toLowerCase()));
+    const fieldDocs = await LeadField.find({ isActive: true, list: listId }).lean();
+    const customNameMap = new Map<string, string>();
+    for (const field of fieldDocs) {
+      customNameMap.set(field.name.toLowerCase(), field.name);
+      customNameMap.set(field.label.toLowerCase(), field.name);
+    }
 
     let created = 0;
     let skipped = 0;
@@ -70,7 +74,8 @@ export async function POST(request: NextRequest) {
         if (NAME_KEYS.includes(lower) || EMAIL_KEYS.includes(lower) || PHONE_KEYS.includes(lower) || SOURCE_KEYS.includes(lower) || PRIORITY_KEYS.includes(lower)) {
           continue;
         }
-        if (value.trim()) customFields[key] = value;
+        const canonicalName = customNameMap.get(lower);
+        if (canonicalName && value.trim()) customFields[canonicalName] = value;
       }
 
       const priority: LeadPriority = (LEAD_PRIORITIES as readonly string[]).includes(priorityRaw)

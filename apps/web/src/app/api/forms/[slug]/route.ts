@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDb } from "@/lib/db";
-import { LeadField } from "@/lib/models/lead-field";
 import { Lead } from "@/lib/models/lead";
-import { findLeadListByFormSlug, sanitizeCustomFields } from "@/lib/leads";
+import { findLeadListByFormSlug, getActiveFieldsForList, sanitizeCustomFields } from "@/lib/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +23,9 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
       return NextResponse.json({ error: "This form is no longer available" }, { status: 404 });
     }
 
-    await connectDb();
-    const fields = await LeadField.find({ isActive: true }).lean();
+    // Lead creation/update below still needs the DB; the field helper connects
+    // lazily, so no explicit connect call is required here.
+    const fields = await getActiveFieldsForList(list._id, Boolean(list.isDefault));
     const fieldNames = new Set(fields.map((f) => f.name));
 
     const name = typeof body.name === "string" ? body.name.trim().slice(0, 200) : "";

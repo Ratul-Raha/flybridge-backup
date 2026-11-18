@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { connectDb } from "@/lib/db";
-import { LeadField } from "@/lib/models/lead-field";
-import { findLeadListByFormSlug } from "@/lib/leads";
+import { findLeadListByFormSlug, getActiveFieldsForList } from "@/lib/leads";
 import { PublicLeadForm } from "@/components/forms/public-lead-form";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +15,7 @@ export default async function PublicLeadFormPage({ params }: { params: { slug: s
   const list = await findLeadListByFormSlug(params.slug);
   if (!list || list.formEnabled === false) notFound();
 
-  await connectDb();
-  const fields = await LeadField.find({ isActive: true }).sort({ sortOrder: 1, createdAt: 1 }).lean();
+  const fields = await getActiveFieldsForList(list._id, Boolean(list.isDefault));
 
   return (
     <PublicLeadForm

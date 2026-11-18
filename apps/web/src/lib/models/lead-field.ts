@@ -22,6 +22,8 @@ const leadFieldOptionSchema = new Schema(
 
 const leadFieldSchema = new Schema(
   {
+    /** The lead list this field belongs to. Fields are scoped per list. */
+    list: { type: Schema.Types.ObjectId, ref: "LeadList", default: null, index: true },
     name: { type: String, required: true, trim: true, maxlength: 60 },
     label: { type: String, required: true, trim: true, maxlength: 120 },
     type: { type: String, enum: LEAD_FIELD_TYPES, default: "text" },
@@ -35,6 +37,7 @@ const leadFieldSchema = new Schema(
 );
 
 leadFieldSchema.index({ name: 1 }, { unique: true });
+leadFieldSchema.index({ list: 1, sortOrder: 1 });
 leadFieldSchema.index({ sortOrder: 1 });
 
 export type LeadFieldDoc = InferSchemaType<typeof leadFieldSchema> & {

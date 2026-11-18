@@ -5,6 +5,7 @@ import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Lead, LEAD_PRIORITIES, LEAD_SOURCES, type LeadDoc, type LeadPriority, type LeadSource } from "@/lib/models/lead";
 import { LeadList } from "@/lib/models/lead-list";
+import { LeadField } from "@/lib/models/lead-field";
 import { Order } from "@/lib/models/order";
 import { CourseWishlist } from "@/lib/models/wishlist";
 import { SeminarRegistration } from "@/lib/models/seminar";
@@ -73,6 +74,21 @@ export async function findLeadListByFormSlug(slug: string) {
   if (bySlug) return bySlug;
   if (Types.ObjectId.isValid(slug)) return LeadList.findById(slug);
   return null;
+}
+
+/**
+ * Active custom fields for a list. Legacy unscoped fields are adopted by the
+ * default list the first time it is read.
+ */
+export async function getActiveFieldsForList(listId: Types.ObjectId, isDefault: boolean) {
+  await connectDb();
+  if (isDefault) {
+    await LeadField.updateMany(
+      { $or: [{ list: null }, { list: { $exists: false } }] },
+      { $set: { list: listId } }
+    );
+  }
+  return LeadField.find({ isActive: true, list: listId }).sort({ sortOrder: 1, createdAt: 1 });
 }
 
 /**

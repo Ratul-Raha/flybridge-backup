@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, ExternalLink, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
 import { parseCsv } from "@/lib/csv";
 import { PRIORITY_META, SOURCE_LABEL } from "@/components/dashboard/leads/lead-meta";
@@ -33,6 +33,7 @@ export type LeadItem = {
   source: string;
   priority: string;
   owner: string | null;
+  list: string | null;
   customFields: Record<string, unknown>;
   interests: { itemType: string; itemId: string; title: string; createdAt: string | null }[];
   tags: string[];
@@ -180,14 +181,12 @@ export function LeadFormModal({
   mode,
   lead,
   lists,
-  fields,
   onClose,
   onSaved,
 }: {
   mode: "create" | "edit";
   lead: LeadItem | null;
   lists: ListItem[];
-  fields: FieldItem[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -199,6 +198,7 @@ export function LeadFormModal({
   const [status, setStatus] = useState("new");
   const [listId, setListId] = useState("");
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
+  const [availableFields, setAvailableFields] = useState<FieldItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -210,7 +210,7 @@ export function LeadFormModal({
       setSource(lead.source);
       setPriority(lead.priority);
       setStatus(lead.status);
-      setListId("");
+      setListId(lead.list ?? "");
       setCustomFields(lead.customFields ?? {});
     } else {
       setName("");
@@ -223,6 +223,28 @@ export function LeadFormModal({
       setCustomFields({});
     }
   }, [mode, lead, lists]);
+
+  const fieldsListId = mode === "edit" ? lead?.list ?? "" : listId;
+
+  useEffect(() => {
+    if (!fieldsListId) {
+      setAvailableFields([]);
+      return;
+    }
+    let active = true;
+    fetch(`/api/admin/lead-fields?listId=${encodeURIComponent(fieldsListId)}`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!active) return;
+        setAvailableFields(((data?.fields ?? []) as FieldItem[]).filter((f) => f.isActive));
+      })
+      .catch(() => {
+        if (active) setAvailableFields([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [fieldsListId]);
 
   const save = async () => {
     if (!name.trim()) {
@@ -320,11 +342,11 @@ export function LeadFormModal({
           )}
         </div>
 
-        {fields.length > 0 && (
+        {availableFields.length > 0 && (
           <div>
             <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>Custom fields</p>
             <div className="grid gap-4 sm:grid-cols-2">
-              {fields.map((f) => (
+              {availableFields.map((f) => (
                 <div key={f.id}>
                   <label className={labelClass} style={{ color: "var(--ink)" }}>
                     {f.label} {f.isRequired && <span style={{ color: "#C0392B" }}>*</span>}
@@ -508,7 +530,20 @@ const FIELD_TYPES = [
   { value: "checkbox", label: "Checkbox" },
 ];
 
-export function FieldsModal({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
+export function FieldsModal({
+  lists,
+  defaultListId,
+  onClose,
+  onChanged,
+}: {
+  lists: ListItem[];
+  defaultListId?: string;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const [listId, setListId] = useState(
+    defaultListId || lists.find((l) => l.isDefault)?.id || lists[0]?.id || ""
+  );
   const [fields, setFields] = useState<FieldItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -516,9 +551,15 @@ export function FieldsModal({ onClose, onChanged }: { onClose: () => void; onCha
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    if (!listId) {
+      setFields([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/lead-fields", { cache: "no-store" });
+      const res = await fetch(`/api/admin/lead-fields?listId=${encodeURIComponent(listId)}`, { cache: "no-store" });
       const data = await res.json();
       setFields(data.fields ?? []);
     } catch {
@@ -526,13 +567,17 @@ export function FieldsModal({ onClose, onChanged }: { onClose: () => void; onCha
     } finally {
       setLoading(false);
     }
-  };
+  }, [listId]);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   const createField = async () => {
+    if (!listId) {
+      setError("Select a list first");
+      return;
+    }
     if (!form.name.trim() || !form.label.trim()) {
       setError("Name and label are required");
       return;
@@ -546,7 +591,14 @@ export function FieldsModal({ onClose, onChanged }: { onClose: () => void; onCha
       const res = await fetch("/api/admin/lead-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, label: form.label, type: form.type, options, isRequired: form.isRequired }),
+        body: JSON.stringify({
+          listId,
+          name: form.name,
+          label: form.label,
+          type: form.type,
+          options,
+          isRequired: form.isRequired,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to create field");
@@ -579,92 +631,129 @@ export function FieldsModal({ onClose, onChanged }: { onClose: () => void; onCha
   };
 
   return (
-    <ModalShell title="Manage custom fields" subtitle="Fields appear in the lead form and table" onClose={onClose} maxW="max-w-xl">
+    <ModalShell title="Manage custom fields" subtitle="Each list has its own fields for its form and leads" onClose={onClose} maxW="max-w-xl">
       <div className="flex flex-col gap-4">
         {error && <p className="text-[13px] font-medium" style={{ color: "#C0392B" }}>{error}</p>}
 
-        {!adding ? (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1.5 self-start rounded-full px-5 py-[9px] text-[13px] font-medium text-white"
-            style={{ background: "var(--brand)" }}
-          >
-            <Plus size={14} /> Add field
-          </button>
+        {lists.length === 0 ? (
+          <p className="rounded-xl border px-4 py-5 text-[13px]" style={{ borderColor: "var(--line)", color: "var(--body)" }}>
+            Create a lead list first. Fields belong to a specific list.
+          </p>
         ) : (
-          <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className={labelClass} style={{ color: "var(--ink)" }}>Field name (id)</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. preferred_destination" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
-              </div>
-              <div>
-                <label className={labelClass} style={{ color: "var(--ink)" }}>Label</label>
-                <input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="e.g. Preferred Destination" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
-              </div>
-              <div>
-                <label className={labelClass} style={{ color: "var(--ink)" }}>Type</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
-                  {FIELD_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-              {form.type === "select" && (
-                <div>
-                  <label className={labelClass} style={{ color: "var(--ink)" }}>Options (comma separated)</label>
-                  <input value={form.options} onChange={(e) => setForm({ ...form, options: e.target.value })} placeholder="UK, USA, Canada" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+          <>
+            <div>
+              <label className={labelClass} style={{ color: "var(--ink)" }}>List</label>
+              <select
+                value={listId}
+                onChange={(e) => {
+                  setListId(e.target.value);
+                  setAdding(false);
+                  setError(null);
+                }}
+                className={inputClass}
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              >
+                {lists.map((l) => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div
+              className="rounded-xl border px-4 py-3 text-[12.5px] leading-[1.6]"
+              style={{ borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }}
+            >
+              Name, email and phone are built-in fields. Everything you add here is custom for
+              <span className="font-semibold" style={{ color: "var(--ink)" }}>
+                {" "}{lists.find((l) => l.id === listId)?.name ?? "this list"}
+              </span>
+              .
+            </div>
+
+            {!adding ? (
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="inline-flex items-center gap-1.5 self-start rounded-full px-5 py-[9px] text-[13px] font-medium text-white"
+                style={{ background: "var(--brand)" }}
+              >
+                <Plus size={14} /> Add field
+              </button>
+            ) : (
+              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass} style={{ color: "var(--ink)" }}>Field name (id)</label>
+                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. preferred_destination" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+                  </div>
+                  <div>
+                    <label className={labelClass} style={{ color: "var(--ink)" }}>Label</label>
+                    <input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="e.g. Preferred Destination" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+                  </div>
+                  <div>
+                    <label className={labelClass} style={{ color: "var(--ink)" }}>Type</label>
+                    <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                      {FIELD_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {form.type === "select" && (
+                    <div>
+                      <label className={labelClass} style={{ color: "var(--ink)" }}>Options (comma separated)</label>
+                      <input value={form.options} onChange={(e) => setForm({ ...form, options: e.target.value })} placeholder="UK, USA, Canada" className={inputClass} style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+                    </div>
+                  )}
                 </div>
+                <label className="inline-flex items-center gap-2 text-[13px]" style={{ color: "var(--ink)" }}>
+                  <input type="checkbox" checked={form.isRequired} onChange={(e) => setForm({ ...form, isRequired: e.target.checked })} className="h-4 w-4" style={{ accentColor: "var(--brand)" }} />
+                  Required field
+                </label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={createField} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full px-5 py-[8px] text-[12.5px] font-medium text-white disabled:opacity-60" style={{ background: "var(--brand)" }}>
+                    {busy && <Loader2 size={13} className="animate-spin" />} Create
+                  </button>
+                  <button type="button" onClick={() => setAdding(false)} className="rounded-full border px-5 py-[8px] text-[12.5px] font-medium" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col divide-y rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+              {loading ? (
+                <div className="flex items-center gap-2 px-4 py-6 text-[13px]" style={{ color: "var(--body)" }}>
+                  <Loader2 size={15} className="animate-spin" /> Loading…
+                </div>
+              ) : fields.length === 0 ? (
+                <p className="px-4 py-6 text-[13px]" style={{ color: "var(--body)" }}>
+                  No custom fields for this list yet. Add one to capture extra info.
+                </p>
+              ) : (
+                fields.map((f) => (
+                  <div key={f.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>{f.label}</p>
+                      <p className="text-[12px]" style={{ color: "var(--body)" }}>{f.name} · {f.type}</p>
+                    </div>
+                    <span
+                      className="rounded-full px-2.5 py-[3px] text-[11px] font-semibold"
+                      style={f.isActive ? { background: "rgba(15,169,104,0.12)", color: "#065F46" } : { background: "var(--line)", color: "var(--body)" }}
+                    >
+                      {f.isActive ? "Visible" : "Hidden"}
+                    </span>
+                    <button type="button" onClick={() => toggleField(f)} className="text-[12px] font-semibold" style={{ color: "var(--brand)" }}>
+                      {f.isActive ? "Hide" : "Show"}
+                    </button>
+                    <button type="button" onClick={() => deleteField(f)} className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors hover:bg-red-50" style={{ borderColor: "var(--line)", color: "#C0392B" }} aria-label="Delete">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
               )}
             </div>
-            <label className="inline-flex items-center gap-2 text-[13px]" style={{ color: "var(--ink)" }}>
-              <input type="checkbox" checked={form.isRequired} onChange={(e) => setForm({ ...form, isRequired: e.target.checked })} className="h-4 w-4" style={{ accentColor: "var(--brand)" }} />
-              Required field
-            </label>
-            <div className="flex gap-2">
-              <button type="button" onClick={createField} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full px-5 py-[8px] text-[12.5px] font-medium text-white disabled:opacity-60" style={{ background: "var(--brand)" }}>
-                {busy && <Loader2 size={13} className="animate-spin" />} Create
-              </button>
-              <button type="button" onClick={() => setAdding(false)} className="rounded-full border px-5 py-[8px] text-[12.5px] font-medium" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
-                Cancel
-              </button>
-            </div>
-          </div>
+          </>
         )}
-
-        <div className="flex flex-col divide-y rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
-          {loading ? (
-            <div className="flex items-center gap-2 px-4 py-6 text-[13px]" style={{ color: "var(--body)" }}>
-              <Loader2 size={15} className="animate-spin" /> Loading…
-            </div>
-          ) : fields.length === 0 ? (
-            <p className="px-4 py-6 text-[13px]" style={{ color: "var(--body)" }}>
-              No custom fields yet. Add one to capture extra info per lead.
-            </p>
-          ) : (
-            fields.map((f) => (
-              <div key={f.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>{f.label}</p>
-                  <p className="text-[12px]" style={{ color: "var(--body)" }}>{f.name} · {f.type}</p>
-                </div>
-                <span
-                  className="rounded-full px-2.5 py-[3px] text-[11px] font-semibold"
-                  style={f.isActive ? { background: "rgba(15,169,104,0.12)", color: "#065F46" } : { background: "var(--line)", color: "var(--body)" }}
-                >
-                  {f.isActive ? "Visible" : "Hidden"}
-                </span>
-                <button type="button" onClick={() => toggleField(f)} className="text-[12px] font-semibold" style={{ color: "var(--brand)" }}>
-                  {f.isActive ? "Hide" : "Show"}
-                </button>
-                <button type="button" onClick={() => deleteField(f)} className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors hover:bg-red-50" style={{ borderColor: "var(--line)", color: "#C0392B" }} aria-label="Delete">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
       </div>
     </ModalShell>
   );

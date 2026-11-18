@@ -136,13 +136,14 @@ export function LeadManage() {
 
   const loadFields = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/lead-fields", { cache: "no-store" });
+      const query = list ? `?listId=${encodeURIComponent(list)}` : "";
+      const res = await fetch(`/api/admin/lead-fields${query}`, { cache: "no-store" });
       const data = await res.json();
       if (res.ok) setFields((data.fields ?? []).filter((f: FieldItem) => f.isActive));
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [list]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -613,7 +614,6 @@ export function LeadManage() {
           mode={editingLead ? "edit" : "create"}
           lead={editingLead}
           lists={lists}
-          fields={fields}
           onClose={() => setFormOpen(false)}
           onSaved={async () => {
             await load();
@@ -622,7 +622,14 @@ export function LeadManage() {
         />
       )}
       {importOpen && <ImportModal lists={lists} onClose={() => setImportOpen(false)} onImported={() => { void load(); void loadLists(); }} />}
-      {fieldsOpen && <FieldsModal onClose={() => setFieldsOpen(false)} onChanged={() => void loadFields()} />}
+      {fieldsOpen && (
+        <FieldsModal
+          lists={lists}
+          defaultListId={list || undefined}
+          onClose={() => setFieldsOpen(false)}
+          onChanged={() => void loadFields()}
+        />
+      )}
       {createListOpen && (
         <CreateListModal
           onClose={() => setCreateListOpen(false)}

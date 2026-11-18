@@ -3,7 +3,8 @@ import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin";
 import { LeadList } from "@/lib/models/lead-list";
 import { Lead } from "@/lib/models/lead";
-import { generateLeadFormSlug } from "@/lib/leads";
+import { LeadField } from "@/lib/models/lead-field";
+import { generateLeadFormSlug, resolveLeadList } from "@/lib/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,16 @@ export async function GET() {
         list.formSlug = await generateLeadFormSlug(list.name);
         await list.save();
       }
+    }
+
+    // Fields created before per-list scoping belonged to every list. Attach
+    // them to the default list so existing custom values keep a home.
+    const defaultListId = await resolveLeadList();
+    if (defaultListId) {
+      await LeadField.updateMany(
+        { $or: [{ list: null }, { list: { $exists: false } }] },
+        { $set: { list: defaultListId } }
+      );
     }
 
     const counts = await Lead.aggregate<{ _id: unknown; count: number }>([

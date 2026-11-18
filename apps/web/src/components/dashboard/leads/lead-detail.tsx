@@ -36,6 +36,7 @@ type Detail = {
     source: string;
     priority: string;
     owner: string | null;
+    list: string | null;
     customFields: Record<string, unknown>;
     interests: { itemType: string; itemId: string; title: string; createdAt: string | null }[];
     tags: string[];
@@ -90,16 +91,25 @@ export function LeadDetail({ id }: { id: string }) {
   }, [load]);
 
   useEffect(() => {
+    const listId = data?.lead.list;
+    if (!listId) {
+      setFields([]);
+      return;
+    }
+    let active = true;
     (async () => {
       try {
-        const res = await fetch("/api/admin/lead-fields", { cache: "no-store" });
+        const res = await fetch(`/api/admin/lead-fields?listId=${encodeURIComponent(listId)}`, { cache: "no-store" });
         const json = await res.json();
-        if (res.ok) setFields((json.fields ?? []).filter((f: FieldItem) => f.isActive));
+        if (active && res.ok) setFields((json.fields ?? []).filter((f: FieldItem) => f.isActive));
       } catch {
         /* ignore */
       }
     })();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [data?.lead.list]);
 
   const patch = useCallback(
     async (payload: Record<string, unknown>) => {

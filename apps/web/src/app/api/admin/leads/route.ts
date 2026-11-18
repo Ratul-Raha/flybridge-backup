@@ -104,7 +104,14 @@ export async function GET(request: NextRequest) {
       Lead.countDocuments({ followUpAt: { $lt: now }, status: { $nin: ["converted", "not-interested", "unqualified"] } }),
       Lead.countDocuments({ owner: null }),
       LeadList.find().sort({ isDefault: -1, name: 1 }).lean(),
-      LeadField.find({ isActive: true }).sort({ sortOrder: 1, createdAt: 1 }).lean(),
+      LeadField.find({
+        isActive: true,
+        ...(list && list !== "unlisted" && Types.ObjectId.isValid(list)
+          ? { list: new Types.ObjectId(list) }
+          : {}),
+      })
+        .sort({ sortOrder: 1, createdAt: 1 })
+        .lean(),
     ]);
 
     const statusCounts: Record<string, number> = {};
