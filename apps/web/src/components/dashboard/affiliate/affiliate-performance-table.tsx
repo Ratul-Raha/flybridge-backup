@@ -5,6 +5,7 @@ export type AffiliatePerformanceRow = {
   affiliateName?: string;
   code?: string;
   status?: string;
+  affiliateCurrency?: string;
   destination: string;
   link: string;
   clicks: number;

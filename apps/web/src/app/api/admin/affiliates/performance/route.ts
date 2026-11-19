@@ -15,7 +15,7 @@ export async function GET() {
   try {
     await connectDb();
     const [affiliates, performance] = await Promise.all([
-      Affiliate.find().select("name code status").sort({ name: 1 }).lean(),
+      Affiliate.find().select("name code status currency").sort({ name: 1 }).lean(),
       computeAffiliateLinkPerformance(),
     ]);
 
@@ -43,6 +43,7 @@ export async function GET() {
         affiliateName: affiliate.name ?? "",
         code: affiliate.code,
         status: affiliate.status,
+        affiliateCurrency: affiliate.currency ?? "BDT",
         link: affiliateTargetLink(AFFILIATE_SITE_URL, affiliate.code, row.destination),
       }));
     });
