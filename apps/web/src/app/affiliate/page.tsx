@@ -13,7 +13,7 @@ const steps = [
   {
     icon: Link2,
     title: "Get your link",
-    desc: "We set you up with a short link like flybridge.com/r/YOURNAME. Share it anywhere — social, blog, email, WhatsApp.",
+    desc: "We set you up with a short link like flybridgeedu.com/r/YOURNAME. Share it anywhere — social, blog, email, WhatsApp.",
   },
   {
     icon: MousePointerClick,

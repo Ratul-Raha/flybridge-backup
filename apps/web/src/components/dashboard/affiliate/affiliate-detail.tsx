@@ -67,6 +67,7 @@ type Affiliate = {
 
 type Detail = {
   affiliate: Affiliate;
+  link: string;
   totals: Record<string, Totals>;
   clicks: number;
   conversions: Conversion[];
@@ -148,7 +149,7 @@ export function AffiliateDetail({ id }: { id: string }) {
     reversed: 0,
     orderTotal: 0,
   };
-  const link = `https://flybridge.com/r/${affiliate.code}`;
+  const link = data.link;
 
   return (
     <div>

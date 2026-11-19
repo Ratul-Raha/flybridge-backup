@@ -4,7 +4,13 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { Affiliate, AFFILIATE_STATUSES } from "@/lib/models/affiliate";
 import { AffiliateConversion } from "@/lib/models/affiliate-conversion";
 import { AffiliatePayout } from "@/lib/models/affiliate-payout";
-import { serializeAffiliate, normalizeAffiliateCode, parsePayoutDetails } from "@/lib/affiliate";
+import {
+  AFFILIATE_SITE_URL,
+  affiliateLink,
+  serializeAffiliate,
+  normalizeAffiliateCode,
+  parsePayoutDetails,
+} from "@/lib/affiliate";
 import { computeAffiliateTotals, countAffiliateClicks } from "@/lib/affiliate-stats";
 
 function serializeConversion(doc: Record<string, unknown>) {
@@ -42,6 +48,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     return NextResponse.json({
       affiliate: serializeAffiliate(affiliate as unknown as Record<string, unknown>),
+      link: affiliateLink(AFFILIATE_SITE_URL, affiliate.code),
       totals,
       clicks,
       conversions: conversions.map((c) => serializeConversion(c as unknown as Record<string, unknown>)),

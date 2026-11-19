@@ -5,6 +5,8 @@ import { connectDb } from "@/lib/db";
 import { Affiliate, AFFILIATE_PAYOUT_METHODS, type AffiliatePayoutMethod } from "@/lib/models/affiliate";
 
 export const AFFILIATE_COOKIE = "flybridge_affiliate";
+/** Canonical public origin used for affiliate links, including in local development. */
+export const AFFILIATE_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com").replace(/\/+$/, "");
 /** Last-click attribution window, matching the shared marketing cookie. */
 export const AFFILIATE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90;
 /** Days a commission stays pending before it can be paid out. */
@@ -91,6 +93,14 @@ export function encodeAffiliateCookie(ref: AffiliateRef): string {
 export function affiliateLink(origin: string, code: string): string {
   const base = origin.replace(/\/+$/, "");
   return `${base}/r/${normalizeAffiliateCode(code)}`;
+}
+
+export function affiliateTargetLink(origin: string, code: string, destination: string): string {
+  const base = affiliateLink(origin, code);
+  const path = destination.trim();
+  if (!path || path === "/") return base;
+  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) return base;
+  return `${base}?to=${encodeURIComponent(path)}`;
 }
 
 export type AffiliatePayoutDetails = {

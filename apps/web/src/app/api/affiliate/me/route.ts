@@ -1,13 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
 import { AffiliateConversion } from "@/lib/models/affiliate-conversion";
 import { AffiliatePayout } from "@/lib/models/affiliate-payout";
-import { affiliateLink, findAffiliateForSession, serializeAffiliate } from "@/lib/affiliate";
+import {
+  AFFILIATE_SITE_URL,
+  affiliateLink,
+  affiliateTargetLink,
+  findAffiliateForSession,
+  serializeAffiliate,
+} from "@/lib/affiliate";
 import { approveDueConversions } from "@/lib/affiliate-commission";
-import { computeAffiliateTotals, countAffiliateClicks } from "@/lib/affiliate-stats";
+import {
+  computeAffiliateLinkPerformance,
+  computeAffiliateTotals,
+  countAffiliateClicks,
+} from "@/lib/affiliate-stats";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await readSession();
   if (!session?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,18 +33,33 @@ export async function GET(request: NextRequest) {
 
     await approveDueConversions(affiliate._id.toString());
 
-    const [totals, clicks, conversions, payouts] = await Promise.all([
+    const [totals, clicks, conversions, payouts, linkPerformance] = await Promise.all([
       computeAffiliateTotals(affiliate._id.toString()),
       countAffiliateClicks(affiliate._id.toString()),
       AffiliateConversion.find({ affiliate: affiliate._id }).sort({ createdAt: -1 }).limit(100).lean(),
       AffiliatePayout.find({ affiliate: affiliate._id }).sort({ createdAt: -1 }).limit(50).lean(),
+      computeAffiliateLinkPerformance(affiliate._id.toString()),
     ]);
+
+    if (!linkPerformance.some((row) => row.destination === "/")) {
+      linkPerformance.unshift({
+        affiliateId: affiliate._id.toString(),
+        destination: "/",
+        clicks: 0,
+        conversions: 0,
+        currencies: {},
+      });
+    }
 
     return NextResponse.json({
       affiliate: serializeAffiliate(affiliate as unknown as Record<string, unknown>),
-      link: affiliateLink(request.nextUrl.origin, affiliate.code),
+      link: affiliateLink(AFFILIATE_SITE_URL, affiliate.code),
       totals,
       clicks,
+      linkPerformance: linkPerformance.map((row) => ({
+        ...row,
+        link: affiliateTargetLink(AFFILIATE_SITE_URL, affiliate.code, row.destination),
+      })),
       conversions: conversions.map((c) => ({
         id: c._id.toString(),
         orderId: c.order ? String(c.order) : null,

@@ -11,6 +11,10 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 import { formatMoney } from "@/lib/pricing";
+import {
+  AffiliatePerformanceTable,
+  type AffiliatePerformanceRow,
+} from "@/components/dashboard/affiliate/affiliate-performance-table";
 
 type Totals = {
   conversions: number;
@@ -74,6 +78,7 @@ type MeResponse = {
   clicks?: number;
   conversions?: Conversion[];
   payouts?: Payout[];
+  linkPerformance?: AffiliatePerformanceRow[];
 };
 
 type Product = {
@@ -248,6 +253,19 @@ export function AffiliateDashboard() {
       </div>
 
       <LinkBuilder base={data.link ?? ""} code={affiliate.code} />
+
+      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+        <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+          Link performance
+        </h2>
+        <p className="mb-4 text-[12.5px]" style={{ color: "var(--body)" }}>
+          Visits and attributed orders grouped by the page each affiliate link points to. Commission excludes reversed orders.
+        </p>
+        <AffiliatePerformanceTable
+          rows={data.linkPerformance ?? []}
+          emptyMessage="No tracked affiliate link visits yet. Share a link to start seeing its performance."
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon={MousePointerClick} label="Clicks" value={String(data.clicks ?? 0)} />

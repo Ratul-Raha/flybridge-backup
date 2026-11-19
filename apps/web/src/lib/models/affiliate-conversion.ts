@@ -47,6 +47,7 @@ const affiliateConversionSchema = new Schema(
 // One commission per order, ever.
 affiliateConversionSchema.index({ order: 1 }, { unique: true });
 affiliateConversionSchema.index({ affiliate: 1, status: 1, createdAt: -1 });
+affiliateConversionSchema.index({ affiliate: 1, clickId: 1 });
 affiliateConversionSchema.index({ currency: 1, status: 1, availableAt: 1 });
 
 export type AffiliateConversionDoc = InferSchemaType<typeof affiliateConversionSchema> & {
