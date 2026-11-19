@@ -1,18 +1,9 @@
 "use client";
 
-import { Playfair_Display, Dancing_Script } from "next/font/google";
 import { ShieldCheck, Lock, Award } from "lucide-react";
 
-const displayFont = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  style: ["normal", "italic"],
-});
-
-const scriptFont = Dancing_Script({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
+const displayFontFamily = '"Playfair Display Variable", Georgia, serif';
+const scriptFontFamily = '"Dancing Script Variable", cursive';
 
 export type CertificateGrade = {
   percentage: number;
@@ -143,15 +134,16 @@ export function CertificateFace({
           </p>
 
           <p
-            className={`${displayFont.className} italic mt-1.5`}
-            style={{ fontSize: "clamp(13px,1.7vw,17px)", color: "var(--body)" }}
+            className="italic mt-1.5"
+            style={{ fontFamily: displayFontFamily, fontSize: "clamp(13px,1.7vw,17px)", color: "var(--body)" }}
           >
             This is to certify that
           </p>
 
           <p
-            className={`${scriptFont.className} leading-none`}
+            className="leading-none"
             style={{
+              fontFamily: scriptFontFamily,
               fontSize: "clamp(30px,5.2vw,52px)",
               color: unlocked ? "var(--ink)" : LOCKED_TONE,
               marginTop: "clamp(4px,1vw,10px)",
@@ -161,8 +153,8 @@ export function CertificateFace({
           </p>
 
           <p
-            className={displayFont.className}
             style={{
+              fontFamily: displayFontFamily,
               fontSize: "clamp(11px,1.5vw,14px)",
               color: unlocked ? "var(--body)" : LOCKED_TONE,
               maxWidth: "500px",
@@ -198,8 +190,8 @@ export function CertificateFace({
                 <div className="text-center">
                   <p style={{ fontSize: "clamp(6.5px,0.85vw,7.5px)", color: "var(--body)" }}>{s.label}</p>
                   <p
-                    className={`${displayFont.className} mt-0.5 font-bold tabular-nums`}
-                    style={{ fontSize: "clamp(11px,1.6vw,16px)", color: "var(--ink)" }}
+                    className="mt-0.5 font-bold tabular-nums"
+                    style={{ fontFamily: displayFontFamily, fontSize: "clamp(11px,1.6vw,16px)", color: "var(--ink)" }}
                   >
                     {s.value}
                   </p>
@@ -213,8 +205,8 @@ export function CertificateFace({
         <div className="relative flex items-end justify-between mx-[6.5%] mt-[2.8%] pb-[3.8%]">
           <div className="text-left">
             <p
-              className={`${scriptFont.className} font-bold`}
-              style={{ fontSize: "clamp(16px,2.4vw,24px)", color: "var(--brand)" }}
+              className="font-bold"
+              style={{ fontFamily: scriptFontFamily, fontSize: "clamp(16px,2.4vw,24px)", color: "var(--brand)" }}
             >
               FlyBridge
             </p>
@@ -275,8 +267,8 @@ export function CertificateFace({
                 <Lock size={16} style={{ color: "#fff" }} />
               </div>
               <p
-                className={`${displayFont.className} italic font-semibold`}
-                style={{ fontSize: "clamp(10px,1.3vw,12.5px)", color: "var(--ink)" }}
+                className="italic font-semibold"
+                style={{ fontFamily: displayFontFamily, fontSize: "clamp(10px,1.3vw,12.5px)", color: "var(--ink)" }}
               >
                 Unlock the full certificate
               </p>
