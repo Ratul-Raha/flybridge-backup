@@ -435,14 +435,7 @@ export function DashboardLayout({
               {
                 label: "Affiliates",
                 href: "/dashboard/admin/affiliates",
-                active:
-                  pathname.startsWith("/dashboard/admin/affiliates") &&
-                  !pathname.startsWith("/dashboard/admin/affiliates/performance"),
-              },
-              {
-                label: "Affiliate Performance",
-                href: "/dashboard/admin/affiliates/performance",
-                active: pathname.startsWith("/dashboard/admin/affiliates/performance"),
+                active: pathname.startsWith("/dashboard/admin/affiliates"),
               },
               {
                 label: "Growth & Sales",

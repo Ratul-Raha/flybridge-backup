@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Megaphone, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { AffiliatePerformance } from "@/components/dashboard/affiliate/affiliate-performance";
 import { formatMoney } from "@/lib/pricing";
 
 type Totals = {
@@ -86,6 +87,7 @@ function statusPill(status: string) {
 }
 
 export function AffiliateManage() {
+  const [activeTab, setActiveTab] = useState<"manage" | "performance">("manage");
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +116,7 @@ export function AffiliateManage() {
   }, [load]);
 
   const openCreate = () => {
+    setActiveTab("manage");
     setEditingId(null);
     setForm(EMPTY_FORM);
     setError(null);
@@ -227,7 +230,7 @@ export function AffiliateManage() {
       <PageHeader
         title="Affiliates"
         subtitle="Hand-picked partners who earn a share of the sales their links bring in."
-        action={
+        action={activeTab === "manage" ? (
           <button
             type="button"
             onClick={openCreate}
@@ -236,16 +239,48 @@ export function AffiliateManage() {
           >
             <Plus size={15} /> New affiliate
           </button>
-        }
+        ) : undefined}
       />
 
-      {error && (
-        <p className="mb-4 text-[13px] font-medium" style={{ color: "#C0392B" }}>
-          {error}
-        </p>
-      )}
+      <div
+        role="tablist"
+        aria-label="Affiliate dashboard sections"
+        className="mb-6 flex gap-1 border-b"
+        style={{ borderColor: "var(--line)" }}
+      >
+        {([
+          ["manage", "Affiliates"],
+          ["performance", "Performance"],
+        ] as const).map(([tab, label]) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab}
+            onClick={() => setActiveTab(tab)}
+            className="border-b-2 px-4 py-3 text-[13.5px] font-medium transition-colors"
+            style={
+              activeTab === tab
+                ? { borderColor: "var(--brand)", color: "var(--brand)" }
+                : { borderColor: "transparent", color: "var(--body)" }
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {formOpen && (
+      {activeTab === "performance" ? (
+        <AffiliatePerformance />
+      ) : (
+        <>
+          {error && (
+            <p className="mb-4 text-[13px] font-medium" style={{ color: "#C0392B" }}>
+              {error}
+            </p>
+          )}
+
+          {formOpen && (
         <div className="mb-6 rounded-[20px] border bg-white p-5 sm:p-7" style={{ borderColor: "var(--line)" }}>
           <h2 className="mb-5 font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit affiliate" : "Create affiliate"}
@@ -371,9 +406,9 @@ export function AffiliateManage() {
             </button>
           </div>
         </div>
-      )}
+          )}
 
-      <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
         {affiliates.length === 0 ? (
           <div className="rounded-[20px] border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
             <Megaphone size={22} className="mx-auto mb-3" style={{ color: "var(--body)" }} />
@@ -392,7 +427,9 @@ export function AffiliateManage() {
             />
           ))
         )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
