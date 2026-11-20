@@ -229,7 +229,7 @@ export function CouponManage() {
       )}
 
       {formOpen && (
-        <div className="mb-6 rounded-[20px] border bg-white p-5 sm:p-7" style={{ borderColor: "var(--line)" }}>
+        <div className="mb-6 rounded-lg border bg-white p-5 sm:p-7" style={{ borderColor: "var(--line)" }}>
           <h2 className="mb-5 font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit coupon" : "Create coupon"}
           </h2>
@@ -427,7 +427,7 @@ export function CouponManage() {
 
       <div className="flex flex-col gap-3">
         {coupons.length === 0 ? (
-          <div className="rounded-[20px] border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
             <Tag size={22} className="mx-auto mb-3" style={{ color: "var(--body)" }} />
             <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>No coupons yet</p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>Create a coupon code for customers to use at checkout.</p>
@@ -436,7 +436,7 @@ export function CouponManage() {
           coupons.map((coupon) => (
             <div
               key={coupon.id}
-              className="flex flex-wrap items-center gap-3 rounded-[20px] border bg-white p-4"
+              className="flex flex-wrap items-center gap-3 rounded-lg border bg-white p-4"
               style={{ borderColor: "var(--line)", opacity: coupon.active ? 1 : 0.62 }}
             >
               <div className="min-w-[220px] flex-1">

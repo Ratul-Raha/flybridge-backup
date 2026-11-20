@@ -316,7 +316,7 @@ export function LeadManage() {
       )}
 
       {/* Toolbar */}
-      <div className="mb-4 rounded-xl border bg-white p-3 flex flex-col gap-2.5" style={{ borderColor: "var(--line)" }}>
+      <div className="mb-4 rounded-lg border bg-white p-3 flex flex-col gap-2.5" style={{ borderColor: "var(--line)" }}>
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 min-w-[200px]">
             <select
@@ -450,7 +450,7 @@ export function LeadManage() {
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: "var(--line)" }}>
+      <div className="overflow-hidden rounded-lg border bg-white" style={{ borderColor: "var(--line)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px]" style={{ minWidth: 960 }}>
             <thead>
@@ -645,7 +645,7 @@ export function LeadManage() {
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className="rounded-xl border bg-white px-4 py-3" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white px-4 py-3" style={{ borderColor: "var(--line)" }}>
       <p className="text-[11.5px] font-medium" style={{ color: "var(--body)" }}>{label}</p>
       <p className="mt-1 font-display text-[20px] font-semibold tabular-nums" style={{ color: accent ? "#C0392B" : "var(--ink)" }}>
         {value}

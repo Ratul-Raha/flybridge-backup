@@ -167,7 +167,7 @@ export function AffiliateDetail({ id }: { id: string }) {
         <Stat label="Owed" value={formatMoney(totals.approved, currency)} hint={`${formatMoney(totals.paid, currency)} paid`} />
       </div>
 
-      <div className="mb-6 rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="mb-6 rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>Affiliate link</p>
@@ -205,7 +205,7 @@ function BackLink() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <p className="text-[12.5px] font-medium" style={{ color: "var(--body)" }}>{label}</p>
       <p className="mt-1 font-display text-[22px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>{value}</p>
       {hint && <p className="mt-1 text-[12px]" style={{ color: "var(--body)" }}>{hint}</p>}
@@ -286,7 +286,7 @@ function EditForm({ affiliate, onSaved }: { affiliate: Affiliate; onSaved: () =>
   };
 
   return (
-    <div className="mb-6 rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="mb-6 rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-4 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>Settings</h2>
       {error && <p className="mb-3 text-[13px] font-medium" style={{ color: "#C0392B" }}>{error}</p>}
       <div className="grid gap-4 md:grid-cols-2">
@@ -413,7 +413,7 @@ function PayoutPanel({
   };
 
   return (
-    <div className="mb-6 rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="mb-6 rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>Payouts</h2>
       <p className="mb-4 text-[12.5px]" style={{ color: "var(--body)" }}>
         Send the transfer first, then log it here. This marks the included approved commissions as paid.
@@ -477,7 +477,7 @@ function PayoutPanel({
 
 function ConversionsTable({ conversions }: { conversions: Conversion[] }) {
   return (
-    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-4 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>Conversions</h2>
       {conversions.length === 0 ? (
         <p className="text-[13px]" style={{ color: "var(--body)" }}>No sales yet.</p>

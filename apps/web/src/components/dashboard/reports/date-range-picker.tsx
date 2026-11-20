@@ -73,7 +73,7 @@ export function DateRangePicker({
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
-            className="absolute right-0 z-40 mt-2 w-[280px] rounded-xl border bg-white p-2 shadow-[0_18px_44px_-18px_rgba(16,24,40,0.35)]"
+            className="absolute right-0 z-40 mt-2 w-[280px] rounded-lg border bg-white p-2 shadow-[0_18px_44px_-18px_rgba(16,24,40,0.35)]"
             style={{ borderColor: "var(--line)" }}
           >
             <div className="flex flex-col">

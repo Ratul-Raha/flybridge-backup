@@ -103,7 +103,7 @@ export function LeadForms() {
       )}
 
       <div
-        className="mb-5 flex items-start gap-3 rounded-xl border px-4 py-3.5"
+        className="mb-5 flex items-start gap-3 rounded-lg border px-4 py-3.5"
         style={{ borderColor: "rgba(111,76,224,0.25)", background: "rgba(111,76,224,0.05)" }}
       >
         <span
@@ -124,12 +124,12 @@ export function LeadForms() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center rounded-xl border bg-white py-16" style={{ borderColor: "var(--line)" }}>
+        <div className="flex items-center justify-center rounded-lg border bg-white py-16" style={{ borderColor: "var(--line)" }}>
           <Loader2 size={20} className="animate-spin" style={{ color: "var(--body)" }} />
         </div>
       ) : lists.length === 0 ? (
         <div
-          className="flex flex-col items-center rounded-xl border bg-white px-6 py-14 text-center"
+          className="flex flex-col items-center rounded-lg border bg-white px-6 py-14 text-center"
           style={{ borderColor: "var(--line)" }}
         >
           <FileText size={24} style={{ color: "var(--body)" }} />
@@ -147,7 +147,7 @@ export function LeadForms() {
             return (
               <div
                 key={list.id}
-                className="rounded-xl border bg-white p-4 sm:p-5"
+                className="rounded-lg border bg-white p-4 sm:p-5"
                 style={{ borderColor: "var(--line)" }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">

@@ -169,7 +169,7 @@ export function GoogleFormsIntegrations() {
 
       {error && <p className="mb-4 text-[13px] font-medium" style={{ color: "#C0392B" }}>{error}</p>}
 
-      <div className="mb-6 rounded-xl border bg-white p-4 flex flex-wrap items-end gap-3" style={{ borderColor: "var(--line)" }}>
+      <div className="mb-6 rounded-lg border bg-white p-4 flex flex-wrap items-end gap-3" style={{ borderColor: "var(--line)" }}>
         <div className="min-w-[220px] flex-1">
           <label className={labelClass} style={{ color: "var(--ink)" }}>Google Form name</label>
           <input
@@ -196,7 +196,7 @@ export function GoogleFormsIntegrations() {
           <Loader2 size={16} className="animate-spin" /> Loading integrations…
         </div>
       ) : integrations.length === 0 ? (
-        <div className="rounded-xl border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
           <Plug size={22} className="mx-auto mb-3" style={{ color: "var(--body)" }} />
           <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>No integrations yet</p>
           <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>
@@ -208,7 +208,7 @@ export function GoogleFormsIntegrations() {
           {integrations.map((integration) => {
             const webhookUrl = `${origin}/api/integrations/google-forms/${integration.key}/webhook`;
             return (
-              <div key={integration.id} className="rounded-xl border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+              <div key={integration.id} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

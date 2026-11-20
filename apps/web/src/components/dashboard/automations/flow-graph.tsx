@@ -278,7 +278,7 @@ function NodeBlock({
   return (
     <div
       onClick={onSelect}
-      className="cursor-pointer rounded-xl border bg-white transition"
+      className="cursor-pointer rounded-lg border bg-white transition"
       style={{
         width: compact ? 240 : 300,
         borderColor: selected ? meta.color : "var(--line)",

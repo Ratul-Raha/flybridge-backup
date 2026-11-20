@@ -130,7 +130,7 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-[20px] border bg-white p-5 flex flex-col gap-2" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5 flex flex-col gap-2" style={{ borderColor: "var(--line)" }}>
       <div className="flex items-center gap-2 text-[12.5px] font-medium" style={{ color: "var(--body)" }}>
         <Icon size={15} /> {label}
       </div>
@@ -199,7 +199,7 @@ export function AffiliateDashboard() {
 
   if (!data?.affiliate) {
     return (
-      <div className="rounded-[20px] border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
         <Wallet size={22} className="mx-auto mb-3" style={{ color: "var(--body)" }} />
         <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
           You are not an affiliate yet
@@ -227,7 +227,7 @@ export function AffiliateDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
@@ -254,7 +254,7 @@ export function AffiliateDashboard() {
 
       <LinkBuilder base={data.link ?? ""} code={affiliate.code} />
 
-      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
           Link performance
         </h2>
@@ -290,7 +290,7 @@ export function AffiliateDashboard() {
       </div>
 
       {currencies.length > 1 && (
-        <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
           <h2 className="mb-3 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
             Earnings by currency
           </h2>
@@ -311,7 +311,7 @@ export function AffiliateDashboard() {
         </div>
       )}
 
-      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <h2 className="mb-4 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
           Recent sales
         </h2>
@@ -349,7 +349,7 @@ export function AffiliateDashboard() {
         )}
       </div>
 
-      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <h2 className="mb-4 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
           Payouts
         </h2>
@@ -432,7 +432,7 @@ function PayoutMethodForm({
   };
 
   return (
-    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
         Payout method
       </h2>
@@ -579,7 +579,7 @@ function LinkBuilder({ base, code }: { base: string; code: string }) {
   };
 
   return (
-    <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-1 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
         Link builder
       </h2>

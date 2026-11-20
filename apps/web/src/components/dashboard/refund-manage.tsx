@@ -128,7 +128,7 @@ export function RefundManage({ rows }: { rows: RefundRow[] }) {
 
       {visible.length === 0 ? (
         <div
-          className="rounded-xl border px-6 py-10 text-center text-[13.5px]"
+          className="rounded-lg border px-6 py-10 text-center text-[13.5px]"
           style={{ borderColor: "var(--line)", background: "var(--bg-soft)", color: "var(--body)" }}
         >
           Nothing here right now.
@@ -152,7 +152,7 @@ export function RefundManage({ rows }: { rows: RefundRow[] }) {
           return (
             <div
               key={row.id}
-              className="rounded-xl border bg-white p-5 flex flex-col gap-3"
+              className="rounded-lg border bg-white p-5 flex flex-col gap-3"
               style={{ borderColor: "var(--line)" }}
             >
               <div className="flex items-start justify-between gap-4 flex-wrap">

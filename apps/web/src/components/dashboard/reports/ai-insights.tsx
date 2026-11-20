@@ -56,7 +56,7 @@ export function AiInsights({ query, canGenerate }: { query: string; canGenerate:
       {!data && !loading && (
         <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
           <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+            className="w-12 h-12 rounded-lg flex items-center justify-center"
             style={{ background: "rgba(110,76,255,0.1)" }}
           >
             <Sparkles size={22} style={{ color: BRAND }} />

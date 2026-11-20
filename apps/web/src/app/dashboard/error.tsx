@@ -12,7 +12,7 @@ export default function DashboardError({
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
       <div
-        className="flex h-14 w-14 items-center justify-center rounded-2xl"
+        className="flex h-14 w-14 items-center justify-center rounded-lg"
         style={{ background: "rgba(224,87,46,0.12)", color: "#E0572E" }}
       >
         <AlertTriangle size={26} />

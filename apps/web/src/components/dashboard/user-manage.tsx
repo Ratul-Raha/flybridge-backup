@@ -693,7 +693,7 @@ export function UserManage() {
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
-              <div className="w-11 h-11 rounded-2xl mb-4" style={{ background: "var(--line)" }} />
+              <div className="w-11 h-11 rounded-lg mb-4" style={{ background: "var(--line)" }} />
               <div className="h-[26px] w-16 rounded-lg mb-2" style={{ background: "var(--line)" }} />
               <div className="h-[10px] w-24 rounded" style={{ background: "var(--line)" }} />
             </div>
@@ -737,7 +737,7 @@ export function UserManage() {
                 >
                   <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-[0.08] transition-transform duration-500 group-hover:scale-150" style={{ background: c.gradient }} />
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white mb-4 transition-transform duration-250 group-hover:scale-110 group-hover:rotate-6"
+                    className="w-11 h-11 rounded-lg flex items-center justify-center text-white mb-4 transition-transform duration-250 group-hover:scale-110 group-hover:rotate-6"
                     style={{ background: c.gradient, boxShadow: `0 8px 18px -6px ${c.gradient}66` }}
                   >
                     <c.icon size={19} strokeWidth={2.2} />
@@ -766,7 +766,7 @@ export function UserManage() {
 
       {/* Filters */}
       <div
-        className="rounded-xl border bg-white p-3 sm:p-4"
+        className="rounded-lg border bg-white p-3 sm:p-4"
         style={{ borderColor: "var(--line)" }}
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">

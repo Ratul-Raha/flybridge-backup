@@ -176,7 +176,7 @@ export default function CertificatePage({
         )}
 
         {/* ============ Download / status section ============ */}
-        <div className="no-print mt-6 rounded-2xl border" style={{ borderColor: "var(--line)", background: "#fff" }}>
+        <div className="no-print mt-6 rounded-lg border" style={{ borderColor: "var(--line)", background: "#fff" }}>
           <div className="p-6">
             {serverEligible ? (
               <>

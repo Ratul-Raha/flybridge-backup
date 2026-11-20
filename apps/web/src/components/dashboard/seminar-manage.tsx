@@ -195,7 +195,7 @@ export function SeminarManage() {
       )}
 
       {formOpen && (
-        <div className="rounded-[24px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
           <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit seminar" : "New seminar"}
           </h2>
@@ -399,7 +399,7 @@ export function SeminarManage() {
       <div className="flex flex-col gap-5">
         {loading && <CardLoader label="Loading seminars…" />}
         {seminars.map((s) => (
-          <div key={s.id} className="rounded-[24px] border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
+          <div key={s.id} className="rounded-lg border bg-white overflow-hidden" style={{ borderColor: "var(--line)" }}>
             <div className="flex flex-col sm:flex-row">
               {s.image ? (
                 // eslint-disable-next-line @next/next/no-img-element

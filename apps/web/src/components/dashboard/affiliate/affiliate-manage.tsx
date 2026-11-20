@@ -281,7 +281,7 @@ export function AffiliateManage() {
           )}
 
           {formOpen && (
-        <div className="mb-6 rounded-[20px] border bg-white p-5 sm:p-7" style={{ borderColor: "var(--line)" }}>
+        <div className="mb-6 rounded-lg border bg-white p-5 sm:p-7" style={{ borderColor: "var(--line)" }}>
           <h2 className="mb-5 font-display text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit affiliate" : "Create affiliate"}
           </h2>
@@ -410,7 +410,7 @@ export function AffiliateManage() {
 
           <div className="flex flex-col gap-3">
         {affiliates.length === 0 ? (
-          <div className="rounded-[20px] border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border bg-white p-10 text-center" style={{ borderColor: "var(--line)" }}>
             <Megaphone size={22} className="mx-auto mb-3" style={{ color: "var(--body)" }} />
             <p className="font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>No affiliates yet</p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--body)" }}>Add a partner to start tracking the sales their links bring in.</p>
@@ -461,7 +461,7 @@ function AffiliateRow({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-3 rounded-[20px] border bg-white p-4"
+      className="flex flex-wrap items-center gap-3 rounded-lg border bg-white p-4"
       style={{ borderColor: "var(--line)", opacity: active ? 1 : 0.65 }}
     >
       <div className="min-w-[220px] flex-1">

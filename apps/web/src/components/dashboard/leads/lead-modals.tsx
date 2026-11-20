@@ -71,7 +71,7 @@ function ModalShell({
     >
       <div className="absolute inset-0" style={{ background: "rgba(15,17,28,0.5)", backdropFilter: "blur(2px)" }} />
       <div
-        className={`relative w-full ${maxW} max-h-[88vh] flex flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl`}
+        className={`relative w-full ${maxW} max-h-[88vh] flex flex-col overflow-hidden rounded-lg border bg-white shadow-2xl`}
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: "var(--line)" }}>
@@ -455,7 +455,7 @@ export function ImportModal({ lists, onClose, onImported }: { lists: ListItem[];
         </div>
 
         <label
-          className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-10 text-center cursor-pointer transition-colors hover:bg-[var(--bg-soft)]"
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-10 text-center cursor-pointer transition-colors hover:bg-[var(--bg-soft)]"
           style={{ borderColor: "var(--line)" }}
         >
           <Upload size={22} style={{ color: "var(--body)" }} />
@@ -680,7 +680,7 @@ export function FieldsModal({
                 <Plus size={14} /> Add field
               </button>
             ) : (
-              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
+              <div className="rounded-lg border p-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className={labelClass} style={{ color: "var(--ink)" }}>Field name (id)</label>

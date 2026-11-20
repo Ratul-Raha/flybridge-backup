@@ -469,7 +469,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+    <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
       <h2 className="mb-4 font-display text-[15px] font-semibold" style={{ color: "var(--ink)" }}>{title}</h2>
       {children}
     </div>

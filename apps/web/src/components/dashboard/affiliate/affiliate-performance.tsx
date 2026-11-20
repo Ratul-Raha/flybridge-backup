@@ -196,7 +196,7 @@ export function AffiliatePerformance() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-[20px] border bg-white p-5" style={{ borderColor: "var(--line)" }}>
+      <div className="rounded-lg border bg-white p-5" style={{ borderColor: "var(--line)" }}>
         <p className="mb-4 text-[12.5px]" style={{ color: "var(--body)" }}>
           Select an affiliate row to expand its URL breakdown. Click a column heading to sort. Order-count filters apply to each affiliate’s total. Order value includes attributed orders; commission excludes reversed orders.
         </p>

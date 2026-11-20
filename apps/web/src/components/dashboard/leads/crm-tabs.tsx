@@ -13,7 +13,7 @@ const TABS = [
 export function CrmTabs() {
   const pathname = usePathname();
   return (
-    <div className="mb-6 flex flex-wrap gap-1 rounded-xl border bg-white p-1" style={{ borderColor: "var(--line)" }}>
+    <div className="mb-6 flex flex-wrap gap-1 rounded-lg border bg-white p-1" style={{ borderColor: "var(--line)" }}>
       {TABS.map((tab) => {
         const active = pathname.startsWith(tab.href);
         return (

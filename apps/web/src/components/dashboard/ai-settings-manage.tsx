@@ -204,7 +204,7 @@ export function AiSettingsManage() {
                 key={p.id}
                 type="button"
                 onClick={() => setProvider(p.id)}
-                className="rounded-xl border p-4 text-left transition-all"
+                className="rounded-lg border p-4 text-left transition-all"
                 style={{
                   borderColor: active ? p.color : "var(--line)",
                   background: active ? p.bg : "transparent",
@@ -272,7 +272,7 @@ export function AiSettingsManage() {
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border p-4" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border p-4" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center justify-between">
               <span
                 className="flex h-9 w-9 items-center justify-center rounded-lg"
@@ -294,7 +294,7 @@ export function AiSettingsManage() {
             </p>
           </div>
 
-          <div className="rounded-xl border p-4" style={{ borderColor: "var(--line)" }}>
+          <div className="rounded-lg border p-4" style={{ borderColor: "var(--line)" }}>
             <span
               className="flex h-9 w-9 items-center justify-center rounded-lg"
               style={{ background: "rgba(15,169,104,0.12)", color: "#0FA968" }}

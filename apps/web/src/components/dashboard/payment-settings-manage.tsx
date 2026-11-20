@@ -199,7 +199,7 @@ export function PaymentSettingsManage() {
             />
           </div>
 
-          <div className="mt-5 flex flex-col gap-2.5 rounded-xl border px-4 py-3.5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
+          <div className="mt-5 flex flex-col gap-2.5 rounded-lg border px-4 py-3.5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
             <StatusDot ok={data?.stripe.testKey ?? false} label="Test secret key" hint={data?.stripe.testKey ? "sk_test_… configured" : "missing"} />
             <StatusDot ok={data?.stripe.liveKey ?? false} label="Live secret key" hint={data?.stripe.liveKey ? "sk_live_… configured" : "missing"} />
             <StatusDot ok={data?.stripe.testWebhook ?? false} label="Test webhook secret" hint={data?.stripe.testWebhook ? "configured" : "missing"} />
@@ -251,7 +251,7 @@ export function PaymentSettingsManage() {
             />
           </div>
 
-          <div className="mt-5 flex flex-col gap-2.5 rounded-xl border px-4 py-3.5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
+          <div className="mt-5 flex flex-col gap-2.5 rounded-lg border px-4 py-3.5" style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}>
             <StatusDot ok={epsMode !== "production"} label="Sandbox credentials" hint="public demo account" />
             <StatusDot ok={data?.eps.envCreds ?? false} label="Live credentials" hint={data?.eps.envCreds ? "configured" : "missing"} />
           </div>

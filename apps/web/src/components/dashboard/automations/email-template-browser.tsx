@@ -236,7 +236,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border py-14 text-center" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border py-14 text-center" style={{ borderColor: "var(--line)" }}>
           <p className="text-[13.5px]" style={{ color: "var(--body)" }}>
             No templates match your filters.
           </p>
@@ -249,7 +249,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
               <button
                 key={t.id}
                 onClick={() => setSelectedId(t.id)}
-                className="group rounded-xl border bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-16px_rgba(18,32,67,0.25)]"
+                className="group rounded-lg border bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-16px_rgba(18,32,67,0.25)]"
                 style={{ borderColor: "var(--line)" }}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -295,7 +295,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
           onClick={() => setSelectedId(null)}
         >
           <div
-            className="w-full rounded-2xl border bg-white overflow-hidden"
+            className="w-full rounded-lg border bg-white overflow-hidden"
             style={{ maxWidth: 1080, borderColor: "var(--line)", boxShadow: "0 40px 80px -30px rgba(18,32,67,0.45)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -404,7 +404,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
               {tab === "preview" ? (
                 <div className="flex justify-center p-4">
                   <div
-                    className="overflow-hidden rounded-xl bg-white transition-all duration-200"
+                    className="overflow-hidden rounded-lg bg-white transition-all duration-200"
                     style={{ width: device === "mobile" ? 390 : 640, boxShadow: "0 14px 40px -18px rgba(18,32,67,0.4)" }}
                   >
                     <iframe
@@ -417,7 +417,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
                 </div>
               ) : tab === "code" ? (
                 <div className="p-4">
-                  <div className="rounded-xl bg-[#0F1524] p-4">
+                  <div className="rounded-lg bg-[#0F1524] p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
                         email.html · {selected.html.length.toLocaleString()} chars
@@ -438,7 +438,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
               ) : (
                 <div className="p-4">
                   {live?.error && (
-                    <div className="mb-3 flex items-start gap-2 rounded-xl border px-4 py-3 text-[12.5px] font-medium" style={{ borderColor: "#F5C6C6", background: "#FDECEC", color: "#C0392B" }}>
+                    <div className="mb-3 flex items-start gap-2 rounded-lg border px-4 py-3 text-[12.5px] font-medium" style={{ borderColor: "#F5C6C6", background: "#FDECEC", color: "#C0392B" }}>
                       <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                       <span>
                         Template error: {live.error}. Hint: block tags must be balanced (<code>{"{{#if …}}"}</code>…<code>{"{{/if}}"}</code>, <code>{"{{#each …}}"}</code>…<code>{"{{/each}}"}</code>).
@@ -476,7 +476,7 @@ export function EmailTemplateBrowser({ templates, initialTemplateId }: { templat
                         placeholder="Full HTML email source. Use {{user.name}}, {{#if …}}, {{#each …}} to inject sample data."
                       />
                     </div>
-                    <details className="rounded-xl border bg-white px-4 py-3" style={{ borderColor: "var(--line)" }}>
+                    <details className="rounded-lg border bg-white px-4 py-3" style={{ borderColor: "var(--line)" }}>
                       <summary className="cursor-pointer text-[12.5px] font-semibold" style={{ color: "var(--ink)" }}>
                         Template syntax &amp; sample data
                       </summary>

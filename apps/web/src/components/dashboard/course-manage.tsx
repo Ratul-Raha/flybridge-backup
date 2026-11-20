@@ -471,7 +471,7 @@ export function CourseManage() {
       )}
 
       {formOpen && (
-        <div className="rounded-[24px] border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
+        <div className="rounded-lg border bg-white p-[clamp(20px,3vw,28px)]" style={{ borderColor: "var(--line)" }}>
           <h2 className="font-display text-[16px] font-semibold mb-5" style={{ color: "var(--ink)" }}>
             {editingId ? "Edit course" : "New course"}
           </h2>
@@ -628,7 +628,7 @@ export function CourseManage() {
             </div>
 
             <div
-              className="flex flex-col gap-3 md:col-span-2 rounded-xl border p-4"
+              className="flex flex-col gap-3 md:col-span-2 rounded-lg border p-4"
               style={{ borderColor: "var(--line)", background: "var(--bg-soft)" }}
             >
               <label

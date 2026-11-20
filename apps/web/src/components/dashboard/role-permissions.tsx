@@ -433,7 +433,7 @@ export function RolePermissions() {
 
       {/* Tabs */}
       <div
-        className="inline-flex items-center gap-1 self-start rounded-xl border bg-white p-1"
+        className="inline-flex items-center gap-1 self-start rounded-lg border bg-white p-1"
         style={{ borderColor: "var(--line)" }}
       >
         {(
@@ -542,7 +542,7 @@ export function RolePermissions() {
                 {candidates.map((c) => (
                   <div
                     key={c.id}
-                    className="flex flex-wrap items-center gap-3 rounded-xl border px-3.5 py-3"
+                    className="flex flex-wrap items-center gap-3 rounded-lg border px-3.5 py-3"
                     style={{ borderColor: "var(--line)" }}
                   >
                     <Avatar name={c.name} src={c.avatar} size={32} />

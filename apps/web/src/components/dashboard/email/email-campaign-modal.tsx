@@ -127,14 +127,14 @@ export function EmailCampaignModal({
     >
       <div className="absolute inset-0" style={{ background: "rgba(15,17,28,0.5)", backdropFilter: "blur(2px)" }} />
       <div
-        className="relative w-full max-w-2xl h-full sm:h-[88vh] flex flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl"
+        className="relative w-full max-w-2xl h-full sm:h-[88vh] flex flex-col overflow-hidden rounded-lg border bg-white shadow-2xl"
         style={{ borderColor: "var(--line)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: "var(--line)" }}>
           <div className="flex items-center gap-2.5 min-w-0">
             <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
               style={{ background: "var(--brand-soft)", color: "var(--brand)" }}
             >
               <Mail size={16} />
@@ -167,7 +167,7 @@ export function EmailCampaignModal({
             <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--body)" }}>
               Audience
             </p>
-            <div className="flex items-center gap-1 rounded-xl border p-1 self-start" style={{ borderColor: "var(--line)" }}>
+            <div className="flex items-center gap-1 rounded-lg border p-1 self-start" style={{ borderColor: "var(--line)" }}>
               {(
                 [
                   { key: "all", label: "All users" },
@@ -219,7 +219,7 @@ export function EmailCampaignModal({
           </div>
 
           {/* Tab switch */}
-          <div className="flex items-center gap-1 rounded-xl border p-1 self-start" style={{ borderColor: "var(--line)" }}>
+          <div className="flex items-center gap-1 rounded-lg border p-1 self-start" style={{ borderColor: "var(--line)" }}>
             {(
               [
                 { key: "compose", label: "Compose", icon: Code2 },
@@ -355,7 +355,7 @@ export function EmailCampaignModal({
               </p>
               {!subject.trim() && !body.trim() ? (
                 <div
-                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-16 text-center"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-16 text-center"
                   style={{ borderColor: "var(--line)", color: "var(--body)" }}
                 >
                   <Mail size={20} />
@@ -363,13 +363,13 @@ export function EmailCampaignModal({
                 </div>
               ) : (
                 <>
-                  <div className="rounded-xl border px-3.5 py-2.5" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
+                  <div className="rounded-lg border px-3.5 py-2.5" style={{ borderColor: "var(--line)", color: "var(--ink)" }}>
                     <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] mr-2" style={{ color: "var(--body)" }}>
                       Subject
                     </span>
                     {preview.subject}
                   </div>
-                  <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                  <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                     <iframe
                       title="Email preview"
                       srcDoc={`<!doctype html><html><body>${preview.html}</body></html>`}
