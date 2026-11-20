@@ -163,8 +163,9 @@ export async function GET(
     return socialPreviewResponse(code, destination, preview);
   }
 
-  const response = NextResponse.redirect(new URL(destination, request.nextUrl.origin));
+  const response = NextResponse.redirect(new URL(destination, AFFILIATE_SITE_URL));
   response.headers.set("Vary", "User-Agent");
+  response.headers.set("Cache-Control", "no-store");
 
   if (!code) return response;
 

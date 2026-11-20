@@ -6,7 +6,13 @@ import { Affiliate, AFFILIATE_PAYOUT_METHODS, type AffiliatePayoutMethod } from 
 
 export const AFFILIATE_COOKIE = "flybridge_affiliate";
 /** Canonical public origin used for affiliate links, including in local development. */
-export const AFFILIATE_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://flybridgeedu.com").replace(/\/+$/, "");
+const configuredSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim();
+const localSiteUrlPattern = /^https?:\/\/(localhost|127(?:\.\d{1,3}){3}|\[::1\]|0\.0\.0\.0)(?::\d+)?\/?$/i;
+export const AFFILIATE_SITE_URL = (
+  !configuredSiteUrl || localSiteUrlPattern.test(configuredSiteUrl)
+    ? "https://flybridgeedu.com"
+    : configuredSiteUrl
+).replace(/\/+$/, "");
 /** Last-click attribution window, matching the shared marketing cookie. */
 export const AFFILIATE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90;
 /** Days a commission stays pending before it can be paid out. */
