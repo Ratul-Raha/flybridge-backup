@@ -69,6 +69,15 @@ export const programs: Program[] = [
     hasDb: true,
   },
   {
+    slug: "easy-smart-ielts-reading",
+    badge: "IELTS READING",
+    title: "Easy & Smart IELTS Reading",
+    desc: "Practical IELTS Reading skills and question-solving strategies in 40 days, with just 20 minutes of learning per day.",
+    bg: "var(--mint-bg)",
+    badgeColor: "var(--mint-ink)",
+    hasDb: true,
+  },
+  {
     slug: "ielts-band-score-machine",
     badge: "IELTS",
     title: "IELTS Band Score Machine",
