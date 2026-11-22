@@ -1,11 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { formatMoney } from "@/lib/pricing";
-import { ArrowUpRight, BookOpen, Check, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BadgeCheck,
+  BookOpen,
+  Check,
+  Clock3,
+  CreditCard,
+  GraduationCap,
+  Loader2,
+  Lock,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { CouponCodeEntry, type CouponQuote } from "@/components/checkout/coupon-code-entry";
 import { trackMetaEvent } from "@/lib/meta-events";
 import { outboundLink } from "@/lib/outbound-link";
@@ -14,10 +29,13 @@ type Course = {
   courseId: string;
   slug: string;
   title: string;
+  subtitle?: string;
+  description?: string;
   image: string | null;
   badge: string;
   price: number;
   currency: string;
+  certificateEnabled?: boolean;
   prices?: { USD?: number; BDT?: number } | null;
   /** The pre-discount BDT amount, as a number so the summary can subtract from it. */
   originalPrice?: number;
@@ -28,6 +46,20 @@ type Course = {
   upcoming: boolean;
   /** Whether at least one lesson is marked free preview. */
   hasFreePreview?: boolean;
+  level?: string;
+  language?: string;
+  pace?: string;
+  access?: string;
+};
+
+type CheckoutInclusion = {
+  title: string;
+  description?: string;
+};
+
+type CheckoutStat = {
+  value: string;
+  label: string;
 };
 
 /**
@@ -39,12 +71,16 @@ export function CheckoutPanel({
   course,
   moduleCount,
   lessonCount,
-  product,
+  intro,
+  stats,
+  includedItems,
 }: {
   course: Course;
   moduleCount: number;
   lessonCount: number;
-  product: ReactNode;
+  intro?: string;
+  stats?: CheckoutStat[];
+  includedItems?: CheckoutInclusion[];
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -149,10 +185,8 @@ export function CheckoutPanel({
   };
 
   const inputClass =
-    "w-full rounded-xl border border-line bg-white px-4 py-3 text-[14px] outline-none transition-colors placeholder:text-body/50 focus:border-brand-2 focus:ring-2 focus:ring-brand-2/15";
-  const labelClass = "block text-[13px] font-medium mb-1.5";
-  const sectionTitle = "text-[12px] font-semibold uppercase tracking-[0.08em] mb-4";
-
+    "w-full rounded-[14px] border border-[#DDE4E2] bg-white px-4 py-[14px] text-[14px] outline-none transition-all placeholder:text-[#98A2B3] focus:border-[#15875F] focus:ring-4 focus:ring-[#15875F]/10";
+  const labelClass = "mb-2 block text-[13px] font-semibold";
   const displayCurrency = "BDT";
   const currentCouponQuote = couponQuote?.currency === displayCurrency ? couponQuote : null;
   // The server already applied the course's discount, so the summary and the
@@ -173,396 +207,436 @@ export function CheckoutPanel({
   const hasDiscount = discountAmount > 0 || wishlistDiscountAmount > 0 || couponDiscountAmount > 0;
 
   const money = (amount: number) => (amount <= 0 ? "Free" : formatMoney(amount, displayCurrency));
+  const itemsToInclude = includedItems ?? [
+    ...(moduleCount || lessonCount
+      ? [{ title: `${moduleCount} modules · ${lessonCount} lessons`, description: "Self-paced course content." }]
+      : []),
+    ...(course.language ? [{ title: `Course language: ${course.language}` }] : []),
+    ...(course.pace ? [{ title: course.pace }] : []),
+    ...(course.certificateEnabled ? [{ title: "Completion certificate" }] : []),
+  ];
+  const statsToShow = stats ?? [
+    ...(moduleCount ? [{ value: String(moduleCount), label: "Modules" }] : []),
+    ...(lessonCount ? [{ value: String(lessonCount), label: "Lessons" }] : []),
+    ...(course.level ? [{ value: course.level, label: "Level" }] : []),
+    ...(course.access ? [{ value: course.access, label: "Access" }] : []),
+  ].slice(0, 4);
+  const checkoutIntro = intro ?? course.description;
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start"
-    >
-      {/* Left — product + contact */}
-      <div className="space-y-8">
-        {product}
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <section
+        className="relative isolate overflow-hidden rounded-[30px] bg-[#101B35] text-white shadow-[0_30px_75px_-38px_rgba(16,27,53,0.58)]"
+        aria-labelledby="checkout-title"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+          style={{
+            background:
+              "radial-gradient(600px 400px at 100% 0%, rgba(124,240,189,.19), transparent 65%), radial-gradient(560px 360px at 0% 100%, rgba(42,104,150,.2), transparent 68%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.055]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+            maskImage: "radial-gradient(ellipse at 70% 20%, #000 4%, transparent 72%)",
+          }}
+        />
 
-        <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
-          <p className={sectionTitle} style={{ color: "var(--body)" }}>
-            Contact information
-          </p>
-          <div className="space-y-3">
-            <div>
-              <label className={labelClass} style={{ color: "var(--ink)" }}>
-                Full name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className={inputClass}
-                style={{ color: "var(--ink)" }}
-              />
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,.82fr)]">
+          <div className="px-6 pb-8 pt-7 sm:px-10 sm:pb-10 sm:pt-9 lg:py-11">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-2 text-[10.5px] font-bold uppercase tracking-[0.17em] text-[#B8F6DD]">
+              <Lock className="h-[13px] w-[13px]" strokeWidth={2.4} />
+              FlyBridge · Secure checkout
             </div>
-            <div>
-              <label className={labelClass} style={{ color: "var(--ink)" }}>
-                Email address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={inputClass}
-                style={{ color: "var(--ink)" }}
-              />
-            </div>
-            <div>
-              <label className={labelClass} style={{ color: "var(--ink)" }}>
-                Phone <span className="font-normal opacity-50">(optional)</span>
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+880 1XXX-XXXXXX"
-                className={inputClass}
-                style={{ color: "var(--ink)" }}
-              />
+            <h1
+              id="checkout-title"
+              className="mt-5 max-w-[620px] font-display text-[clamp(27px,4vw,43px)] font-semibold leading-[1.25] tracking-[-0.025em]"
+            >
+              আপনার পরের লক্ষ্যপূরণের যাত্রা শুরু হোক এখান থেকেই
+            </h1>
+            <p className="mt-4 max-w-[590px] text-[14.5px] leading-[1.85] text-[#C0CAD8] sm:text-[15.5px]">
+              {checkoutIntro || "কোর্সে ভর্তি হয়ে নিজের শেখার যাত্রা শুরু করুন।"}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5 text-[12px] font-medium text-[#D9E2EC]">
+              <span className="inline-flex items-center gap-2">
+                <Check className="h-[14px] w-[14px] text-[#8AF0C5]" strokeWidth={2.8} />
+                তাৎক্ষণিক কোর্স অ্যাক্সেস
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-[14px] w-[14px] text-[#8AF0C5]" strokeWidth={2.3} />
+                ৩ দিনের refund window
+              </span>
             </div>
           </div>
 
-          {error && (
-            <p className="mt-4 text-[13px] font-medium" style={{ color: "#C0392B" }}>
-              {error}
-            </p>
-          )}
-
-          {isUpcoming ? (
-            <div
-              className="mt-6 w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-semibold"
-              style={{ background: "var(--bg-soft)", color: "var(--body)" }}
-            >
-              Coming soon
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      {/* Right — subtotal card, then payment options, then inclusions */}
-      <aside className="space-y-6">
-        <div
-          className="rounded-lg border border-line bg-white overflow-hidden"
-          style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
-        >
-          <div className="p-6">
-            <p className={sectionTitle} style={{ color: "var(--body)" }}>
-              Order summary
-            </p>
-
-            <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
-              <div
-                className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
-                style={{ background: "var(--brand-soft)" }}
-              >
-                {course.image ? (
-                  <Image
-                    src={course.image}
-                    alt=""
-                    width={128}
-                    height={128}
-                    sizes="64px"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <BookOpen size={20} className="text-white/50" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-[14px] font-semibold leading-snug"
-                  style={{ color: "var(--ink)" }}
-                >
-                  {course.title}
-                </p>
-                <p className="text-[12px] mt-1" style={{ color: "var(--body)" }}>
-                  {course.badge}
-                </p>
-              </div>
-            </div>
-
-            {hasDiscount && (
-              <div className="py-4 space-y-2.5">
-                <div className="flex items-center justify-between gap-4 text-[13.5px]">
-                  <span style={{ color: "var(--body)" }}>Course price</span>
-                  <span className="font-medium tabular-nums" style={{ color: "var(--ink)" }}>
-                    {money(originalAmount)}
-                  </span>
+          <div className="px-4 pb-5 sm:px-6 sm:pb-6 lg:py-6 lg:pr-6">
+            <div className="h-full rounded-[23px] border border-white/10 bg-white/[0.075] p-4 backdrop-blur-sm sm:p-5">
+              <div className="flex h-full items-center gap-4 sm:gap-5">
+                <div className="relative h-[112px] w-[92px] shrink-0 overflow-hidden rounded-[15px] bg-white/10 sm:h-[145px] sm:w-[120px]">
+                  {course.image ? (
+                    <Image
+                      src={course.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 92px, 120px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[#B8F6DD]">
+                      <BookOpen className="h-8 w-8" strokeWidth={1.5} />
+                    </div>
+                  )}
                 </div>
-
-                {discountAmount > 0 && (
-                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span style={{ color: "var(--body)" }}>Discount</span>
-                      {course.discountLabel && (
-                        <span
-                          className="font-mono text-[10px] font-medium tracking-[0.08em]"
-                          style={{ color: "var(--brand-2)" }}
-                        >
-                          {course.discountLabel}
-                        </span>
-                      )}
-                    </span>
-                    <span
-                      className="font-medium tabular-nums whitespace-nowrap"
-                      style={{ color: "var(--brand-2)" }}
-                    >
-                      &minus;{formatMoney(discountAmount, displayCurrency)}
-                    </span>
-                  </div>
-                )}
-
-                {wishlistDiscountAmount > 0 && (
-                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span style={{ color: "var(--body)" }}>Wishlist discount</span>
-                      {course.wishlistDiscountPercent ? (
-                        <span
-                          className="font-mono text-[10px] font-medium tracking-[0.08em]"
-                          style={{ color: "var(--brand-2)" }}
-                        >
-                          {course.wishlistDiscountPercent}%
-                        </span>
-                      ) : null}
-                    </span>
-                    <span
-                      className="font-medium tabular-nums whitespace-nowrap"
-                      style={{ color: "var(--brand-2)" }}
-                    >
-                      &minus;{formatMoney(wishlistDiscountAmount, displayCurrency)}
-                    </span>
-                  </div>
-                )}
-
-                {couponDiscountAmount > 0 && currentCouponQuote && (
-                  <div className="flex items-center justify-between gap-4 text-[13.5px]">
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span style={{ color: "var(--body)" }}>Coupon</span>
-                      <span className="font-mono text-[10px] font-medium tracking-[0.08em]" style={{ color: "var(--brand-2)" }}>
-                        {currentCouponQuote.code}
+                <div className="min-w-0 py-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C9F36A] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#142139]">
+                    <Sparkles className="h-3 w-3" />
+                    {course.badge}
+                  </span>
+                  <h2 className="mt-3 font-display text-[16px] font-semibold leading-[1.45] text-white sm:text-[18px]">
+                    {course.title}
+                  </h2>
+                  {course.subtitle && (
+                    <p className="mt-1 text-[11px] leading-[1.5] text-[#D0D9E4]">{course.subtitle}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[11px] leading-[1.5] text-[#BCC8D7]">
+                    {[course.level, course.language].filter(Boolean).map((detail) => (
+                      <span key={detail} className="inline-flex items-center gap-2">
+                        {detail}
+                        {detail === course.level && course.language && <i className="h-1 w-1 rounded-full bg-white/40" />}
                       </span>
-                    </span>
-                    <span className="whitespace-nowrap font-medium tabular-nums" style={{ color: "var(--brand-2)" }}>
-                      &minus;{formatMoney(couponDiscountAmount, displayCurrency)}
-                    </span>
+                    ))}
                   </div>
-                )}
+                  {course.pace && (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#B8F6DD]">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {course.pace}
+                    </p>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
 
-            {canPay && (
-              <div className={hasDiscount ? "border-t pt-4" : "pt-4"} style={{ borderColor: "var(--line)" }}>
-                <CouponCodeEntry
-                  itemType="course"
-                  itemId={course.courseId}
-                  currency={displayCurrency}
-                  onQuoteChange={setCouponQuote}
+        {statsToShow.length > 0 && (
+          <dl className="grid grid-cols-2 border-t border-white/10 sm:grid-cols-4">
+            {statsToShow.map((stat, index) => (
+              <div
+                key={`${stat.value}-${stat.label}`}
+                className="min-w-0 px-5 py-4 sm:px-7 sm:py-5"
+                style={{ borderLeft: index > 0 ? "1px solid rgba(255,255,255,.1)" : undefined }}
+              >
+                <dt className="text-[10.5px] leading-[1.5] text-[#AAB8CA] sm:text-[11px]">{stat.label}</dt>
+                <dd className="mt-1 font-display text-[20px] font-semibold leading-tight text-[#C9F36A] sm:text-[23px]">
+                  {stat.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:gap-8">
+        <div className="space-y-6">
+          <section className="rounded-[25px] border border-[#E5EAE8] bg-white p-5 shadow-[0_18px_50px_-42px_rgba(16,27,53,.36)] sm:p-8">
+            <div className="mb-6 flex items-start gap-3.5 sm:mb-7">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[13px] bg-[#E6F7F0] font-mono text-[13px] font-bold text-[#14845B]">
+                01
+              </span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-[#14845B]">
+                  Your details
+                </p>
+                <h2 className="mt-1 font-display text-[20px] font-semibold leading-[1.35] text-[#142139] sm:text-[22px]">
+                  কোথায় পাঠাবো আপনার কোর্স অ্যাক্সেস?
+                </h2>
+                <p className="mt-1.5 text-[12.5px] leading-[1.6] text-[#697586]">
+                  সঠিক তথ্য দিন—অর্ডার ও অ্যাক্সেসের আপডেট এখানেই পাবেন।
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="checkout-name" className={labelClass} style={{ color: "var(--ink)" }}>
+                  Full name
+                </label>
+                <input
+                  id="checkout-name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="আপনার পুরো নাম"
+                  className={inputClass}
+                  style={{ color: "var(--ink)" }}
                 />
               </div>
-            )}
-
-            <div
-              className={`flex items-center justify-between gap-4 ${
-                hasDiscount ? "border-t pt-4" : "pt-5"
-              }`}
-              style={{ borderColor: "var(--line)" }}
-            >
-              <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
-                Total
-              </span>
-              <span
-                className="text-[22px] font-bold leading-none tabular-nums"
-                style={{ color: "var(--ink)" }}
-              >
-                {money(total)}
-              </span>
+              <div>
+                <label htmlFor="checkout-email" className={labelClass} style={{ color: "var(--ink)" }}>
+                  Email address
+                </label>
+                <input
+                  id="checkout-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                  style={{ color: "var(--ink)" }}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="checkout-phone" className={labelClass} style={{ color: "var(--ink)" }}>
+                  Phone number <span className="font-normal text-[#8792A2]">(optional)</span>
+                </label>
+                <input
+                  id="checkout-phone"
+                  name="tel"
+                  type="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+880 1XXX-XXXXXX"
+                  className={inputClass}
+                  style={{ color: "var(--ink)" }}
+                />
+              </div>
             </div>
 
-            {isUpcoming && (
-              <div
-                className="mt-4 text-center text-[13px] font-medium py-2.5 rounded-xl"
-                style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
-              >
-                This course is coming soon — join the waitlist to be notified.
-              </div>
+            {error && (
+              <p role="alert" className="mt-4 rounded-xl border border-[#F2C7C2] bg-[#FFF4F2] px-4 py-3 text-[13px] font-medium leading-[1.6] text-[#A4362B]">
+                {error}
+              </p>
             )}
+          </section>
+
+          <div className="flex items-start gap-3 rounded-[18px] border border-[#DDEEE6] bg-[#F5FBF8] px-4 py-4 sm:px-5">
+            <BadgeCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#16845C]" />
+            <p className="text-[12.5px] leading-[1.7] text-[#526273]">
+              পেমেন্ট সফল হলে আপনার অ্যাকাউন্টে কোর্সটি যোগ হবে। নতুন হলে পরের ধাপে সাইন ইন বা অ্যাকাউন্ট তৈরি করতে পারবেন।
+            </p>
           </div>
         </div>
 
-        {canPay && (
-          <div
-            className="rounded-lg border border-line bg-white p-6"
-            style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
-          >
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold text-white transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 disabled:opacity-60 cursor-pointer"
-              style={{
-                background: "var(--brand)",
-                boxShadow: "0 16px 28px -14px rgba(29,46,107,0.55)",
-              }}
-            >
-              {submitting && <Loader2 size={16} className="animate-spin" />}
-                {submitting
-                  ? "Redirecting to payment…"
-                  : isFree || total === 0
-                    ? "Get it for free"
-                    : "Pay Now"}
-            </button>
-
-            {course.hasFreePreview && (
-              <a
-                href={`/dashboard/courses/${course.slug}/learn`}
-                className="mt-3 w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-semibold border transition-colors hover:bg-black/5"
-                style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-              >
-                Start free trial
-              </a>
-            )}
-
-            <div className="my-3 flex items-center gap-3">
-              <span className="h-px flex-1" style={{ background: "var(--line)" }} />
-              <span className="text-[11px] font-medium uppercase tracking-[0.08em]" style={{ color: "var(--body)" }}>
-                or
-              </span>
-              <span className="h-px flex-1" style={{ background: "var(--line)" }} />
+        <aside className="space-y-5 lg:sticky lg:top-24">
+          <section className="overflow-hidden rounded-[25px] border border-[#E4E9E7] bg-white shadow-[0_24px_65px_-42px_rgba(16,27,53,.38)]">
+            <div className="border-b border-[#E9EEEC] px-5 py-5 sm:px-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#687587]">
+                  Order summary
+                </p>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F1] px-2.5 py-1 text-[10px] font-semibold text-[#137C55]">
+                  <Lock className="h-3 w-3" /> Secure
+                </span>
+              </div>
+              <div className="mt-4 flex items-center gap-3.5">
+                <div className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center overflow-hidden rounded-[13px] bg-[#E7F6F0]">
+                  {course.image ? (
+                    <Image src={course.image} alt="" fill sizes="58px" className="object-cover" />
+                  ) : (
+                    <BookOpen className="h-5 w-5 text-[#14845B]" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-display text-[14px] font-semibold leading-[1.45] text-[#142139]">
+                    {course.title}
+                  </h2>
+                  <p className="mt-1 text-[11px] font-medium text-[#778394]">{course.badge}</p>
+                </div>
+              </div>
             </div>
 
-            <a
-              href={
-                outboundLink(
-                  `https://wa.me/8801804400070?text=${encodeURIComponent(
-                    `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}${currentCouponQuote ? ` with coupon ${currentCouponQuote.code}` : ""}).`
-                  )}`,
-                  { label: `checkout-whatsapp:${course.slug}` }
-                ) ?? "#"
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 rounded-full py-4 text-[15px] font-bold transition-all duration-250 hover:-translate-y-[1px] hover:opacity-90 cursor-pointer"
-              style={{
-                background: "#25D366",
-                color: "#fff",
-                boxShadow: "0 16px 28px -14px rgba(18,140,74,0.55)",
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px] shrink-0" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              Pay Via WhatsApp
-            </a>
-          </div>
-        )}
-
-        <div
-          className="rounded-lg border border-line bg-white p-6"
-          style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
-        >
-          <p
-            className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3"
-            style={{ color: "var(--body)" }}
-          >
-            What&apos;s included
-          </p>
-          <ul className="space-y-2.5">
-            {[
-              "Instant access after enrollment",
-              `${moduleCount} modules · ${lessonCount} lessons`,
-              "Lifetime access — learn at your own pace",
-              ...(course.slug === "ielts-band-score-machine" ? [] : ["Certificate of completion"]),
-              "Live support from instructors",
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-2.5 text-[13px]">
-                <span
-                  className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0 mt-[1px]"
-                  style={{ background: "var(--brand-soft)", color: "var(--brand-2)" }}
-                >
-                  <Check className="w-[10px] h-[10px]" strokeWidth={3} />
-                </span>
-                <span style={{ color: "var(--ink)" }}>{item}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--line)" }}>
-            <p
-              className="text-[11.5px] font-semibold uppercase tracking-[0.08em] mb-3.5"
-              style={{ color: "var(--body)" }}
-            >
-              Buying safely
-            </p>
-            <ul className="space-y-2.5">
-              {/* The refund row is the only outbound one, and it opens the exact
-                  section of the policy that says what is covered. */}
-              {[
-                {
-                  icon: Lock,
-                  label: "SSL encrypted, secure checkout",
-                  href: null,
-                },
-                {
-                  icon: ShieldCheck,
-                  label: "3-day refund, 100% of your money back",
-                  href: "/refund#terms",
-                },
-                {
-                  icon: Zap,
-                  label: "Instant access once payment clears",
-                  href: null,
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                const body = (
+            <div className="px-5 py-5 sm:px-6">
+              <div className="space-y-3">
+                {hasDiscount && (
                   <>
-                    <Icon
-                      className="w-[14px] h-[14px] shrink-0"
-                      strokeWidth={2.2}
-                      style={{ color: "var(--brand-2)" }}
-                    />
-                    <span className="flex-1 text-[12.5px] leading-[1.5]" style={{ color: "var(--body)" }}>
-                      {item.label}
-                    </span>
-                    {item.href && (
-                      <ArrowUpRight
-                        className="w-[13px] h-[13px] shrink-0 opacity-60"
-                        strokeWidth={2.4}
-                        style={{ color: "var(--brand-2)" }}
-                      />
+                    <div className="flex items-center justify-between gap-4 text-[13px]">
+                      <span className="text-[#687587]">Course price</span>
+                      <span className="font-medium tabular-nums text-[#142139]">{money(originalAmount)}</span>
+                    </div>
+                    {discountAmount > 0 && (
+                      <div className="flex items-center justify-between gap-4 text-[13px]">
+                        <span className="flex flex-wrap items-center gap-2 text-[#687587]">
+                          Discount
+                          {course.discountLabel && (
+                            <span className="rounded bg-[#EAF8F1] px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-[0.06em] text-[#147D56]">
+                              {course.discountLabel}
+                            </span>
+                          )}
+                        </span>
+                        <span className="whitespace-nowrap font-semibold tabular-nums text-[#14845B]">
+                          −{formatMoney(discountAmount, displayCurrency)}
+                        </span>
+                      </div>
+                    )}
+                    {wishlistDiscountAmount > 0 && (
+                      <div className="flex items-center justify-between gap-4 text-[13px]">
+                        <span className="text-[#687587]">
+                          Wishlist discount{course.wishlistDiscountPercent ? ` · ${course.wishlistDiscountPercent}%` : ""}
+                        </span>
+                        <span className="whitespace-nowrap font-semibold tabular-nums text-[#14845B]">
+                          −{formatMoney(wishlistDiscountAmount, displayCurrency)}
+                        </span>
+                      </div>
+                    )}
+                    {couponDiscountAmount > 0 && currentCouponQuote && (
+                      <div className="flex items-center justify-between gap-4 text-[13px]">
+                        <span className="text-[#687587]">Coupon · {currentCouponQuote.code}</span>
+                        <span className="whitespace-nowrap font-semibold tabular-nums text-[#14845B]">
+                          −{formatMoney(couponDiscountAmount, displayCurrency)}
+                        </span>
+                      </div>
                     )}
                   </>
-                );
+                )}
+              </div>
 
-                return (
-                  <li key={item.label} className="flex items-start gap-2.5">
-                    {item.href ? (
+              {canPay && (
+                <div className={`${hasDiscount ? "mt-4 border-t pt-4" : "mt-1"}`} style={{ borderColor: "var(--line)" }}>
+                  <CouponCodeEntry
+                    itemType="course"
+                    itemId={course.courseId}
+                    currency={displayCurrency}
+                    onQuoteChange={setCouponQuote}
+                  />
+                </div>
+              )}
+
+              <div className={`mt-4 flex items-end justify-between gap-4 border-t border-[#E9EEEC] pt-4 ${hasDiscount ? "" : "!mt-2"}`}>
+                <div>
+                  <p className="text-[13px] font-semibold text-[#39465A]">Total due</p>
+                  <p className="mt-1 text-[10.5px] text-[#8893A1]">One-time payment · BDT</p>
+                </div>
+                <span className="font-display text-[25px] font-bold leading-none tracking-[-0.02em] tabular-nums text-[#142139]">
+                  {money(total)}
+                </span>
+              </div>
+
+              {isUpcoming ? (
+                <div className="mt-5 rounded-[14px] bg-[#F2EEFF] px-4 py-3 text-center text-[12.5px] font-semibold leading-[1.6] text-[#6948C9]">
+                  This course is coming soon. Join the waitlist to be notified.
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-[15px] bg-[#14845B] px-5 py-[15px] text-[14px] font-bold text-white shadow-[0_14px_28px_-15px_rgba(20,132,91,.8)] transition-all hover:-translate-y-0.5 hover:bg-[#0F714D] disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                    {submitting
+                      ? "Taking you to secure payment…"
+                      : isFree || total === 0
+                        ? "Get started for free"
+                        : "Continue to secure payment"}
+                    {!submitting && <ArrowRight className="h-4 w-4" />}
+                  </button>
+
+                  {course.hasFreePreview && (
+                    <a
+                      href={`/dashboard/courses/${course.slug}/learn`}
+                      className="mt-3 flex w-full items-center justify-center rounded-[14px] border border-[#E0E6E3] px-4 py-3 text-[12.5px] font-semibold text-[#465366] transition-colors hover:bg-[#F7FAF8]"
+                    >
+                      Explore the free preview
+                    </a>
+                  )}
+
+                  {canPay && (
+                    <>
+                      <div className="my-4 flex items-center gap-3">
+                        <span className="h-px flex-1 bg-[#E9EEEC]" />
+                        <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-[#8A95A3]">Need help?</span>
+                        <span className="h-px flex-1 bg-[#E9EEEC]" />
+                      </div>
                       <a
-                        href={item.href}
+                        href={
+                          outboundLink(
+                            `https://wa.me/8801804400070?text=${encodeURIComponent(
+                              `Hi FlyBridge! I'd like to pay for "${course.title}" (BDT ${formatMoney(total, displayCurrency)}${currentCouponQuote ? ` with coupon ${currentCouponQuote.code}` : ""}).`
+                            )}`,
+                            { label: `checkout-whatsapp:${course.slug}` }
+                          ) ?? "#"
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-start gap-2.5 group -m-1 p-1 rounded transition-colors hover:bg-brand-soft/50"
+                        className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#DDEEE5] bg-[#F5FBF7] px-4 py-3 text-[12px] font-bold text-[#167C53] transition-colors hover:bg-[#EAF7EF]"
                       >
-                        {body}
+                        <MessageCircle className="h-4 w-4" />
+                        Ask us on WhatsApp
+                        <ArrowUpRight className="h-3.5 w-3.5" />
                       </a>
-                    ) : (
-                      <span className="flex items-start gap-2.5">{body}</span>
+                    </>
+                  )}
+                </>
+              )}
+
+              <div className="mt-4 flex items-start gap-2.5 border-t border-[#E9EEEC] pt-4">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#14845B]" />
+                <p className="text-[10.5px] leading-[1.65] text-[#758091]">
+                  ৩ দিনের refund window প্রযোজ্য। ব্যবহারের শর্ত ও রিফান্ডের সম্পূর্ণ নিয়ম{" "}
+                  <a href="/refund#terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#147D56] underline underline-offset-2">
+                    দেখে নিন
+                  </a>
+                  ।
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[25px] border border-[#E4E9E7] bg-white p-5 shadow-[0_18px_50px_-42px_rgba(16,27,53,.32)] sm:p-6">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#F0F5F3] text-[#14845B]">
+                <GraduationCap className="h-[17px] w-[17px]" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#778394]">Your course includes</p>
+                <h2 className="mt-0.5 font-display text-[16px] font-semibold text-[#142139]">শেখার জন্য যা যা পাচ্ছেন</h2>
+              </div>
+            </div>
+            <ul className="mt-5 space-y-4">
+              {itemsToInclude.map((item, index) => (
+                <li key={`${item.title}-${index}`} className="flex items-start gap-3">
+                  <span className="mt-[1px] flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-[#E8F7F0] text-[#14845B]">
+                    <Check className="h-[11px] w-[11px]" strokeWidth={3} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-[12.5px] leading-[1.55] text-[#253247] ${item.description ? "font-semibold" : "font-medium"}`}>
+                      {item.title}
+                    </span>
+                    {item.description && (
+                      <span className="mt-1 block text-[11px] leading-[1.65] text-[#758091]">
+                        {item.description}
+                      </span>
                     )}
-                  </li>
-                );
-              })}
+                  </span>
+                </li>
+              ))}
             </ul>
-          </div>
-        </div>
-      </aside>
+            <div className="mt-5 border-t border-[#E9EEEC] pt-4">
+              <div className="flex items-center gap-2 text-[11px] font-medium text-[#758091]">
+                <Zap className="h-3.5 w-3.5 text-[#14845B]" />
+                {isFree ? "Course access is added after enrollment." : "Course access is added as soon as payment clears."}
+              </div>
+              <div className="mt-2.5 flex items-center gap-2 text-[11px] font-medium text-[#758091]">
+                <Lock className="h-3.5 w-3.5 text-[#14845B]" />
+                Your account and checkout details stay protected.
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </form>
   );
 }

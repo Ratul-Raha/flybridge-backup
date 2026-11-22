@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
-import { getProgram, programs } from "@/lib/programs";
+import { getProgram } from "@/lib/programs";
 import { connectDb } from "@/lib/db";
 import { publicCoursePricing } from "@/lib/course-discount";
 import { hasFreePreview } from "@/lib/course-preview";
@@ -12,9 +11,12 @@ import { readSession } from "@/lib/auth/session";
 import { Course } from "@/lib/models/course";
 import { CheckoutPanel } from "@/components/programs/checkout-panel";
 import { courseDetails } from "../course-data";
-import { BookOpen } from "lucide-react";
 
 type Props = { params: { slug: string } };
+
+const BENGALI_DIGITS = "০১২৩৪৫৬৭৮৯";
+const formatBengaliNumber = (value: number) =>
+  String(value).replace(/\d/g, (digit) => BENGALI_DIGITS[Number(digit)]);
 
 export const dynamic = "force-dynamic";
 
@@ -89,105 +91,184 @@ export default async function CheckoutPage({ params }: Props) {
     level: details?.level ?? course.level ?? "",
     language: details?.language ?? course.language ?? "",
     pace: details?.pace ?? course.pace ?? "",
+    access: details?.access ?? "",
+    certificateEnabled: course.certificateEnabled === true,
     upcoming: course.upcoming === true,
     hasFreePreview: (pricing.price ?? 0) > 0 && hasFreePreview(course),
   };
+
+  const isSpokenEnglish = params.slug === "easy-smart-spoken-english";
+  const isIelts = params.slug === "ielts-band-score-machine";
+
+  const spokenEnglishStats = [
+    { value: "১০০", label: "লেসন" },
+    { value: "১০", label: "ইউনিট" },
+    { value: "২০", label: "মিনিট / দিন" },
+    { value: "লাইভ", label: "সাপোর্ট" },
+  ];
+  const ieltsStats = [
+    { value: "২৫", label: "ভিডিও মাস্টারক্লাস" },
+    { value: "০৫", label: "বোনাস ক্লাস" },
+    { value: "১৫", label: "ফ্রি মক টেস্ট" },
+    { value: "০৪", label: "IELTS স্কিল" },
+  ];
+
+  const spokenEnglishItems = [
+    {
+      title: "১০০টি লেসন · ১০টি ইউনিট",
+      description: "দিনে একটি লেসন, প্রায় ২০ মিনিটে—নিজের সময়ে নিজের গতিতে।",
+    },
+    {
+      title: "টক-ব্যাক speaking practice",
+      description: "ভিডিও থামিয়ে নিজে মুখে বলুন; শুধু দেখা নয়, প্রতিটি ধাপে প্র্যাকটিস।",
+    },
+    {
+      title: "বাংলা + English-এ শেখা",
+      description: "বাংলায় ব্যাখ্যা, পরিচিত পরিস্থিতি, আর মাথায় অনুবাদ না করে express করার পদ্ধতি।",
+    },
+    {
+      title: "Easy & Smart Spoken English Course Book",
+      description: "কোর্সের সাথে ফ্রি—ভিডিওতে শিখুন, বইয়ে প্র্যাকটিস করুন।",
+    },
+    {
+      title: "লাইভ সাপোর্ট ও লার্নার কমিউনিটি",
+      description: "নিয়মিত অনুশীলন চালিয়ে যেতে সহায়তা ও শেখার কমিউনিটি।",
+    },
+    ...(course.certificateEnabled
+      ? [
+          {
+            title: "Completion Certificate",
+            description: "কোর্সটি শেষ করে আপনার শেখার অগ্রগতি উদ্‌যাপন করুন।",
+          },
+        ]
+      : []),
+  ];
+
+  const ieltsItems = [
+    {
+      title: "২৫টি IELTS video masterclass + ৫টি bonus class",
+      description: "পরীক্ষার ফরম্যাট ও model answer ধরে ধাপে ধাপে শিখুন।",
+    },
+    {
+      title: "১৫টি computer-based mock test",
+      description: "ওয়েবসাইটে আসল পরীক্ষার মতো স্ক্রিনে অনুশীলন ও নিজের প্রস্তুতি যাচাই।",
+    },
+    {
+      title: "Speaking, Writing, Listening ও Reading",
+      description: "চারটি IELTS skill-এর জন্য আলাদা কৌশল, practice ও skill-based lessons।",
+    },
+    {
+      title: "সম্পূর্ণ IELTS Companion PDF book",
+      description: "Lesson notes, model answers, Band 6 বনাম Band 7 বিশ্লেষণ ও practice test।",
+    },
+    {
+      title: "Quiz, practice ও নিয়মিত live class",
+      description: "শেখা ঝালাই করুন, প্রশ্ন করুন, আর প্রস্তুতি যাচাই করুন।",
+    },
+    { title: "Lifetime access", description: "নিজের সুবিধামতো সময়ে lessons ও course materials-এ ফিরে আসুন।" },
+  ];
+
+  const genericItems = [
+    ...(moduleCount || lessonCount
+      ? [
+          {
+            title: `${formatBengaliNumber(moduleCount)}টি মডিউল · ${formatBengaliNumber(lessonCount)}টি লেসন`,
+            description: details?.pace ?? course.pace ?? "নিজের সময়ে, নিজের গতিতে শিখুন।",
+          },
+        ]
+      : []),
+    ...(details?.features ?? []).slice(0, 4).map((feature) => ({
+      title: feature.title,
+      description: feature.desc,
+    })),
+    ...(details?.book
+      ? [
+          {
+            title: details.book.title,
+            description: details.book.includedNote || details.book.desc,
+          },
+        ]
+      : []),
+    ...(details?.pdfs?.length
+      ? [
+          {
+            title: `${formatBengaliNumber(details.pdfs.length)}টি course PDF resource`,
+            description: details.pdfs.map((pdf) => pdf.title).join(" · "),
+          },
+        ]
+      : []),
+    ...(course.certificateEnabled
+      ? [
+          {
+            title: details?.certificate?.title ?? "Completion Certificate",
+            description: details?.certificate?.desc ?? "কোর্স সম্পন্ন করে সার্টিফিকেট অর্জন করুন।",
+          },
+        ]
+      : []),
+  ];
+
+  const genericStats = details?.stats?.length
+    ? details.stats.map((stat) => ({ value: stat.value, label: stat.label }))
+    : [
+        ...(moduleCount ? [{ value: formatBengaliNumber(moduleCount), label: "মডিউল" }] : []),
+        ...(lessonCount ? [{ value: formatBengaliNumber(lessonCount), label: "লেসন" }] : []),
+        ...(details?.access ? [{ value: details.access, label: "অ্যাক্সেস" }] : []),
+        ...(details?.level ? [{ value: details.level, label: "লেভেল" }] : []),
+      ].slice(0, 4);
+
+  const checkoutIntro = isSpokenEnglish
+    ? "Don’t Translate, Just Express. দিনে মাত্র ২০ মিনিটে, এক লেসন করে ইংরেজিতে নিজের কথা প্রকাশের অনুশীলন শুরু করুন।"
+    : isIelts
+      ? "চারটি IELTS skill, ২৫টি video masterclass, ৫টি bonus class আর ১৫টি computer-based mock test—আপনার প্রস্তুতির জন্য একটি সম্পূর্ণ practice system।"
+      : details?.desc ?? course.description;
+  const includedItems = isSpokenEnglish
+    ? spokenEnglishItems
+    : isIelts
+      ? ieltsItems
+      : genericItems.length > 0
+        ? genericItems
+        : [{ title: "কোর্সের সম্পূর্ণ lesson ও learning materials-এ অ্যাক্সেস" }];
+  const checkoutStats = isSpokenEnglish ? spokenEnglishStats : isIelts ? ieltsStats : genericStats;
 
   return (
     <div className="checkout-page">
       <Nav />
 
-      {/* Breadcrumb */}
-      <div className="px-[clamp(20px,4.5vw,56px)] pt-[120px] pb-4 max-w-[1320px] mx-auto">
-        <div className="flex items-center gap-2 text-[12.5px] font-medium">
+      <div className="mx-auto max-w-[1320px] px-[clamp(20px,4.5vw,56px)] pb-5 pt-[112px] sm:pt-[126px]">
+        <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-[#778394]">
           <Link
             href="/"
-            style={{ color: "var(--body)" }}
-            className="hover:text-brand-2 transition-colors"
+            className="transition-colors hover:text-[#14845B]"
           >
             Home
           </Link>
-          <span style={{ color: "var(--body)" }}>/</span>
+          <span aria-hidden="true">/</span>
           <Link
             href="/programs"
-            style={{ color: "var(--body)" }}
-            className="hover:text-brand-2 transition-colors"
+            className="transition-colors hover:text-[#14845B]"
           >
             Programs
           </Link>
-          <span style={{ color: "var(--body)" }}>/</span>
+          <span aria-hidden="true">/</span>
           <Link
             href={`/programs/${params.slug}`}
-            style={{ color: "var(--body)" }}
-            className="hover:text-brand-2 transition-colors"
+            className="max-w-[220px] truncate transition-colors hover:text-[#14845B]"
           >
             {checkoutCourse.badge}
           </Link>
-          <span style={{ color: "var(--body)" }}>/</span>
-          <span style={{ color: "var(--brand-2)" }}>Checkout</span>
+          <span aria-hidden="true">/</span>
+          <span className="font-semibold text-[#14845B]">Secure checkout</span>
         </div>
       </div>
 
-      {/* Main checkout grid */}
-      <section className="px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
+      <section className="mx-auto max-w-[1320px] px-[clamp(20px,4.5vw,56px)] pb-[88px] sm:pb-[104px]">
         <CheckoutPanel
           course={checkoutCourse}
           moduleCount={moduleCount}
           lessonCount={lessonCount}
-          product={
-            <div className="rounded-lg border border-line bg-white overflow-hidden">
-              <div className="grid sm:grid-cols-[200px_1fr] gap-0">
-                <div
-                  className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
-                  style={{ background: "var(--brand-soft)" }}
-                >
-                  {checkoutCourse.image ? (
-                    <>
-                      <Image
-                        src={checkoutCourse.image}
-                        alt={checkoutCourse.title}
-                        fill
-                        sizes="200px"
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background:
-                            "linear-gradient(to top, rgba(18,32,67,0.18), transparent 50%)",
-                        }}
-                      />
-                    </>
-                  ) : (
-                    <BookOpen size={36} className="text-white/40" />
-                  )}
-                </div>
-                <div className="p-5 sm:p-6 flex flex-col justify-center">
-                  <span
-                    className="font-mono text-[10px] font-semibold tracking-[0.3em] mb-2 inline-block w-fit"
-                    style={{ color: "var(--brand-2)" }}
-                  >
-                    {checkoutCourse.badge.toUpperCase()}
-                  </span>
-                  <h1
-                    className="font-display text-[19px] font-semibold leading-[1.3]"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {checkoutCourse.title}
-                    {checkoutCourse.subtitle && <> {checkoutCourse.subtitle}</>}
-                  </h1>
-                  {checkoutCourse.description && (
-                    <p
-                      className="mt-2 text-[13px] leading-[1.6] line-clamp-2"
-                      style={{ color: "var(--body)" }}
-                    >
-                      {checkoutCourse.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          }
+          intro={checkoutIntro}
+          stats={checkoutStats}
+          includedItems={includedItems}
         />
       </section>
 
