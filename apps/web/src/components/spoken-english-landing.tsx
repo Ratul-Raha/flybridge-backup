@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import styles from "./spoken-english-landing.module.css";
 import { SpokenEnglishCurriculum } from "./spoken-english-curriculum";
+import { SpokenEnglishReviewToasts } from "./spoken-english-review-toasts";
 import {
   SpeakingLessonPreview,
   SpokenEnglishMobileBar,
@@ -27,6 +28,15 @@ import {
 } from "./spoken-english-interactions";
 
 const ENROLLMENT_HREF = "/programs/easy-smart-spoken-english/checkout";
+
+const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
+const formatCount = (value: number) =>
+  value.toLocaleString("en-US").replace(/\d/g, (digit) => BN_DIGITS.charAt(Number(digit)));
+
+export type SpokenEnglishStudentAvatar = {
+  name: string;
+  avatar: string | null;
+};
 
 const navigation = [
   { label: "কোর্স সম্পর্কে", href: "#course" },
@@ -123,9 +133,21 @@ const afterItems = [
   "ধীরে ধীরে নিজের কথা প্রকাশ করা",
 ];
 
-export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean }) {
+export function SpokenEnglishLanding({
+  enrolled = false,
+  studentCount = 0,
+  studentAvatars = [],
+}: {
+  enrolled?: boolean;
+  studentCount?: number;
+  studentAvatars?: SpokenEnglishStudentAvatar[];
+}) {
   const ctaHref = enrolled ? "/dashboard/courses/easy-smart-spoken-english/learn" : ENROLLMENT_HREF;
   const ctaLabel = enrolled ? "কোর্সে ফিরে যান" : "আজই শুরু করুন";
+  const avatarSlots =
+    studentAvatars.length > 0
+      ? studentAvatars.slice(0, 4)
+      : Array.from({ length: 4 }, () => ({ name: "শিক্ষার্থী", avatar: null }));
 
   return (
     <>
@@ -206,9 +228,6 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                   {ctaLabel}
                   <ArrowRight aria-hidden="true" size={18} />
                 </TrackedEnrollmentLink>
-                <span className={styles.lessonCount}>
-                  100 LESSONS <b>·</b> 10 UNITS
-                </span>
               </div>
 
               <div className={styles.trust} aria-label="কোর্স সুবিধা">
@@ -219,19 +238,42 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                   <Check aria-hidden="true" size={15} /> লাইভ সাপোর্ট
                 </span>
               </div>
+
+              {studentCount > 0 && (
+                <div
+                  className={styles.enrollmentProof}
+                  aria-label={`${formatCount(studentCount)} শিক্ষার্থী ইতিমধ্যে কোর্সে যুক্ত হয়েছেন`}
+                >
+                  <div className={styles.enrollmentAvatars} aria-hidden="true">
+                    {avatarSlots.map((student, index) =>
+                      student.avatar ? (
+                        <img
+                          key={`${student.name}-${index}`}
+                          className={styles.enrollmentAvatar}
+                          src={student.avatar}
+                          alt=""
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span
+                          key={`${student.name}-${index}`}
+                          className={`${styles.enrollmentAvatar} ${styles.enrollmentAvatarFallback}`}
+                        >
+                          {Array.from(student.name.trim())[0] || "শি"}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                  <p className={styles.enrollmentProofCopy}>
+                    <strong>{formatCount(studentCount)} শিক্ষার্থী</strong>
+                    <span>ইতিমধ্যে কোর্সে যুক্ত হয়েছেন</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className={styles.preview} aria-label="কোর্স লেসনের নমুনা">
               <div className={styles.previewOrbit} aria-hidden="true" />
-              <div className={`${styles.floatBadge} ${styles.lessonsBadge}`}>
-                <span className={styles.badgeIcon}>
-                  <Play aria-hidden="true" size={12} fill="currentColor" />
-                </span>
-                <span>
-                  <b>100 LESSONS</b>
-                  <small>একটি করে ধাপ</small>
-                </span>
-              </div>
 
               <div className={styles.lessonCard}>
                 <div className={styles.lessonTopbar}>
@@ -283,45 +325,30 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                     </span>{" "}
                     Lesson preview
                   </span>
-                  <span>20 MIN / DAY</span>
                 </div>
               </div>
 
-              <div className={`${styles.floatBadge} ${styles.timeBadge}`}>
-                <span className={styles.timeDot} aria-hidden="true" />
-                <span>
-                  <b>20 MIN / DAY</b>
-                  <small>আপনার নিজের গতিতে</small>
-                </span>
-              </div>
+              <dl className={styles.previewStats} aria-label="কোর্সের পরিসংখ্যান">
+                <div className={styles.previewStat}>
+                  <dt>লেসন</dt>
+                  <dd>১০০</dd>
+                </div>
+                <div className={styles.previewStat}>
+                  <dt>ইউনিট</dt>
+                  <dd>১০</dd>
+                </div>
+                <div className={styles.previewStat}>
+                  <dt>ফ্রি বই</dt>
+                  <dd>১</dd>
+                </div>
+              </dl>
+
               <div className={styles.decorativeNote} aria-hidden="true">
                 “
               </div>
             </div>
           </div>
           <div className={styles.heroBottomFade} aria-hidden="true" />
-        </section>
-
-        <section className={styles.statsSection} aria-label="কোর্সের পরিসংখ্যান">
-          <div className={styles.statsInner}>
-            <dl className={styles.statsGrid}>
-              <div className={styles.statItem}>
-                <dt>লেসন</dt>
-                <dd>১০০</dd>
-              </div>
-              <div className={styles.statItem}>
-                <dt>ইউনিট</dt>
-                <dd>১০</dd>
-              </div>
-              <div className={styles.statItem}>
-                <dt>ফ্রি বই</dt>
-                <dd>১</dd>
-              </div>
-            </dl>
-            <p className={styles.statsNote}>
-              A complete speaking journey, from the basics to real-life conversations.
-            </p>
-          </div>
         </section>
 
         <section
@@ -508,35 +535,6 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
               </article>
 
               <article className={styles.featureCard}>
-                <div className={`${styles.featureVisual} ${styles.bookVisual}`}>
-                  <span className={styles.bookIncludedBadge}>
-                    <BookOpen size={12} /> INCLUDED FREE
-                  </span>
-                  <Image
-                    src="/programs/spoken-english-book.png"
-                    alt="Easy & Smart Spoken English Course Book cover"
-                    width={158}
-                    height={224}
-                    sizes="158px"
-                    className={styles.bookCover}
-                  />
-                  <span className={styles.bookVisualNote}>
-                    ভিডিওতে শিখুন
-                    <br />
-                    বইয়ে প্র্যাকটিস করুন
-                  </span>
-                </div>
-                <div className={styles.featureHeadingRow}>
-                  <span className={styles.featureIndex}>04</span>
-                  <span className={styles.featureTag}>YOUR PRACTICE BOOK</span>
-                </div>
-                <h3 className={styles.featureTitle}>ফ্রি কোর্স বুক</h3>
-                <p className={styles.featureDescription}>
-                  কোর্সের সাথে প্র্যাকটিস বুকও পাচ্ছেন। ভিডিওতে শিখুন, বইয়ে প্র্যাকটিস করুন।
-                </p>
-              </article>
-
-              <article className={styles.featureCard}>
                 <div
                   className={`${styles.featureVisual} ${styles.certificateVisual}`}
                   aria-hidden="true"
@@ -550,7 +548,7 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                   </div>
                 </div>
                 <div className={styles.featureHeadingRow}>
-                  <span className={styles.featureIndex}>05</span>
+                  <span className={styles.featureIndex}>04</span>
                   <span className={styles.featureTag}>CELEBRATE YOUR PROGRESS</span>
                 </div>
                 <h3 className={styles.featureTitle}>সার্টিফিকেট</h3>
@@ -585,7 +583,7 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                   </span>
                 </div>
                 <div className={styles.featureHeadingRow}>
-                  <span className={styles.featureIndex}>06</span>
+                  <span className={styles.featureIndex}>05</span>
                   <span className={styles.featureTag}>LEARN TOGETHER</span>
                 </div>
                 <h3 className={styles.featureTitle}>কখনো একা না</h3>
@@ -828,7 +826,6 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
                 </article>
               ))}
             </div>
-
           </div>
         </section>
 
@@ -863,6 +860,7 @@ export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean 
           </div>
         </section>
       </main>
+      <SpokenEnglishReviewToasts reviews={facebookRecommendations} />
       <SpokenEnglishMobileBar href={ctaHref} enrolled={enrolled} />
     </>
   );

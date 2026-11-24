@@ -265,20 +265,6 @@
   box-shadow: 0 8px 30px rgba(201, 243, 106, 0.16);
 }
 
-.lessonCount {
-  color: rgba(255, 255, 255, 0.68);
-  font-family: "Space Grotesk Variable", sans-serif;
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
-.lessonCount b {
-  padding: 0 4px;
-  color: var(--spoken-lime);
-}
-
 .trust {
   display: flex;
   flex-wrap: wrap;
@@ -298,6 +284,63 @@
 .trust svg {
   color: var(--spoken-lime);
   stroke-width: 2.5;
+}
+
+.enrollmentProof {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 18px;
+}
+
+.enrollmentAvatars {
+  display: flex;
+  padding-left: 6px;
+}
+
+.enrollmentAvatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  margin-left: -8px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+  font-family: "Bornomala", "Inter Variable", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.enrollmentAvatar:first-child {
+  margin-left: 0;
+}
+
+.enrollmentAvatarFallback {
+  color: var(--spoken-navy);
+  background: var(--spoken-lime);
+}
+
+.enrollmentProofCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  font-family: "Bornomala", "Inter Variable", sans-serif;
+}
+
+.enrollmentProofCopy strong {
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.enrollmentProofCopy span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .preview {
@@ -547,68 +590,51 @@
   background: var(--spoken-lime);
 }
 
-.floatBadge {
-  position: absolute;
+.previewStats {
+  position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 11px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 15px;
-  color: var(--spoken-navy);
-  background: #fff;
-  box-shadow: 0 16px 40px rgba(1, 9, 23, 0.22);
-  transform: rotate(-2deg);
-}
-
-.floatBadge > span:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.floatBadge b {
-  font-family: "Space Grotesk Variable", sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.floatBadge small {
-  color: #737c8d;
-  font-family: "Bornomala", sans-serif;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.lessonsBadge {
-  top: 12px;
-  left: -6px;
-}
-
-.badgeIcon {
   display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 10px;
-  color: #27361c;
-  background: var(--spoken-lime);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 432px);
+  margin: 16px auto 0;
+  padding: 10px;
+  border: 1px solid rgba(201, 243, 106, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  box-shadow: 0 14px 35px -24px rgba(1, 9, 23, 0.6);
+  backdrop-filter: blur(14px);
+  transform: rotate(-1deg);
 }
 
-.timeBadge {
-  right: -10px;
-  bottom: 17px;
-  transform: rotate(2deg);
+.previewStat {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.timeDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #8fb73f;
-  box-shadow: 0 0 0 5px #eff6e2;
+.previewStat:last-child {
+  border-right: 0;
+}
+
+.previewStat dd {
+  order: 1;
+  margin: 0;
+  color: var(--spoken-lime);
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.previewStat dt {
+  order: 2;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: "Bornomala", "Inter Variable", sans-serif;
+  font-size: 11px;
 }
 
 .decorativeNote {
@@ -629,65 +655,6 @@
   left: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(201, 243, 106, 0.3), transparent);
-}
-
-.statsSection {
-  position: relative;
-  z-index: 1;
-  color: #152039;
-  background: var(--spoken-cream);
-}
-
-.statsInner {
-  width: min(100%, 1280px);
-  margin: 0 auto;
-  padding: 31px clamp(20px, 5vw, 76px) 25px;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 0;
-}
-
-.statItem {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 12px;
-  padding: 5px 24px;
-  border-right: 1px solid #dfe4d8;
-}
-
-.statItem:last-child {
-  border-right: 0;
-}
-
-.statItem dt {
-  order: 2;
-  color: #667085;
-  font-family: "Bornomala", "Inter Variable", sans-serif;
-  font-size: 15px;
-}
-
-.statItem dd {
-  order: 1;
-  margin: 0;
-  color: var(--spoken-navy);
-  font-family: "Bornomala", "Inter Variable", sans-serif;
-  font-size: clamp(28px, 3vw, 38px);
-  font-weight: 700;
-  line-height: 1.15;
-}
-
-.statsNote {
-  margin: 17px 0 0;
-  color: #858d9b;
-  font-family: "Space Grotesk Variable", sans-serif;
-  font-size: 11px;
-  line-height: 1.5;
-  text-align: center;
-  letter-spacing: 0.015em;
 }
 
 .transformationSection {
@@ -1945,182 +1912,88 @@
   color: var(--spoken-lime);
 }
 
-.curriculumList {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #e2e7dc;
-  border-radius: 19px;
-  background: #fff;
-  box-shadow: 0 20px 46px rgba(21, 32, 57, 0.055);
-}
-
-.curriculumList::before {
-  position: absolute;
-  z-index: 0;
-  top: 30px;
-  bottom: 30px;
-  left: 34px;
-  width: 1px;
-  background: #e2e8d8;
-  content: "";
-}
-
-.curriculumItem {
-  position: relative;
-  z-index: 1;
-  border-bottom: 1px solid #edf0e9;
-  background: #fff;
-}
-
-.curriculumItem:last-child {
-  border-bottom: 0;
-}
-
-.curriculumItemOpen {
-  background: #fcfdf9;
-}
-
-.curriculumItemHeading {
-  margin: 0;
-  font: inherit;
-}
-
-.curriculumTrigger {
+.curriculumGrid {
   display: grid;
-  width: 100%;
-  min-height: 70px;
-  grid-template-columns: 36px minmax(0, 1fr) 28px;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.curriculumTrigger:focus-visible {
+.curriculumCard {
   position: relative;
-  z-index: 2;
-  outline-offset: -3px;
+  padding: 16px;
+  border: 1px solid #e2e7dc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(21, 32, 57, 0.045);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.curriculumCard:hover {
+  transform: translateY(-2px);
+  border-color: #d4e3bd;
+  box-shadow: 0 18px 34px rgba(21, 32, 57, 0.07);
+}
+
+.curriculumCard:first-child {
+  border-color: #d7e7b9;
+  background: linear-gradient(145deg, #fbfdf4, #fff 70%);
+}
+
+.curriculumCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .curriculumNode {
-  position: relative;
-  z-index: 1;
   display: grid;
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 1px solid #e1e7d9;
-  border-radius: 50%;
+  border-radius: 9px;
   color: #78836a;
-  background: #fff;
+  background: #f5f8ef;
   font-family: "Space Grotesk Variable", sans-serif;
   font-size: 9px;
   font-weight: 700;
-  transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease;
 }
 
-.curriculumItemOpen .curriculumNode {
+.curriculumCard:first-child .curriculumNode {
   border-color: var(--spoken-lime);
-  color: #26381c;
+  color: var(--spoken-navy);
   background: var(--spoken-lime);
 }
 
-.curriculumTriggerCopy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 3px;
+.curriculumUnitMeta {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #697a4d;
+  background: #f0f5e7;
+  font-family: "Bornomala", sans-serif;
+  font-size: 10px;
+  line-height: 1.3;
 }
 
 .curriculumUnitTitle {
-  overflow: hidden;
+  margin: 11px 0 0;
   color: #26334a;
   font-family: "Space Grotesk Variable", sans-serif;
   font-size: 14px;
   font-weight: 650;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.curriculumItemOpen .curriculumUnitTitle {
-  color: var(--spoken-navy);
-}
-
-.curriculumUnitMeta {
-  color: #929a8d;
-  font-family: "Bornomala", sans-serif;
-  font-size: 11px;
-  line-height: 1.3;
-}
-
-.curriculumChevron {
-  justify-self: center;
-  color: #7d8970;
-  transition:
-    transform 220ms ease,
-    color 180ms ease;
-}
-
-.curriculumItemOpen .curriculumChevron {
-  color: #536b31;
-  transform: rotate(180deg);
-}
-
-.curriculumPanel {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition:
-    grid-template-rows 280ms ease,
-    opacity 180ms ease,
-    visibility 280ms;
-  visibility: hidden;
-}
-
-.curriculumPanelOpen {
-  grid-template-rows: 1fr;
-  opacity: 1;
-  visibility: visible;
-}
-
-.curriculumPanelInner {
-  min-height: 0;
-  overflow: hidden;
-  padding: 0 22px 0 64px;
-  transition: padding-bottom 280ms ease;
-}
-
-.curriculumPanelOpen .curriculumPanelInner {
-  padding-bottom: 18px;
-}
-
-.curriculumPanelInner p {
-  margin: 0;
-  color: #596579;
+.curriculumUnitDescription {
+  margin: 5px 0 0;
+  color: #667085;
   font-family: "Bornomala", "Inter Variable", sans-serif;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.curriculumPanelInner > span {
-  display: inline-flex;
-  margin-top: 10px;
-  padding: 5px 8px;
-  border-radius: 7px;
-  color: #697a4d;
-  background: #f0f5e7;
-  font-family: "Space Grotesk Variable", sans-serif;
-  font-size: 7px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 
 .methodSection {
@@ -2869,23 +2742,17 @@
     grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
     gap: 26px;
   }
-  .curriculumList::before {
-    left: 31px;
+  .curriculumGrid {
+    gap: 8px;
   }
-  .curriculumTrigger {
-    grid-template-columns: 34px minmax(0, 1fr) 23px;
-    gap: 9px;
-    padding-inline: 12px;
-  }
-  .curriculumNode {
-    width: 33px;
-    height: 33px;
+  .curriculumCard {
+    padding: 13px;
   }
   .curriculumUnitTitle {
     font-size: 13px;
   }
-  .curriculumPanelInner {
-    padding-left: 55px;
+  .curriculumUnitDescription {
+    font-size: 12px;
   }
   .methodSteps {
     gap: 9px;
@@ -2934,47 +2801,6 @@
     background:
       radial-gradient(ellipse at 90% 55%, rgba(39, 66, 94, 0.32), transparent 50%),
       linear-gradient(145deg, #101b35 0%, #111d38 100%);
-  }
-
-  .statsInner {
-    padding: 20px 20px 18px;
-  }
-
-  .statsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .statItem {
-    min-height: 62px;
-    gap: 8px;
-    padding: 7px 9px;
-  }
-
-  .statItem:first-child {
-    border-bottom: 1px solid #dfe4d8;
-  }
-
-  .statItem:nth-child(2) {
-    border-right: 0;
-    border-bottom: 1px solid #dfe4d8;
-  }
-
-  .statItem:last-child {
-    grid-column: 1 / -1;
-    border-right: 0;
-  }
-
-  .statItem dt {
-    font-size: 13px;
-  }
-
-  .statItem dd {
-    font-size: 30px;
-  }
-
-  .statsNote {
-    margin-top: 9px;
-    font-size: 10px;
   }
 
   .transformationSection {
@@ -3273,47 +3099,27 @@
     height: 4px;
   }
 
-  .curriculumList {
-    border-radius: 16px;
+  .curriculumGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
 
-  .curriculumList::before {
-    top: 27px;
-    bottom: 27px;
-    left: 30px;
-  }
-
-  .curriculumTrigger {
-    min-height: 64px;
-    grid-template-columns: 33px minmax(0, 1fr) 22px;
-    gap: 9px;
-    padding: 9px 11px;
+  .curriculumCard {
+    padding: 12px 13px;
   }
 
   .curriculumNode {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     font-size: 8px;
   }
 
   .curriculumUnitTitle {
+    margin-top: 9px;
     font-size: 13px;
   }
 
-  .curriculumUnitMeta {
-    font-size: 10px;
-  }
-
-  .curriculumPanelInner {
-    padding-right: 14px;
-    padding-left: 53px;
-  }
-
-  .curriculumPanelOpen .curriculumPanelInner {
-    padding-bottom: 14px;
-  }
-
-  .curriculumPanelInner p {
+  .curriculumUnitDescription {
     font-size: 12px;
   }
 
@@ -3530,10 +3336,6 @@
     border-radius: 13px;
     font-size: 16px;
   }
-  .lessonCount {
-    font-size: 8px;
-    letter-spacing: 0.08em;
-  }
   .trust {
     gap: 14px;
     margin-top: 14px;
@@ -3587,29 +3389,6 @@
   .lessonBottom {
     padding: 10px 15px;
   }
-  .floatBadge {
-    gap: 7px;
-    padding: 8px 10px;
-    border-radius: 12px;
-  }
-  .floatBadge b {
-    font-size: 8px;
-  }
-  .floatBadge small {
-    font-size: 9px;
-  }
-  .badgeIcon {
-    width: 26px;
-    height: 26px;
-  }
-  .lessonsBadge {
-    top: 0;
-    left: -3px;
-  }
-  .timeBadge {
-    right: -3px;
-    bottom: 0;
-  }
   .heroGlow {
     top: 36%;
     right: -40%;
@@ -3626,9 +3405,6 @@
   }
   .problem {
     font-size: 14px;
-  }
-  .lessonCount {
-    flex-basis: 100%;
   }
   .actions {
     row-gap: 9px;
@@ -3648,6 +3424,47 @@
   }
 }
 
+@media (max-width: 640px) {
+  .enrollmentProof {
+    gap: 9px;
+    margin-top: 16px;
+  }
+
+  .enrollmentAvatar {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+
+  .enrollmentProofCopy strong {
+    font-size: 11.5px;
+  }
+
+  .enrollmentProofCopy span {
+    font-size: 10px;
+  }
+
+  .previewStats {
+    gap: 0;
+    margin-top: 13px;
+    padding: 8px;
+    transform: none;
+  }
+
+  .previewStat {
+    gap: 4px;
+    padding: 0 4px;
+  }
+
+  .previewStat dd {
+    font-size: 18px;
+  }
+
+  .previewStat dt {
+    font-size: 10px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .copy,
   .preview {
@@ -3658,10 +3475,7 @@
   .primaryCta,
   .navigation a,
   .featureCard,
-  .curriculumPanel,
-  .curriculumPanelInner,
-  .curriculumChevron,
-  .curriculumNode,
+  .curriculumCard,
   .methodSample,
   .methodSampleInner,
   .methodSampleButton,

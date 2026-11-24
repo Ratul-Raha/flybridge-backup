@@ -24,7 +24,10 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseReview } from "@/lib/models/course-review";
 import { readSession } from "@/lib/auth/session";
 import { MetaProductView } from "@/components/meta-product-view";
-import { SpokenEnglishLanding } from "@/components/spoken-english-landing";
+import {
+  SpokenEnglishLanding,
+  type SpokenEnglishStudentAvatar,
+} from "@/components/spoken-english-landing";
 import { IeltsReadingLanding } from "@/components/ielts-reading-landing";
 import IeltsBandScoreLanding from "@/components/ielts/ielts-band-score-landing";
 import { courseDetails } from "./course-data";
@@ -230,14 +233,40 @@ export default async function ProgramPage({ params }: Props) {
         )
       : false;
 
-  if (params.slug === "easy-smart-spoken-english" || params.slug === "easy-smart-ielts-reading") {
+  if (params.slug === "easy-smart-spoken-english") {
     if (!course) notFound();
 
-    return params.slug === "easy-smart-spoken-english" ? (
-      <SpokenEnglishLanding enrolled={enrolled} />
-    ) : (
-      <IeltsReadingLanding enrolled={enrolled} />
+    const [studentCount, enrollmentSamples] = await Promise.all([
+      CourseEnrollment.countDocuments({ course: course._id, status: "active" }),
+      CourseEnrollment.find({ course: course._id, status: "active" })
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .populate("user", "name avatar")
+        .lean(),
+    ]);
+
+    const students: SpokenEnglishStudentAvatar[] = enrollmentSamples
+      .map((enrollment) => {
+        const user = enrollment.user as { name?: string | null; avatar?: string | null } | null;
+        return {
+          name: user?.name?.trim() || "শিক্ষার্থী",
+          avatar: user?.avatar ?? null,
+        };
+      })
+      .slice(0, 4);
+
+    return (
+      <SpokenEnglishLanding
+        enrolled={enrolled}
+        studentCount={studentCount}
+        studentAvatars={students}
+      />
     );
+  }
+
+  if (params.slug === "easy-smart-ielts-reading") {
+    if (!course) notFound();
+    return <IeltsReadingLanding enrolled={enrolled} />;
   }
 
   const staticModules: ProgramModule[] = details?.modules ?? [];
