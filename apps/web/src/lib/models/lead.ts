@@ -51,7 +51,7 @@ const leadSchema = new Schema(
     /** The list this lead belongs to. Every lead belongs to exactly one list. */
     list: { type: Schema.Types.ObjectId, ref: "LeadList", default: null, index: true },
     name: { type: String, required: true, trim: true },
-    email: { type: String, lowercase: true, trim: true, index: true },
+    email: { type: String, lowercase: true, trim: true },
     phone: { type: String, trim: true },
     status: { type: String, enum: LEAD_STATUSES, default: "new", index: true },
     source: { type: String, enum: LEAD_SOURCES, default: "manual", index: true },

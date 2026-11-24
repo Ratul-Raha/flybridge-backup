@@ -12,8 +12,8 @@ import {
   Mic2,
   Pause,
   Play,
-  Star,
   Timer,
+  ThumbsUp,
   Users,
   UserRound,
 } from "lucide-react";
@@ -35,12 +35,85 @@ const navigation = [
   { label: "FAQ", href: "/faq" },
 ];
 
-export type SpokenEnglishReview = {
-  id: string;
-  rating: number;
-  text: string;
-  userName: string;
-};
+const facebookRecommendations = [
+  {
+    id: "mohammad-dulal",
+    name: "Mohammad Dulal",
+    date: "February 9, 2021",
+    dateTime: "2021-02-09",
+    text: "আপনার ভিডিও গুলো দেখে আমার অনেক উপকার হয়েছে, আপনার কাছে আমি চীর কৃতজ্ঞ থাকব, আশা করি অন্যরা ও উপকৃত হবে, দোয়া করি আল্লাহ যেন আপনাকে সবসময় সুস্থ রাখেন",
+  },
+  {
+    id: "subrato-shil-shuvro",
+    name: "Subrato Shil Shuvro",
+    date: "February 9, 2021",
+    dateTime: "2021-02-09",
+    text: "wonderful presentation Brother.",
+  },
+  {
+    id: "pritom-goswami",
+    name: "Pritom Goswami",
+    date: "February 9, 2021",
+    dateTime: "2021-02-09",
+    text: "I watch the videos of Ahmed Rasel sir almost daily.This page is very helpful for those who want to actually learn English.What I like most in Ahmed Rasel sir,his presentation skill.In a word,it's just amazing!He makes the lessons easier and I never feel bored during his lessons.I am wishing his success.\nSo, I will highly recommend this page for the English learners.\nThank you.",
+  },
+  {
+    id: "abu-hurayra",
+    name: "Abu Hurayra",
+    date: "February 8, 2021",
+    dateTime: "2021-02-08",
+    text: "Once upon a time, English was a scary thing. But your short videos have given me the courage to overcome the fear of English. You are one of the best English teacher. You are a Sylheti man. Thinking about it makes me proud as a SylhetI.\n Love you sir.\nMay Allah keep you always mentally and physically healthy.",
+  },
+  {
+    id: "md-redwan",
+    name: "Md Redwan",
+    date: "February 8, 2021",
+    dateTime: "2021-02-08",
+    text: "আমি মনে করি এটা ইংলিশ স্পোকেনের সবচেয়ে ভালো কোর্স।",
+  },
+  {
+    id: "samiul-imran",
+    name: "সামিউল ইমরান",
+    date: "February 8, 2021",
+    dateTime: "2021-02-08",
+    text: "ইংরেজি নিয়ে আমি বরাবরই হতাশ এবং ব্যর্থ। তবে ইতিমধ্যে আপনার কিছু ভিডিও দেখে মনে হচ্ছে যে, না আমাকে দিয়েও ইংরেজি শিখা সম্ভব। যেটা আগে কখনো উপলব্ধি করতে পারিনি।",
+  },
+  {
+    id: "nayan-sharif",
+    name: "Nayan Sharif",
+    date: "February 7, 2021",
+    dateTime: "2021-02-07",
+    text: "I have come to learn many of English basics from DLI wiith honorable Ahmed Rasel sir..\nI stayed,I stay and I'll stay with DLI for my betterment..❤️\nI hope for the best and will be prepared for all Inshallah with your learning page,dear Ahmed Rasel sir...",
+  },
+  {
+    id: "salah-uddin-tareq",
+    name: "Salah Uddin Tareq",
+    date: "February 7, 2021",
+    dateTime: "2021-02-07",
+    text: "Your videos have changed a lot in my life.I feel lucky to have found a guardian like you. May Allah grant you long life in good health.",
+  },
+  {
+    id: "monsur-ali",
+    name: "Monsur Ali",
+    date: "February 7, 2021",
+    dateTime: "2021-02-07",
+    text: "It's a platform of learning English in an easiest way.There are a lot of elements to acquire from every videos.Excellent way of presentation by the author make it possible more easier. I love it very much...really you deserve ★★★★★.",
+  },
+  {
+    id: "ma-bari-talukder",
+    name: "M.A Bari Talukder",
+    date: "June 11, 2020",
+    dateTime: "2020-06-11",
+    text: "Amar natir jonne kinlam boi ti. thanks baba",
+  },
+  {
+    id: "rajon-ahmed-rajon",
+    name: "Rajon Ahmed Rajon",
+    date: "June 11, 2020",
+    dateTime: "2020-06-11",
+    text: "Amazing book you have made. Thanks for being sujch an inspiration for me Sir.",
+  },
+];
 
 const beforeItems = ["কথা বলার আগে অনুবাদ করা", "ভুল হওয়ার ভয়", "সহজ বাক্যেও আটকে যাওয়া"];
 
@@ -50,13 +123,7 @@ const afterItems = [
   "ধীরে ধীরে নিজের কথা প্রকাশ করা",
 ];
 
-export function SpokenEnglishLanding({
-  enrolled = false,
-  reviews = [],
-}: {
-  enrolled?: boolean;
-  reviews?: SpokenEnglishReview[];
-}) {
+export function SpokenEnglishLanding({ enrolled = false }: { enrolled?: boolean }) {
   const ctaHref = enrolled ? "/dashboard/courses/easy-smart-spoken-english/learn" : ENROLLMENT_HREF;
   const ctaLabel = enrolled ? "কোর্সে ফিরে যান" : "আজই শুরু করুন";
 
@@ -68,7 +135,7 @@ export function SpokenEnglishLanding({
           <div className={styles.headerInner}>
             <Link
               className={styles.wordmark}
-              href="/easy-smart-spoken-english"
+              href="/programs/easy-smart-spoken-english"
               aria-label="Easy & Smart Spoken English — home"
             >
               <span className={styles.wordmarkName}>
@@ -718,49 +785,52 @@ export function SpokenEnglishLanding({
           </div>
         </section>
 
-        {reviews.length > 0 && (
-          <section
-            className={styles.reviewsSection}
-            id="student-feedback"
-            aria-labelledby="reviews-title"
-          >
-            <div className={styles.reviewsInner}>
-              <div className={styles.reviewsIntro}>
-                <span className={styles.reviewsEyebrow}>STUDENT FEEDBACK</span>
-                <h2 id="reviews-title" className={styles.reviewsTitle}>
-                  কোর্সের রিভিউ
-                </h2>
-                <p>এই কোর্স সম্পর্কে জমা পড়া রিভিউ থেকে।</p>
-              </div>
-              <div className={styles.reviewGrid}>
-                {reviews.map((review) => (
-                  <article key={review.id} className={styles.reviewCard}>
-                    <div
-                      className={styles.reviewStars}
-                      aria-label={`${review.rating} out of 5 stars`}
-                    >
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <Star
-                          key={index}
-                          size={14}
-                          aria-hidden="true"
-                          fill={index < review.rating ? "currentColor" : "transparent"}
-                        />
-                      ))}
-                    </div>
-                    <blockquote>“{review.text}”</blockquote>
-                    <div className={styles.reviewAuthor}>
-                      <span className={styles.reviewInitial} aria-hidden="true">
-                        {review.userName.trim().charAt(0) || "শি"}
-                      </span>
-                      <span>{review.userName || "শিক্ষার্থী"}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
+        <section
+          className={styles.reviewsSection}
+          id="student-feedback"
+          aria-labelledby="reviews-title"
+        >
+          <div className={styles.reviewsInner}>
+            <div className={styles.reviewsIntro}>
+              <span className={styles.reviewsEyebrow}>FACEBOOK · STUDENT RECOMMENDATIONS</span>
+              <h2 id="reviews-title" className={styles.reviewsTitle}>
+                What students say
+              </h2>
+              <p>Facebook-এ শিক্ষার্থীদের শেয়ার করা অভিজ্ঞতা ও recommendation.</p>
             </div>
-          </section>
-        )}
+
+            <div className={styles.facebookReviewFeed}>
+              {facebookRecommendations.map((review) => (
+                <article key={review.id} className={styles.facebookReviewCard}>
+                  <header className={styles.facebookReviewHeader}>
+                    <span className={styles.facebookReviewInitial} aria-hidden="true">
+                      {Array.from(review.name.trim())[0] || "শি"}
+                    </span>
+                    <div className={styles.facebookReviewMeta}>
+                      <strong>{review.name}</strong>
+                      <span>
+                        recommends <b>Easy &amp; Smart Spoken English.</b>
+                      </span>
+                      <time dateTime={review.dateTime}>{review.date} · Facebook</time>
+                    </div>
+                    <span className={styles.facebookReviewMark} aria-label="Facebook">
+                      f
+                    </span>
+                  </header>
+                  <p className={styles.facebookReviewText}>{review.text}</p>
+                  <footer className={styles.facebookReviewFooter}>
+                    <span>
+                      <ThumbsUp size={15} fill="currentColor" aria-hidden="true" />
+                      Facebook recommendation
+                    </span>
+                    <span>Easy &amp; Smart Spoken English</span>
+                  </footer>
+                </article>
+              ))}
+            </div>
+
+          </div>
+        </section>
 
         <section
           className={styles.finalCtaSection}

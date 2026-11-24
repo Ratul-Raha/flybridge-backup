@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
@@ -35,7 +35,6 @@ export const metadata: Metadata = {
   description:
     "Practical, self-paced video courses that walk you through studying, working, and building a career abroad — one confident step at a time.",
   manifest: "/manifest.json",
-  themeColor: "#6B4CE0",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -63,6 +62,10 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6B4CE0",
 };
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;

@@ -119,7 +119,7 @@ export function IeltsReadingLanding({ enrolled = false }: { enrolled?: boolean }
           <div className={styles.headerInner}>
             <Link
               className={styles.wordmark}
-              href="/easy-smart-ielts-reading"
+              href="/programs/easy-smart-ielts-reading"
               aria-label="Easy & Smart IELTS Reading — home"
             >
               <span className={styles.wordmarkName}>

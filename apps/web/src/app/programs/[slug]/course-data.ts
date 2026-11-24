@@ -77,7 +77,7 @@ export type CurriculumModule = {
   title: string;
   lessonCount: string;
   items: string[];
-  capstone: string;
+  capstone?: string;
 };
 
 export type CurriculumSection = {
@@ -121,6 +121,8 @@ export type CourseDetails = {
   level: string;
   language: string;
   pace: string;
+  lessonCount?: number;
+  moduleCount?: number;
   price?: string;
   originalPrice?: string;
   savings?: string;
@@ -509,202 +511,139 @@ export const courseDetails: Record<string, CourseDetails> = {
     slug: "easy-smart-spoken-english",
     badge: "ENGLISH",
     title: "Easy & Smart Spoken English",
-    subtitle: "Speak English with Confidence in Real Life",
-    desc: "A practical spoken English course built around real conversations, daily phrases and confident speaking — designed for beginners who want to think and speak in English naturally.",
+    subtitle: "১০০ দিনের Spoken English journey",
+    desc: "ইংরেজি বুঝেন, কিন্তু বলতে গেলে আটকে যান? মাথায় অনুবাদ না করে পরিচিত পরিস্থিতিতে নিজের কথা প্রকাশ করতে শিখুন—দিনে ২০ মিনিটের ১০০টি লেসন, ১০টি ইউনিট এবং সাথে ফ্রি কোর্স বুক।",
     level: "Beginner friendly",
     language: "বাংলা + English",
-    pace: "Self-paced · 6-week program",
-    rating: {
-      average: 4.8,
-      count: 64,
-      distribution: [52, 8, 3, 1, 0],
-    },
-    reviews: [
-      {
-        name: "Tasnim Rahman",
-        rating: 5,
-        date: "৩ সপ্তাহ আগে",
-        text: "ক্লাসে যে স্ক্রিপ্ট ও ড্রিল দেওয়া হয়, সেগুলো ফলো করে এখন অফিসেও ইংরেজিতে কথা বলতে পারি। আগে একদম ভয় পেতাম, এখন কনফিডেন্স বেড়েছে।",
-        helpful: 18,
-        verified: true,
-      },
-      {
-        name: "Sakib Hasan",
-        rating: 5,
-        date: "১ মাস আগে",
-        text: "প্রতিটি লেসন ছোট ছোট ও সহজ — রোজ ২০ মিনিট করে শিখতে পারি। Daily Phrase Book টা অসাধারণ।",
-        helpful: 14,
-        verified: true,
-      },
-      {
-        name: "Nusrat Jahan",
-        rating: 5,
-        date: "২ সপ্তাহ আগে",
-        text: "AI Practice Partner দিয়ে প্র্যাকটিস করে ইন্টারভিউতে ইংরেজিতে উত্তর দিতে পেরেছি। এটাই আমার জন্য সবচেয়ে বড় সাফল্য।",
-        helpful: 11,
-        verified: true,
-      },
-      {
-        name: "Rafiq Uddin",
-        rating: 4,
-        date: "২ মাস আগে",
-        text: "কোর্সটি খুবই কার্যকর। শুধু একটু বেশি লাইভ সেশন থাকলে আরও ভালো হতো। তবে overall অনেক উপকার হয়েছে।",
-        helpful: 8,
-      },
-    ],
+    pace: "Self-paced · 100 days · 20 min/day",
+    lessonCount: 100,
+    moduleCount: 10,
+    heroPill: "100-DAY SPOKEN ENGLISH COURSE",
+    chips: ["১০০টি লেসন", "১০টি ইউনিট", "দিনে ২০ মিনিট"],
     stats: [
-      { value: "৬", label: "সপ্তাহের প্রোগ্রাম" },
-      { value: "২৪", label: "ভিডিও লেসন" },
-      { value: "৩", label: "PDF রিসোর্স" },
+      { value: "১০০", label: "লেসন" },
+      { value: "১০", label: "ইউনিট" },
+      { value: "১", label: "ফ্রি কোর্স বুক" },
     ],
     outcomes: [
-      { title: "Think in English and speak without translating in your head" },
-      { title: "Handle everyday conversations — greetings, shopping, travel, office" },
-      { title: "Speak confidently in job interviews and professional settings" },
-      { title: "Understand native speakers and respond naturally" },
-      { title: "Build a daily English habit that lasts beyond the course" },
-      { title: "Use proper pronunciation and natural intonation" },
+      {
+        title: "সহজে ও আত্মবিশ্বাসের সাথে নিজের পরিচয় দিতে পারবেন",
+      },
+      {
+        title: "দোকান, ডাক্তার, অফিস ও ইন্টারভিউর মতো পরিচিত পরিস্থিতিতে কথা বলতে পারবেন",
+      },
+      {
+        title: "না থেমে ২ মিনিট ইংরেজিতে নিজের কথা প্রকাশ করতে পারবেন",
+      },
     ],
+    problem: {
+      title: "ইংরেজি বুঝেন, কিন্তু বলতে গেলে আটকে যান?",
+      desc: "আপনি অনেক ইংরেজি শব্দ জানেন। Grammar-ও কিছুটা বোঝেন। কিন্তু কথা বলতে গেলেই মাথায় বাংলা আসে, তারপর ইংরেজিতে অনুবাদ করতে গিয়ে কথাটা আটকে যায়। এই অভ্যাসটাই ধীরে ধীরে বদলাতে সাহায্য করবে Easy & Smart Spoken English Course.",
+    },
+    steps: {
+      title: "শুধু দেখবেন না, মুখে বলবেন",
+      subtitle: "Don’t Translate, Just Express.",
+      cards: [
+        {
+          title: "একটি ছোট ভিডিও দেখুন",
+          desc: "প্রতিদিনের লেসনে নতুন শব্দ ও পরিচিত পরিস্থিতির কথোপকথন শিখুন।",
+        },
+        {
+          title: "ভিডিও থামিয়ে নিজে বলুন",
+          desc: "প্রতিটি speaking prompt-এ pause করে কথাগুলো উচ্চস্বরে অনুশীলন করুন।",
+        },
+        {
+          title: "নিজের জীবনে কথাগুলো ব্যবহার করুন",
+          desc: "বাংলায় অনুবাদ না করে ধীরে ধীরে নিজের কথা ইংরেজিতে প্রকাশ করুন।",
+        },
+      ],
+    },
     features: [
       {
         icon: Mic,
-        title: "Real Conversation Scripts",
-        desc: "রিয়েল-লাইফ পরিস্থিতিতে ব্যবহৃত কথোপকথনের স্ক্রিপ্ট — অফিস, কফিশপ, ইন্টারভিউ ও ভ্রমণে সরাসরি ব্যবহার করুন।",
-      },
-      {
-        icon: Brain,
-        title: "Smart Fluency Method",
-        desc: "গ্রামার রটনো ছাড়াই অবচেতন মনে ইংরেজি চিন্তা ও কথা বলার সহজ পদ্ধতি।",
-      },
-      {
-        icon: Bot,
-        title: "AI Practice Partner",
-        desc: "যেকোনো সময় ২৪/৭ AI প্র্যাকটিস পার্টনারের সাথে কথা বলুন ও উচ্চারণ শুধরুন।",
-      },
-      {
-        icon: FileText,
-        title: "Daily Phrase Book & PDFs",
-        desc: "প্রতিদিনের ব্যবহার্য ফ্রেজ, ভোকাবুলারি ও ওয়ার্কশিটের কমপ্লিট PDF সংগ্রহ।",
+        title: "টক-ব্যাক ভিডিও",
+        desc: "ছোট ভিডিও দেখুন, থামিয়ে নিজে মুখে বলুন—শুধু দেখা নয়, প্রতিটি ধাপে speaking practice।",
       },
       {
         icon: MessageCircle,
-        title: "Live Speaking Sessions",
-        desc: "সরাসরি ইন্সট্রাক্টরের সাথে প্র্যাকটিস সেশনে কথা বলুন ও ভুল শুধরে নিন।",
+        title: "বাংলা + English-এ শেখা",
+        desc: "বাংলায় ব্যাখ্যা ও আমাদের পরিচিত দৈনন্দিন পরিস্থিতি ধরে শেখা।",
+      },
+      {
+        icon: Brain,
+        title: "বাংলার পরিচিত ভুল চিনুন",
+        desc: "“Myself Rafi”-এর মতো পরিচিত ভুলগুলো বুঝে আরও স্বাভাবিকভাবে ইংরেজি বলুন।",
+      },
+      {
+        icon: BookOpen,
+        title: "ফ্রি কোর্স বুক",
+        desc: "কোর্সের সাথে প্র্যাকটিস বুকও পাচ্ছেন—ভিডিওতে শিখুন, বইয়ে প্র্যাকটিস করুন।",
+      },
+      {
+        icon: FileText,
+        title: "Completion Certificate",
+        desc: "কোর্সটি শেষ করে অর্জন করুন Completion Certificate.",
       },
       {
         icon: Users,
-        title: "Community Support",
-        desc: "একটিভ লার্নিং কম্যুনিটিতে অন্যদের সাথে প্র্যাকটিস করুন ও সাপোর্ট পান।",
+        title: "লাইভ সাপোর্ট ও লার্নার কমিউনিটি",
+        desc: "লাইভ সাপোর্ট আর লার্নার কমিউনিটিতে অনুশীলন চালিয়ে যেতে সহায়তা পান।",
       },
     ],
     featuresDesc:
-      "প্রথম লেসন থেকেই কথা বলা শুরু করুন — প্রতিটি রিসোর্স একই প্যাকেজের অন্তর্ভুক্ত।",
-    highlightsDesc: "Everything you need to start speaking English with confidence, in one place.",
+      "প্রথম দিন থেকেই মুখে বলা শুরু—প্রতিদিন ২০ মিনিট করে ১০০ দিনের speaking practice।",
+    highlightsDesc: "১০টি ইউনিটে সাজানো ১০০টি লেসন, প্রতিদিন মাত্র ২০ মিনিট করে শিখুন।",
     highlights: [
       {
-        title: "24 Video Lessons",
-        sub: "Short, practical lessons you can finish in 15–20 minutes each",
+        title: "100টি লেসন · 10টি ইউনিট",
+        sub: "Hello থেকে শুরু করে ধাপে ধাপে বাস্তব জীবনের কথোপকথনে পৌঁছান।",
       },
       {
-        title: "Live Speaking Practice",
-        sub: "Weekly live sessions to practice real conversations with instructors",
+        title: "দিনে মাত্র ২০ মিনিট",
+        sub: "নিজের গতিতে একটি করে লেসন দেখুন, থামুন, আর মুখে বলার অনুশীলন করুন।",
       },
       {
-        title: "Daily Phrase Book & PDFs",
-        sub: "Ready-to-use conversation scripts, vocabulary lists and worksheets",
+        title: "ফ্রি Spoken English Course Book",
+        sub: "ভিডিওতে শিখুন, বইয়ের সাথে মিলিয়ে প্র্যাকটিস করুন।",
       },
     ],
     book: {
-      title: "Easy & Smart Spoken English — Course Book",
-      desc: "কোর্সের সাথে যুক্ত প্র্যাকটিক্যাল স্পোকেন ইংলিশ বইটি — ডেইলি ফ্রেজ, কনভারসেশন স্ক্রিপ্ট, উচ্চারণ গাইড ও প্র্যাকটিস এক্সারসাইজ একই প্যাকেজে।",
-      includedNote: "The course book is included free with enrollment.",
-      image: "/programs/easy-smart-spoken-english-book.png",
+      title: "Easy & Smart Spoken English Course Book",
+      desc: "প্রতিটি লেসনের সাথে বইয়ের পেজ মেলানো—ভিডিওতে শিখুন, বইয়ে প্র্যাকটিস করুন।",
+      includedNote: "কোর্সের সাথে ফ্রি—ভিডিওতে শিখুন, বইয়ে প্র্যাকটিস করুন।",
+      image: "/programs/spoken-english-book.png",
     },
-    modules: [
-      {
-        title: "Getting Started — Your English Foundation",
-        lessons: [
-          { title: "কোর্সের পরিচিতি ও কীভাবে ফলো করবেন", duration: "05:10" },
-          { title: "ইংরেজি ভয় ছাড়ার সহজ কৌশল", duration: "08:20" },
-          { title: "Basic greetings ও introductions", duration: "07:45" },
-          { title: "Daily routine নিয়ে কথা বলা", duration: "09:30" },
-          { title: "Practice: নিজের সম্পর্কে ২ মিনিট কথা বলুন", duration: "10:00" },
-        ],
-      },
-      {
-        title: "Everyday Conversations",
-        lessons: [
-          { title: "কফিশপে অর্ডার করা ও ছোট কথা বলা", duration: "08:15" },
-          { title: "Market & shopping conversations", duration: "09:40" },
-          { title: "Asking for directions & getting around", duration: "07:55" },
-          { title: "Talking about your day & hobbies", duration: "08:30" },
-          { title: "Practice: role-play — ৫ মিনিট ডায়ালগ", duration: "11:20" },
-        ],
-      },
-      {
-        title: "Workplace & Professional English",
-        lessons: [
-          { title: "Office introductions & small talk", duration: "08:50" },
-          { title: "Emails: writing clearly and politely", duration: "12:10" },
-          { title: "Phone calls & video meetings", duration: "09:45" },
-          { title: "Giving updates & asking for help", duration: "07:30" },
-          { title: "Practice: mock office conversation", duration: "13:15" },
-        ],
-      },
-      {
-        title: "Interview & Confidence Building",
-        lessons: [
-          { title: "Common interview questions & answers", duration: "14:00" },
-          { title: '"Tell me about yourself" — frame your story', duration: "12:25" },
-          { title: "Answering with STAR method in English", duration: "15:30" },
-          { title: "Handling tricky questions calmly", duration: "10:40" },
-          { title: "Practice: full mock interview", duration: "18:10" },
-        ],
-      },
-      {
-        title: "Pronunciation & Natural Flow",
-        lessons: [
-          { title: "Common sounds Bangladeshi speakers struggle with", duration: "11:20" },
-          { title: "Stress, rhythm & intonation basics", duration: "09:55" },
-          { title: "Linking words naturally in fast speech", duration: "08:40" },
-          { title: "Shadowing technique for better pronunciation", duration: "10:15" },
-          { title: "Practice: record & compare your speech", duration: "12:30" },
-        ],
-      },
-      {
-        title: "Real-World Speaking Mastery",
-        lessons: [
-          { title: "Travel English — airport, hotel, restaurant", duration: "10:00" },
-          { title: "Social situations — parties, networking, events", duration: "09:20" },
-          { title: "Expressing opinions & disagreeing politely", duration: "08:50" },
-          { title: "Storytelling & holding a conversation", duration: "11:40" },
-          { title: "Capstone: 10-minute spontaneous English talk", duration: "15:00" },
-        ],
-      },
-    ],
-    pdfs: [
-      {
-        title: "Daily Phrase Book",
-        desc: "100+ everyday phrases organized by situation — ready to use immediately.",
-        pages: 22,
-        size: "2.8 MB",
-      },
-      {
-        title: "Vocabulary Builder Workbook",
-        desc: "Practice exercises for the most useful words and expressions.",
-        pages: 30,
-        size: "3.5 MB",
-      },
-      {
-        title: "Interview Question Bank & Answer Templates",
-        desc: "Real interview questions with sample answers you can adapt.",
-        pages: 28,
-        size: "3.2 MB",
-      },
-    ],
+    curriculum: {
+      label: "কারিকুলাম",
+      title: "১০০টি লেসন, ১০টি ইউনিট",
+      subtitle: "Hello থেকে শুরু করে বাস্তব জীবনে আত্মবিশ্বাসের সাথে কথা বলা পর্যন্ত।",
+      modules: [
+        { title: "Hello, Me", lessonCount: "১০টি লেসন", items: ["নিজের পরিচয়, পরিবার"] },
+        { title: "My Day", lessonCount: "১০টি লেসন", items: ["রুটিন, সময়"] },
+        { title: "Out and About", lessonCount: "১০টি লেসন", items: ["কেনাকাটা, খাবার, রাস্তা"] },
+        {
+          title: "People and Places",
+          lessonCount: "১০টি লেসন",
+          items: ["মানুষ আর জায়গার বর্ণনা"],
+        },
+        { title: "Right Now", lessonCount: "১০টি লেসন", items: ["এখন কী হচ্ছে, ফোন, আবহাওয়া"] },
+        { title: "Yesterday", lessonCount: "১০টি লেসন", items: ["গতকাল কী হয়েছে"] },
+        { title: "Plans and Future", lessonCount: "১০টি লেসন", items: ["প্ল্যান, দাওয়াত, ভ্রমণ"] },
+        { title: "Health and Help", lessonCount: "১০টি লেসন", items: ["ডাক্তার, সাহায্য চাওয়া"] },
+        { title: "Work and Study", lessonCount: "১০টি লেসন", items: ["চাকরি, ইন্টারভিউ, ইমেইল"] },
+        {
+          title: "Real-Life Confidence",
+          lessonCount: "১০টি লেসন",
+          items: ["মতামত দেওয়া, ২ মিনিট কথা বলা"],
+        },
+      ],
+      note: "প্রতিটি ইউনিটে ১০টি লেসন। দিনে একটি করে লেসন, প্রায় ২০ মিনিট অনুশীলন করে নিজের গতিতে এগিয়ে যান।",
+    },
+    modules: [],
+    pdfs: [],
     certificate: {
       title: "Completion Certificate",
-      desc: "Earn a verified FlyBridge certificate when you complete all 24 lessons and the final speaking challenge.",
+      desc: "কোর্সটি শেষ করে অর্জন করুন Completion Certificate.",
     },
   },
   "ielts-band-score-machine": {

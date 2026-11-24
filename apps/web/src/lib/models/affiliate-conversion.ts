@@ -17,7 +17,7 @@ export type AffiliateConversionStatus = (typeof AFFILIATE_CONVERSION_STATUSES)[n
 const affiliateConversionSchema = new Schema(
   {
     affiliate: { type: Schema.Types.ObjectId, ref: "Affiliate", required: true, index: true },
-    order: { type: Schema.Types.ObjectId, ref: "Order", required: true, index: true },
+    order: { type: Schema.Types.ObjectId, ref: "Order", required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     itemType: { type: String, trim: true },
     itemId: { type: String, trim: true },

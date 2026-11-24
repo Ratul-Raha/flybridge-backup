@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 const DEAL_END = "2026-10-30T23:59:59+06:00";
-const DEAL_HREF = "/ielts-band-score-machine";
+const DEAL_HREF = "/programs/ielts-band-score-machine";
 
 function toUnits(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));

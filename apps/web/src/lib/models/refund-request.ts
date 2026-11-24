@@ -22,7 +22,7 @@ const STORED_REASON_CODES = [...REFUND_REASONS, "", "prefer_not_to_say"] as cons
 const refundRequestSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    order: { type: Schema.Types.ObjectId, ref: "Order", required: true, index: true },
+    order: { type: Schema.Types.ObjectId, ref: "Order", required: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", default: null, index: true },
     /**
      * Points at whichever enrollment backs the order — CourseEnrollment for a

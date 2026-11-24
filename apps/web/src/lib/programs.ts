@@ -62,7 +62,7 @@ export const programs: Program[] = [
     slug: "easy-smart-spoken-english",
     badge: "ENGLISH",
     title: "Easy & Smart Spoken English",
-    desc: "A practical English course built around real conversations, daily phrases and confident speaking.",
+    desc: "১০০ দিনে ইংরেজিতে নিজের কথা প্রকাশ করুন—১০০টি লেসন, ১০টি ইউনিট, দিনে ২০ মিনিট, সাথে ফ্রি কোর্স বুক।",
     bg: "var(--blue-bg)",
     badgeColor: "var(--blue-ink)",
     image: "/programs/easy-smart-spoken-english.jpg",
