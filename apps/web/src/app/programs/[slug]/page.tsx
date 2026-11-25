@@ -12,7 +12,7 @@ import {
   type ProgramDetailStat,
 } from "@/components/programs/program-detail";
 import { type ReviewItem } from "@/components/programs/reviews-section";
-import { getProgram, staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { getProgram, isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
@@ -77,31 +77,33 @@ const getOtherDbCoursesCached = unstable_cache(
         .limit(4),
     ]);
     const enrollMap = new Map(otherEnrollCounts.map((r) => [r._id.toString(), r.count as number]));
-    return dbCourses.map((c) => {
-      const courseId = c._id.toString();
-      const pricing = publicCoursePricing(c);
-      return {
-        id: courseId,
-        slug: c.slug,
-        title: c.title,
-        badge: c.badge ?? "",
-        subtitle: c.subtitle ?? "",
-        description: c.description ?? "",
-        price: c.price ?? 0,
-        currency: c.currency ?? "USD",
-        prices: pricing.prices,
-        originalPrice: pricing.originalPrice ?? undefined,
-        image: c.image ?? null,
-        level: c.level ?? "",
-        upcoming: c.upcoming ?? false,
-        averageRating: c.averageRating ?? 0,
-        enrollmentCount: displayEnrollmentCount(c.slug, enrollMap.get(courseId) ?? 0),
-        modules: (c.modules ?? []).map((m) => ({
-          title: m.title,
-          lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-        })),
-      } as DbCourse;
-    });
+    return dbCourses
+      .filter((course) => !isHiddenCourseListing(course.slug))
+      .map((c) => {
+        const courseId = c._id.toString();
+        const pricing = publicCoursePricing(c);
+        return {
+          id: courseId,
+          slug: c.slug,
+          title: c.title,
+          badge: c.badge ?? "",
+          subtitle: c.subtitle ?? "",
+          description: c.description ?? "",
+          price: c.price ?? 0,
+          currency: c.currency ?? "USD",
+          prices: pricing.prices,
+          originalPrice: pricing.originalPrice ?? undefined,
+          image: c.image ?? null,
+          level: c.level ?? "",
+          upcoming: c.upcoming ?? false,
+          averageRating: c.averageRating ?? 0,
+          enrollmentCount: displayEnrollmentCount(c.slug, enrollMap.get(courseId) ?? 0),
+          modules: (c.modules ?? []).map((m) => ({
+            title: m.title,
+            lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
+          })),
+        } as DbCourse;
+      });
   },
   ["program-other-courses"],
   { revalidate: 60 },

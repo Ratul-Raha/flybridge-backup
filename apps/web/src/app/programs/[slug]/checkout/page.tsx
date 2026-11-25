@@ -30,9 +30,7 @@ export function generateMetadata({ params }: Props): Metadata {
 
 export default async function CheckoutPage({ params }: Props) {
   const program = getProgram(params.slug);
-  if (!program || !program.hasDb) notFound();
-
-  const details = courseDetails[params.slug];
+  if (program?.hidden) notFound();
 
   await connectDb();
   const course = await Course.findOne({
@@ -41,11 +39,13 @@ export default async function CheckoutPage({ params }: Props) {
   });
   if (!course) notFound();
 
+  const details = courseDetails[params.slug];
+
   const courseId = course._id.toString();
   const moduleCount = (course.modules ?? []).length;
   const lessonCount = (course.modules ?? []).reduce(
     (n: number, m: any) => n + (m.lessons?.length ?? 0),
-    0
+    0,
   );
 
   // What the buyer is charged, resolved from the course's own discount so this
@@ -82,9 +82,7 @@ export default async function CheckoutPage({ params }: Props) {
     // matching discount, and a summary whose rows do not add up is worse than
     // no strikethrough at all.
     originalPrice:
-      pricing.discounted && pricing.price !== null
-        ? pricing.price + pricing.savings
-        : undefined,
+      pricing.discounted && pricing.price !== null ? pricing.price + pricing.savings : undefined,
     discountLabel: pricing.discountLabel,
     wishlistDiscountPercent: wishlist?.percent ?? 0,
     wishlistDiscountAmount: wishlist?.amount ?? 0,
@@ -98,7 +96,7 @@ export default async function CheckoutPage({ params }: Props) {
   };
 
   const isSpokenEnglish = params.slug === "easy-smart-spoken-english";
-  const isIelts = params.slug === "ielts-band-score-machine";
+  const isIelts = params.slug.startsWith("ielts-band-score-machine");
 
   const spokenEnglishStats = [
     { value: "১০০", label: "লেসন" },
@@ -124,7 +122,8 @@ export default async function CheckoutPage({ params }: Props) {
     },
     {
       title: "বাংলা + English-এ শেখা",
-      description: "বাংলায় ব্যাখ্যা, পরিচিত পরিস্থিতি, আর মাথায় অনুবাদ না করে express করার পদ্ধতি।",
+      description:
+        "বাংলায় ব্যাখ্যা, পরিচিত পরিস্থিতি, আর মাথায় অনুবাদ না করে express করার পদ্ধতি।",
     },
     {
       title: "Easy & Smart Spoken English Course Book",
@@ -165,7 +164,10 @@ export default async function CheckoutPage({ params }: Props) {
       title: "Quiz, practice ও নিয়মিত live class",
       description: "শেখা ঝালাই করুন, প্রশ্ন করুন, আর প্রস্তুতি যাচাই করুন।",
     },
-    { title: "Lifetime access", description: "নিজের সুবিধামতো সময়ে lessons ও course materials-এ ফিরে আসুন।" },
+    {
+      title: "Lifetime access",
+      description: "নিজের সুবিধামতো সময়ে lessons ও course materials-এ ফিরে আসুন।",
+    },
   ];
 
   const genericItems = [
@@ -220,7 +222,7 @@ export default async function CheckoutPage({ params }: Props) {
     ? "Don’t Translate, Just Express. দিনে মাত্র ২০ মিনিটে, এক লেসন করে ইংরেজিতে নিজের কথা প্রকাশের অনুশীলন শুরু করুন।"
     : isIelts
       ? "চারটি IELTS skill, ২৫টি video masterclass, ৫টি bonus class আর ১৫টি computer-based mock test—আপনার প্রস্তুতির জন্য একটি সম্পূর্ণ practice system।"
-      : details?.desc ?? course.description;
+      : (details?.desc ?? course.description);
   const includedItems = isSpokenEnglish
     ? spokenEnglishItems
     : isIelts
@@ -236,17 +238,11 @@ export default async function CheckoutPage({ params }: Props) {
 
       <div className="mx-auto max-w-[1320px] px-[clamp(20px,4.5vw,56px)] pb-5 pt-[112px] sm:pt-[126px]">
         <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-[#778394]">
-          <Link
-            href="/"
-            className="transition-colors hover:text-[#14845B]"
-          >
+          <Link href="/" className="transition-colors hover:text-[#14845B]">
             Home
           </Link>
           <span aria-hidden="true">/</span>
-          <Link
-            href="/programs"
-            className="transition-colors hover:text-[#14845B]"
-          >
+          <Link href="/programs" className="transition-colors hover:text-[#14845B]">
             Programs
           </Link>
           <span aria-hidden="true">/</span>

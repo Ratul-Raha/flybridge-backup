@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/nav";
 import { getProgram } from "@/lib/programs";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
@@ -12,14 +12,22 @@ import { CourseReview } from "@/lib/models/course-review";
 import { readSession } from "@/lib/auth/session";
 import {
   ArrowRight,
+  BarChart3,
   BookOpen,
   Check,
-  ChevronDown,
+  ClipboardList,
+  FileText,
   Flag,
   Gift,
+  GraduationCap,
+  Infinity as InfinityIcon,
+  Library,
   Monitor,
   Pencil,
+  Percent,
   Play,
+  Sparkles,
+  Users,
 } from "lucide-react";
 import {
   courseDetails,
@@ -31,15 +39,23 @@ import { BengaliText } from "@/components/bengali-text";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
 import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import {
+  BandScoreMachineConsole,
   Countdown,
-  ExamWindow,
+  CurriculumExplorer,
+  HeroDealTimer,
+  HeroDirectCtaButton,
+  HeroVersionSelectorButton,
+  HeroVersionSelectorDock,
   Reveal,
   SkillTabs,
-  StickyOffer,
+  type CurriculumModuleItem,
+  type HeroVersionOption,
 } from "@/components/ielts/interactive";
 import { LandingPixelEvents } from "@/components/ielts/landing-pixel-events";
 import { DbCoursePage } from "@/app/ielts-band-score-machine/db-course-page";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { hasFreePreview } from "@/lib/course-preview";
+import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { formatMoney } from "@/lib/pricing";
 
 const SLUG = "ielts-band-score-machine";
@@ -76,14 +92,23 @@ type Offer = {
   href: string;
   label: string;
   price?: string;
+  numericPrice?: number;
   originalPrice?: string;
   savings?: string;
   dealLabel?: string;
   dealNote?: string;
+  endsAt?: string | null;
+  previewHref?: string;
   scholarshipPercent: number;
   showWaitlistForm: boolean;
   slug: string;
   title: string;
+  versionOptions?: HeroVersionOption[];
+};
+
+type HeroStudentAvatar = {
+  name: string;
+  avatar: string | null;
 };
 
 function JsonLd({ data }: { data: unknown }) {
@@ -145,8 +170,8 @@ export async function generateMetadata(): Promise<Metadata> {
 const N = toBn(MOCK_TEST_COUNT);
 
 const COPY = {
-  heroSub: `প্রতিটি টপিক ভেঙে ভেঙে শেখানো সেলফ পেইসড এক্সপ্লেইনার লেসন, সাথে ${N}টি ফ্রী কম্পিউটার বেইজড মক টেস্ট, কুইজ, প্র্যাকটিস, বই, লাইভ ক্লাস।`,
-  windowCaption: "আমাদের মক টেস্টের ডেমো সিমুলেশন",
+  heroSupport:
+    "৩০টি ইন্টারঅ্যাকটিভ লেসন, ১৫টি কম্পিউটার-বেসড মক টেস্ট আর ইনস্ট্যান্ট Writing & Speaking evaluation—সব এক সিস্টেমে।",
 
   systemTitle: "শিখুন, প্র্যাকটিস করুন, নিজেকে যাচাই করুন",
   systemDesc: "আলাদা কোর্স, আলাদা ফাইল আর আলাদা মক টেস্ট সাইট খুঁজে বেড়াতে হবে না।",
@@ -168,6 +193,50 @@ const COPY = {
   closeBuy: "একবার ভর্তি হলে লেসন আর মক টেস্ট সব আপনার, লাইফটাইম।",
   closeIncluded: "প্যাকেজে যা যা পাচ্ছেন",
 };
+
+const HERO_RIBBON: { label: string; sub: string; englishSub?: boolean }[] = [
+  { label: "৪টি স্কিল", sub: "Speaking, Writing, Listening, Reading", englishSub: true },
+  { label: "১৫টি ফুল মক টেস্ট", sub: "কোনো এক্সট্রা ফি নেই" },
+  { label: "ফোন, ট্যাবলেট, ডেস্কটপ", sub: "নিজের সময়ে প্র্যাকটিস করুন" },
+  { label: "লাইফটাইম অ্যাক্সেস", sub: "এনরোলমেন্টের পর সারাজীবন" },
+];
+
+const CORE_INCLUDES = [
+  {
+    icon: BookOpen,
+    title: "30 Interactive Lessons",
+    desc: "Step-by-step modules across all four skills.",
+  },
+  {
+    icon: ClipboardList,
+    title: "On-demand Practice & Quizzes",
+    desc: "Regenerative drills after every lesson.",
+  },
+  {
+    icon: Monitor,
+    title: "15 Computer-Based Mock Tests",
+    desc: "The real exam screen, before exam day.",
+  },
+  {
+    icon: BarChart3,
+    title: "Progress Tracker",
+    desc: "See what improved and what needs work.",
+  },
+  {
+    icon: Sparkles,
+    title: "Instant Writing & Speaking Evaluation",
+    desc: "Band-level feedback on your answers.",
+  },
+];
+
+const BONUS_INCLUDES = [
+  { icon: FileText, title: "IELTS Free Resources" },
+  { icon: GraduationCap, title: "Scholarship Information" },
+  { icon: Pencil, title: "SOP Generator" },
+  { icon: Users, title: "50+ University Network Access" },
+  { icon: Library, title: "Access to Other Free Courses" },
+  { icon: Percent, title: "10% Cashback on Every Referral" },
+];
 
 /* ───────────────────────── atoms ───────────────────────── */
 
@@ -215,19 +284,33 @@ function Cta({
   full?: boolean;
 }) {
   const dark = tone === "dark";
+  const className = `ib-cta group inline-flex items-center justify-center gap-2.5 rounded-full px-7 py-[15px] text-[16px] font-bold text-center leading-[1.4] ${
+    full ? "w-full" : ""
+  }`;
+  const style = {
+    background: dark ? "var(--ib-mint)" : "var(--ib-brand)",
+    color: dark ? "#052117" : "#fff",
+    boxShadow: dark
+      ? "0 14px 30px -14px rgba(124,240,189,0.6)"
+      : "0 14px 30px -14px rgba(20,133,90,0.7)",
+  };
+
+  if (offer.versionOptions?.length) {
+    return (
+      <HeroVersionSelectorButton
+        versions={offer.versionOptions}
+        label={offer.label}
+        className={className}
+        style={style}
+      />
+    );
+  }
+
   return (
     <Link
       href={offer.href}
-      className={`ib-cta inline-flex items-center justify-center gap-2.5 rounded-full px-7 py-[15px] text-[16px] font-bold text-center leading-[1.4] ${
-        full ? "w-full" : ""
-      }`}
-      style={{
-        background: dark ? "var(--ib-mint)" : "var(--ib-brand)",
-        color: dark ? "#052117" : "#fff",
-        boxShadow: dark
-          ? "0 14px 30px -14px rgba(124,240,189,0.6)"
-          : "0 14px 30px -14px rgba(20,133,90,0.7)",
-      }}
+      className={className}
+      style={style}
     >
       {offer.mode === "enrolled" && <Play className="w-[14px] h-[14px]" fill="currentColor" />}
       <BengaliText>{offer.label}</BengaliText>
@@ -526,136 +609,119 @@ function OfferCard({
 
 /* ───────────────────────── hero ───────────────────────── */
 
-function TrustStrip({ details, lessonCount }: { details?: CourseDetails; lessonCount: number }) {
-  const stats = details?.heroStats?.length
-    ? details.heroStats
-    : [
-        { value: toBn(MOCK_TEST_COUNT), label: "ফ্রি মক টেস্ট" },
-        { value: toBn(lessonCount), label: "সেলফ-পেসড লেসন" },
-        { value: "লাইফটাইম", label: "অ্যাক্সেস" },
-      ];
-
+function LandingHeader({
+  href,
+  label,
+  versions,
+}: {
+  href: string;
+  label: string;
+  versions?: HeroVersionOption[];
+}) {
   return (
-    <Reveal delay={0.2}>
-      <div
-        className="mt-14 lg:mt-20 grid grid-cols-2 lg:grid-cols-4 rounded-[20px] overflow-hidden"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
-        {stats.map((s, i) => (
-          <div
-            key={s.label}
-            className="px-6 py-6 sm:px-8 sm:py-7"
-            style={{
-              borderLeft: i % 2 === 1 ? "1px solid rgba(255,255,255,0.1)" : undefined,
-              borderTop: i > 1 ? "1px solid rgba(255,255,255,0.1)" : undefined,
-            }}
-          >
-            <div
-              className="font-display text-[clamp(26px,3vw,36px)] font-bold leading-none tabular-nums"
-              style={{ color: "var(--ib-mint)" }}
-            >
-              {s.value}
-            </div>
-            <div className="mt-2.5 text-[13px] leading-[1.55]" style={{ color: "#9FB0C7" }}>
-              <BengaliText>{s.label}</BengaliText>
-            </div>
-          </div>
-        ))}
+    <header className="ib-header">
+      <div className="ib-header-inner">
+        <Link
+          href="/programs/ielts-band-score-machine"
+          className="ib-wordmark"
+          aria-label="IELTS Band Score Machine — home"
+        >
+          <span className="ib-wordmark-name">
+            <span className="ib-wordmark-badge">IELTS</span>
+            <span>Band Score Machine</span>
+          </span>
+        </Link>
+
+        <nav className="ib-nav" aria-label="কোর্স নেভিগেশন">
+          <a href="#ielts-hero">কোর্স সম্পর্কে</a>
+          <a href="#included">কী পাচ্ছেন</a>
+          <a href="#mock-tests">মক টেস্ট</a>
+          <a href="#curriculum">কারিকুলাম</a>
+          <Link href="/faq">FAQ</Link>
+        </nav>
+
+        {versions?.length ? (
+          <HeroVersionSelectorButton
+            versions={versions}
+            label={label}
+            className="ib-header-cta group"
+            leadingDot
+          />
+        ) : (
+          <Link href={href} className="ib-header-cta">
+            <span className="ib-live-dot h-2 w-2 rounded-full bg-[#041E14]" aria-hidden="true" />
+            <BengaliText>{label}</BengaliText>
+            <ArrowRight size={14} strokeWidth={2.6} aria-hidden="true" />
+          </Link>
+        )}
       </div>
-    </Reveal>
+    </header>
   );
 }
 
-/**
- * Hero offer for the "buy" state, built for the dark hero:
- * price on top, one big CTA, perks underneath. No boxes.
- */
-function HeroOffer({ offer, note }: { offer: Offer; note?: string }) {
-  const perks = [
-    "লাইফটাইম অ্যাক্সেস",
-    `${toBn(MOCK_TEST_COUNT)}টি মক টেস্ট ফ্রি`,
-    "৩ দিনে ১০০% রিফান্ড",
-  ];
+function HeroSingleOfferDock({ offer, note }: { offer: Offer; note?: string }) {
   const finePrint = offer.dealNote ?? note;
 
   return (
-    <div className="mt-9 max-w-[520px]">
-      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-        <span
-          className="font-display font-bold leading-none tracking-[-0.02em] tabular-nums text-white"
-          style={{ fontSize: "clamp(40px,5vw,56px)" }}
-        >
-          <BengaliText>{offer.price}</BengaliText>
-        </span>
-        <div className="flex items-center gap-2.5 pb-1.5">
-          {offer.originalPrice && (
-            <s className="text-[16px] font-medium" style={{ color: "#8FA0B8" }}>
-              <BengaliText>{offer.originalPrice}</BengaliText>
-            </s>
-          )}
-          {offer.savings && (
-            <span
-              className="rounded-md px-2.5 py-1 text-[12px] font-bold whitespace-nowrap"
-              style={{ background: "var(--ib-mint)", color: "#052117" }}
-            >
-              <BengaliText>{`Save ${offer.savings}`}</BengaliText>
+    <div id="enroll-options" className="mt-5 max-w-[560px] scroll-mt-24">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div>
+          <div className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#5B6B65]">
+            One-time fee · Lifetime access
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-2.5">
+            <span className="font-display text-[30px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#0F1F1A] sm:text-[34px]">
+              <BengaliText>{offer.price}</BengaliText>
             </span>
-          )}
+            {offer.originalPrice && (
+              <s className="text-[14px] font-medium tabular-nums text-[#8A9690]">
+                <BengaliText>{offer.originalPrice}</BengaliText>
+              </s>
+            )}
+            {offer.savings && (
+              <span className="rounded-full bg-[#E3F4EC] px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-[#0D7A55]">
+                Save {offer.savings}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-      <p className="mt-2 text-[13px]" style={{ color: "#8FA0B8" }}>
-        <BengaliText>এককালীন পেমেন্ট, কোনো লুকানো চার্জ নেই</BengaliText>
-      </p>
 
-      {offer.dealLabel && (
-        <div
-          className="mt-4 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
-          style={{
-            border: "1px solid rgba(124,240,189,0.35)",
-            background: "rgba(124,240,189,0.08)",
-          }}
-        >
-          <Flag
-            className="h-[13px] w-[13px] shrink-0"
-            strokeWidth={2.6}
-            style={{ color: "var(--ib-mint)" }}
-          />
-          <span
-            className="text-[11.5px] font-bold uppercase tracking-[0.12em]"
-            style={{ color: "#A9F5D5" }}
-          >
-            <BengaliText>{offer.dealLabel}</BengaliText>
-          </span>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <Cta offer={offer} tone="dark" full />
+        {offer.endsAt && <HeroDealTimer endsAt={offer.endsAt} />}
       </div>
 
-      <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-        {perks.map((t) => (
-          <li
-            key={t}
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium"
-            style={{ color: "#B7C4D6" }}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <HeroDirectCtaButton
+          href={offer.href}
+          label={offer.mode === "enrolled" ? offer.label : "এখনই ভর্তি হোন — Instant Access"}
+          subPrice={offer.price}
+          enrolled={offer.mode === "enrolled"}
+          contentId={offer.slug}
+          contentName={offer.title}
+          numericPrice={offer.numericPrice}
+        />
+
+        {offer.previewHref && offer.mode !== "enrolled" && (
+          <Link
+            href={offer.previewHref}
+            className="inline-flex min-h-[54px] items-center gap-2.5 rounded-[10px] px-5 text-[14.5px] font-medium text-[#0F1F1A] transition-colors hover:bg-white"
+            style={{
+              border: "1px solid #E4E8E4",
+              background: "transparent",
+            }}
           >
-            <Check
-              className="h-[14px] w-[14px] shrink-0"
-              strokeWidth={3}
-              style={{ color: "var(--ib-mint)" }}
-            />
-            <BengaliText>{t}</BengaliText>
-          </li>
-        ))}
-      </ul>
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-full"
+              style={{ background: "#E3F4EC", color: "#0D7A55" }}
+            >
+              <Play className="h-3 w-3 ml-[1px]" fill="currentColor" />
+            </span>
+            <span>ফ্রি প্রিভিউ</span>
+          </Link>
+        )}
+      </div>
 
       {finePrint && (
-        <p className="mt-3 text-[12.5px] leading-[1.7]" style={{ color: "#8FA0B8" }}>
+        <p className="mt-2 text-[12px] leading-[1.6] text-[#5B6B65]">
           <BengaliText>{finePrint}</BengaliText>
         </p>
       )}
@@ -663,178 +729,319 @@ function HeroOffer({ offer, note }: { offer: Offer; note?: string }) {
   );
 }
 
+function HeroEnrollmentProof({
+  studentCount,
+  studentAvatars,
+}: {
+  studentCount: number;
+  studentAvatars: HeroStudentAvatar[];
+}) {
+  if (studentCount <= 0) return null;
+
+  const avatarSlots =
+    studentAvatars.length > 0
+      ? studentAvatars.slice(0, 4)
+      : [
+          { name: "রাফি", avatar: null },
+          { name: "তানজিলা", avatar: null },
+          { name: "সাকিব", avatar: null },
+          { name: "নুসরাত", avatar: null },
+        ];
+
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-3.5 border-t border-[#E4E8E4] pt-4">
+      <div className="flex items-center -space-x-2" aria-hidden="true">
+        {avatarSlots.map((s, idx) =>
+          s.avatar ? (
+            <img
+              key={`${s.name}-${idx}`}
+              src={s.avatar}
+              alt=""
+              loading="lazy"
+              className="h-8 w-8 rounded-full object-cover ring-2 ring-[#FAFAF7]"
+            />
+          ) : (
+            <span
+              key={`${s.name}-${idx}`}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[10.5px] font-bold text-[#041E14] ring-2 ring-[#FAFAF7]"
+              style={{
+                background:
+                  idx % 2 === 0
+                    ? "linear-gradient(135deg, #8FF6C8, #3CD58E)"
+                    : "linear-gradient(135deg, #BAE6FD, #60A5FA)",
+              }}
+            >
+              {Array.from(s.name.trim())[0] || "শি"}
+            </span>
+          ),
+        )}
+      </div>
+
+      <p className="max-w-[430px] text-[13px] leading-[1.6] text-[#5B6B65]">
+        <strong className="font-semibold text-[#0F1F1A]">
+          <BengaliText>{`${toBn(studentCount)}+ শিক্ষার্থী`}</BengaliText>
+        </strong>
+        <BengaliText> ইতিমধ্যে প্রস্তুতি নিচ্ছেন। টিপস মুখস্থ নয়, আসল পরীক্ষার মতো প্র্যাকটিস।</BengaliText>
+      </p>
+    </div>
+  );
+}
+
 function Hero({
   offer,
+  versions,
   title,
-  details,
-  lessonCount,
   pricingNote,
+  studentCount,
+  studentAvatars,
 }: {
   offer: Offer;
+  versions?: HeroVersionOption[];
   title: string;
-  details?: CourseDetails;
-  lessonCount: number;
   pricingNote?: string;
+  studentCount: number;
+  studentAvatars: HeroStudentAvatar[];
 }) {
   return (
     <section
       id="ielts-hero"
-      className="ib-dark relative overflow-hidden"
+      className="relative overflow-hidden"
+      aria-label={title}
       style={{
         background:
-          "radial-gradient(900px 500px at 85% 10%, rgba(124,240,189,0.14), transparent 60%)," +
-          "radial-gradient(700px 480px at 0% 100%, rgba(31,92,138,0.35), transparent 65%)," +
-          "var(--ib-navy)",
+          "radial-gradient(800px 500px at 86% 18%, rgba(13,122,85,0.07), transparent 64%), #FAFAF7",
       }}
     >
-      {/* subtle grid texture */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          maskImage: "radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%)",
-          WebkitMaskImage: "radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%)",
-        }}
-      />
-
-      <div className={`${wrap} relative pt-[108px] sm:pt-[128px] pb-14 lg:pb-20`}>
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] gap-14 lg:gap-16 items-center">
-          {/* ── left: message + offer ── */}
+      <div className="relative mx-auto max-w-[1160px] px-6 pb-10 pt-[104px] sm:pt-[118px] lg:pb-[48px]">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <Reveal>
-            <div
-              className="inline-flex items-center gap-2.5 rounded-full px-4 py-2"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}
+            <h1
+              className="font-display font-semibold tracking-[-0.035em] text-[#0F1F1A]"
+              style={{ lineHeight: 1.12 }}
             >
-              <span
-                className="ib-dot h-[7px] w-[7px] rounded-full"
-                style={{ background: "var(--ib-mint)" }}
-              />
-              <span
-                className="text-[11.5px] font-bold uppercase tracking-[0.16em]"
-                style={{ color: "#A9F5D5" }}
-              >
-                IELTS Preparation
-              </span>
-            </div>
-
-            <h1 className="mt-6 font-display font-bold tracking-[-0.025em] text-white">
-              <span className="block leading-[1.02]" style={{ fontSize: "clamp(40px,5.6vw,72px)" }}>
-                Target{" "}
-                <span className="relative inline-block" style={{ color: "var(--ib-mint)" }}>
-                  Band 7
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 220 12"
-                    preserveAspectRatio="none"
-                    className="absolute left-0 -bottom-2 h-[10px] w-full"
-                  >
-                    <path
-                      d="M2 8 C 50 2, 110 2, 218 7"
-                      fill="none"
-                      stroke="var(--ib-mint)"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      opacity="0.55"
-                    />
-                  </svg>
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="font-display text-[clamp(38px,4.5vw,52px)] font-black leading-none tracking-[-0.09em] text-[#E11D2E]">
+                  IELTS
+                </span>
+                <span aria-hidden="true" className="h-10 w-[2px] bg-[#D8E3DC]" />
+                <span className="flex flex-col leading-none">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#617068]">
+                    Band Score
+                  </span>
+                  <span className="mt-1 font-display text-[clamp(26px,3.1vw,36px)] font-bold tracking-[-0.045em] text-[#0F1F1A]">
+                    Machine
+                  </span>
                 </span>
               </span>
-              <span
-                className="mt-5 block font-semibold leading-[1.45]"
-                style={{ fontSize: "clamp(18px,1.9vw,24px)", color: "#D5DFEC" }}
-              >
-                <BengaliText>{title}</BengaliText>
+              <span className="mt-3 block text-balance text-[clamp(22px,2.6vw,30px)] font-semibold leading-[1.4] text-[#0D7A55]">
+                <BengaliText>আপনার ব্যান্ড স্কোর বাড়বে সিস্টেমেটিক প্রসেসে</BengaliText>
               </span>
             </h1>
 
-            <p
-              className="mt-5 max-w-[520px] text-[16px] leading-[1.85]"
-              style={{ color: "#B7C4D6" }}
-            >
-              <BengaliText>{COPY.heroSub}</BengaliText>
+            <p className="mt-4 max-w-[540px] text-[16px] leading-[1.8] text-[#5B6B65] sm:text-[17px]">
+              <BengaliText>
+                প্রতিটি টপিক ভেঙে ভেঙে শেখানো সেলফ পেইসড এক্সপ্লেইনার লেসন, সাথে ১৫টি ফ্রী কম্পিউটার বেইজড মক টেস্ট, কুইজ, প্র্যাকটিস, বই, লাইভ ক্লাস। কোথায় নম্বর কাটছে, কীভাবে ঠিক করবেন—সব দেখতে পাবেন।
+              </BengaliText>
             </p>
 
-            {offer.mode === "waitlist" && (
-              <div className="mt-7">
-                <Countdown target={LAUNCH_DATE} />
-              </div>
-            )}
-
-            {offer.mode === "buy" && offer.price ? (
-              <HeroOffer offer={offer} note={pricingNote} />
+            {versions && versions.length > 0 ? (
+              <HeroVersionSelectorDock versions={versions} />
             ) : (
-              <div
-                className="mt-8 max-w-[520px] rounded-[20px] p-6"
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                <OfferCard offer={offer} note={pricingNote} compact dark />
-              </div>
+              <>
+                {offer.mode === "waitlist" && (
+                  <div className="mt-4">
+                    <Countdown target={LAUNCH_DATE} />
+                  </div>
+                )}
+
+                {offer.mode === "buy" && offer.price ? (
+                  <HeroSingleOfferDock offer={offer} note={pricingNote} />
+                ) : (
+                  <div className="mt-5 max-w-[560px]">
+                    <OfferCard offer={offer} note={pricingNote} compact />
+                  </div>
+                )}
+              </>
             )}
-          </Reveal>
 
-          {/* ── right: demo simulator (kept) ── */}
-          <Reveal delay={0.15}>
-            <div className="relative">
-              {/* glow behind the simulator */}
-              <div
-                aria-hidden
-                className="absolute -inset-6 -z-0 rounded-[40px] blur-3xl"
-                style={{
-                  background:
-                    "radial-gradient(60% 60% at 50% 50%, rgba(124,240,189,0.28), rgba(31,92,138,0.18) 60%, transparent 80%)",
-                }}
-              />
-              <div
-                className="relative z-[1] rounded-[22px] p-2"
-                style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.16)",
-                  boxShadow: "0 40px 80px -30px rgba(0,0,0,0.65)",
-                }}
-              >
-                <ExamWindow />
-              </div>
-
-              <div
-                className="absolute -top-4 -left-2 sm:-left-5 z-10 inline-flex items-center gap-2 rounded-full px-4 py-2"
-                style={{
-                  background: "var(--ib-mint)",
-                  boxShadow: "0 14px 30px -14px rgba(124,240,189,0.7)",
-                }}
-              >
-                <span
-                  className="ib-dot h-[7px] w-[7px] rounded-full"
-                  style={{ background: "#052117" }}
-                />
-                <span
-                  className="text-[12px] font-bold tracking-[0.06em] uppercase"
-                  style={{ color: "#052117" }}
-                >
-                  Live Demo
-                </span>
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-[#5B6B65]">
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-[#0D7A55]" strokeWidth={2.6} />
+                <BengaliText>লাইভ সাপোর্ট</BengaliText>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-[#0D7A55]" strokeWidth={2.6} />
+                <BengaliText>লাইফটাইম অ্যাক্সেস</BengaliText>
+              </span>
             </div>
 
-            <p
-              className="mt-6 text-[13.5px] leading-[1.75] max-w-[520px]"
-              style={{ color: "#8FA0B8" }}
+            <HeroEnrollmentProof
+              studentCount={studentCount}
+              studentAvatars={studentAvatars}
+            />
+
+            <Link
+              href="/refund"
+              aria-label="৩ দিনের মধ্যে ১০০% রিফান্ড — রিফান্ড পলিসি দেখুন"
+              className="group mt-3 flex min-h-[60px] max-w-[500px] items-center justify-between gap-3 rounded-[6px] border border-[#A8DCC2] border-l-[4px] bg-[#E9F7EF] px-4 py-3 text-[#0D7A55] shadow-[0_6px_18px_rgba(13,122,85,0.08)] transition-all hover:-translate-y-0.5 hover:border-[#0D7A55] hover:bg-[#DFF3E8] hover:shadow-[0_10px_24px_rgba(13,122,85,0.13)]"
             >
-              <BengaliText>{COPY.windowCaption}</BengaliText>
-            </p>
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[4px] bg-white">
+                  <Check className="h-4 w-4" strokeWidth={2.8} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-[13.5px] font-bold leading-tight">
+                    <BengaliText>৩ দিনের মধ্যে ১০০% রিফান্ড</BengaliText>
+                  </span>
+                  <span className="mt-0.5 block text-[11px] font-semibold underline decoration-[#0D7A55]/40 underline-offset-2">
+                    <BengaliText>রিফান্ড পলিসি দেখুন</BengaliText>
+                  </span>
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <BandScoreMachineConsole />
           </Reveal>
         </div>
 
-        <TrustStrip details={details} lessonCount={lessonCount} />
+        <Reveal delay={0.18}>
+          <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-4 border-t border-[#E4E8E4] pt-6 sm:grid-cols-2 lg:grid-cols-4">
+            {HERO_RIBBON.map((item) => (
+              <div key={item.label}>
+                <div className="font-display text-[15px] font-semibold text-[#0F1F1A]">
+                  <BengaliText>{item.label}</BengaliText>
+                </div>
+                <div className="mt-0.5 text-[13px] leading-[1.5] text-[#5B6B65]">
+                  {item.englishSub ? item.sub : <BengaliText>{item.sub}</BengaliText>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────── what you get ───────────────────────── */
+
+function IncludedSection() {
+  return (
+    <section
+      id="included"
+      className="scroll-mt-24 py-[clamp(56px,7vw,84px)]"
+      style={{ background: "#F7F9FC" }}
+    >
+      <div className={wrap}>
+        <Reveal>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-[680px]">
+              <div className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#0F6B48]">
+                What you get / 01
+              </div>
+              <h2
+                className="mt-3 font-display font-semibold leading-[1.2] tracking-[-0.035em] text-[#122043]"
+                style={{ fontSize: "clamp(30px,3.6vw,44px)" }}
+              >
+                Everything for Band 7+, in one place.
+              </h2>
+              <p className="mt-3 max-w-[560px] text-[14.5px] leading-[1.8] text-[#3A4761]">
+                <BengaliText>মূল প্রস্তুতি আর ফ্রি বোনাস—সব একসাথে, কোনো কনফিউশন ছাড়াই।</BengaliText>
+              </p>
+            </div>
+            <div className="shrink-0 rounded-full border border-[#E1E7EF] bg-white px-3.5 py-1.5 font-mono text-[11px] font-semibold text-[#64728A]">
+              5 core · 6 bonuses
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.08}>
+          <div className="mt-9 grid gap-4 lg:grid-cols-2">
+            <div className="ib-card-motion rounded-[6px] border border-[#E6EBF1] bg-white p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3 border-b border-[#EEF2F7] pb-4">
+                <div>
+                  <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#0F6B48]">
+                    Core program / 05
+                  </div>
+                  <h3 className="mt-1.5 font-display text-[20px] font-semibold tracking-[-0.02em] text-[#122043]">
+                    What the course includes
+                  </h3>
+                </div>
+                <span className="rounded-full bg-[#F2F6F3] px-2.5 py-1 font-mono text-[10px] font-semibold text-[#0F6B48]">
+                  INCLUDED
+                </span>
+              </div>
+
+              <ul className="mt-2 divide-y divide-[#F0F3F8]">
+                {CORE_INCLUDES.map(({ title, desc }) => (
+                  <li key={title} className="flex items-start gap-3 py-3.5">
+                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#E8F7F1] text-[#0F6B48]">
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-display text-[14.5px] font-semibold leading-[1.4] text-[#122043]">
+                        {title}
+                      </div>
+                      <div className="mt-0.5 text-[12.5px] leading-[1.6] text-[#7A8697]">
+                        {desc}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="ib-card-motion rounded-[6px] bg-[#0C1A33] p-5 text-white sm:p-6">
+              <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#7CF0BD]">
+                    Bonus layer / 06
+                  </div>
+                  <h3 className="mt-1.5 font-display text-[20px] font-semibold tracking-[-0.02em]">
+                    Free extras with enrollment
+                  </h3>
+                </div>
+                <Gift className="h-5 w-5 shrink-0 text-[#7CF0BD]" strokeWidth={2.2} />
+              </div>
+
+              <ul className="mt-2 divide-y divide-white/10">
+                {BONUS_INCLUDES.map(({ icon: Icon, title }) => (
+                  <li
+                    key={title}
+                    className="flex items-center gap-3 py-3 text-[13.5px] text-white/75"
+                  >
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/10 text-[#7CF0BD]">
+                      <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    </span>
+                    {title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="ib-card-motion mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[6px] border border-[#DCEEE5] bg-[#F2FAF6] px-5 py-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-white text-[#0F6B48]">
+                <InfinityIcon className="h-5 w-5" strokeWidth={2.2} />
+              </span>
+              <div>
+                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#6E8D80]">
+                  Included bonus
+                </div>
+                <div className="mt-1 font-display text-[18px] font-semibold tracking-[-0.02em] text-[#122043]">
+                  Lifetime access
+                </div>
+              </div>
+            </div>
+            <p className="text-[12.5px] text-[#6E8D80]">
+              One payment. Every future update included.
+            </p>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -884,58 +1091,57 @@ function SystemSection({
           <Heading title={COPY.systemTitle} desc={COPY.systemDesc} />
         </Reveal>
 
-        <ol className="mt-14 grid md:grid-cols-3 gap-x-10 gap-y-12">
+        <div className="mt-10 grid gap-3 md:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)_32px_minmax(0,1fr)] md:items-center">
           {steps.map((s, i) => (
-            <li key={s.verb}>
-              <Reveal delay={0.15 + i * 0.12}>
-                <div className="flex items-center gap-4">
-                  <span
-                    className="w-[46px] h-[46px] rounded-full flex items-center justify-center font-bold text-[18px] shrink-0 tabular-nums text-white"
-                    style={{ background: "var(--ib-navy-2)" }}
-                  >
-                    {toBn(i + 1)}
-                  </span>
-                  {i < steps.length - 1 && (
+            <div key={s.verb} className="contents">
+              <Reveal delay={0.12 + i * 0.18} className="h-full">
+                <article className="ib-card-motion group h-full rounded-[6px] border border-[#E4E8E4] bg-[#FCFDFC] p-5 transition-colors hover:border-[#A8DCC2] sm:p-6">
+                  <div className="flex items-center justify-between gap-3">
                     <span
-                      className="hidden md:block h-px flex-1"
-                      style={{ background: "var(--ib-line)" }}
-                      aria-hidden
+                      className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[#0C1A33] font-display text-[16px] font-bold tabular-nums text-white"
+                    >
+                      {toBn(i + 1)}
+                    </span>
+                    <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#89958E]">
+                      Step 0{i + 1}
+                    </span>
+                  </div>
+                  <h3
+                    className="mt-5 font-display text-[22px] font-semibold leading-[1.4]"
+                    style={{ color: "var(--ib-ink)" }}
+                  >
+                    <BengaliText>{s.verb}</BengaliText>
+                  </h3>
+                  <div className="mt-1 text-[14px] font-semibold" style={{ color: "var(--ib-brand-2)" }}>
+                    <BengaliText>{s.title}</BengaliText>
+                  </div>
+                  <p className="mt-3 text-[14px] leading-[1.8]" style={{ color: "var(--ib-body)" }}>
+                    <BengaliText>{s.text}</BengaliText>
+                  </p>
+                  <span
+                    className="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-semibold"
+                    style={{ background: "var(--ib-fog)", color: "var(--ib-ink)" }}
+                  >
+                    <s.icon
+                      className="h-[14px] w-[14px]"
+                      strokeWidth={2}
+                      style={{ color: "var(--ib-brand-2)" }}
                     />
-                  )}
-                </div>
-                <h3
-                  className="font-display text-[24px] font-semibold leading-[1.4] mt-6"
-                  style={{ color: "var(--ib-ink)" }}
-                >
-                  <BengaliText>{s.verb}</BengaliText>
-                </h3>
-                <div
-                  className="mt-1 text-[15px] font-semibold"
-                  style={{ color: "var(--ib-brand-2)" }}
-                >
-                  <BengaliText>{s.title}</BengaliText>
-                </div>
-                <p
-                  className="mt-3 text-[15.5px] leading-[1.85] max-w-[340px]"
-                  style={{ color: "var(--ib-body)" }}
-                >
-                  <BengaliText>{s.text}</BengaliText>
-                </p>
-                <span
-                  className="inline-flex items-center gap-2 mt-4 rounded-full px-3.5 py-1.5 text-[13px] font-semibold"
-                  style={{ background: "var(--ib-fog)", color: "var(--ib-ink)" }}
-                >
-                  <s.icon
-                    className="w-[14px] h-[14px]"
-                    strokeWidth={2}
-                    style={{ color: "var(--ib-brand-2)" }}
-                  />
-                  <BengaliText>{s.chip}</BengaliText>
-                </span>
+                    <BengaliText>{s.chip}</BengaliText>
+                  </span>
+                </article>
               </Reveal>
-            </li>
+              {i < steps.length - 1 && (
+                <div className="flex items-center justify-center py-1" aria-hidden="true">
+                  <ArrowRight
+                    className="ib-step-arrow h-5 w-5 rotate-90 text-[#0D7A55] md:rotate-0"
+                    style={{ animationDelay: `${i * 0.32}s` }}
+                  />
+                </div>
+              )}
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );
@@ -990,73 +1196,83 @@ function CurriculumSection({
   moduleCount: number;
 }) {
   const facts = [
-    { k: "ফরম্যাট", v: "সেলফ-পেসড এক্সপ্লেইনার" },
-    { k: "লেভেল", v: details.level },
-    { k: "মাধ্যম", v: details.language },
-    { k: "গতি", v: details.pace },
-    { k: "অ্যাক্সেস", v: "লাইফটাইম" },
-    { k: "মোট কনটেন্ট", v: `${toBn(moduleCount)} মডিউল, ${toBn(lessonCount)}টি লেসন` },
+    { k: "Format", v: "Self-paced explainers" },
+    { k: "Level", v: details.level },
+    { k: "Medium", v: details.language },
+    { k: "Pace", v: details.pace },
+    { k: "Access", v: "Lifetime" },
+    { k: "Total content", v: `${moduleCount} modules · ${lessonCount} lessons` },
   ].filter((r) => r.v && r.v !== "—");
+
+  const explorerModules: CurriculumModuleItem[] = curriculum.modules.map((m, i) => {
+    const key: CurriculumModuleItem["skillKey"] = /speaking/i.test(m.title)
+      ? "speaking"
+      : /writing/i.test(m.title)
+        ? "writing"
+        : /listening/i.test(m.title)
+          ? "listening"
+          : /reading/i.test(m.title)
+            ? "reading"
+            : "general";
+
+    return {
+      number: String(i + 1).padStart(2, "0"),
+      skillKey: key,
+      skillTag: `${key} · module ${String(i + 1).padStart(2, "0")}`,
+      title: m.title,
+      lessonCount: m.lessonCount,
+      capstone: m.capstone ?? "",
+      lessons: m.items.map((item) => ({ title: item })),
+    };
+  });
 
   return (
     <section id="curriculum" className={sectionY} style={{ background: "#fff" }}>
       <div
-        className={`${wrap} grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] gap-12 lg:gap-20`}
+        className={`${wrap} grid grid-cols-1 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] gap-12 lg:gap-16`}
       >
         <div className="lg:sticky lg:top-28 self-start">
           <Reveal>
-            {curriculum.label && (
-              <div
-                className="text-[14px] font-semibold mb-3"
-                style={{ color: "var(--ib-brand-2)" }}
-              >
-                <BengaliText>{curriculum.label}</BengaliText>
-              </div>
-            )}
+            <div className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#0F6B48]">
+              Curriculum / {String(moduleCount).padStart(2, "0")} modules
+            </div>
             <h2
-              className="font-display font-semibold leading-[1.4]"
-              style={{ fontSize: "clamp(26px,3vw,38px)", color: "var(--ib-ink)" }}
+              className="mt-3 font-display font-semibold leading-[1.18] tracking-[-0.035em]"
+              style={{ fontSize: "clamp(30px,3.4vw,42px)", color: "#122043" }}
             >
-              <BengaliText>{curriculum.title}</BengaliText>
+              Four skills.
+              <br />
+              One clear path.
             </h2>
-            <p className="mt-4 text-[16px] leading-[1.9]" style={{ color: "var(--ib-body)" }}>
+            <p className="mt-4 text-[14.5px] leading-[1.85] text-[#5B6478]">
               <BengaliText>{curriculum.subtitle}</BengaliText>
             </p>
 
             {details.targetBand && (
-              <div
-                className="mt-7 rounded-[14px] px-5 py-4 flex items-center justify-between gap-4"
-                style={{ background: "var(--ib-fog)", border: "1px solid var(--ib-line)" }}
-              >
-                <div className="min-w-0">
-                  <div className="text-[14.5px] font-semibold" style={{ color: "var(--ib-ink)" }}>
-                    <BengaliText>{details.targetBand.label}</BengaliText>
+              <div className="ib-card-motion mt-7 flex items-end justify-between gap-4 rounded-[6px] border border-[#E4E9F1] bg-[#F7F9FC] px-5 py-4">
+                <div>
+                  <div className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#64728A]">
+                    Target band
                   </div>
-                  <div className="text-[13px] mt-0.5" style={{ color: "var(--ib-muted)" }}>
-                    <BengaliText>{details.targetBand.sub}</BengaliText>
-                  </div>
+                  <div className="mt-1 text-[13px] text-[#8A94A6]">IELTS</div>
                 </div>
-                <div
-                  className="font-display text-[36px] font-semibold leading-none tabular-nums"
-                  style={{ color: "var(--ib-ink)" }}
-                >
-                  {details.targetBand.value}
+                <div className="font-display text-[32px] font-bold leading-none tracking-[-0.03em] text-[#122043]">
+                  {details.targetBand.value.replace(/^Band\s*/i, "")}
                 </div>
               </div>
             )}
 
-            <dl className="mt-6">
+            <dl className="mt-6 border-t border-[#E7EBF1]">
               {facts.map((r) => (
                 <div
                   key={r.k}
-                  className="flex items-start justify-between gap-6 py-3 text-[14.5px]"
-                  style={{ borderTop: "1px solid var(--ib-line)" }}
+                  className="flex items-start justify-between gap-6 border-b border-[#EEF2F7] py-3 text-[13.5px]"
                 >
-                  <dt style={{ color: "var(--ib-muted)" }}>
-                    <BengaliText>{r.k}</BengaliText>
+                  <dt className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#8A94A6]">
+                    {r.k}
                   </dt>
-                  <dd className="font-medium text-right" style={{ color: "var(--ib-ink)" }}>
-                    <BengaliText>{r.v as string}</BengaliText>
+                  <dd className="max-w-[62%] text-right font-medium leading-[1.5] text-[#2C3A52]">
+                    {r.v as string}
                   </dd>
                 </div>
               ))}
@@ -1071,74 +1287,11 @@ function CurriculumSection({
         </div>
 
         <div>
-          <Reveal>
-            <div className="ib-acc">
-              {curriculum.modules.map((m, i) => (
-                <details key={m.title} open={i === 0}>
-                  <summary className="flex items-center gap-4 py-5">
-                    <span
-                      className="w-[38px] h-[38px] rounded-full flex items-center justify-center font-bold text-[15px] shrink-0 tabular-nums"
-                      style={{
-                        background: "var(--ib-fog)",
-                        color: "var(--ib-ink)",
-                        border: "1px solid var(--ib-line)",
-                      }}
-                    >
-                      {toBn(i + 1)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block font-display font-semibold text-[17.5px] leading-[1.5]"
-                        style={{ color: "var(--ib-ink)" }}
-                      >
-                        <BengaliText>{m.title}</BengaliText>
-                      </span>
-                      <span
-                        className="block text-[13.5px] mt-0.5"
-                        style={{ color: "var(--ib-muted)" }}
-                      >
-                        <BengaliText>{m.lessonCount}</BengaliText>
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className="ib-chev w-[20px] h-[20px] shrink-0"
-                      style={{ color: "var(--ib-muted)" }}
-                    />
-                  </summary>
-                  <div className="pl-[54px] pr-2 pb-7">
-                    <ul className="flex flex-col gap-2.5">
-                      {m.items.map((item) => (
-                        <li
-                          key={item}
-                          className="flex items-start gap-3 text-[15px] leading-[1.75]"
-                          style={{ color: "var(--ib-body)" }}
-                        >
-                          <span
-                            className="mt-[11px] w-[5px] h-[5px] rounded-full shrink-0"
-                            style={{ background: "var(--ib-brand)" }}
-                          />
-                          <BengaliText>{item}</BengaliText>
-                        </li>
-                      ))}
-                    </ul>
-                    <div
-                      className="mt-5 flex items-start gap-3 rounded-[12px] px-4 py-3.5 text-[14.5px] leading-[1.75] font-medium"
-                      style={{ background: "var(--ib-fog)", color: "var(--ib-ink)" }}
-                    >
-                      <Flag
-                        className="w-[16px] h-[16px] mt-[5px] shrink-0"
-                        style={{ color: "var(--ib-brand-2)" }}
-                        strokeWidth={2.2}
-                      />
-                      <BengaliText>{`মডিউল শেষে চ্যালেঞ্জ: ${m.capstone}`}</BengaliText>
-                    </div>
-                  </div>
-                </details>
-              ))}
-            </div>
+          <Reveal delay={0.08}>
+            <CurriculumExplorer modules={explorerModules} />
 
             {curriculum.note && (
-              <p className="mt-6 text-[14.5px] leading-[1.85]" style={{ color: "var(--ib-muted)" }}>
+              <p className="mt-6 text-[13.5px] leading-[1.85] text-[#7A8697]">
                 <BengaliText>{curriculum.note}</BengaliText>
               </p>
             )}
@@ -1212,77 +1365,69 @@ function HighlightsSection({
 
 function BookBand({ book }: { book: CourseBook }) {
   return (
-    <section className="py-[clamp(48px,6vw,80px)]" style={{ background: "var(--ib-fog)" }}>
-      <Reveal>
-        <div
-          className={`${wrap} grid grid-cols-1 md:grid-cols-[200px_1fr] gap-9 md:gap-14 items-center max-w-[1040px]`}
-        >
-          {/* Flat digital cover — this is a PDF, so no hardcover art */}
-          <div
-            className="ib-float w-[168px] md:w-[200px] aspect-[3/4] mx-auto rounded-[10px] flex flex-col overflow-hidden"
-            style={{
-              background: "var(--ib-navy-2)",
-              boxShadow: "0 28px 50px -26px rgba(10,20,40,0.7)",
-            }}
-          >
-            <div className="flex-1 flex flex-col p-5">
-              <span
-                className="w-[26px] h-[5px] rounded-full"
-                style={{ background: "var(--ib-mint)" }}
-              />
-              <div className="font-display font-semibold text-white leading-[1.45] mt-4 text-[18px]">
-                <BengaliText>{book.title}</BengaliText>
-              </div>
+    <section className="py-[clamp(52px,7vw,88px)]" style={{ background: "#F2F6F3" }}>
+      <div className={wrap}>
+        <Reveal>
+          <div className="ib-card-motion mx-auto grid max-w-[1080px] overflow-hidden rounded-[6px] border border-[#DDE7E0] bg-white md:grid-cols-[0.78fr_1.22fr]">
+            <div className="relative isolate flex min-h-[360px] items-center justify-center overflow-hidden bg-[#0C1A33] p-8 sm:p-10">
               <div
-                className="mt-auto text-[12.5px] font-semibold"
-                style={{ color: "var(--ib-mint)" }}
-              >
-                <BengaliText>পিডিএফ বই</BengaliText>
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-16 -top-16 -z-10 h-64 w-64 rounded-full bg-[#0D7A55]/30 blur-3xl"
+              />
+              <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-[4px] border border-white/15 bg-white/[0.08] px-2.5 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                <FileText className="h-3.5 w-3.5 text-[#7CF0BD]" />
+                Companion PDF
+              </span>
+              <Image
+                src={book.image}
+                alt={book.title}
+                width={900}
+                height={1200}
+                sizes="(max-width: 768px) 190px, 220px"
+                className="relative z-[1] w-[170px] rounded-[6px] shadow-[0_28px_55px_-25px_rgba(0,0,0,0.75)] transition-transform duration-500 hover:scale-[1.025] sm:w-[200px]"
+              />
+              <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-2 text-[10px] font-medium text-white/55">
+                <span>READ · REVISE · PRACTISE</span>
+                <span className="font-mono text-[#7CF0BD]">PDF / 01</span>
               </div>
             </div>
-          </div>
 
-          <div>
-            <h2
-              className="font-display font-semibold leading-[1.45]"
-              style={{ fontSize: "clamp(23px,2.6vw,32px)", color: "var(--ib-ink)" }}
-            >
-              <BengaliText>{COPY.bookTitle}</BengaliText>
-            </h2>
-            <p
-              className="mt-3 text-[16px] leading-[1.9] max-w-[560px]"
-              style={{ color: "var(--ib-body)" }}
-            >
-              <BengaliText>{book.desc}</BengaliText>
-            </p>
-            <ul className="mt-5 flex flex-col gap-2.5">
-              {COPY.bookTicks.map((t) => (
-                <li
-                  key={t}
-                  className="flex items-center gap-3 text-[15px] font-medium"
-                  style={{ color: "var(--ib-ink)" }}
-                >
-                  <Check
-                    className="w-[17px] h-[17px] shrink-0"
-                    strokeWidth={3}
-                    style={{ color: "var(--ib-brand)" }}
-                  />
-                  <BengaliText>{t}</BengaliText>
-                </li>
-              ))}
-            </ul>
-            {book.includedNote && (
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 mt-6 text-[13.5px] font-semibold bg-white"
-                style={{ color: "var(--ib-brand-2)", border: "1px solid var(--ib-line)" }}
+            <div className="p-6 sm:p-9 lg:p-10">
+              <div className="font-mono text-[9.5px] font-bold uppercase tracking-[0.16em] text-[#0D7A55]">
+                A complete study companion
+              </div>
+              <h2
+                className="mt-2 font-display text-[clamp(24px,2.8vw,34px)] font-semibold leading-[1.32] tracking-[-0.025em] text-[#0F1F1A]"
               >
-                <Check className="w-[13px] h-[13px]" strokeWidth={3} />
-                <BengaliText>{book.includedNote}</BengaliText>
-              </span>
-            )}
+                <BengaliText>{COPY.bookTitle}</BengaliText>
+              </h2>
+              <p className="mt-3 max-w-[600px] text-[14.5px] leading-[1.8] text-[#5B6B65]">
+                <BengaliText>{book.desc}</BengaliText>
+              </p>
+
+              <ul className="mt-5 divide-y divide-[#E8ECE9] border-y border-[#E8ECE9]">
+                {COPY.bookTicks.map((item, index) => (
+                  <li key={item} className="flex items-start gap-3 py-3">
+                    <span className="mt-0.5 font-mono text-[10px] font-semibold tabular-nums text-[#0D7A55]">
+                      0{index + 1}
+                    </span>
+                    <span className="text-[13.5px] font-medium leading-[1.6] text-[#24332B]">
+                      <BengaliText>{item}</BengaliText>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {book.includedNote && (
+                <div className="mt-5 flex items-start gap-2.5 border-l-[3px] border-[#0D7A55] bg-[#E9F5EE] px-3.5 py-3 text-[12px] font-semibold leading-[1.55] text-[#0D7A55]">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={3} />
+                  <BengaliText>{book.includedNote}</BengaliText>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
     </section>
   );
 }
@@ -1301,7 +1446,7 @@ function RefundSection() {
       <div className={wrap}>
         <Reveal>
           <div
-            className="rounded-[18px] p-[clamp(28px,4vw,44px)] relative overflow-hidden"
+            className="ib-card-motion rounded-[6px] p-[clamp(28px,4vw,44px)] relative overflow-hidden"
             style={{
               background: "#fff",
               border: "1px solid var(--ib-line)",
@@ -1332,7 +1477,7 @@ function RefundSection() {
                   {facts.map((f) => (
                     <div
                       key={f.label}
-                      className="rounded-[12px] px-3.5 py-4 text-center"
+                      className="ib-card-motion rounded-[6px] px-3.5 py-4 text-center"
                       style={{ background: "var(--ib-fog)", border: "1px solid var(--ib-line)" }}
                     >
                       <div
@@ -1361,7 +1506,7 @@ function RefundSection() {
               </div>
 
               <div
-                className="rounded-[14px] px-6 py-7 flex flex-col gap-5"
+                className="ib-card-motion rounded-[6px] px-6 py-7 flex flex-col gap-5"
                 style={{ border: "1px dashed var(--ib-line)", background: "var(--ib-fog)" }}
               >
                 <div className="flex items-start gap-3">
@@ -1608,52 +1753,185 @@ export default async function IeltsFullReadinessLandingPage() {
 
   const liveReviewItems = liveReviews as any[];
 
+  /* ---- Version chooser: English and Bangla are separate DB courses ---- */
+  const versionSlugs = ["ielts-band-score-machine-en", "ielts-band-score-machine-bn"];
+  const versionCourses = await Course.find({
+    slug: { $in: versionSlugs },
+    $or: [{ published: true }, { upcoming: true }],
+  }).lean();
+  const versionCourseIds = versionCourses.map((version) => version._id);
+
+  const allBsmCourseIds = [...(course ? [course._id] : []), ...versionCourseIds];
+  const [versionEnrollments, rawStudentCount, recentEnrollments] = await Promise.all([
+    userId && versionCourseIds.length > 0
+      ? CourseEnrollment.find({
+          user: userId,
+          course: { $in: versionCourseIds },
+          status: "active",
+        })
+          .select("course")
+          .lean()
+      : [],
+    allBsmCourseIds.length > 0
+      ? CourseEnrollment.countDocuments({
+          course: { $in: allBsmCourseIds },
+          status: "active",
+        })
+      : 0,
+    allBsmCourseIds.length > 0
+      ? CourseEnrollment.find({
+          course: { $in: allBsmCourseIds },
+          status: "active",
+        })
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .populate("user", "name avatar")
+          .lean()
+      : [],
+  ]);
+
+  const studentCount = displayEnrollmentCount(SLUG, rawStudentCount);
+  const seenAvatars = new Set<string>();
+  const studentAvatars: HeroStudentAvatar[] = [];
+  for (const row of recentEnrollments) {
+    const u = row.user as { _id?: { toString(): string }; name?: string | null; avatar?: string | null } | null;
+    const key = u?._id?.toString() ?? u?.name ?? "";
+    if (key && seenAvatars.has(key)) continue;
+    if (key) seenAvatars.add(key);
+    studentAvatars.push({
+      name: u?.name?.trim() || "শিক্ষার্থী",
+      avatar: u?.avatar ?? null,
+    });
+    if (studentAvatars.length >= 4) break;
+  }
+
+  const enrolledVersionIds = new Set(
+    versionEnrollments.map((enrollment) => enrollment.course.toString()),
+  );
+
+  const versionOptions: HeroVersionOption[] = versionSlugs
+    .map((versionSlug): HeroVersionOption | null => {
+      const version = versionCourses.find((item) => item.slug === versionSlug);
+      if (!version) return null;
+
+      const pricing = publicCoursePricing(version);
+      const enrolled = enrolledVersionIds.has(version._id.toString());
+      const upcoming = version.upcoming === true;
+      const isBangla = versionSlug.endsWith("-bn");
+      const language = isBangla ? "Bangla" : "English";
+      const numericPrice =
+        pricing.price != null ? pricing.price : (version.price ?? 0);
+      const price =
+        pricing.price != null
+          ? pricing.price > 0
+            ? formatMoney(pricing.price, "BDT")
+            : "Free"
+          : (version.price ?? 0) > 0
+            ? formatMoney(version.price ?? 0, version.currency ?? "USD")
+            : "Free";
+
+      return {
+        slug: version.slug,
+        title: `${language} Version`,
+        language,
+        languageLabelBn: isBangla ? "বাংলা ভার্সন" : "English Version",
+        languageNote: isBangla
+          ? "বাংলায় সহজ ব্যাখ্যা + ফুল এক্সাম সিস্টেম"
+          : "Full English instruction + Mock System",
+        price,
+        numericPrice: numericPrice > 0 ? numericPrice : undefined,
+        originalPrice: pricing.originalPrice ?? undefined,
+        savings:
+          pricing.discounted && pricing.savings > 0
+            ? `৳${pricing.savings.toLocaleString("en-US")}`
+            : undefined,
+        discountLabel: pricing.discountLabel,
+        endsAt: pricing.endsAt,
+        href: enrolled
+          ? `/dashboard/courses/${version.slug}/learn`
+          : `/programs/${version.slug}/checkout`,
+        previewHref:
+          !upcoming && !enrolled && hasFreePreview(version)
+            ? `/dashboard/courses/${version.slug}/learn`
+            : undefined,
+        enrolled,
+        upcoming,
+      };
+    })
+    .filter((version): version is HeroVersionOption => Boolean(version));
+
+  const hasVersionOptions = versionOptions.length > 0;
+  const primaryVersion =
+    versionOptions.find((v) => !v.upcoming) ?? versionOptions[0];
+
   /* ---- Offer: the single source of truth for every CTA ---- */
   const waitlistEnabled = course?.waitlistEnabled === true;
   const scholarshipPercent = waitlistEnabled ? (course?.wishlistDiscountPercent ?? 0) : 0;
   const isLive = Boolean(cta?.hasDb && liveCourse && !liveCourse.upcoming);
-  const mode: Offer["mode"] = cta?.enrolled ? "enrolled" : isLive ? "buy" : "waitlist";
-  const showWaitlistForm = true;
+  const mode: Offer["mode"] = hasVersionOptions
+    ? "buy"
+    : cta?.enrolled
+      ? "enrolled"
+      : isLive
+        ? "buy"
+        : "waitlist";
+  const showWaitlistForm = !hasVersionOptions;
 
-  const price =
-    livePricing?.price != null && livePricing.price > 0
+  const price = hasVersionOptions
+    ? undefined
+    : livePricing?.price != null && livePricing.price > 0
       ? formatMoney(livePricing.price, "BDT")
       : (details?.price ?? details?.pricing?.price);
-  const originalPrice = livePricing?.originalPrice ?? details?.originalPrice;
-  const savings = livePricing?.discounted
-    ? `BDT ${livePricing.savings.toLocaleString("en-US")}`
-    : details?.savings;
+  const originalPrice = hasVersionOptions
+    ? undefined
+    : (livePricing?.originalPrice ?? details?.originalPrice);
+  const savings = hasVersionOptions
+    ? undefined
+    : livePricing?.discounted
+      ? `BDT ${livePricing.savings.toLocaleString("en-US")}`
+      : details?.savings;
+  const numericOfferPrice = parseAmount(price) ?? primaryVersion?.numericPrice;
+
   const offer: Offer = {
     mode,
-    href:
-      mode === "enrolled"
+    href: hasVersionOptions
+      ? "#enroll-options"
+      : mode === "enrolled"
         ? `/dashboard/courses/${cta?.slug}/learn`
         : mode === "buy"
           ? `/programs/${SLUG}/checkout`
           : showWaitlistForm
             ? "#waitlist"
             : (details?.pricing?.ctaHref ?? "/programs"),
-    label:
-      mode === "enrolled"
+    label: hasVersionOptions
+      ? "কোর্সে ভর্তি হোন"
+      : mode === "enrolled"
         ? "ক্লাসে ফিরে যান"
         : mode === "buy"
-          ? "Enroll Now"
+          ? "এখনই ভর্তি হোন"
           : scholarshipPercent > 0
             ? `ওয়েটলিস্টে জয়েন করে ${toBn(scholarshipPercent)}% স্কলারশিপ নিন`
             : "Join the waitlist",
     price,
+    numericPrice: numericOfferPrice,
     originalPrice,
     savings,
-    dealLabel: livePricing?.discountLabel ?? details?.dealLabel,
-    dealNote: details?.dealNote,
-    scholarshipPercent,
+    dealLabel: hasVersionOptions ? undefined : (livePricing?.discountLabel ?? details?.dealLabel),
+    dealNote: hasVersionOptions ? undefined : details?.dealNote,
+    endsAt: hasVersionOptions ? undefined : livePricing?.endsAt,
+    previewHref:
+      !hasVersionOptions && isLive && !cta?.enrolled && liveCourse && hasFreePreview(liveCourse)
+        ? `/dashboard/courses/${SLUG}/learn`
+        : undefined,
+    scholarshipPercent: hasVersionOptions ? 0 : scholarshipPercent,
     showWaitlistForm,
     slug: SLUG,
     title: details?.title ?? program.title,
+    versionOptions: hasVersionOptions ? versionOptions : undefined,
   };
 
   /* ---- Structured data ---- */
-  const amount = parseAmount(price);
+  const amount = parseAmount(price) ?? primaryVersion?.numericPrice ?? null;
   const courseLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -1683,29 +1961,31 @@ export default async function IeltsFullReadinessLandingPage() {
         : undefined,
   };
   const isEnrolled = mode === "enrolled";
-  const stickyPrice =
-    mode !== "enrolled" && offer.price
-      ? { label: "কোর্স ফি", value: offer.price, originalValue: offer.originalPrice }
-      : null;
-
   return (
-    <div className="ib-page ielts-landing pb-[88px]">
+    <div className="ib-page ielts-landing">
       <JsonLd data={courseLd} />
       <LandingPixelEvents
         contentId={SLUG}
         contentName={details?.title ?? program.title}
-        value={parseAmount(price) ?? undefined}
+        value={numericOfferPrice}
         currency="BDT"
       />
-      <Nav />
+      <LandingHeader
+        href={offer.href}
+        label={offer.label}
+        versions={hasVersionOptions ? versionOptions : undefined}
+      />
 
       <Hero
         offer={offer}
+        versions={hasVersionOptions ? versionOptions : undefined}
         title={details?.title ?? program.title}
-        details={details}
-        lessonCount={lessonCount}
         pricingNote={details?.pricing?.note}
+        studentCount={studentCount}
+        studentAvatars={studentAvatars}
       />
+
+      <IncludedSection />
 
       <IeltsPromoPopup />
 
@@ -1733,8 +2013,6 @@ export default async function IeltsFullReadinessLandingPage() {
 
           {details.book && <BookBand book={details.book} />}
 
-          {!isEnrolled && <RefundSection />}
-
           {!isEnrolled && <ClosingSection details={details} offer={offer} />}
         </>
       ) : (
@@ -1755,17 +2033,10 @@ export default async function IeltsFullReadinessLandingPage() {
         </section>
       )}
 
-      <StickyOffer
-        href={offer.href}
-        label={offer.label}
-        price={stickyPrice?.value}
-        priceLabel={stickyPrice?.label}
-        originalPrice={stickyPrice?.originalValue}
-        arrow={mode !== "enrolled"}
-      />
-
-      <style>{`
-        .ib-page {
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+         .ib-page {
           --ib-ink: #0C1A33;
           --ib-navy: #0A1428;
           --ib-navy-2: #12213D;
@@ -1776,6 +2047,7 @@ export default async function IeltsFullReadinessLandingPage() {
           --ib-brand: #14855A;
           --ib-brand-2: #0F6B48;
           --ib-mint: #7CF0BD;
+          --ielts-red: #E31837;
           --ib-mark: #FFE066;
           --ib-focus: #1F5C8A;
           /* keep shared components (reviews, related cards) on their expected tokens */
@@ -1783,6 +2055,228 @@ export default async function IeltsFullReadinessLandingPage() {
           --line: #DDE2EC;
           color: var(--ib-body);
           background: #fff;
+        }
+
+        .ielts-landing {
+          --font-display: var(--font-plus-jakarta-sans), var(--font-anek-bangla), sans-serif;
+          --font-body: var(--font-plus-jakarta-sans), var(--font-anek-bangla), sans-serif;
+          --font-mono: var(--font-plus-jakarta-sans), var(--font-anek-bangla), sans-serif;
+        }
+
+        .ib-header {
+          position: absolute;
+          z-index: 20;
+          inset: 0 0 auto;
+          padding: 17px clamp(20px, 5vw, 76px);
+          border-bottom: 1px solid rgba(228, 232, 228, 0.9);
+          background: rgba(250, 250, 247, 0.92);
+          backdrop-filter: blur(14px);
+        }
+
+        .ib-header-inner {
+          display: flex;
+          width: min(100%, 1280px);
+          min-height: 43px;
+          align-items: center;
+          justify-content: space-between;
+          gap: 26px;
+          margin: 0 auto;
+        }
+
+        .ib-wordmark {
+          display: inline-flex;
+          flex: 0 0 auto;
+          flex-direction: column;
+          gap: 3px;
+          color: #0F1F1A;
+          line-height: 1;
+          text-decoration: none;
+        }
+
+        .ib-wordmark-name {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 18px;
+          font-weight: 750;
+          letter-spacing: -0.04em;
+        }
+
+        .ib-wordmark-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 7px;
+          border-radius: 6px;
+          background: var(--ielts-red);
+          color: #fff;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          line-height: 1;
+        }
+
+        .ib-hero-highlight {
+          position: relative;
+          display: inline;
+          padding-block: 0.08em;
+          padding-inline: 0.03em;
+          background: linear-gradient(120deg, #9BF8D0 0%, #63E6AC 50%, #3CD58E 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-box-decoration-break: clone;
+          box-decoration-break: clone;
+          color: transparent;
+        }
+
+        .ib-hero-cta:hover {
+          transform: translateY(-2px);
+          filter: brightness(1.04);
+        }
+
+        .ib-hero-cta:active {
+          transform: translateY(0) scale(0.99);
+        }
+
+        @keyframes ibSheen {
+          0% { transform: translateX(-130%) skewX(-18deg); }
+          36%, 100% { transform: translateX(220%) skewX(-18deg); }
+        }
+
+        .ib-cta-sheen {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.38) 50%,
+            transparent 100%
+          );
+          width: 46%;
+          animation: ibSheen 4.4s ease-in-out infinite;
+        }
+
+        .ib-wordmark-name i {
+          color: var(--ib-mint);
+          font-style: normal;
+        }
+
+        .ib-wordmark-course {
+          color: rgba(255, 255, 255, 0.59);
+          font-size: 8px;
+          font-weight: 650;
+          letter-spacing: 0.19em;
+        }
+
+        .ib-wordmark-course i {
+          padding: 2px 3px;
+          border-radius: 2px;
+          color: #fff;
+          background: var(--ielts-red);
+          font-style: normal;
+          letter-spacing: 0.09em;
+        }
+
+        .ib-nav {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(17px, 2.5vw, 34px);
+        }
+
+        .ib-nav a {
+          color: rgba(15, 31, 26, 0.68);
+          font-family: var(--font-plus-jakarta-sans), var(--font-anek-bangla), sans-serif;
+          font-size: 13px;
+          text-decoration: none;
+          transition: color 160ms ease;
+        }
+
+        .ib-nav a:hover {
+          color: #0D7A55;
+        }
+
+        .ib-header-cta {
+          display: inline-flex;
+          min-height: 42px;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          padding: 0 17px;
+          border-radius: 12px;
+          color: #fff;
+          background: #0D7A55;
+          font-family: var(--font-plus-jakarta-sans), var(--font-anek-bangla), sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          text-decoration: none;
+          white-space: nowrap;
+          transition:
+            transform 170ms ease,
+            background 170ms ease,
+            box-shadow 170ms ease;
+        }
+
+        .ib-header-cta:hover {
+          transform: translateY(-2px);
+          background: #095F42;
+          box-shadow: 0 11px 28px rgba(13, 122, 85, 0.2);
+        }
+
+        @media (max-width: 980px) {
+          .ib-header {
+            padding-inline: clamp(18px, 4vw, 42px);
+          }
+          .ib-nav {
+            display: none;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .ib-header {
+            padding: 12px 18px;
+          }
+          .ib-header-inner {
+            min-height: 42px;
+            gap: 10px;
+          }
+          .ib-wordmark-name {
+            font-size: 15px;
+            gap: 5px;
+          }
+          .ib-wordmark-badge {
+            font-size: 11.5px;
+            padding: 2.5px 6px;
+          }
+          .ib-header-cta {
+            min-height: 39px;
+            padding-inline: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+          }
+          .ib-header-cta svg {
+            width: 14px;
+            height: 14px;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .ib-header {
+            padding: 10px 14px;
+          }
+          .ib-wordmark-name {
+            font-size: 13.5px;
+          }
+          .ib-wordmark-badge {
+            font-size: 10.5px;
+            padding: 2px 5px;
+          }
+          .ib-header-cta {
+            min-height: 36px;
+            padding-inline: 10px;
+            gap: 5px;
+            font-size: 11.5px;
+          }
+          .ib-header-cta .ib-live-dot {
+            display: none;
+          }
         }
 
         /* the scholarship is the only thing on the page that gets the highlighter */
@@ -1810,11 +2304,22 @@ export default async function IeltsFullReadinessLandingPage() {
         @keyframes ibPop { from { transform: scale(.96); } to { transform: scale(1); } }
         @keyframes ibSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes ibFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes ibStepPulse { 0%, 100% { opacity: .45; scale: .9; } 50% { opacity: 1; scale: 1.08; } }
 
         .ib-live-dot, .ib-dot { animation: ibPulse 1.6s ease-in-out infinite; }
         .ib-anim-in { animation: ibSlide .4s cubic-bezier(.22,1,.36,1) both; }
         .ib-float { animation: ibFloat 7s ease-in-out infinite; }
         .ib-float:hover { animation-play-state: paused; }
+        .ib-step-arrow { animation: ibStepPulse 1.45s ease-in-out infinite; }
+        .ib-card-motion {
+          transition: transform .32s cubic-bezier(.22,1,.36,1), box-shadow .32s ease, border-color .32s ease;
+        }
+        @media (hover: hover) {
+          .ib-card-motion:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 36px -26px rgba(15,31,26,0.24);
+          }
+        }
         .ib-opt {
           transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
         }
@@ -1839,15 +2344,19 @@ export default async function IeltsFullReadinessLandingPage() {
         .ib-dark summary:focus-visible { outline-color: var(--ib-mint); }
 
         @media (prefers-reduced-motion: reduce) {
-          .ib-cta, .ib-chev { transition: none; }
-          .ib-cta:hover { transform: none; }
-          .ib-live-dot, .ib-dot, .ib-anim-in, .ib-opt, .ib-float { animation: none !important; transition: none !important; }
+          .ib-cta, .ib-hero-cta, .ib-chev { transition: none; }
+          .ib-cta:hover, .ib-hero-cta:hover { transform: none; }
+          .ib-live-dot, .ib-dot, .ib-anim-in, .ib-opt, .ib-float, .ib-step-arrow, .ib-cta-sheen { animation: none !important; transition: none !important; }
+          .ib-card-motion { transition: none !important; }
+          .ib-card-motion:hover { transform: none; }
           .ib-opt:hover, .ib-opt:active { transform: none; }
           .ib-acc summary, .closing-feature { transition: none; }
           .ib-acc summary:hover { background: transparent; }
           .closing-feature:hover { transform: none; }
         }
-      `}</style>
+      `,
+        }}
+      />
     </div>
   );
 }

@@ -6,8 +6,1068 @@
  */
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, Headphones, Pencil } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  FileText,
+  Headphones,
+  Mic,
+  Monitor,
+  Pencil,
+  Play,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { trackMetaEvent } from "@/lib/meta-events";
+
+const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
+const toBn = (v: number | string) => String(v).replace(/\d/g, (d) => BN_DIGITS.charAt(Number(d)));
+
+/* ───────────────────────── hero: minimal enrollment controls ───────────────────────── */
+
+export type HeroVersionOption = {
+  slug: string;
+  title: string;
+  language: string;
+  languageLabelBn: string;
+  languageNote: string;
+  price?: string;
+  numericPrice?: number;
+  originalPrice?: string;
+  savings?: string;
+  discountLabel?: string | null;
+  endsAt?: string | null;
+  href: string;
+  previewHref?: string;
+  enrolled: boolean;
+  upcoming: boolean;
+};
+
+export function HeroDealTimer({ endsAt }: { endsAt: string }) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    const target = new Date(endsAt).getTime();
+    if (Number.isNaN(target)) return;
+    const tick = () => setRemaining(target - Date.now());
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [endsAt]);
+
+  if (remaining === null || remaining <= 0) return null;
+
+  const totalSecs = Math.floor(remaining / 1000);
+  const d = Math.floor(totalSecs / 86400);
+  const h = Math.floor((totalSecs % 86400) / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const readout =
+    d > 0 ? `${d}d ${pad(h)}h ${pad(m)}m` : `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-medium tabular-nums tracking-[0.04em]"
+      style={{
+        background: "#E3F4EC",
+        border: "1px solid #B9E4D1",
+        color: "#0D7A55",
+      }}
+    >
+      <Clock3 className="h-3 w-3 shrink-0 text-[#0D7A55]" />
+      <span>{readout}</span>
+    </span>
+  );
+}
+
+export function HeroDirectCtaButton({
+  href,
+  label,
+  enrolled = false,
+  contentId,
+  contentName,
+  numericPrice,
+}: {
+  href: string;
+  label: string;
+  subPrice?: string;
+  enrolled?: boolean;
+  contentId: string;
+  contentName: string;
+  numericPrice?: number;
+}) {
+  const handleClick = () => {
+    if (!enrolled && !href.startsWith("#")) {
+      trackMetaEvent("InitiateCheckout", {
+        content_ids: [contentId],
+        content_name: contentName,
+        content_type: "product",
+        ...(numericPrice != null && numericPrice > 0 ? { value: numericPrice, currency: "BDT" } : {}),
+      });
+    }
+  };
+
+  return (
+    <Link
+      href={href}
+      onClick={handleClick}
+      className="ib-hero-cta group inline-flex min-h-[54px] items-center justify-center gap-2.5 rounded-[10px] px-6 text-[16px] font-bold leading-[1.3] text-white transition-all"
+      style={{
+        background: "#0D7A55",
+        boxShadow: "0 10px 28px rgba(13,122,85,0.16)",
+      }}
+    >
+      {enrolled && <Play className="h-4 w-4 shrink-0" fill="currentColor" />}
+      <span>{label}</span>
+      {!enrolled && (
+        <ArrowRight
+          className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+          strokeWidth={2.4}
+        />
+      )}
+    </Link>
+  );
+}
+
+function trackVersionCheckout(version: HeroVersionOption) {
+  if (version.enrolled || version.upcoming) return;
+  trackMetaEvent("InitiateCheckout", {
+    content_ids: [version.slug],
+    content_name: `IELTS Band Score Machine (${version.language})`,
+    content_type: "product",
+    ...(version.numericPrice != null && version.numericPrice > 0
+      ? { value: version.numericPrice, currency: "BDT" }
+      : {}),
+  });
+}
+
+function VersionSelectorDialog({
+  versions,
+  onClose,
+}: {
+  versions: HeroVersionOption[];
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 sm:p-6">
+      <button
+        type="button"
+        aria-label="ডায়ালগ বন্ধ করুন"
+        onClick={onClose}
+        className="absolute inset-0 bg-[#0B1F16]/55 backdrop-blur-[3px]"
+      />
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ielts-version-dialog-title"
+        className="ib-anim-in relative z-[1] w-full max-w-[460px] rounded-[6px] border border-[#E3E9E5] bg-[#FCFDFC] p-4 shadow-[0_28px_80px_rgba(3,20,12,0.28)] sm:p-5"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <h2
+            id="ielts-version-dialog-title"
+            className="pt-1 font-display text-[20px] font-bold tracking-[-0.03em] text-[#0F1F1A]"
+          >
+            ভার্সন বেছে নিন
+          </h2>
+          <button
+            type="button"
+            aria-label="বন্ধ করুন"
+            onClick={onClose}
+            autoFocus
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-[6px] border border-[#E1E7E3] bg-white text-[#536159] transition-colors hover:bg-[#F3F7F4]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-2.5">
+          {versions.map((version) => {
+            const available = version.enrolled || !version.upcoming;
+            const primary = version.language === "English" && available;
+            const choice = (
+              <span className="flex min-h-[62px] items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-[14px] font-bold">
+                    {version.languageLabelBn}
+                  </span>
+                  {!available && (
+                    <span className="mt-0.5 block text-[10px] font-medium opacity-70">
+                      শীঘ্রই আসছে
+                    </span>
+                  )}
+                  {version.enrolled && (
+                    <span className="mt-0.5 block text-[10px] font-medium opacity-70">
+                      কোর্সে ফিরে যান
+                    </span>
+                  )}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="font-display text-[17px] font-bold tabular-nums">
+                    {version.price ?? "See price"}
+                  </span>
+                  {available && (
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  )}
+                </span>
+              </span>
+            );
+
+            if (!available) {
+              return (
+                <div
+                  key={version.slug}
+                  aria-disabled="true"
+                  className="rounded-[6px] border border-[#DDE3DF] bg-[#F4F6F4] px-4 py-1 text-[#66736C] opacity-75"
+                >
+                  {choice}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={version.slug}
+                href={version.href}
+                onClick={() => trackVersionCheckout(version)}
+                aria-label={`${version.languageLabelBn} — ${version.price ?? "View price"}`}
+                className={`group rounded-[6px] border-2 px-4 py-1 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#0D7A55] ${
+                  primary
+                    ? "border-[#0D7A55] bg-[#0D7A55] text-white shadow-[0_10px_24px_rgba(13,122,85,0.18)] hover:bg-[#095F42]"
+                    : "border-[#B9DCCB] bg-white text-[#0F1F1A] shadow-[0_8px_20px_rgba(15,31,26,0.06)] hover:border-[#0D7A55]"
+                }`}
+              >
+                {choice}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export function HeroVersionSelectorButton({
+  versions,
+  label,
+  className,
+  style,
+  leadingDot = false,
+}: {
+  versions: HeroVersionOption[];
+  label: string;
+  className: string;
+  style?: CSSProperties;
+  leadingDot?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    window.requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [close, open]);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className={className}
+        style={style}
+      >
+        {leadingDot && <span className="ib-live-dot h-2 w-2 rounded-full bg-[#041E14]" aria-hidden="true" />}
+        <span>{label}</span>
+        <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+      </button>
+      {open && <VersionSelectorDialog versions={versions} onClose={close} />}
+    </>
+  );
+}
+
+export function HeroVersionSelectorDock({ versions }: { versions: HeroVersionOption[] }) {
+  return (
+    <div id="enroll-options" className="mt-5 max-w-[560px] scroll-mt-24">
+      <div className="mb-2 font-sans text-[13px] font-semibold text-[#5B6B65]">
+        আপনার পছন্দের ভার্সন বেছে নিন
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {versions.map((version) => {
+          const available = version.enrolled || !version.upcoming;
+          const primary = version.language === "English" && available;
+          const titleTone = primary ? "text-white" : available ? "text-[#0F1F1A]" : "text-[#66736C]";
+          const priceTone = primary ? "text-white" : available ? "text-[#0D7A55]" : "text-[#66736C]";
+          const content = (
+            <span className="flex min-h-[62px] items-center justify-between gap-4">
+              <span className="min-w-0">
+                <span className={`block truncate font-display text-[14px] font-bold ${titleTone}`}>
+                  {version.languageLabelBn}
+                </span>
+                {!available && (
+                  <span className="mt-0.5 block text-[10px] font-medium text-[#78857E]">
+                    শীঘ্রই আসছে
+                  </span>
+                )}
+                {version.enrolled && (
+                  <span className={`mt-0.5 block text-[10px] font-medium ${primary ? "text-white/70" : "text-[#78857E]"}`}>
+                    কোর্সে ফিরে যান
+                  </span>
+                )}
+              </span>
+              <span className="flex shrink-0 items-center gap-2.5">
+                <span className={`font-display text-[17px] font-bold leading-none tabular-nums ${priceTone}`}>
+                  {version.price ?? "See price"}
+                </span>
+                {available && (
+                  <ArrowRight
+                    className={`h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 ${priceTone}`}
+                  />
+                )}
+              </span>
+            </span>
+          );
+
+          if (!available) {
+            return (
+              <div
+                key={version.slug}
+                aria-disabled="true"
+                className="flex min-h-[70px] flex-col justify-center rounded-[6px] border border-[#DDE3DF] bg-white/70 px-4 py-1 opacity-75"
+              >
+                {content}
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={version.slug}
+              href={version.href}
+              onClick={() => trackVersionCheckout(version)}
+              aria-label={`${version.languageLabelBn} — ${version.price ?? "View price"}`}
+              className={`group block min-h-[70px] rounded-[6px] border-2 px-4 py-1 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#0D7A55] ${
+                primary
+                  ? "border-[#0D7A55] bg-[#0D7A55] shadow-[0_12px_28px_rgba(13,122,85,0.18)] hover:border-[#095F42] hover:bg-[#095F42] hover:shadow-[0_16px_34px_rgba(13,122,85,0.22)]"
+                  : "border-[#B9DCCB] bg-white shadow-[0_8px_24px_rgba(15,31,26,0.07)] hover:border-[#0D7A55] hover:bg-[#FBFEFC] hover:shadow-[0_14px_30px_rgba(15,31,26,0.12)]"
+              }`}
+            >
+              {content}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── hero: band score machine™ live console ───────────────────────── */
+
+type ConsoleMode = "upgrade" | "simulator" | "evaluator";
+type UpgradeSkill = "writing" | "speaking";
+
+const UPGRADE_SAMPLES: Record<
+  UpgradeSkill,
+  {
+    label: string;
+    taskTag: string;
+    prompt: string;
+    band6: {
+      overall: string;
+      rubrics: { code: string; name: string; score: number }[];
+      beforeText: string;
+      weakSpot1: string;
+      midText: string;
+      weakSpot2: string;
+      afterText: string;
+      flaws: string[];
+    };
+    band7: {
+      overall: string;
+      rubrics: { code: string; name: string; score: number }[];
+      beforeText: string;
+      strongSpot1: string;
+      midText: string;
+      strongSpot2: string;
+      afterText: string;
+      wins: string[];
+    };
+  }
+> = {
+  writing: {
+    label: "Writing Task 2",
+    taskTag: "ESSAY X-RAY · BAND 6 vs 7+",
+    prompt: "Prompt: Does modern technology make people less socially connected?",
+    band6: {
+      overall: "6.0",
+      rubrics: [
+        { code: "TR", name: "Task", score: 6.0 },
+        { code: "CC", name: "Coherence", score: 6.0 },
+        { code: "LR", name: "Lexical", score: 5.5 },
+        { code: "GRA", name: "Grammar", score: 6.0 },
+      ],
+      beforeText: "Nowadays technology is ",
+      weakSpot1: "very important in our daily life",
+      midText: ". Many people think it ",
+      weakSpot2: "makes people less social",
+      afterText: " because they use phones all day instead of talking.",
+      flaws: ["মুখস্থ ক্লিশে শুরু", "সাধারণ শব্দভাণ্ডার", "অস্পষ্ট পজিশন"],
+    },
+    band7: {
+      overall: "7.0",
+      rubrics: [
+        { code: "TR", name: "Task", score: 7.0 },
+        { code: "CC", name: "Coherence", score: 7.0 },
+        { code: "LR", name: "Lexical", score: 7.0 },
+        { code: "GRA", name: "Grammar", score: 7.0 },
+      ],
+      beforeText: "While digital devices are often blamed for ",
+      strongSpot1: "eroding face-to-face interaction",
+      midText: ", they actively ",
+      strongSpot2: "strengthen long-distance bonds",
+      afterText: " when used intentionally rather than passively.",
+      wins: ["Complex Contrast Clause", "Precise Collocations", "Clear Examiner Thesis"],
+    },
+  },
+  speaking: {
+    label: "Speaking Part 2",
+    taskTag: "CUE CARD X-RAY · BAND 6 vs 7+",
+    prompt: "Cue Card: Describe a skill you learned recently that helped your career.",
+    band6: {
+      overall: "6.0",
+      rubrics: [
+        { code: "FC", name: "Fluency", score: 6.0 },
+        { code: "LR", name: "Lexical", score: 5.5 },
+        { code: "GRA", name: "Grammar", score: 6.0 },
+        { code: "PR", name: "Pronun.", score: 6.0 },
+      ],
+      beforeText: "Last year I learned public speaking. At first it was ",
+      weakSpot1: "very hard and scary for me",
+      midText: ", but later it gave me ",
+      weakSpot2: "very good benefit in my job",
+      afterText: " when presenting to clients.",
+      flaws: ["বারবার 'very' ব্যবহার", "সরল বাক্য গঠন", "সীমিত এক্সপ্রেশন"],
+    },
+    band7: {
+      overall: "7.0",
+      rubrics: [
+        { code: "FC", name: "Fluency", score: 7.0 },
+        { code: "LR", name: "Lexical", score: 7.0 },
+        { code: "GRA", name: "Grammar", score: 7.0 },
+        { code: "PR", name: "Pronun.", score: 7.0 },
+      ],
+      beforeText: "Picking up persuasive speaking was ",
+      strongSpot1: "initially daunting",
+      midText: ", yet mastering the PREP framework ",
+      strongSpot2: "transformed my client pitches",
+      afterText: " within weeks.",
+      wins: ["Idiomatic Precision", "PREP Method Flow", "Natural Rhythm"],
+    },
+  },
+};
+
+const SIM_OPTIONS = ["TRUE", "FALSE", "NOT GIVEN"];
+
+const SIM_QUESTIONS = [
+  {
+    statement: "Urban bees may have a more varied diet than bees kept beside single-crop farms.",
+    correct: "TRUE",
+    why: "প্যাসেজে স্পষ্ট বলা আছে: 'more varied diet than those kept beside single-crop farms.'",
+  },
+  {
+    statement: "Rooftop hives produce double the honey of rural farm hives.",
+    correct: "NOT GIVEN",
+    why: "মধুর পরিমাণের কোনো তুলনা প্যাসেজে দেওয়া হয়নি — এটি ক্লাসিক IELTS ট্র্যাপ!",
+  },
+  {
+    statement: "Every ecologist supports placing more hives in small city areas.",
+    correct: "FALSE",
+    why: "'Some ecologists, however, warn...' — অর্থাৎ সবাই সমর্থন করেন না।",
+  },
+];
+
+export function BandScoreMachineConsole() {
+  const [mode, setMode] = useState<ConsoleMode>("upgrade");
+  const [skill, setSkill] = useState<UpgradeSkill>("writing");
+  const [upgraded, setUpgraded] = useState(false);
+
+  // Simulator state
+  const [secs, setSecs] = useState(59 * 60 + 12);
+  const [qIdx, setQIdx] = useState(0);
+  const [simAnswers, setSimAnswers] = useState<(string | null)[]>(["TRUE", null, null]);
+
+  const userTouched = useRef(false);
+
+  const markTouched = () => {
+    userTouched.current = true;
+  };
+
+  // Cycle through the demo screens and Band 6→7 until the visitor interacts.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setUpgraded(true);
+      return;
+    }
+    const firstFlip = window.setTimeout(() => {
+      if (!userTouched.current) setUpgraded(true);
+    }, 1800);
+
+    const cycle = window.setInterval(() => {
+      if (userTouched.current) return;
+      setMode((current) =>
+        current === "upgrade" ? "simulator" : current === "simulator" ? "evaluator" : "upgrade",
+      );
+      setUpgraded((prev) => !prev);
+    }, 4800);
+
+    return () => {
+      window.clearTimeout(firstFlip);
+      window.clearInterval(cycle);
+    };
+  }, []);
+
+  // Exam timer tick when simulator tab is open
+  useEffect(() => {
+    if (mode !== "simulator") return;
+    const id = window.setInterval(() => setSecs((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => window.clearInterval(id);
+  }, [mode]);
+
+  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
+  const ss = String(secs % 60).padStart(2, "0");
+
+  const sample = UPGRADE_SAMPLES[skill];
+  const activeData = upgraded ? sample.band7 : sample.band6;
+  const bandProgress = Math.min(100, (Number(activeData.overall) / 9) * 100);
+  const bandGap = Math.max(0, 7 - Number(activeData.overall));
+  const bandNote = upgraded
+    ? "লক্ষ্যে পৌঁছে গেছেন"
+    : `Band 7+ এর জন্য আরও ${toBn(bandGap.toFixed(1))} দরকার`;
+  const currentQ = SIM_QUESTIONS[qIdx];
+  const chosenAnswer = simAnswers[qIdx];
+
+  const tabs: { id: ConsoleMode; label: string }[] = [
+    { id: "upgrade", label: "Band upgrade" },
+    { id: "simulator", label: "Mock test" },
+    { id: "evaluator", label: "AI feedback" },
+  ];
+
+  return (
+    <div className="relative mx-auto h-[560px] w-full max-w-[500px]">
+      <div
+        className="ib-card-motion flex h-full flex-col overflow-hidden rounded-[6px] border border-[#E4E8E4] bg-white"
+        style={{
+          boxShadow: "0 18px 48px -30px rgba(15,31,26,0.28)",
+          color: "#0F1F1A",
+        }}
+      >
+        <div className="flex min-h-[54px] shrink-0 items-center justify-between gap-3 px-5">
+          <span className="font-display text-[14px] font-semibold tracking-[-0.02em] text-[#0F1F1A]">
+            IELTS Band Score Machine
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#6B7972]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0D7A55]" />
+            Live preview
+          </span>
+        </div>
+
+        <div
+          role="tablist"
+          aria-label="Band Score Machine ফিচার প্রিভিউ"
+          className="flex shrink-0 border-y border-[#E8ECE9] px-3"
+        >
+          {tabs.map(({ id, label }) => {
+            const active = mode === id;
+            return (
+              <button
+                key={id}
+                role="tab"
+                type="button"
+                aria-selected={active}
+                onClick={() => {
+                  markTouched();
+                  setMode(id);
+                }}
+                className="min-h-[42px] flex-1 border-b-2 px-2 py-1 font-sans text-[11px] font-semibold tracking-[-0.01em] transition-colors sm:text-[12px]"
+                style={
+                  active
+                    ? {
+                        borderColor: "#0D7A55",
+                        color: "#0D7A55",
+                      }
+                    : {
+                        borderColor: "transparent",
+                        color: "#7B8982",
+                      }
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── MODE 1: BAND 6.0 -> BAND 7 COMPARISON ── */}
+        {mode === "upgrade" && (
+          <div className="ib-anim-in min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex gap-3">
+                {(["writing", "speaking"] as UpgradeSkill[]).map((sk) => (
+                  <button
+                    key={sk}
+                    type="button"
+                    onClick={() => {
+                      markTouched();
+                      setSkill(sk);
+                    }}
+                    className="border-b pb-1 text-[12px] font-semibold transition-colors"
+                    style={{
+                      borderColor: skill === sk ? "#0D7A55" : "transparent",
+                      color: skill === sk ? "#0D7A55" : "#7B8982",
+                    }}
+                  >
+                    {sk === "writing" ? "Writing" : "Speaking"}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-1 rounded-md bg-[#F4F6F4] p-1">
+                {[
+                  { value: false, label: "6.0" },
+                  { value: true, label: "7+" },
+                ].map(({ value, label }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    aria-pressed={upgraded === value}
+                    onClick={() => {
+                      markTouched();
+                      setUpgraded(value);
+                    }}
+                    className="rounded px-2 py-1 text-[10.5px] font-semibold transition-colors"
+                    style={{
+                      background: upgraded === value ? "#FFFFFF" : "transparent",
+                      color: upgraded === value ? "#0F1F1A" : "#78857E",
+                      boxShadow: upgraded === value ? "0 1px 3px rgba(15,31,26,0.1)" : "none",
+                    }}
+                  >
+                    Band {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-end justify-between gap-4">
+              <div>
+                <span className="block text-[10px] font-medium uppercase tracking-[0.1em] text-[#839088]">
+                  {sample.label} · Overall band
+                </span>
+                <div className="mt-1 flex items-baseline gap-2.5">
+                  <span
+                    key={activeData.overall}
+                    className="ib-anim-in font-display text-[40px] font-semibold leading-none tracking-[-0.04em] tabular-nums"
+                    style={{ color: upgraded ? "#0D7A55" : "#0F1F1A" }}
+                  >
+                    {activeData.overall}
+                  </span>
+                  <span className="text-[11px] text-[#78857E]">{bandNote}</span>
+                </div>
+              </div>
+              <span className="mb-1 rounded-full bg-[#E9F5EE] px-2.5 py-1 text-[10px] font-semibold text-[#0D7A55]">
+                Target 7+
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <div
+                role="meter"
+                aria-label={`${sample.label} band score progress`}
+                aria-valuemin={0}
+                aria-valuemax={9}
+                aria-valuenow={Number(activeData.overall)}
+                className="relative h-1.5 overflow-visible rounded-full bg-[#E8ECE9]"
+              >
+                <span
+                  className="block h-full rounded-full bg-[#0D7A55] transition-[width] duration-500"
+                  style={{ width: `${bandProgress}%` }}
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-[3px] h-3 w-px bg-[#68766F]"
+                  style={{ left: "77.78%" }}
+                />
+              </div>
+              <div className="mt-1 flex justify-between text-[9px] text-[#929C96]">
+                <span>0</span>
+                <span>7+ target</span>
+                <span>9</span>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-4 divide-x divide-[#E8ECE9] border-y border-[#E8ECE9] py-3">
+              {activeData.rubrics.map((r) => (
+                <div key={r.code} className="min-w-0 px-2 first:pl-0">
+                  <span className="block text-[9px] font-medium text-[#87938C]">{r.code}</span>
+                  <span
+                    className="mt-0.5 block font-display text-[16px] font-semibold leading-none tabular-nums"
+                    style={{ color: upgraded ? "#0D7A55" : "#0F1F1A" }}
+                  >
+                    {r.score.toFixed(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3">
+              <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#87938C]">
+                Sample response
+              </span>
+              <p className="mt-1.5 font-sans text-[13px] leading-[1.7] text-[#34413A]">
+                {upgraded ? (
+                  <>
+                    {sample.band7.beforeText}
+                    <mark className="rounded bg-[#E9F5EE] px-1 text-[#0D7A55]">
+                      {sample.band7.strongSpot1}
+                    </mark>
+                    {sample.band7.midText}
+                    <mark className="rounded bg-[#E9F5EE] px-1 text-[#0D7A55]">
+                      {sample.band7.strongSpot2}
+                    </mark>
+                    {sample.band7.afterText}
+                  </>
+                ) : (
+                  <>
+                    {sample.band6.beforeText}
+                    <mark className="rounded bg-[#FCEDEC] px-1 text-[#A33B3F]">
+                      {sample.band6.weakSpot1}
+                    </mark>
+                    {sample.band6.midText}
+                    <mark className="rounded bg-[#FCEDEC] px-1 text-[#A33B3F]">
+                      {sample.band6.weakSpot2}
+                    </mark>
+                    {sample.band6.afterText}
+                  </>
+                )}
+              </p>
+              <p className="mt-2 text-[11px] text-[#78857E]">
+                {upgraded ? "Strength" : "Focus next"}: {upgraded ? sample.band7.wins[0] : sample.band6.flaws[0]}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── MODE 2: MINIMAL CD-IELTS MOCK SIMULATOR ── */}
+        {mode === "simulator" && (
+          <div className="ib-anim-in min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3 text-[11px]">
+              <span className="font-medium text-[#66736C]">Reading mock · 01 / 15</span>
+              <span role="timer" className="font-mono font-semibold tabular-nums text-[#0D7A55]">
+                {mm}:{ss}
+              </span>
+            </div>
+
+            <p className="mt-3 border-l-2 border-[#B9E4D1] pl-3 text-[12px] leading-[1.65] text-[#5B6861]">
+              Supporters point to city parks giving urban bees a{" "}
+              <mark className="bg-[#E9F5EE] px-0.5 text-[#0D7A55]">more varied diet</mark>{" "}
+              than those beside single-crop farms.
+            </p>
+
+            <div className="mt-4 flex items-center justify-between border-t border-[#E8ECE9] pt-3">
+              <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#839088]">
+                Question {qIdx + 1} of {SIM_QUESTIONS.length}
+              </span>
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={`Question ${i + 1}`}
+                    aria-current={i === qIdx ? "step" : undefined}
+                    onClick={() => {
+                      markTouched();
+                      setQIdx(i);
+                    }}
+                    className="h-1.5 w-5 rounded-full"
+                    style={{ background: i === qIdx ? "#0D7A55" : "#DDE4DF" }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <p className="mt-2 font-sans text-[13px] font-medium leading-[1.5] text-[#19251F]">
+              {currentQ.statement}
+            </p>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {SIM_OPTIONS.map((opt) => {
+                const isPicked = chosenAnswer === opt;
+                const isRight = opt === currentQ.correct;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    aria-pressed={isPicked}
+                    onClick={() => {
+                      markTouched();
+                      setSimAnswers((prev) => prev.map((a, i) => (i === qIdx ? opt : a)));
+                    }}
+                    className="rounded-md border px-2 py-2 text-center text-[10px] font-semibold transition-colors"
+                    style={{
+                      background: isPicked ? (isRight ? "#E9F5EE" : "#FCEDEC") : "#FFFFFF",
+                      borderColor: isPicked ? (isRight ? "#9AD4B5" : "#E9B5B4") : "#E1E7E3",
+                      color: isPicked ? (isRight ? "#0D7A55" : "#A33B3F") : "#536159",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {chosenAnswer && (
+              <p
+                aria-live="polite"
+                className="mt-3 border-t border-[#E8ECE9] pt-2 text-[11px] leading-[1.5]"
+                style={{ color: chosenAnswer === currentQ.correct ? "#0D7A55" : "#9A5514" }}
+              >
+                {chosenAnswer === currentQ.correct
+                  ? "Correct — "
+                  : `Correct answer: ${currentQ.correct} · `}
+                {currentQ.why}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── MODE 3: MINIMAL INSTANT EVALUATION ── */}
+        {mode === "evaluator" && (
+          <div className="ib-anim-in min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#839088]">
+                  AI feedback
+                </span>
+                <p className="mt-0.5 font-display text-[15px] font-semibold text-[#0F1F1A]">
+                  Writing &amp; Speaking
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="block text-[9px] uppercase tracking-[0.08em] text-[#839088]">
+                  Sample band
+                </span>
+                <span className="font-display text-[24px] font-semibold leading-none text-[#0D7A55]">
+                  7.0
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 divide-y divide-[#E8ECE9] border-y border-[#E8ECE9]">
+              {[
+                {
+                  tag: "LEXICAL RESOURCE",
+                  before: "good career chance",
+                  after: "lucrative career prospects",
+                },
+                {
+                  tag: "GRAMMAR",
+                  before: "People is depending more on...",
+                  after: "Individuals increasingly rely on...",
+                },
+                {
+                  tag: "SPEAKING PACE",
+                  before: "136 WPM · Clear delivery",
+                  after: "Band 7.0 Fluency",
+                },
+              ].map((item) => (
+                <div
+                  key={item.tag}
+                  className="py-3 first:pt-0 last:pb-0"
+                >
+                  <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-[#87938C]">
+                    {item.tag}
+                  </span>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]">
+                    <s className="text-[#8A948E]">{item.before}</s>
+                    <ArrowRight className="h-3 w-3 shrink-0 text-[#0D7A55]" />
+                    <span className="font-medium text-[#24332B]">{item.after}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── curriculum: interactive 4-skill explorer ───────────────────────── */
+
+export type CurriculumModuleItem = {
+  number: string;
+  skillKey: "speaking" | "writing" | "listening" | "reading" | "general";
+  skillTag: string;
+  title: string;
+  lessonCount: string;
+  capstone: string;
+  lessons: { title: string; duration?: string }[];
+};
+
+const SKILL_META: Record<
+  CurriculumModuleItem["skillKey"],
+  { Icon: typeof Mic; bg: string; ink: string }
+> = {
+  speaking: { Icon: Mic, bg: "var(--mint-bg)", ink: "var(--mint-ink)" },
+  writing: { Icon: FileText, bg: "var(--blue-bg)", ink: "var(--blue-ink)" },
+  listening: { Icon: Headphones, bg: "var(--lav-bg)", ink: "var(--lav-ink)" },
+  reading: { Icon: BookOpen, bg: "var(--peach-bg)", ink: "var(--peach-ink)" },
+  general: { Icon: Sparkles, bg: "var(--mint-bg)", ink: "var(--mint-ink)" },
+};
+
+export function CurriculumExplorer({ modules }: { modules: CurriculumModuleItem[] }) {
+  const [openIdx, setOpenIdx] = useState<number>(0);
+
+  return (
+    <div className="flex flex-col gap-3.5">
+      {modules.map((mod, idx) => {
+        const isOpen = openIdx === idx;
+        const { Icon, bg, ink } = SKILL_META[mod.skillKey] ?? SKILL_META.general;
+
+        return (
+          <article
+            key={mod.title}
+            className="ib-card-motion overflow-hidden rounded-[6px] bg-white transition-all duration-200"
+            style={{
+              border: isOpen ? "1px solid #BCE5D3" : "1px solid #E4E9F1",
+              boxShadow: isOpen
+                ? "0 20px 44px -26px rgba(18,32,67,0.14)"
+                : "0 6px 18px -12px rgba(18,32,67,0.06)",
+            }}
+          >
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={() => setOpenIdx(isOpen ? -1 : idx)}
+              className="flex w-full items-center gap-4 px-5 py-4.5 text-left transition-colors hover:bg-[#FAFBFD] sm:px-6 sm:py-5"
+            >
+              <span
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-[13px]"
+                style={{ background: bg, color: ink }}
+              >
+                <Icon className="h-5 w-5" strokeWidth={2} />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#64728A]">
+                    {mod.skillTag}
+                  </span>
+                </span>
+                <span className="mt-1 block font-display text-[17.5px] font-semibold leading-[1.3] tracking-[-0.02em] text-[#122043] sm:text-[19px]">
+                  {mod.title}
+                </span>
+              </span>
+
+              <span className="hidden rounded-full bg-[#F3F6FA] px-3 py-1 text-[12px] font-medium text-[#4B5768] sm:inline-block">
+                {mod.lessonCount}
+              </span>
+
+              <span
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors"
+                style={{
+                  background: isOpen ? "#E8F7F1" : "#F3F6FA",
+                  color: isOpen ? "#0F6B48" : "#64728A",
+                }}
+              >
+                <ChevronDown
+                  className="h-4 w-4 transition-transform duration-200"
+                  style={{ transform: isOpen ? "rotate(180deg)" : "none" }}
+                />
+              </span>
+            </button>
+
+            {isOpen && (
+              <div
+                className="px-5 pb-5 pt-1 sm:px-6 sm:pb-6"
+                style={{ borderTop: "1px solid #EEF2F7" }}
+              >
+                <ul className="divide-y divide-[#F1F4F9]">
+                  {mod.lessons.map((lesson, lIdx) => (
+                    <li
+                      key={lesson.title}
+                      className="flex items-start justify-between gap-4 py-3 text-[14.5px] leading-[1.65]"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="mt-[3px] w-5 shrink-0 font-mono text-[11.5px] font-semibold tabular-nums text-[#8A94A6]">
+                          {String(lIdx + 1).padStart(2, "0")}
+                        </span>
+                        <span className="text-[#2C3A52]">{lesson.title}</span>
+                      </div>
+                      {lesson.duration && (
+                        <span className="mt-[2px] shrink-0 rounded-md bg-[#F6F8FC] px-2 py-0.5 font-mono text-[11px] font-medium tabular-nums text-[#64728A]">
+                          {lesson.duration}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {mod.capstone && (
+                  <div
+                    className="ib-card-motion mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[6px] px-4 py-3"
+                    style={{ background: "#F2FAF6", border: "1px solid #D5EFE3" }}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px]"
+                        style={{ background: "#E2F6EE", color: "#0F6B48" }}
+                      >
+                        <Award className="h-4 w-4" strokeWidth={2.2} />
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] text-[#188A5D]">
+                          MODULE CAPSTONE
+                        </span>
+                        <span className="block text-[13.5px] font-semibold text-[#122043]">
+                          {mod.capstone}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
 
 /* ───────────────────────── shared chrome ───────────────────────── */
 
@@ -93,7 +1153,7 @@ export function ExamWindow() {
 
   return (
     <div
-      className="rounded-[12px] overflow-hidden bg-white"
+      className="ib-card-motion rounded-[6px] overflow-hidden bg-white"
       style={{
         border: "1px solid var(--ib-line)",
         boxShadow: "0 44px 80px -44px rgba(12,26,51,0.5), 0 0 0 6px rgba(255,255,255,0.6)",
@@ -296,7 +1356,7 @@ const WAVE = [8, 14, 22, 12, 28, 18, 10, 24, 30, 16, 9, 20, 26, 14, 8, 18, 28, 2
 function ListeningPane() {
   return (
     <div className="p-5 sm:p-6">
-      <div className="flex items-center gap-4 rounded-[10px] px-4 py-3.5" style={{ background: "#F3F6FA", border: "1px solid var(--ib-line)" }}>
+      <div className="ib-card-motion flex items-center gap-4 rounded-[6px] px-4 py-3.5" style={{ background: "#F3F6FA", border: "1px solid var(--ib-line)" }}>
         <span className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--ib-navy-2)" }}>
           <Headphones className="w-[18px] h-[18px] text-white" />
         </span>
@@ -317,7 +1377,7 @@ function ListeningPane() {
       <div className="mt-5 text-[12px] font-semibold" style={{ color: "var(--ib-muted)" }}>
         Questions 1–4 · Complete the form
       </div>
-      <div className="mt-3 rounded-[10px] overflow-hidden" style={{ border: "1px solid var(--ib-line)" }}>
+      <div className="ib-card-motion mt-3 rounded-[6px] overflow-hidden" style={{ border: "1px solid var(--ib-line)" }}>
         {[
           { label: "Name", value: "Sarah Collins" },
           { label: "Phone", value: "07700 9" },
@@ -391,7 +1451,7 @@ function WritingPane() {
         Some people think all students should learn to type before they learn to write by hand. Discuss both views and give your opinion.
       </p>
       <div
-        className="mt-4 rounded-[10px] p-4 text-[13.5px] leading-[1.75] min-h-[150px]"
+        className="ib-card-motion mt-4 rounded-[6px] p-4 text-[13.5px] leading-[1.75] min-h-[150px]"
         style={{ border: "1.5px solid var(--ib-brand)", background: "#fff", color: "var(--ib-body)" }}
       >
         People who support this idea argue that typing is a skill every graduate needs. On the other hand, handwriting still helps young children remember what they learn
@@ -411,7 +1471,7 @@ export function SkillTabs() {
   const [current, setCurrent] = useState<SkillKey>("listening");
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const move = (e: KeyboardEvent<HTMLButtonElement>, idx: number) => {
+  const move = (e: ReactKeyboardEvent<HTMLButtonElement>, idx: number) => {
     let next = idx;
     if (e.key === "ArrowDown" || e.key === "ArrowRight") next = (idx + 1) % SKILLS.length;
     else if (e.key === "ArrowUp" || e.key === "ArrowLeft") next = (idx - 1 + SKILLS.length) % SKILLS.length;
@@ -469,7 +1529,7 @@ export function SkillTabs() {
         role="tabpanel"
         id={`skill-panel-${current}`}
         aria-labelledby={`skill-tab-${current}`}
-        className="rounded-[12px] overflow-hidden bg-white min-h-[340px]"
+        className="ib-card-motion rounded-[6px] overflow-hidden bg-white min-h-[340px]"
         style={{ boxShadow: "0 44px 90px -44px rgba(0,0,0,0.7)" }}
       >
         <ScreenBar title={PANES[current].bar} />
@@ -627,7 +1687,7 @@ export function Countdown({
     <div
       role="timer"
       aria-label="কোর্স লঞ্চ পর্যন্ত বাকি সময়"
-      className="inline-flex flex-wrap items-center gap-2 rounded-[12px] px-3 py-2.5"
+      className="ib-card-motion inline-flex flex-wrap items-center gap-2 rounded-[6px] px-3 py-2.5"
       style={{ background: "#fff", border: "1px solid var(--ib-line)", boxShadow: "0 10px 24px -14px rgba(12,26,51,0.25)" }}
     >
       <span className="flex items-center gap-2 text-[12.5px] font-bold mr-1" style={{ color: "var(--ib-brand-2)" }}>
@@ -636,7 +1696,7 @@ export function Countdown({
       </span>
       {cells.map((c, i) => (
         <span key={c.label} className="flex items-center gap-2">
-          <span className="flex flex-col items-center rounded-[9px] px-2.5 py-1.5 min-w-[46px]" style={{ background: "var(--ib-fog)" }}>
+          <span className="flex flex-col items-center rounded-[6px] px-2.5 py-1.5 min-w-[46px]" style={{ background: "var(--ib-fog)" }}>
             <span
               className="font-display text-[17px] font-bold leading-none tabular-nums"
               style={{ color: "var(--ib-ink)" }}

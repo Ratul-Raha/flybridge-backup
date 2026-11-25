@@ -25,6 +25,7 @@ type FetchedCourse = {
 
 type MenuItem = {
   slug: string;
+  href: string;
   title: string;
   badge: string;
   price: number | string | null;
@@ -68,6 +69,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
 
     const fromStatic: MenuItem[] = staticItems.map((p) => ({
       slug: p.slug,
+      href: `/programs/${p.slug}`,
       title: p.title,
       badge: p.badge,
       price: p.price ?? null,
@@ -80,6 +82,9 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
 
     const fromDb: MenuItem[] = db.map((c) => ({
       slug: c.slug,
+      href: c.slug.startsWith("ielts-band-score-machine-")
+        ? "/programs/ielts-band-score-machine"
+        : `/programs/${c.slug}`,
       title: c.title,
       badge: c.badge || "COURSE",
       price: c.price,
@@ -258,7 +263,7 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
           items.map((item) => (
             <a
               key={item.slug}
-              href={`/programs/${item.slug}`}
+              href={item.href}
               onClick={onClose}
               className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-200 hover:bg-brand-soft/60"
             >
@@ -310,7 +315,9 @@ export function ProgramsMegaMenu({ onClose }: { onClose: () => void }) {
                     >
                       {item.discountLabel}
                     </span>
-                    {item.discountEndsAt && <DealCountdown endsAt={item.discountEndsAt} tone="menu" />}
+                    {item.discountEndsAt && (
+                      <DealCountdown endsAt={item.discountEndsAt} tone="menu" />
+                    )}
                   </span>
                 )}
               </span>

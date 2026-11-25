@@ -7,7 +7,7 @@ import { StoryAvatars } from "@/components/story-avatars";
 import { ProgramCard } from "@/components/program-card";
 import { DbCourseCard, type DbCourse } from "@/components/programs/db-course-card";
 import { TrackAccordion } from "@/components/programs/track-accordion";
-import { staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
@@ -52,6 +52,7 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
 
     return courses
+      .filter((course) => !isHiddenCourseListing(course.slug))
       .map((c) => {
         const itemId = c._id.toString();
         const pricing = publicCoursePricing(c);
@@ -67,8 +68,8 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
           currency: c.currency ?? "USD",
           prices: pricing.prices,
           originalPrice: pricing.configured
-          ? (pricing.originalPrice ?? undefined)
-          : (courseDetails[c.slug]?.originalPrice ?? undefined),
+            ? (pricing.originalPrice ?? undefined)
+            : (courseDetails[c.slug]?.originalPrice ?? undefined),
           discountLabel: pricing.discountLabel,
           discountEndsAt: pricing.endsAt,
           image: c.image ?? null,
@@ -120,7 +121,10 @@ export default async function ProgramsPage() {
                   className="inline-flex items-center gap-2.5 rounded-full border px-4 py-[9px] mb-8"
                   style={{ borderColor: "var(--line)", background: "rgba(255,255,255,0.8)" }}
                 >
-                  <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+                  <span
+                    className="w-[6px] h-[6px] rounded-full"
+                    style={{ background: "var(--brand)" }}
+                  />
                   <span
                     className="font-mono text-[10.5px] font-semibold tracking-[0.28em] uppercase"
                     style={{ color: "var(--brand-2)" }}
@@ -153,15 +157,21 @@ export default async function ProgramsPage() {
                   </span>
                 </h1>
 
-                <p className="mt-6 max-w-[480px] text-[16.5px] leading-[1.7]" style={{ color: "var(--body)" }}>
-                  Self-paced, practical courses that take you from where you are now to
-                  studying, working and building a life abroad.
+                <p
+                  className="mt-6 max-w-[480px] text-[16.5px] leading-[1.7]"
+                  style={{ color: "var(--body)" }}
+                >
+                  Self-paced, practical courses that take you from where you are now to studying,
+                  working and building a life abroad.
                 </p>
 
                 <div className="flex items-center gap-[18px] mt-9">
                   <StoryAvatars sizeClass="w-11 h-11" />
                   <div>
-                    <div className="text-[15px] font-semibold leading-none" style={{ color: "var(--ink)" }}>
+                    <div
+                      className="text-[15px] font-semibold leading-none"
+                      style={{ color: "var(--ink)" }}
+                    >
                       {formatUsersFull(totalUsers)} learners
                     </div>
                     <div className="text-[12px] mt-[5px]" style={{ color: "var(--body)" }}>
@@ -208,12 +218,18 @@ export default async function ProgramsPage() {
         `}</style>
 
         {/* Program grid */}
-        <section id="programs" className="px-[clamp(20px,4.5vw,56px)] pb-[100px] pt-[36px] scroll-mt-8">
+        <section
+          id="programs"
+          className="px-[clamp(20px,4.5vw,56px)] pb-[100px] pt-[36px] scroll-mt-8"
+        >
           <div className="max-w-[1320px] mx-auto">
             <div className="flex items-end justify-between flex-wrap gap-4 mb-11">
               <div className="max-w-[640px]">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand-2)" }} />
+                  <span
+                    className="w-[6px] h-[6px] rounded-full"
+                    style={{ background: "var(--brand-2)" }}
+                  />
                   <span
                     className="font-mono text-[10.5px] font-semibold tracking-[0.3em] uppercase"
                     style={{ color: "var(--brand-2)" }}
@@ -238,7 +254,10 @@ export default async function ProgramsPage() {
                     program &amp; course
                   </span>
                 </h2>
-                <p className="text-[14.5px] mt-[10px] max-w-[520px]" style={{ color: "var(--body)" }}>
+                <p
+                  className="text-[14.5px] mt-[10px] max-w-[520px]"
+                  style={{ color: "var(--body)" }}
+                >
                   Everything you need for study abroad and work abroad — all in one place.
                 </p>
               </div>
@@ -247,7 +266,10 @@ export default async function ProgramsPage() {
                 className="inline-flex items-center gap-2 font-mono text-[11px] font-semibold tracking-[0.14em] uppercase rounded-full border px-4 py-[9px] shrink-0"
                 style={{ borderColor: "var(--line)", background: "#fff", color: "var(--brand-2)" }}
               >
-                <span className="w-[6px] h-[6px] rounded-full" style={{ background: "var(--brand)" }} />
+                <span
+                  className="w-[6px] h-[6px] rounded-full"
+                  style={{ background: "var(--brand)" }}
+                />
                 {programCount} programs
               </div>
             </div>
@@ -284,11 +306,21 @@ export default async function ProgramsPage() {
 
               <div className="grid sm:grid-cols-2 gap-x-10 gap-y-10">
                 {included.map((f) => (
-                  <div key={f.title} className="pt-6 border-t" style={{ borderColor: "var(--line)" }}>
-                    <h3 className="font-display font-semibold text-[15.5px]" style={{ color: "var(--ink)" }}>
+                  <div
+                    key={f.title}
+                    className="pt-6 border-t"
+                    style={{ borderColor: "var(--line)" }}
+                  >
+                    <h3
+                      className="font-display font-semibold text-[15.5px]"
+                      style={{ color: "var(--ink)" }}
+                    >
                       {f.title}
                     </h3>
-                    <p className="text-[13.5px] leading-[1.65] mt-2" style={{ color: "var(--body)" }}>
+                    <p
+                      className="text-[13.5px] leading-[1.65] mt-2"
+                      style={{ color: "var(--body)" }}
+                    >
                       {f.desc}
                     </p>
                   </div>
@@ -315,9 +347,12 @@ export default async function ProgramsPage() {
                 <h2 className="font-display text-[clamp(26px,3vw,36px)] font-semibold leading-[1.2] tracking-[-0.02em] text-white text-balance">
                   Talk to a counselor and get a personal roadmap
                 </h2>
-                <p className="text-[15.5px] leading-[1.65] mt-4 max-w-[440px]" style={{ color: "rgba(255,255,255,0.65)" }}>
-                  Tell us where you want to go — we&apos;ll point you to the right course and
-                  the next step to take.
+                <p
+                  className="text-[15.5px] leading-[1.65] mt-4 max-w-[440px]"
+                  style={{ color: "rgba(255,255,255,0.65)" }}
+                >
+                  Tell us where you want to go — we&apos;ll point you to the right course and the
+                  next step to take.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-4 mt-10">
@@ -326,7 +361,16 @@ export default async function ProgramsPage() {
                     className="inline-flex items-center gap-2.5 font-medium text-[14.5px] rounded-full px-[26px] py-[13px] transition-opacity hover:opacity-90"
                     style={{ background: "var(--brand-2)", color: "#ffffff" }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                     Call us
@@ -337,7 +381,16 @@ export default async function ProgramsPage() {
                     style={{ color: "rgba(255,255,255,0.85)" }}
                   >
                     See learner stories
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
                   </a>

@@ -89,6 +89,16 @@ export const programs: Program[] = [
   },
 ];
 
+/** Version courses reached through the main IELTS landing, not standalone catalog cards. */
+const HIDDEN_COURSE_LISTING_SLUGS = new Set([
+  "ielts-band-score-machine-en",
+  "ielts-band-score-machine-bn",
+]);
+
+export function isHiddenCourseListing(slug: string): boolean {
+  return HIDDEN_COURSE_LISTING_SLUGS.has(slug.toLowerCase());
+}
+
 export function getProgram(slug: string) {
   return programs.find((p) => p.slug === slug);
 }
@@ -99,7 +109,9 @@ export function getProgram(slug: string) {
  * from any merged listing to avoid rendering the same course twice.
  * Programs flagged with `hidden: true` are also excluded from listings.
  */
-export function staticProgramsWithoutDbCourse<T extends { slug: string }>(dbCourses: readonly T[]): Program[] {
+export function staticProgramsWithoutDbCourse<T extends { slug: string }>(
+  dbCourses: readonly T[],
+): Program[] {
   const dbSlugs = new Set(dbCourses.map((c) => c.slug.toLowerCase()));
   return programs.filter((p) => !p.hidden && !dbSlugs.has(p.slug.toLowerCase()));
 }

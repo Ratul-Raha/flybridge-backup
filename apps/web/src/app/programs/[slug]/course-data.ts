@@ -753,7 +753,7 @@ export const courseDetails: Record<string, CourseDetails> = {
     curriculum: {
       label: "কারিকুলাম",
       title: "৩০টা লেসন, ৪টা মডিউল",
-      subtitle: "কোনো কনফিউশন নেই — প্রতিটা মডিউল আপনাকে ব্যান্ড ৮+ এর দিকে এগিয়ে নিয়ে যাবে",
+      subtitle: "কোনো কনফিউশন নেই — প্রতিটা মডিউল আপনাকে ব্যান্ড ৭+ এর দিকে এগিয়ে নিয়ে যাবে",
       modules: [
         {
           title: "IELTS Speaking Mastery",

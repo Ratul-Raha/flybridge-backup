@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { connectDb } from "@/lib/db";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
-import { staticProgramsWithoutDbCourse } from "@/lib/programs";
+import { isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { publicCoursePricing } from "@/lib/course-discount";
 import { courseDetails } from "@/app/programs/[slug]/course-data";
@@ -23,6 +23,7 @@ async function getDbCoursesUncached(): Promise<DbCourse[]> {
     const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
 
     return courses
+      .filter((course) => !isHiddenCourseListing(course.slug))
       .map((c) => {
         const itemId = c._id.toString();
         const pricing = publicCoursePricing(c);
@@ -38,8 +39,8 @@ async function getDbCoursesUncached(): Promise<DbCourse[]> {
           currency: c.currency ?? "USD",
           prices: pricing.prices,
           originalPrice: pricing.configured
-          ? (pricing.originalPrice ?? undefined)
-          : (courseDetails[c.slug]?.originalPrice ?? undefined),
+            ? (pricing.originalPrice ?? undefined)
+            : (courseDetails[c.slug]?.originalPrice ?? undefined),
           discountLabel: pricing.discountLabel,
           discountEndsAt: pricing.endsAt,
           image: c.image ?? null,
@@ -67,7 +68,10 @@ export async function Programs() {
   const visiblePrograms = staticProgramsWithoutDbCourse(dbCourses);
 
   return (
-    <section id="programs" className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto">
+    <section
+      id="programs"
+      className="pt-[110px] px-[clamp(20px,4.5vw,56px)] pb-[100px] max-w-[1320px] mx-auto"
+    >
       <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
         <div className="max-w-[640px]">
           <h2 className="text-balance">

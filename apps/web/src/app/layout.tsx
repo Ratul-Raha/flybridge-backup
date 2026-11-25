@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
+import { Anek_Bangla, Plus_Jakarta_Sans } from "next/font/google";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/caveat";
@@ -16,6 +17,19 @@ import { PWAServiceWorker } from "@/components/pwa-service-worker";
 import { PWAInstallButton } from "@/components/pwa-install-button";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
+
+const anekBangla = Anek_Bangla({
+  subsets: ["bengali", "latin"],
+  display: "swap",
+  variable: "--font-anek-bangla",
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-plus-jakarta-sans",
+});
 
 const NavigationProgress = dynamic(
   () => import("@/components/navigation-progress").then((m) => m.NavigationProgress),
@@ -76,7 +90,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${anekBangla.variable} ${plusJakartaSans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <meta name="application-name" content="FlyBridge" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

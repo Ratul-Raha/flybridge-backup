@@ -184,7 +184,7 @@ export function IeltsPromoPopup() {
             </div>
 
             {/* Offer highlight */}
-            <div className="mt-5 w-fit max-w-full rounded-xl bg-[#EAF9F1] px-4 py-3">
+            <div className="mt-5 w-fit max-w-full rounded-[6px] bg-[#EAF9F1] px-4 py-3">
               <p className="text-[14.5px] font-extrabold leading-snug text-[#0B1F3A]">
                 Band 7-এর জন্য ২৫টা মাস্টারক্লাস{" "}
                 <span className="text-[#0F9D58]">+ ৫টা বোনাস ক্লাস একটাই সিস্টেমে</span>

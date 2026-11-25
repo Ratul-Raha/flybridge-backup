@@ -142,7 +142,7 @@ export function DbCoursePage({
         {enrolled ? (
           <div className="max-w-[560px] mx-auto">
             <div
-              className="rounded-lg border border-line bg-white p-8 sm:p-10 text-center"
+              className="rounded-[6px] border border-line bg-white p-8 sm:p-10 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.12)" }}
             >
               <div
@@ -184,7 +184,7 @@ export function DbCoursePage({
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
             <div className="space-y-8">
-              <div className="rounded-lg border border-line bg-white overflow-hidden">
+              <div className="rounded-[6px] border border-line bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <div className="grid sm:grid-cols-[200px_1fr] gap-0">
                   <div
                     className="relative h-[180px] sm:h-full sm:min-h-[180px] flex items-center justify-center overflow-hidden"
@@ -252,14 +252,14 @@ export function DbCoursePage({
                 </div>
               </div>
 
-              <div className="rounded-lg border border-line bg-white p-6 sm:p-8">
+              <div className="rounded-[6px] border border-line bg-white p-6 sm:p-8 transition-shadow duration-300 hover:shadow-lg">
                 <CheckoutForm course={checkoutCourse} />
               </div>
             </div>
 
             <aside className="lg:sticky lg:top-24">
               <div
-                className="rounded-lg border border-line bg-white overflow-hidden"
+                className="rounded-[6px] border border-line bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1"
                 style={{ boxShadow: "0 32px 60px -32px rgba(18,32,67,0.18)" }}
               >
                 <div className="p-6">
@@ -269,7 +269,7 @@ export function DbCoursePage({
 
                   <div className="flex gap-4 pb-5 border-b" style={{ borderColor: "var(--line)" }}>
                     <div
-                      className="w-[64px] h-[64px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                      className="w-[64px] h-[64px] rounded-[6px] overflow-hidden shrink-0 flex items-center justify-center"
                       style={{ background: "var(--brand-soft)" }}
                     >
                       {checkoutCourse.image ? (
@@ -345,7 +345,7 @@ export function DbCoursePage({
 
                   {checkoutCourse.upcoming && (
                     <div
-                      className="mt-4 text-center text-[13.5px] font-medium py-2.5 px-3 rounded-xl leading-[1.7]"
+                      className="mt-4 text-center text-[13.5px] font-medium py-2.5 px-3 rounded-[6px] leading-[1.7]"
                       style={{ background: "rgba(111,76,224,0.08)", color: "#6B4CE0" }}
                     >
                       এই কোর্সটা শিগগিরই আসছে — নোটিফিকেশন পেতে ওয়েটলিস্টে যুক্ত হও।
@@ -434,7 +434,7 @@ export function DbCoursePage({
             {(course.books ?? []).map((book, i) => (
               <div
                 key={i}
-                className="flex flex-col gap-3 rounded-xl border p-5 bg-white transition hover:shadow-md"
+                className="flex flex-col gap-3 rounded-[6px] border p-5 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                 style={{ borderColor: "var(--line)" }}
               >
                 <div className="flex items-center gap-3">
