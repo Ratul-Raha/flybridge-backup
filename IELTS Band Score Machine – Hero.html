@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IELTS Band Score Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafaf7; --surface:#ffffff; --ink:#0f1f1a; --muted:#5b6b65; --line:#e4e8e4;
+  --accent:#0d7a55; --accent-ink:#ffffff; --accent-soft:#e3f4ec; --bad:#b4232a; --bad-soft:#fdeceb;
+  --good:#0d7a55; --good-soft:#e3f4ec;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1512; --surface:#121e1a; --ink:#eef4f0; --muted:#9bada5; --line:#233630;
+    --accent:#3ddc97; --accent-ink:#06150f; --accent-soft:#15302586; --bad:#ff8a8f; --bad-soft:#3a1b1d;
+    --good:#3ddc97; --good-soft:#15302a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1512; --surface:#121e1a; --ink:#eef4f0; --muted:#9bada5; --line:#233630;
+  --accent:#3ddc97; --accent-ink:#06150f; --accent-soft:#15302a; --bad:#ff8a8f; --bad-soft:#3a1b1d;
+  --good:#3ddc97; --good-soft:#15302a; color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Hind Siliguri","Plus Jakarta Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:28px 24px 56px}
+nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:72px}
+.brand{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:17px;display:flex;align-items:center;gap:10px}
+.brand b{background:#e11d2e;color:#fff;padding:2px 8px;border-radius:5px;font-size:15px}
+nav a.login{color:var(--muted);text-decoration:none;font-size:15px}
+nav a.login:hover{color:var(--ink)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center}
+h1{font-size:clamp(34px,4.6vw,54px);line-height:1.18;font-weight:700;letter-spacing:-.01em}
+h1 span{display:block;font-family:"Plus Jakarta Sans","Hind Siliguri",sans-serif;font-weight:800;color:var(--accent);margin-top:6px}
+.sub{margin-top:22px;font-size:18px;color:var(--muted);max-width:30em}
+.sub strong{color:var(--ink);font-weight:600}
+.cta{margin-top:34px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font:inherit;font-weight:600;font-size:17px;padding:15px 26px;border-radius:10px;border:1px solid transparent;cursor:pointer;text-decoration:none;display:inline-flex;flex-direction:column;line-height:1.25}
+.btn small{font-weight:400;font-size:13px;opacity:.85}
+.btn:focus-visible,.seg button:focus-visible,nav a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.primary{background:var(--accent);color:var(--accent-ink)}
+.primary:hover{filter:brightness(.94)}
+.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.ghost small{color:var(--muted)}
+.assure{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14.5px;color:var(--muted)}
+.assure span::before{content:"✓";color:var(--accent);font-weight:700;margin-right:7px}
+.proof{margin-top:30px;padding-top:22px;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
+.proof b{color:var(--ink)}
+
+/* score card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 18px 50px -24px rgba(15,31,26,.28)}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.card-top .t{font-family:"Plus Jakarta Sans",sans-serif;font-weight:600;font-size:14px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:600 13px "Plus Jakarta Sans",sans-serif;border:0;background:transparent;color:var(--muted);padding:6px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.band{display:flex;align-items:baseline;gap:14px;margin-top:22px}
+.band .n{font-family:"Plus Jakarta Sans",sans-serif;font-size:64px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.band .l{color:var(--muted);font-size:14px}
+.crit{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.crit div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:"Plus Jakarta Sans",sans-serif}
+.crit i{display:block;font-style:normal;font-size:11.5px;color:var(--muted)}
+.crit b{font-size:17px}
+.bar{height:6px;border-radius:6px;background:var(--line);margin-top:20px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .5s ease}
+.bar-l{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:6px}
+.essay{margin-top:20px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-family:"Plus Jakarta Sans",sans-serif;font-size:15.5px;line-height:1.7}
+.essay .p{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+mark{padding:1px 5px;border-radius:4px;background:var(--bad-soft);color:var(--bad)}
+mark.ok{background:var(--good-soft);color:var(--good)}
+.tips{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.tips span{font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 12px;color:var(--muted)}
+
+/* feature strip */
+.strip{margin-top:72px;border-top:1px solid var(--line);padding-top:28px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.strip b{display:block;font-weight:600;font-size:16px}
+.strip small{color:var(--muted);font-size:14px}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:44px}
+  nav{margin-bottom:40px}
+  .strip{grid-template-columns:1fr 1fr}
+}
+@media (max-width:520px){
+  .btn{width:100%}
+  .crit{grid-template-columns:repeat(2,1fr)}
+  .strip{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.bar span{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><b>IELTS</b> Band Score Machine</div>
+    <a class="login" href="#login">লগইন</a>
+  </nav>
+
+  <main class="hero">
+    <section>
+      <h1>Band 6.0-এ আটকে আছেন?
+        <span>Band 7.5+ এর রোডম্যাপ এখানেই।</span>
+      </h1>
+      <p class="sub">প্রতিটি টপিক ভেঙে শেখানো লেসন, ১৫টি ফুল মক টেস্ট আর AI ফিডব্যাক। <strong>কোথায় নম্বর কাটছে, কীভাবে ঠিক করবেন</strong> — সব দেখতে পাবেন।</p>
+
+      <div class="cta">
+        <a class="btn primary" href="#checkout">ইংরেজি ভার্সন নিন — ৳5,999<small>এখনই অ্যাক্সেস পাবেন</small></a>
+        <a class="btn ghost" href="#bangla">বাংলা ভার্সন — ফ্রি<small>শীঘ্রই আসছে, ওয়েটলিস্টে যোগ দিন</small></a>
+      </div>
+
+      <div class="assure">
+        <span>৩ দিনে ১০০% মানি-ব্যাক</span>
+        <span>লাইভ সাপোর্ট</span>
+        <span>লাইফটাইম অ্যাক্সেস</span>
+      </div>
+
+      <p class="proof"><b>২২+ শিক্ষার্থী</b> ইতিমধ্যে প্রস্তুতি নিচ্ছেন। টিপস মুখস্থ নয়, আসল পরীক্ষার মতো প্র্যাকটিস।</p>
+    </section>
+
+    <aside class="card" aria-label="Writing feedback preview">
+      <div class="card-top">
+        <span class="t">Writing Task 2 · AI ফিডব্যাক</span>
+        <div class="seg" role="group" aria-label="Band level">
+          <button id="b6" aria-pressed="true" type="button">Band 6.0</button>
+          <button id="b75" aria-pressed="false" type="button">Band 7.5</button>
+        </div>
+      </div>
+
+      <div class="band"><span class="n" id="score">6.0</span><span class="l" id="scoreNote">Band 7.5-এর জন্য আরও ১.৫ দরকার</span></div>
+
+      <div class="crit" id="crit"></div>
+
+      <div class="bar" aria-hidden="true"><span id="fill" style="width:62%"></span></div>
+      <div class="bar-l"><span>বর্তমান</span><span>লক্ষ্য 7.5</span></div>
+
+      <div class="essay">
+        <div class="p">Prompt: Does modern technology make people less socially connected?</div>
+        <div id="text"></div>
+        <div class="tips" id="tips"></div>
+      </div>
+    </aside>
+  </main>
+
+  <section class="strip">
+    <div><b>৪টি স্কিল</b><small>Speaking, Writing, Listening, Reading</small></div>
+    <div><b>১৫টি ফুল মক টেস্ট</b><small>কোনো এক্সট্রা ফি নেই</small></div>
+    <div><b>ফোন, ট্যাবলেট, ডেস্কটপ</b><small>নিজের সময়ে প্র্যাকটিস করুন</small></div>
+    <div><b>লাইফটাইম অ্যাক্সেস</b><small>এনরোলমেন্টের পর সারাজীবন</small></div>
+  </section>
+</div>
+
+<script>
+var data={
+ low:{score:"6.0",note:"Band 7.5-এর জন্য আরও ১.৫ দরকার",w:62,
+  crit:[["TR","6.0"],["CC","6.0"],["LR","5.5"],["GRA","6.0"]],
+  text:'Nowadays technology is <mark>very important in our daily life</mark>. Many people think it <mark>makes people less social</mark> because they use phones all day instead of talking.',
+  tips:["সাধারণ শব্দভান্ডার","অস্পষ্ট পজিশন","মুখস্থ ক্লিশে"]},
+ high:{score:"7.5",note:"লক্ষ্যে পৌঁছে গেছেন",w:100,
+  crit:[["TR","7.5"],["CC","7.5"],["LR","7.5"],["GRA","7.5"]],
+  text:'Technology has become <mark class="ok">deeply embedded in everyday routines</mark>, yet its effect on relationships is double-edged. Critics argue that <mark class="ok">constant screen time erodes face-to-face interaction</mark>, but this overlooks how it sustains distant ties.',
+  tips:["স্পষ্ট পজিশন","উন্নত শব্দচয়ন","কাউন্টার-আর্গুমেন্ট"]}
+};
+function render(k){
+  var d=data[k];
+  document.getElementById("score").textContent=d.score;
+  document.getElementById("scoreNote").textContent=d.note;
+  document.getElementById("fill").style.width=d.w+"%";
+  document.getElementById("text").innerHTML=d.text;
+  document.getElementById("crit").innerHTML=d.crit.map(function(c){return "<div><i>"+c[0]+"</i><b>"+c[1]+"</b></div>"}).join("");
+  document.getElementById("tips").innerHTML=d.tips.map(function(t){return "<span>"+t+"</span>"}).join("");
+  document.getElementById("b6").setAttribute("aria-pressed",k==="low");
+  document.getElementById("b75").setAttribute("aria-pressed",k==="high");
+}
+document.getElementById("b6").onclick=function(){render("low")};
+document.getElementById("b75").onclick=function(){render("high")};
+render("low");
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, UploadCloud, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { uploadToStorage } from "@/lib/upload-client";
+import { uploadToStorage, validateImageDimensions } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CardLoader, PageLoader } from "@/components/dashboard/page-loader";
 import { formatPriceText } from "@/lib/pricing";
@@ -26,6 +26,15 @@ type Seminar = {
 
 const inputClass =
   "w-full text-[14px] rounded-xl border bg-white px-4 py-[11px] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-2/30 hover:border-brand-2/60";
+
+const SEMINAR_IMAGE_RULE = {
+  label: "Seminar card image",
+  ratio: 16 / 9,
+  ratioLabel: "16:9",
+  example: "1280×720px",
+  minWidth: 960,
+  minHeight: 540,
+};
 
 const emptyForm = {
   title: "",
@@ -102,6 +111,7 @@ export function SeminarManage() {
     setUploading(true);
     setUploadProgress(0);
     try {
+      await validateImageDimensions(file, SEMINAR_IMAGE_RULE);
       const uploaded = await uploadToStorage(file, "seminars", "file", setUploadProgress);
       setForm((f) => ({ ...f, image: uploaded.ref, imagePublicId: uploaded.key }));
     } catch (e) {
@@ -353,6 +363,9 @@ export function SeminarManage() {
                   </span>
                 </div>
               )}
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                Recommended: 1280×720px (16:9). Minimum 960×540px.
+              </span>
             </div>
 
             <div className="flex flex-col gap-2 md:col-span-2">

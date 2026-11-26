@@ -15,11 +15,6 @@ const IeltsLaunchTicker = dynamic(
   { ssr: false, loading: () => null }
 );
 
-const IeltsPromoPopup = dynamic(
-  () => import("@/components/ielts-promo-popup").then((m) => m.IeltsPromoPopup),
-  { ssr: false, loading: () => null }
-);
-
 // Public landing content is fine to lag a few minutes; longer ISR windows mean
 // far fewer regenerations (and far less Fast Origin Transfer) on a hot route.
 export const revalidate = 300;
@@ -40,7 +35,6 @@ export default async function HomePage() {
         <PublicLeaderboard />
         <SuccessStories userCount={totalUsers} />
       </main>
-      <IeltsPromoPopup />
     </>
   );
 }

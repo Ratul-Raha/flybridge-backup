@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Heart, Loader2, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { uploadToStorage } from "@/lib/upload-client";
+import { uploadToStorage, validateImageDimensions } from "@/lib/upload-client";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageLoader } from "@/components/dashboard/page-loader";
 import { COURSE_CATEGORIES } from "@/lib/course-categories";
@@ -28,6 +28,15 @@ type Module = { title: string; lessons: Lesson[] };
 type Book = { title: string; description: string; pdfUrl: string };
 
 const TOPIC_SKILLS = ["reading", "listening", "speaking", "writing", "general"] as const;
+
+const COURSE_IMAGE_RULE = {
+  label: "Course card image",
+  ratio: 1.6,
+  ratioLabel: "1.6:1",
+  example: "1148×712px",
+  minWidth: 574,
+  minHeight: 356,
+};
 
 type Discount = {
   active?: boolean | null;
@@ -330,11 +339,17 @@ export function CourseManage() {
     }
   };
 
-  const handleFile = async (file: File | undefined, apply: (url: string) => void) => {
+  const handleFile = async (
+    file: File | undefined,
+    apply: (url: string) => void,
+    validate?: (file: File) => Promise<unknown>
+  ) => {
     if (!file || uploading) return;
+    setError(null);
     const key = `${file.name}-${Date.now()}`;
     setUploading(key);
     try {
+      if (validate) await validate(file);
       const url = await uploadFile(file);
       if (!url) throw new Error("Upload returned no URL");
       apply(url);
@@ -798,13 +813,19 @@ export function CourseManage() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) =>
-                    handleFile(e.target.files?.[0] ?? undefined, (url) =>
-                      setForm((f) => ({ ...f, image: url }))
-                    )
-                  }
+                  onChange={(e) => {
+                    void handleFile(
+                      e.target.files?.[0] ?? undefined,
+                      (url) => setForm((f) => ({ ...f, image: url })),
+                      (file) => validateImageDimensions(file, COURSE_IMAGE_RULE)
+                    );
+                    e.target.value = "";
+                  }}
                 />
               </div>
+              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                Recommended: 1148×712px (about 1.61:1). Minimum 574×356px.
+              </span>
             </div>
 
             <label className="flex items-center gap-2.5 text-[13.5px] font-medium md:col-span-2 cursor-pointer" style={{ color: "var(--ink)" }}>
