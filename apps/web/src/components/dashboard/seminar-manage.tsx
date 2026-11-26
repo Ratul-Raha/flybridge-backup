@@ -308,6 +308,9 @@ export function SeminarManage() {
               <label className="text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
                 Image
               </label>
+              <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
+                Suggested card image: 1280×720px (16:9). Any size is accepted.
+              </p>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -353,9 +356,6 @@ export function SeminarManage() {
                   </span>
                 </div>
               )}
-              <span className="text-[11.5px]" style={{ color: "var(--body)" }}>
-                Recommended: 1280×720px (16:9). Minimum 960×540px.
-              </span>
             </div>
 
             <div className="flex flex-col gap-2 md:col-span-2">
