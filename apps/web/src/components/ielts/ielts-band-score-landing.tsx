@@ -37,7 +37,6 @@ import {
 } from "@/app/programs/[slug]/course-data";
 import { BengaliText } from "@/components/bengali-text";
 import { WaitlistForm } from "@/components/programs/waitlist-form";
-import { IeltsPromoPopup } from "@/components/ielts-promo-popup";
 import {
   BandScoreMachineConsole,
   Countdown,
@@ -1986,8 +1985,6 @@ export default async function IeltsFullReadinessLandingPage() {
       />
 
       <IncludedSection />
-
-      <IeltsPromoPopup />
 
       {details ? (
         <>

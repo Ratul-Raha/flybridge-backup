@@ -85,6 +85,8 @@ export const programs: Program[] = [
     bg: "var(--mint-bg)",
     badgeColor: "var(--mint-ink)",
     image: "/programs/ielts-band-score-machine.svg",
+    price: "৳2,999",
+    originalPrice: "৳5,999",
     hasDb: true,
   },
 ];
