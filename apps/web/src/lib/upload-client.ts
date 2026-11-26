@@ -11,57 +11,6 @@ export type StoredUpload = {
 
 type PresignResult = StoredUpload & { uploadUrl: string; contentType: string };
 
-export type ImageDimensionRule = {
-  label: string;
-  ratio: number;
-  ratioLabel: string;
-  example: string;
-  minWidth: number;
-  minHeight: number;
-  tolerance?: number;
-};
-
-export async function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const dimensions = { width: img.naturalWidth, height: img.naturalHeight };
-      URL.revokeObjectURL(url);
-      resolve(dimensions);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Could not read image dimensions"));
-    };
-    img.src = url;
-  });
-}
-
-export async function validateImageDimensions(
-  file: File,
-  rule: ImageDimensionRule
-): Promise<{ width: number; height: number }> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error(`${rule.label} must be an image file`);
-  }
-  const dimensions = await readImageDimensions(file);
-  if (dimensions.width < rule.minWidth || dimensions.height < rule.minHeight) {
-    throw new Error(
-      `${rule.label} must be at least ${rule.minWidth}×${rule.minHeight}px ` +
-        `(selected ${dimensions.width}×${dimensions.height}px). Recommended: ${rule.example}.`
-    );
-  }
-  const tolerance = rule.tolerance ?? 0.02;
-  if (Math.abs(dimensions.width / dimensions.height - rule.ratio) > tolerance) {
-    throw new Error(
-      `${rule.label} must use a ${rule.ratioLabel} ratio (${rule.example}). ` +
-        `Selected ${dimensions.width}×${dimensions.height}px.`
-    );
-  }
-  return dimensions;
-}
-
 async function presignUpload(file: File, scope: UploadScope, use: "file" | "thumbnail"): Promise<PresignResult> {
   const res = await fetch("/api/uploads/presign", {
     method: "POST",
