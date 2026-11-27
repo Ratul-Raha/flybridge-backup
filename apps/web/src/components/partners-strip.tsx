@@ -1,77 +1,67 @@
-"use client";
+import { GraduationCap } from "lucide-react";
 
-import { useMarqueeSpeed } from "@/hooks/use-marquee-speed";
-
-const partners = [
-  "IDP Education",
-  "British Council",
-  "Arizona State University",
-  "Southern New Hampshire University",
-  "University of Central Oklahoma",
-  "Western University",
-  "Lakehead University",
-  "Laurentian University",
-  "Brock University",
-  "Yorkville University",
-  "University of Edinburgh",
-  "University of Bristol",
-  "University of Glasgow",
-  "University of Warwick",
-  "University of Manchester",
-  "Cardiff University",
-  "Durham University",
-  "University of Southampton",
-  "University of Birmingham",
-  "Edinburgh Napier University",
-  "Swansea University",
-  "Australian National University",
-  "UNSW Sydney",
-  "University of Western Australia",
-  "University of Technology Sydney",
-  "Macquarie University",
-  "Queensland University of Technology",
-  "Curtin University",
-  "Bond University",
-  "Deakin University",
-  "Griffith University",
-  "La Trobe University",
-  "Auckland University of Technology",
-  "Massey University",
-  "University of Canterbury",
-  "Victoria University of Wellington",
+const stats = [
+  { value: "40+", label: "University Partners" },
+  { value: "12+", label: "Countries" },
+  { value: "14", label: "Years of Expertise" },
 ];
 
 export function PartnersStrip() {
-  const { trackRef, duration } = useMarqueeSpeed();
-
   return (
-    <section className="relative overflow-hidden pt-[10px] pb-[12px] md:py-[18px]" style={{ background: "var(--ink)" }}>
-      <div className="max-w-[1320px] mx-auto flex flex-col md:flex-row md:items-center gap-3.5 md:gap-8 px-[clamp(20px,4.5vw,56px)]">
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="w-[8px] h-[8px] rounded-full shrink-0" style={{ background: "var(--brand-2)", boxShadow: "0 0 0 4px rgba(20,181,126,0.18)" }} />
-          <div>
-            <div className="font-mono text-[10px] font-medium tracking-[0.3em] uppercase leading-none text-white/90">
+    <section
+      className="relative overflow-hidden border-y border-white/[0.06]"
+      style={{ background: "var(--ink)" }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(780px 180px at 8% -40%, rgba(20,181,126,0.14), transparent 70%)",
+        }}
+      />
+      <div className="relative max-w-[1320px] mx-auto px-[clamp(20px,4.5vw,56px)] py-[22px] md:py-[26px]">
+        <div className="flex flex-wrap items-center gap-x-7 gap-y-5">
+          <div className="flex items-center gap-3 shrink-0">
+            <span
+              className="w-[8px] h-[8px] rounded-full shrink-0"
+              style={{
+                background: "var(--brand-2)",
+                boxShadow: "0 0 0 4px rgba(20,181,126,0.18)",
+              }}
+            />
+            <span className="font-mono text-[10px] font-medium tracking-[0.3em] uppercase leading-none text-white/90">
               Trusted partners
-            </div>
-            <div className="text-[11px] mt-[3px] leading-none text-white/50">
-              40+ institutions, 12+ countries
-            </div>
+            </span>
           </div>
-        </div>
 
-        <span className="hidden md:block w-px h-8 shrink-0" style={{ background: "rgba(255,255,255,0.14)" }} />
-
-        <div className="fb-marquee flex items-center w-full overflow-hidden min-w-0" style={{ maskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)" }}>
-          <div ref={trackRef} className="fb-marquee-track flex items-center gap-[12px] pr-[12px] shrink-0" style={duration ? { animationDuration: `${duration}s` } : undefined}>
-            {[...partners, ...partners].map((name, i) => (
+          <div className="grid grid-cols-3 w-full sm:flex sm:items-center sm:w-auto">
+            {stats.map((stat, i) => (
               <div
-                key={`${name}-${i}`}
-                className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-[8px] sm:px-[18px] sm:py-[9px] whitespace-nowrap"
+                key={stat.label}
+                className={`px-2 sm:px-7 sm:first:pl-0 ${
+                  i < stats.length - 1 ? "border-r border-white/10" : ""
+                }`}
               >
-                <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: "var(--brand-2)" }} />
-                <span className="text-[12px] sm:text-[13px] font-medium leading-none text-white/85">{name}</span>
+                <div className="font-display text-[19px] sm:text-[24px] font-bold leading-none tracking-[-0.02em] text-white">
+                  {stat.value}
+                </div>
+                <div className="mt-[6px] text-[9px] sm:text-[11px] leading-none text-white/55 whitespace-nowrap">
+                  {stat.label}
+                </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-[9px]">
+            <GraduationCap
+              size={14}
+              strokeWidth={1.75}
+              className="shrink-0"
+              style={{ color: "var(--brand-2)" }}
+            />
+            <span className="text-[10px] sm:text-[11px] leading-none text-white/65">
+              English Language, Student Visa Guidance &amp; Global Education
+            </span>
           </div>
         </div>
       </div>
