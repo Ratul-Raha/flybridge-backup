@@ -97,8 +97,16 @@ const HIDDEN_COURSE_LISTING_SLUGS = new Set([
   "ielts-band-score-machine-bn",
 ]);
 
+const LISTING_IMAGE_SOURCE_SLUGS: Record<string, string> = {
+  "ielts-band-score-machine": "ielts-band-score-machine-en",
+};
+
 export function isHiddenCourseListing(slug: string): boolean {
   return HIDDEN_COURSE_LISTING_SLUGS.has(slug.toLowerCase());
+}
+
+export function listingImageSourceSlug(slug: string): string | undefined {
+  return LISTING_IMAGE_SOURCE_SLUGS[slug.toLowerCase()];
 }
 
 export function getProgram(slug: string) {

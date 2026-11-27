@@ -1,73 +1,10 @@
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
-import { connectDb } from "@/lib/db";
-import { Course } from "@/lib/models/course";
-import { CourseEnrollment } from "@/lib/models/enrollment";
-import { isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
-import { displayEnrollmentCount } from "@/lib/enrollment-display";
-import { publicCoursePricing } from "@/lib/course-discount";
-import { COURSES_TAG } from "@/lib/course-cache";
-import { courseDetails } from "@/app/programs/[slug]/course-data";
+import { getPublicCourseListings } from "@/lib/course-listings";
 import { ProgramCard } from "./program-card";
-import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
-
-async function getDbCoursesUncached(): Promise<DbCourse[]> {
-  try {
-    await connectDb();
-    const courses = await Course.find({
-      $or: [{ published: true }, { upcoming: true }],
-    }).sort({ createdAt: -1 });
-
-    const enrollCounts = await CourseEnrollment.aggregate([
-      { $group: { _id: "$course", count: { $sum: 1 } } },
-    ]);
-    const enrollMap = new Map(enrollCounts.map((r) => [r._id.toString(), r.count as number]));
-
-    return courses
-      .filter((course) => !isHiddenCourseListing(course.slug))
-      .map((c) => {
-        const itemId = c._id.toString();
-        const pricing = publicCoursePricing(c);
-
-        return {
-          id: itemId,
-          slug: c.slug,
-          title: c.title,
-          badge: c.badge ?? "",
-          subtitle: c.subtitle ?? "",
-          description: c.description ?? "",
-          price: c.price ?? 0,
-          currency: c.currency ?? "USD",
-          prices: pricing.prices,
-          originalPrice: pricing.configured
-            ? (pricing.originalPrice ?? undefined)
-            : (courseDetails[c.slug]?.originalPrice ?? undefined),
-          discountLabel: pricing.discountLabel,
-          discountEndsAt: pricing.endsAt,
-          image: c.image ?? null,
-          level: c.level ?? "",
-          upcoming: c.upcoming ?? false,
-          enrollmentCount: displayEnrollmentCount(c.slug, enrollMap.get(itemId) ?? 0),
-          modules: (c.modules ?? []).map((m) => ({
-            title: m.title,
-            lessons: (m.lessons ?? []).map((l) => ({ title: l.title })),
-          })),
-        };
-      })
-      .sort((a, b) => b.enrollmentCount - a.enrollmentCount);
-  } catch {
-    return [];
-  }
-}
-
-const getDbCourses = unstable_cache(getDbCoursesUncached, ["db-courses-v2"], {
-  revalidate: 60,
-  tags: [COURSES_TAG],
-});
+import { DbCourseCard } from "./programs/db-course-card";
 
 export async function Programs() {
-  const dbCourses = await getDbCourses();
-  const visiblePrograms = staticProgramsWithoutDbCourse(dbCourses);
+  const { courses, staticPrograms } = await getPublicCourseListings();
 
   return (
     <section
@@ -109,10 +46,10 @@ export async function Programs() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {visiblePrograms.map((p) => (
+        {staticPrograms.map((p) => (
           <ProgramCard key={p.slug} p={p} />
         ))}
-        {dbCourses.map((c) => (
+        {courses.map((c) => (
           <DbCourseCard key={c.id} course={c} />
         ))}
       </div>

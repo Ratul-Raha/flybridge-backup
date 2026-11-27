@@ -12,7 +12,12 @@ import {
   type ProgramDetailStat,
 } from "@/components/programs/program-detail";
 import { type ReviewItem } from "@/components/programs/reviews-section";
-import { getProgram, isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
+import {
+  getProgram,
+  isHiddenCourseListing,
+  listingImageSourceSlug,
+  staticProgramsWithoutDbCourse,
+} from "@/lib/programs";
 import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
@@ -78,6 +83,13 @@ const getOtherDbCoursesCached = unstable_cache(
         .limit(4),
     ]);
     const enrollMap = new Map(otherEnrollCounts.map((r) => [r._id.toString(), r.count as number]));
+    const imageBySlug = new Map(dbCourses.map((c) => [c.slug.toLowerCase(), c.image ?? null]));
+    const cardImage = (slug: string, fallback?: string | null) => {
+      const sourceSlug = listingImageSourceSlug(slug);
+      const sourceImage = sourceSlug ? imageBySlug.get(sourceSlug.toLowerCase()) : null;
+      return sourceImage || fallback || null;
+    };
+
     return dbCourses
       .filter((course) => !isHiddenCourseListing(course.slug))
       .map((c) => {
@@ -94,7 +106,7 @@ const getOtherDbCoursesCached = unstable_cache(
           currency: c.currency ?? "USD",
           prices: pricing.prices,
           originalPrice: pricing.originalPrice ?? undefined,
-          image: c.image ?? null,
+          image: cardImage(c.slug, c.image ?? null),
           level: c.level ?? "",
           upcoming: c.upcoming ?? false,
           averageRating: c.averageRating ?? 0,
