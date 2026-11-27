@@ -12,6 +12,7 @@ import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { getTotalUsers, formatUsersFull } from "@/lib/site-stats";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { COURSES_TAG } from "@/lib/course-cache";
 import { courseDetails } from "./[slug]/course-data";
 
 export const revalidate = 300;
@@ -88,8 +89,9 @@ async function getPublishedCoursesUncached(): Promise<DbCourse[]> {
   }
 }
 
-const getPublishedCourses = unstable_cache(getPublishedCoursesUncached, ["published-courses"], {
+const getPublishedCourses = unstable_cache(getPublishedCoursesUncached, ["published-courses-v2"], {
   revalidate: 60,
+  tags: [COURSES_TAG],
 });
 
 export default async function ProgramsPage() {

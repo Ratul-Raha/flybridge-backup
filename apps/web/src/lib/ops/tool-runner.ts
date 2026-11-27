@@ -2,6 +2,7 @@ import "server-only";
 
 import { connectDb } from "@/lib/db";
 import { revalidateUserDashboard } from "@/lib/dashboard/tags";
+import { revalidateCourseListings } from "@/lib/course-cache";
 import { User } from "@/lib/models/user";
 import { Course } from "@/lib/models/course";
 import { Seminar, SeminarRegistration } from "@/lib/models/seminar";
@@ -1008,6 +1009,7 @@ async function updateCourse(
   }
 
   await Course.updateOne({ _id: course._id }, { $set: updates });
+  revalidateCourseListings(course.slug);
 
   return {
     success: true,

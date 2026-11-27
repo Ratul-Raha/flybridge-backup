@@ -6,6 +6,7 @@ import { CourseEnrollment } from "@/lib/models/enrollment";
 import { isHiddenCourseListing, staticProgramsWithoutDbCourse } from "@/lib/programs";
 import { displayEnrollmentCount } from "@/lib/enrollment-display";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { COURSES_TAG } from "@/lib/course-cache";
 import { courseDetails } from "@/app/programs/[slug]/course-data";
 import { ProgramCard } from "./program-card";
 import { DbCourseCard, type DbCourse } from "./programs/db-course-card";
@@ -59,8 +60,9 @@ async function getDbCoursesUncached(): Promise<DbCourse[]> {
   }
 }
 
-const getDbCourses = unstable_cache(getDbCoursesUncached, ["db-courses"], {
+const getDbCourses = unstable_cache(getDbCoursesUncached, ["db-courses-v2"], {
   revalidate: 60,
+  tags: [COURSES_TAG],
 });
 
 export async function Programs() {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { readSession } from "@/lib/auth/session";
-import { revalidateUserDashboard } from "@/lib/dashboard/tags";
+import { revalidateCourseListings } from "@/lib/course-cache";
 import { Course, isCourseCategory } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { sanitizePrices } from "@/lib/pricing";
@@ -154,6 +154,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     await course.save();
+    revalidateCourseListings(
+      typeof before.slug === "string" ? before.slug : undefined,
+      course.slug,
+    );
     const changedFields = Object.keys(COURSE_FIELD_LABELS)
       .filter((key) => key in body && !eq(before[key], course.get(key)))
       .map((key) => COURSE_FIELD_LABELS[key]);
@@ -182,7 +186,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
     await CourseEnrollment.deleteMany({ course: course._id });
-    revalidateUserDashboard();
+    revalidateCourseListings(course.slug);
     await Course.findByIdAndDelete(course._id);
     await emitEvent("course.deleted", {
       course: { id: course._id.toString(), slug: course.slug, title: course.title },

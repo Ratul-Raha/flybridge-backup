@@ -18,6 +18,7 @@ import { BLUEPRINT_FEATURES } from "@/lib/blueprint-features";
 import { connectDb } from "@/lib/db";
 import { formatMoney } from "@/lib/pricing";
 import { publicCoursePricing } from "@/lib/course-discount";
+import { COURSES_TAG } from "@/lib/course-cache";
 import { hasFreePreview } from "@/lib/course-preview";
 import { Course } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
@@ -105,8 +106,8 @@ const getOtherDbCoursesCached = unstable_cache(
         } as DbCourse;
       });
   },
-  ["program-other-courses"],
-  { revalidate: 60 },
+  ["program-other-courses-v2"],
+  { revalidate: 60, tags: [COURSES_TAG] },
 );
 
 function buildCurriculum(modules: ProgramModule[]): ProgramDetailCurriculum | undefined {

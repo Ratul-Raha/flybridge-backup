@@ -4,6 +4,7 @@ import { readSession } from "@/lib/auth/session";
 import { Course, isCourseCategory, type CourseDoc } from "@/lib/models/course";
 import { CourseEnrollment } from "@/lib/models/enrollment";
 import { CourseWishlist } from "@/lib/models/wishlist";
+import { revalidateCourseListings } from "@/lib/course-cache";
 import { sanitizePrices, cleanPrices, formatMoney } from "@/lib/pricing";
 import {
   parseCourseDiscount,
@@ -240,6 +241,8 @@ export async function POST(request: NextRequest) {
       books: normalizeBooks(body.books),
       createdBy: session!.userId,
     });
+
+    revalidateCourseListings(course.slug);
 
     await emitEvent("course.created", {
       course: {
