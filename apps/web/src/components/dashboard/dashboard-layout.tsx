@@ -331,6 +331,11 @@ export function DashboardLayout({
                 active: pathname.startsWith("/dashboard/mock-tests"),
               },
               {
+                label: "Quiz Manager",
+                href: "/dashboard/quiz-manager",
+                active: pathname.startsWith("/dashboard/quiz-manager"),
+              },
+              {
                 label: "Blogs",
                 href: "/dashboard/blogs",
                 active: pathname.startsWith("/dashboard/blogs"),

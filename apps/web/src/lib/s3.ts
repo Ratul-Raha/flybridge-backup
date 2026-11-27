@@ -10,7 +10,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export const S3_REGION = process.env.AWS_REGION ?? "eu-north-1";
 export const S3_BUCKET = process.env.S3_BUCKET ?? "";
 
-export type StorageScope = "courses" | "resources" | "stories" | "scholarships" | "blogs" | "mock-tests" | "seminars";
+export type StorageScope = "courses" | "resources" | "stories" | "scholarships" | "blogs" | "mock-tests" | "seminars" | "practice";
 export type StorageKind = "image" | "pdf" | "video" | "audio" | "file";
 export type Visibility = "public" | "private";
 
@@ -137,6 +137,14 @@ export async function presignGetUrl(
     }),
     { expiresIn: ttlSeconds }
   );
+}
+
+export async function readObjectText(key: string): Promise<string> {
+  const result = await s3Client().send(
+    new GetObjectCommand({ Bucket: S3_BUCKET, Key: key })
+  );
+  if (!result.Body) throw new Error("S3 object is empty");
+  return result.Body.transformToString();
 }
 
 export async function deleteObject(key: string): Promise<void> {

@@ -19,9 +19,9 @@ const MAX_SIZES: Record<string, number> = {
 };
 
 const ALLOWED_EXTENSIONS =
-  /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|png|jpe?g|webp|gif|svg|mp4|mov|webm|mp3|wav|m4a|aac|txt|csv|zip)$/i;
+  /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|png|jpe?g|webp|gif|svg|mp4|mov|webm|mp3|wav|m4a|aac|txt|csv|json|zip)$/i;
 
-const SCOPES: StorageScope[] = ["courses", "resources", "stories", "scholarships", "blogs", "mock-tests", "seminars"];
+const SCOPES: StorageScope[] = ["courses", "resources", "stories", "scholarships", "blogs", "mock-tests", "seminars", "practice"];
 
 const MIME_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
@@ -38,6 +38,7 @@ const MIME_BY_EXT: Record<string, string> = {
   zip: "application/zip",
   txt: "text/plain",
   csv: "text/csv",
+  json: "application/json",
   mp4: "video/mp4",
   mov: "video/quicktime",
   webm: "video/webm",
