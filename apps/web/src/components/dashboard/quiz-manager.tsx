@@ -3,6 +3,7 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Check,
+  Copy,
   Eye,
   FileJson,
   Loader2,
@@ -91,6 +92,30 @@ function templateFor(skill: string): string {
   );
 }
 
+function buildGenerationPrompt(sample: string): string {
+  return [
+    "Generate a NEW IELTS Reading practice set for FlyBridge in the exact JSON format of the sample below.",
+    "",
+    "Rules:",
+    "- Return ONLY valid JSON. Do not use markdown fences or add commentary.",
+    "- Keep schemaVersion: 2 and the same tests[].sections[] structure.",
+    "- Write original passages and questions. Do not copy the sample topics or sentences.",
+    "- Include one section for every question type shown in the sample, with unique ids: s1, s2, s3...",
+    "- Each section must have: id, type, title, instructions, passage { title, labeled, paragraphs: [{id, text}] } and questions.",
+    "- Every question must have a unique id (q1, q2...), a sequential number, and an explanation tied to the passage.",
+    "- For multiple-choice, include question.options as [{id, text}] and answer as the correct option id.",
+    "- For true-false-not-given and yes-no-not-given, answer must be one of TRUE/FALSE/NOT GIVEN or YES/NO/NOT GIVEN.",
+    "- For matching sections, provide headings/features/endings as [{id, text}] and use their ids in answers.",
+    "- For completion and short-answer sections, answer must be an array of acceptable strings, with the best answer first.",
+    "- Every answer must be clearly supported by the passage text.",
+    "- Use realistic IELTS difficulty and natural academic English.",
+    "- No placeholder URLs, no TODOs, no comments, and no duplicate ids.",
+    "",
+    "Sample JSON (structure and field names to copy exactly):",
+    sample,
+  ].join("\n");
+}
+
 function StatusPill({ status }: { status: string }) {
   const colors: Record<string, CSSProperties> = {
     published: { background: "rgba(15,169,104,0.12)", color: "#0FA968" },
@@ -164,6 +189,8 @@ export function QuizManager() {
   const [title, setTitle] = useState("");
   const [localReport, setLocalReport] = useState<PracticeValidationReport | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [copyingPrompt, setCopyingPrompt] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -372,6 +399,26 @@ export function QuizManager() {
     URL.revokeObjectURL(url);
   };
 
+  const copyGenerationPrompt = async () => {
+    setCopyingPrompt(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/practice-templates/ielt-reading-v2.json", {
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("Could not load the sample JSON");
+      const sample = await response.text();
+      await navigator.clipboard.writeText(buildGenerationPrompt(sample));
+      setPromptCopied(true);
+      window.setTimeout(() => setPromptCopied(false), 2500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not copy the generation prompt");
+    } finally {
+      setCopyingPrompt(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-16 text-[13px]" style={{ color: "var(--body)" }}>
@@ -386,14 +433,26 @@ export function QuizManager() {
         title="IELTS Quiz Manager"
         subtitle="Upload course-linked question sets with passages, answers and explanations."
         action={
-          <button
-            type="button"
-            className={`${buttonClass} border`}
-            style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-            onClick={downloadTemplate}
-          >
-            <FileJson size={14} /> Download JSON template
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} border`}
+              style={{ borderColor: "var(--line)", color: promptCopied ? "#0A7A4A" : "var(--ink)" }}
+              onClick={() => void copyGenerationPrompt()}
+              disabled={copyingPrompt}
+            >
+              {promptCopied ? <Check size={14} /> : <Copy size={14} />}
+              {copyingPrompt ? "Loading…" : promptCopied ? "Prompt copied" : "Copy Claude prompt"}
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border`}
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              onClick={downloadTemplate}
+            >
+              <FileJson size={14} /> Download JSON template
+            </button>
+          </div>
         }
       />
 

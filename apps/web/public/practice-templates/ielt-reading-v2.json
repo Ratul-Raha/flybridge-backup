@@ -1,0 +1,1123 @@
+{
+  "schemaVersion": 2,
+  "tests": [
+    {
+      "id": "reading-all-types-001",
+      "module": "reading",
+      "title": "Reading: All Question Types",
+      "difficulty": "medium",
+      "timeLimitMinutes": 60,
+      "sections": [
+        {
+          "id": "s1",
+          "type": "multiple-choice",
+          "title": "Section 1: Multiple Choice",
+          "instructions": "Choose the correct letter, A, B, C or D.",
+          "passage": {
+            "title": "The Rise of Vertical Farming",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Vertical farming grows crops in stacked layers inside buildings, using artificial light and controlled temperature. Because plants are grown indoors, farmers need no soil; instead, roots are supplied with water containing nutrients, a method known as hydroponics."
+              },
+              {
+                "id": "B",
+                "text": "Supporters claim that vertical farms use up to 95 percent less water than traditional fields and can be built in cities, close to customers. This reduces the distance food must travel. Critics, however, point out that the electricity needed for lighting makes the process expensive, and so far most farms grow only leafy vegetables and herbs rather than staple crops such as wheat or rice."
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "q1",
+              "number": 1,
+              "prompt": "Vertical farms grow plants",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "in soil beds under natural sunlight"
+                },
+                {
+                  "id": "B",
+                  "text": "in stacked layers inside buildings"
+                },
+                {
+                  "id": "C",
+                  "text": "on rooftops only"
+                },
+                {
+                  "id": "D",
+                  "text": "in greenhouses without artificial light"
+                }
+              ],
+              "answer": "B",
+              "explanation": "Paragraph 1: crops are grown in stacked layers inside buildings."
+            },
+            {
+              "id": "q2",
+              "number": 2,
+              "prompt": "Hydroponics involves supplying plant roots with",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "water containing nutrients"
+                },
+                {
+                  "id": "B",
+                  "text": "compost"
+                },
+                {
+                  "id": "C",
+                  "text": "extra sunlight"
+                },
+                {
+                  "id": "D",
+                  "text": "chemical powder"
+                }
+              ],
+              "answer": "A",
+              "explanation": "Roots are supplied with water containing nutrients."
+            },
+            {
+              "id": "q3",
+              "number": 3,
+              "prompt": "According to supporters, vertical farms",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "produce staple crops cheaply"
+                },
+                {
+                  "id": "B",
+                  "text": "use much less water than fields"
+                },
+                {
+                  "id": "C",
+                  "text": "need no electricity"
+                },
+                {
+                  "id": "D",
+                  "text": "replace all rural farms"
+                }
+              ],
+              "answer": "B",
+              "explanation": "They use up to 95 percent less water."
+            },
+            {
+              "id": "q4",
+              "number": 4,
+              "prompt": "What is the main criticism of vertical farming?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It is too slow"
+                },
+                {
+                  "id": "B",
+                  "text": "It damages city air"
+                },
+                {
+                  "id": "C",
+                  "text": "It needs a lot of costly electricity"
+                },
+                {
+                  "id": "D",
+                  "text": "It cannot grow vegetables"
+                }
+              ],
+              "answer": "C",
+              "explanation": "Electricity for lighting makes it expensive."
+            },
+            {
+              "id": "q5",
+              "number": 5,
+              "prompt": "Most vertical farms currently grow",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "wheat"
+                },
+                {
+                  "id": "B",
+                  "text": "rice"
+                },
+                {
+                  "id": "C",
+                  "text": "fruit trees"
+                },
+                {
+                  "id": "D",
+                  "text": "leafy vegetables and herbs"
+                }
+              ],
+              "answer": "D",
+              "explanation": "Paragraph 2: mostly leafy vegetables and herbs."
+            }
+          ]
+        },
+        {
+          "id": "s2",
+          "type": "true-false-not-given",
+          "title": "Section 2: True / False / Not Given",
+          "instructions": "Write TRUE if the statement agrees with the information, FALSE if it contradicts the information, NOT GIVEN if there is no information on this.",
+          "passage": {
+            "title": "The Intelligent Octopus",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Octopuses are among the most intelligent invertebrates. In laboratory tests they have learned to open jars, solve mazes and recognise individual human keepers. Their intelligence is partly explained by their nervous system: roughly two thirds of their neurons are located in their arms rather than in the brain."
+              },
+              {
+                "id": "B",
+                "text": "Despite this, octopuses are short-lived. Most species live for only one to two years, and females die soon after their eggs hatch. Scientists believe this short lifespan limits the amount of knowledge that can be passed between generations."
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "q6",
+              "number": 6,
+              "prompt": "Octopuses can recognise individual people.",
+              "answer": "TRUE",
+              "explanation": "They recognise individual human keepers."
+            },
+            {
+              "id": "q7",
+              "number": 7,
+              "prompt": "Most of an octopus's neurons are found in its brain.",
+              "answer": "FALSE",
+              "explanation": "Two thirds are in the arms."
+            },
+            {
+              "id": "q8",
+              "number": 8,
+              "prompt": "Octopuses are more intelligent than dolphins.",
+              "answer": "NOT GIVEN",
+              "explanation": "No comparison with dolphins is made."
+            },
+            {
+              "id": "q9",
+              "number": 9,
+              "prompt": "Female octopuses die shortly after their eggs hatch.",
+              "answer": "TRUE",
+              "explanation": "Paragraph 2 states this directly."
+            },
+            {
+              "id": "q10",
+              "number": 10,
+              "prompt": "Most octopus species live for longer than two years.",
+              "answer": "FALSE",
+              "explanation": "Most live only one to two years."
+            }
+          ]
+        },
+        {
+          "id": "s3",
+          "type": "yes-no-not-given",
+          "title": "Section 3: Yes / No / Not Given",
+          "instructions": "Write YES if the statement agrees with the views of the writer, NO if it contradicts the views of the writer, NOT GIVEN if it is impossible to say what the writer thinks about this.",
+          "passage": {
+            "title": "Learning Languages Late",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "It is often said that children learn languages more easily than adults, and many parents rush to enrol toddlers in language classes. Yet research suggests this belief is only partly true. Adults generally learn grammar rules faster than children, and they can use study strategies that young learners cannot."
+              },
+              {
+                "id": "B",
+                "text": "The real advantage of children is pronunciation: those who begin before puberty are far more likely to speak without a foreign accent. In my view, though, accent matters much less than being understood, and adults should not be discouraged from starting. A confident adult learner can reach a high level of fluency within a few years."
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "q11",
+              "number": 11,
+              "prompt": "The writer believes the popular idea about children and languages is completely correct.",
+              "answer": "NO",
+              "explanation": "He says it is only partly true."
+            },
+            {
+              "id": "q12",
+              "number": 12,
+              "prompt": "The writer thinks adults can learn grammar rules faster than children.",
+              "answer": "YES",
+              "explanation": "Adults generally learn grammar rules faster."
+            },
+            {
+              "id": "q13",
+              "number": 13,
+              "prompt": "The writer says children are more likely to have a native-like accent.",
+              "answer": "YES",
+              "explanation": "Pronunciation is the real advantage of children."
+            },
+            {
+              "id": "q14",
+              "number": 14,
+              "prompt": "The writer considers accent the most important part of language learning.",
+              "answer": "NO",
+              "explanation": "He says accent matters much less than being understood."
+            },
+            {
+              "id": "q15",
+              "number": 15,
+              "prompt": "The writer believes online courses are better than classroom courses.",
+              "answer": "NOT GIVEN",
+              "explanation": "Online courses are not discussed."
+            }
+          ]
+        },
+        {
+          "id": "s4",
+          "type": "matching-information",
+          "title": "Section 4: Matching Information",
+          "instructions": "The passage has five paragraphs, A-E. Which paragraph contains the following information? Write the correct letter, A-E.",
+          "passage": {
+            "title": "The Problem of Urban Noise",
+            "labeled": true,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Noise in cities has risen steadily over the past fifty years. Traffic is the largest source, followed by construction and aircraft, and measurements show that some streets now exceed the levels recommended by health authorities."
+              },
+              {
+                "id": "B",
+                "text": "Long exposure to loud sound is linked to sleep disturbance and raised blood pressure. A study of residents living near an airport found that children there scored lower in reading tests than those in quieter areas."
+              },
+              {
+                "id": "C",
+                "text": "Some cities have responded with practical measures. Amsterdam has introduced quieter road surfaces, while Paris restricts the hours when delivery lorries may operate in residential districts."
+              },
+              {
+                "id": "D",
+                "text": "Architects can also help. Buildings with thick glazing and courtyards facing away from main roads can reduce indoor noise dramatically, and trees planted along streets have a small but useful effect."
+              },
+              {
+                "id": "E",
+                "text": "Not all noise is unwelcome, however. Researchers have found that the sounds of running water and birdsong lower stress, and some planners now design parks to make these sounds more noticeable."
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "q16",
+              "number": 16,
+              "prompt": "a comparison of children's test results in noisy and quiet places",
+              "answer": "B",
+              "explanation": "Paragraph B: airport study."
+            },
+            {
+              "id": "q17",
+              "number": 17,
+              "prompt": "an example of a city limiting delivery times",
+              "answer": "C",
+              "explanation": "Paris restricts delivery hours."
+            },
+            {
+              "id": "q18",
+              "number": 18,
+              "prompt": "a statement that certain sounds can reduce stress",
+              "answer": "E",
+              "explanation": "Running water and birdsong lower stress."
+            },
+            {
+              "id": "q19",
+              "number": 19,
+              "prompt": "identification of the largest source of city noise",
+              "answer": "A",
+              "explanation": "Traffic is the largest source."
+            },
+            {
+              "id": "q20",
+              "number": 20,
+              "prompt": "reference to building features that keep sound out",
+              "answer": "D",
+              "explanation": "Thick glazing and courtyards."
+            }
+          ]
+        },
+        {
+          "id": "s5",
+          "type": "matching-headings",
+          "title": "Section 5: Matching Headings",
+          "instructions": "The passage has five paragraphs, A-E. Choose the correct heading for each paragraph from the list of headings. Write the correct number, i-vii. There are more headings than paragraphs, so you will not use them all.",
+          "passage": {
+            "title": "The Hidden Costs of Cheap Clothing",
+            "labeled": true,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Fast fashion brands now release new collections every few weeks, encouraging shoppers to buy far more clothes than they need. The average consumer today buys around sixty percent more garments than in the year 2000, but keeps each item for half as long."
+              },
+              {
+                "id": "B",
+                "text": "Producing cotton demands huge amounts of water; a single T-shirt can require over two thousand litres. In regions where cotton is farmed intensively, rivers and lakes have shrunk and local farmers struggle to irrigate their own crops."
+              },
+              {
+                "id": "C",
+                "text": "Most garments are sewn in factories in countries where wages are low. Investigations have revealed long working hours and unsafe buildings, and a number of well-known brands have faced public pressure to improve conditions."
+              },
+              {
+                "id": "D",
+                "text": "When clothes are thrown away, most end up in landfill, where synthetic fibres can take hundreds of years to break down. Only a small fraction of discarded textiles are recycled into new products."
+              },
+              {
+                "id": "E",
+                "text": "Some companies are now trying a different approach, offering repair services, rental schemes and clothing made from recycled fibres. Whether such ideas can change the habits of shoppers remains to be seen."
+              }
+            ]
+          },
+          "headings": [
+            {
+              "id": "i",
+              "text": "The pressure on water supplies"
+            },
+            {
+              "id": "ii",
+              "text": "A culture of overbuying"
+            },
+            {
+              "id": "iii",
+              "text": "Problems for the people who make clothes"
+            },
+            {
+              "id": "iv",
+              "text": "Where unwanted garments end up"
+            },
+            {
+              "id": "v",
+              "text": "The benefits of cheap labour"
+            },
+            {
+              "id": "vi",
+              "text": "New ideas from the industry"
+            },
+            {
+              "id": "vii",
+              "text": "The history of cotton farming"
+            }
+          ],
+          "questions": [
+            {
+              "id": "q21",
+              "number": 21,
+              "paragraphId": "A",
+              "answer": "ii",
+              "explanation": "Buying far more than needed = overbuying."
+            },
+            {
+              "id": "q22",
+              "number": 22,
+              "paragraphId": "B",
+              "answer": "i",
+              "explanation": "Cotton needs huge amounts of water."
+            },
+            {
+              "id": "q23",
+              "number": 23,
+              "paragraphId": "C",
+              "answer": "iii",
+              "explanation": "Low wages, long hours, unsafe buildings."
+            },
+            {
+              "id": "q24",
+              "number": 24,
+              "paragraphId": "D",
+              "answer": "iv",
+              "explanation": "Clothes end up in landfill."
+            },
+            {
+              "id": "q25",
+              "number": 25,
+              "paragraphId": "E",
+              "answer": "vi",
+              "explanation": "Repair, rental and recycling initiatives."
+            }
+          ]
+        },
+        {
+          "id": "s6",
+          "type": "matching-features",
+          "title": "Section 6: Matching Features",
+          "instructions": "Match each statement with the correct person, A, B or C. You may use any letter more than once.",
+          "passage": {
+            "title": "Three Pioneers of Aviation",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Otto Lilienthal, a German engineer, made more than two thousand flights in gliders during the 1890s. He published detailed measurements of wing shapes, which later inventors relied on. He died in 1896 when one of his gliders stalled and crashed."
+              },
+              {
+                "id": "B",
+                "text": "Wilbur and Orville Wright, bicycle makers from Ohio, studied Lilienthal's data but found errors in it. They built their own wind tunnel to test wing designs and, in 1903, made the first controlled, powered flight of a heavier-than-air machine."
+              },
+              {
+                "id": "C",
+                "text": "Alberto Santos-Dumont, a Brazilian living in Paris, first became famous for flying small airships around the Eiffel Tower. In 1906 he flew a powered aeroplane in public in front of a large crowd, and he later gave away his designs freely so that others could build them."
+              }
+            ]
+          },
+          "features": [
+            {
+              "id": "A",
+              "text": "Otto Lilienthal"
+            },
+            {
+              "id": "B",
+              "text": "The Wright brothers"
+            },
+            {
+              "id": "C",
+              "text": "Alberto Santos-Dumont"
+            }
+          ],
+          "questions": [
+            {
+              "id": "q26",
+              "number": 26,
+              "prompt": "built equipment to test wing designs",
+              "answer": "B",
+              "explanation": "The Wrights built a wind tunnel."
+            },
+            {
+              "id": "q27",
+              "number": 27,
+              "prompt": "died in a flying accident",
+              "answer": "A",
+              "explanation": "Lilienthal crashed in 1896."
+            },
+            {
+              "id": "q28",
+              "number": 28,
+              "prompt": "became well known for airship flights in Paris",
+              "answer": "C",
+              "explanation": "Santos-Dumont and the Eiffel Tower."
+            },
+            {
+              "id": "q29",
+              "number": 29,
+              "prompt": "found mistakes in earlier research",
+              "answer": "B",
+              "explanation": "The Wrights found errors in Lilienthal's data."
+            },
+            {
+              "id": "q30",
+              "number": 30,
+              "prompt": "allowed other people to copy his designs",
+              "answer": "C",
+              "explanation": "He gave away his designs freely."
+            }
+          ]
+        },
+        {
+          "id": "s7",
+          "type": "matching-sentence-endings",
+          "title": "Section 7: Matching Sentence Endings",
+          "instructions": "Complete each sentence with the correct ending, A-G. There are more endings than sentences.",
+          "passage": {
+            "title": "Volcanoes and Climate",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Large volcanic eruptions can change the climate for several years. When a volcano erupts violently, it throws sulphur dioxide high into the atmosphere, where it forms tiny droplets that reflect sunlight back into space. As a result, the surface of the Earth cools."
+              },
+              {
+                "id": "B",
+                "text": "The eruption of Mount Pinatubo in 1991 lowered global temperatures by about half a degree Celsius for roughly two years. In contrast, the eruption of Tambora in 1815 led to the 'year without a summer' in 1816, when crop failures caused hunger across Europe and North America."
+              },
+              {
+                "id": "C",
+                "text": "Eruptions also release carbon dioxide, but in amounts far smaller than those produced by human activity. Scientists therefore regard volcanoes as a short-term influence on climate rather than a cause of long-term warming."
+              }
+            ]
+          },
+          "endings": [
+            {
+              "id": "A",
+              "text": "a year of crop failures and hunger."
+            },
+            {
+              "id": "B",
+              "text": "reflect sunlight back into space."
+            },
+            {
+              "id": "C",
+              "text": "much less than the amount produced by humans."
+            },
+            {
+              "id": "D",
+              "text": "a short-term influence on climate."
+            },
+            {
+              "id": "E",
+              "text": "lowered global temperatures for about two years."
+            },
+            {
+              "id": "F",
+              "text": "the main cause of global warming."
+            },
+            {
+              "id": "G",
+              "text": "a source of oxygen for the atmosphere."
+            }
+          ],
+          "questions": [
+            {
+              "id": "q31",
+              "number": 31,
+              "prompt": "Sulphur dioxide from eruptions forms droplets that",
+              "answer": "B",
+              "explanation": "They reflect sunlight into space."
+            },
+            {
+              "id": "q32",
+              "number": 32,
+              "prompt": "The Pinatubo eruption",
+              "answer": "E",
+              "explanation": "Lowered temperatures for about two years."
+            },
+            {
+              "id": "q33",
+              "number": 33,
+              "prompt": "The Tambora eruption was followed by",
+              "answer": "A",
+              "explanation": "Crop failures and hunger in 1816."
+            },
+            {
+              "id": "q34",
+              "number": 34,
+              "prompt": "The carbon dioxide released by volcanoes is",
+              "answer": "C",
+              "explanation": "Far smaller than human emissions."
+            },
+            {
+              "id": "q35",
+              "number": 35,
+              "prompt": "Scientists consider volcanoes to be",
+              "answer": "D",
+              "explanation": "A short-term influence on climate."
+            }
+          ]
+        },
+        {
+          "id": "s8",
+          "type": "sentence-completion",
+          "title": "Section 8: Sentence Completion",
+          "instructions": "Complete the sentences. Write NO MORE THAN TWO WORDS from the passage for each answer.",
+          "passage": {
+            "title": "How Honeybees Communicate",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Honeybees communicate the location of food through a movement called the waggle dance. The dancing bee moves in a figure of eight, and the angle of her central run shows the direction of the food relative to the sun. The longer the dance lasts, the farther away the food is."
+              },
+              {
+                "id": "B",
+                "text": "Other bees follow the dancer closely in the dark hive, touching her with their antennae. Scientists first decoded this system in the 1940s, and the discoverer, Karl von Frisch, later won a Nobel Prize for his work."
+              }
+            ]
+          },
+          "maxWords": 2,
+          "questions": [
+            {
+              "id": "q36",
+              "number": 36,
+              "prompt": "Honeybees use the ___ dance to show where food is.",
+              "answer": [
+                "waggle"
+              ],
+              "explanation": "First sentence."
+            },
+            {
+              "id": "q37",
+              "number": 37,
+              "prompt": "The dancing bee moves in a figure of ___.",
+              "answer": [
+                "eight"
+              ],
+              "explanation": "Paragraph 1."
+            },
+            {
+              "id": "q38",
+              "number": 38,
+              "prompt": "The longer the dance lasts, the ___ the food is.",
+              "answer": [
+                "farther away",
+                "further away",
+                "farther",
+                "further"
+              ],
+              "explanation": "Paragraph 1, last sentence."
+            },
+            {
+              "id": "q39",
+              "number": 39,
+              "prompt": "Other bees touch the dancer with their ___.",
+              "answer": [
+                "antennae"
+              ],
+              "explanation": "Paragraph 2."
+            },
+            {
+              "id": "q40",
+              "number": 40,
+              "prompt": "Karl von Frisch later won a ___ Prize.",
+              "answer": [
+                "Nobel"
+              ],
+              "explanation": "Paragraph 2."
+            }
+          ]
+        },
+        {
+          "id": "s9",
+          "type": "summary-completion",
+          "title": "Section 9: Summary Completion (word bank)",
+          "instructions": "Complete the summary using the list of words, A-H, below. Write the correct letter next to each blank.",
+          "passage": {
+            "title": "The Printing Press",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Before the mid-fifteenth century, books in Europe were copied by hand, mostly by monks, and a single volume could take months to finish. Johannes Gutenberg changed this around 1450 by developing a press that used movable metal type. Individual letters could be arranged into pages, inked, and pressed onto paper, then rearranged for the next page."
+              },
+              {
+                "id": "B",
+                "text": "As books became cheaper, literacy rose quickly. By 1500, printing presses in more than two hundred European cities had produced millions of books. Ideas spread faster than ever before, and the Protestant Reformation of the sixteenth century owed much to printed pamphlets."
+              }
+            ]
+          },
+          "summaryText": "Before Gutenberg, books were copied by {{q41}}, and each one took a long time. Gutenberg's press used {{q42}} metal letters that could be rearranged. As a result, books became {{q43}}, and more people learned to read. By 1500, presses in over 200 cities had printed {{q44}} of books, and printed {{q45}} helped the Reformation spread.",
+          "wordBank": [
+            {
+              "id": "A",
+              "text": "hand"
+            },
+            {
+              "id": "B",
+              "text": "cheaper"
+            },
+            {
+              "id": "C",
+              "text": "pamphlets"
+            },
+            {
+              "id": "D",
+              "text": "millions"
+            },
+            {
+              "id": "E",
+              "text": "movable"
+            },
+            {
+              "id": "F",
+              "text": "paper"
+            },
+            {
+              "id": "G",
+              "text": "monks"
+            },
+            {
+              "id": "H",
+              "text": "expensive"
+            }
+          ],
+          "questions": [
+            {
+              "id": "q41",
+              "number": 41,
+              "blank": "q41",
+              "answer": "A",
+              "explanation": "Copied by hand."
+            },
+            {
+              "id": "q42",
+              "number": 42,
+              "blank": "q42",
+              "answer": "E",
+              "explanation": "Movable metal type."
+            },
+            {
+              "id": "q43",
+              "number": 43,
+              "blank": "q43",
+              "answer": "B",
+              "explanation": "Books became cheaper."
+            },
+            {
+              "id": "q44",
+              "number": 44,
+              "blank": "q44",
+              "answer": "D",
+              "explanation": "Millions of books."
+            },
+            {
+              "id": "q45",
+              "number": 45,
+              "blank": "q45",
+              "answer": "C",
+              "explanation": "Printed pamphlets."
+            }
+          ]
+        },
+        {
+          "id": "s10",
+          "type": "table-completion",
+          "title": "Section 10: Table Completion",
+          "instructions": "Complete the table. Write ONE WORD ONLY from the passage for each answer.",
+          "passage": {
+            "title": "Renewable Energy Sources",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Solar panels convert sunlight directly into electricity, and their cost has fallen by about ninety percent in the past decade. They work best in sunny regions, but their output drops at night."
+              },
+              {
+                "id": "B",
+                "text": "Wind turbines, in contrast, can generate power day and night, though they need steady wind and are often built at sea, where wind is stronger. Hydropower, the oldest of the three, uses falling water to turn turbines. It provides reliable energy, but large dams can force people from their homes and damage river ecosystems."
+              }
+            ]
+          },
+          "maxWords": 1,
+          "table": {
+            "columns": [
+              "Source",
+              "Key feature",
+              "Main drawback"
+            ],
+            "rows": [
+              [
+                "Solar",
+                "Converts {{q46}} directly into electricity; cost has fallen sharply",
+                "Output drops at {{q47}}"
+              ],
+              [
+                "Wind",
+                "Works day and night; often built at {{q48}}",
+                "Needs {{q49}} wind"
+              ],
+              [
+                "Hydropower",
+                "Uses falling water to turn turbines; reliable",
+                "Large dams can damage river {{q50}}"
+              ]
+            ]
+          },
+          "questions": [
+            {
+              "id": "q46",
+              "number": 46,
+              "blank": "q46",
+              "answer": [
+                "sunlight"
+              ],
+              "explanation": "Paragraph 1."
+            },
+            {
+              "id": "q47",
+              "number": 47,
+              "blank": "q47",
+              "answer": [
+                "night"
+              ],
+              "explanation": "Output drops at night."
+            },
+            {
+              "id": "q48",
+              "number": 48,
+              "blank": "q48",
+              "answer": [
+                "sea"
+              ],
+              "explanation": "Often built at sea."
+            },
+            {
+              "id": "q49",
+              "number": 49,
+              "blank": "q49",
+              "answer": [
+                "steady"
+              ],
+              "explanation": "Needs steady wind."
+            },
+            {
+              "id": "q50",
+              "number": 50,
+              "blank": "q50",
+              "answer": [
+                "ecosystems"
+              ],
+              "explanation": "Dams damage river ecosystems."
+            }
+          ]
+        },
+        {
+          "id": "s11",
+          "type": "flow-chart-completion",
+          "title": "Section 11: Flow-chart Completion",
+          "instructions": "Complete the flow-chart. Write ONE WORD ONLY from the passage for each answer.",
+          "passage": {
+            "title": "How Paper Is Recycled",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Recycling paper begins with collection. Used paper is gathered from homes and offices and taken to a recycling plant, where it is sorted by quality. The paper is then mixed with water and chemicals and broken down into a soft pulp."
+              },
+              {
+                "id": "B",
+                "text": "Next, the pulp passes through screens that remove staples, plastic and other waste. Ink is then removed by blowing air through the mixture, which makes the ink float to the surface. Finally, the cleaned pulp is pressed flat, dried and rolled into new sheets."
+              }
+            ]
+          },
+          "maxWords": 1,
+          "flowChart": {
+            "steps": [
+              "Used paper is collected and taken to a recycling plant",
+              "Paper is {{q51}} according to quality",
+              "Paper is mixed with water and chemicals to form {{q52}}",
+              "Pulp passes through {{q53}} to remove waste",
+              "{{q54}} is blown through the mixture so that ink floats away",
+              "Clean pulp is pressed, dried and {{q55}} into new sheets"
+            ]
+          },
+          "questions": [
+            {
+              "id": "q51",
+              "number": 51,
+              "blank": "q51",
+              "answer": [
+                "sorted"
+              ],
+              "explanation": "Sorted by quality."
+            },
+            {
+              "id": "q52",
+              "number": 52,
+              "blank": "q52",
+              "answer": [
+                "pulp"
+              ],
+              "explanation": "Broken down into pulp."
+            },
+            {
+              "id": "q53",
+              "number": 53,
+              "blank": "q53",
+              "answer": [
+                "screens"
+              ],
+              "explanation": "Pulp passes through screens."
+            },
+            {
+              "id": "q54",
+              "number": 54,
+              "blank": "q54",
+              "answer": [
+                "air"
+              ],
+              "explanation": "Air is blown through the mixture."
+            },
+            {
+              "id": "q55",
+              "number": 55,
+              "blank": "q55",
+              "answer": [
+                "rolled"
+              ],
+              "explanation": "Rolled into new sheets."
+            }
+          ]
+        },
+        {
+          "id": "s12",
+          "type": "diagram-label-completion",
+          "title": "Section 12: Diagram Label Completion",
+          "instructions": "Label the diagram. Write ONE WORD ONLY from the passage for each answer.",
+          "passage": {
+            "title": "Inside a Wind Turbine",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "A modern wind turbine has three main parts. At the top of a tall tower sits the nacelle, a housing that contains the gearbox and the generator. The long blades are attached to a central hub at the front of the nacelle; as wind pushes the blades round, the hub turns a slow shaft."
+              },
+              {
+                "id": "B",
+                "text": "The gearbox increases the speed of this rotation so that the generator can produce electricity. At the base of the tower, a cable carries the power to a transformer."
+              }
+            ]
+          },
+          "maxWords": 1,
+          "diagram": {
+            "image": {
+              "url": "https://YOUR-BUCKET.s3.amazonaws.com/ielts/reading/diagrams/wind-turbine.png",
+              "alt": "Side view of a wind turbine with five numbered label points"
+            },
+            "labels": [
+              {
+                "blank": "q56",
+                "x": 22,
+                "y": 30
+              },
+              {
+                "blank": "q57",
+                "x": 55,
+                "y": 22
+              },
+              {
+                "blank": "q58",
+                "x": 60,
+                "y": 38
+              },
+              {
+                "blank": "q59",
+                "x": 72,
+                "y": 38
+              },
+              {
+                "blank": "q60",
+                "x": 50,
+                "y": 92
+              }
+            ]
+          },
+          "questions": [
+            {
+              "id": "q56",
+              "number": 56,
+              "prompt": "Label pointing to the part that the blades are attached to",
+              "blank": "q56",
+              "answer": [
+                "hub"
+              ],
+              "explanation": "Blades attach to the central hub."
+            },
+            {
+              "id": "q57",
+              "number": 57,
+              "prompt": "Label pointing to the housing at the top of the tower",
+              "blank": "q57",
+              "answer": [
+                "nacelle"
+              ],
+              "explanation": "The nacelle is the housing."
+            },
+            {
+              "id": "q58",
+              "number": 58,
+              "prompt": "Label pointing to the part that increases rotation speed",
+              "blank": "q58",
+              "answer": [
+                "gearbox"
+              ],
+              "explanation": "The gearbox increases speed."
+            },
+            {
+              "id": "q59",
+              "number": 59,
+              "prompt": "Label pointing to the part that produces electricity",
+              "blank": "q59",
+              "answer": [
+                "generator"
+              ],
+              "explanation": "The generator produces electricity."
+            },
+            {
+              "id": "q60",
+              "number": 60,
+              "prompt": "Label pointing to the unit at the base that receives the cable's power",
+              "blank": "q60",
+              "answer": [
+                "transformer"
+              ],
+              "explanation": "A cable carries power to a transformer."
+            }
+          ]
+        },
+        {
+          "id": "s13",
+          "type": "short-answer",
+          "title": "Section 13: Short-answer Questions",
+          "instructions": "Answer the questions. Write NO MORE THAN THREE WORDS AND/OR A NUMBER from the passage for each answer.",
+          "passage": {
+            "title": "Giant Pandas",
+            "labeled": false,
+            "paragraphs": [
+              {
+                "id": "A",
+                "text": "Giant pandas live in the mountain forests of central China. Although they belong to the order of carnivores, around ninety-nine percent of their diet is bamboo, and an adult may eat up to fourteen kilograms a day. Because bamboo provides little energy, pandas spend most of their day eating and resting."
+              },
+              {
+                "id": "B",
+                "text": "Pandas were once classed as endangered, but conservation work, including the creation of protected reserves and bamboo corridors linking forests, has helped numbers recover. In 2016 the species was reclassified as vulnerable, and about 1,800 wild pandas are now thought to exist."
+              }
+            ]
+          },
+          "maxWords": 3,
+          "questions": [
+            {
+              "id": "q61",
+              "number": 61,
+              "prompt": "What type of forest do giant pandas live in?",
+              "answer": [
+                "mountain forests",
+                "mountain forest"
+              ],
+              "explanation": "Paragraph 1."
+            },
+            {
+              "id": "q62",
+              "number": 62,
+              "prompt": "What percentage of a panda's diet is bamboo?",
+              "answer": [
+                "99",
+                "99%",
+                "99 percent",
+                "ninety-nine percent"
+              ],
+              "explanation": "About ninety-nine percent."
+            },
+            {
+              "id": "q63",
+              "number": 63,
+              "prompt": "How much bamboo can an adult panda eat in a day?",
+              "answer": [
+                "14 kilograms",
+                "fourteen kilograms",
+                "14 kg",
+                "14"
+              ],
+              "explanation": "Up to fourteen kilograms."
+            },
+            {
+              "id": "q64",
+              "number": 64,
+              "prompt": "What do the bamboo corridors connect?",
+              "answer": [
+                "forests"
+              ],
+              "explanation": "Corridors link forests."
+            },
+            {
+              "id": "q65",
+              "number": 65,
+              "prompt": "In which year was the panda reclassified as vulnerable?",
+              "answer": [
+                "2016"
+              ],
+              "explanation": "In 2016."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

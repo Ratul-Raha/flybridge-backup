@@ -576,7 +576,7 @@ export function PracticeGround({
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {availableTypes.map(([typeKey, count]) => (
+            {availableTypes.map(([typeKey]) => (
               <button
                 key={typeKey}
                 type="button"
@@ -591,9 +591,6 @@ export function PracticeGround({
                     style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
                   >
                     Random
-                  </span>
-                  <span className="text-[11px]" style={{ color: "var(--body)" }}>
-                    {count} question{count === 1 ? "" : "s"}
                   </span>
                 </div>
                 <p className="mt-4 text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
@@ -677,7 +674,7 @@ export function PracticeGround({
                   {item.label}
                 </p>
                 <p className="mt-1 text-[12px]" style={{ color: "var(--body)" }}>
-                  {item.count} question{item.count === 1 ? "" : "s"} available
+                  Start practice
                 </p>
               </button>
             );

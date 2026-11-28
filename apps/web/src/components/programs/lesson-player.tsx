@@ -302,6 +302,25 @@ export function LessonPlayer({
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setView("practice");
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                  setSidebarOpen(false);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full border px-3 py-[5px] transition-colors hover:bg-black/5"
+              style={{
+                color: view === "practice" ? "var(--brand)" : "var(--ink)",
+                borderColor: view === "practice" ? "var(--brand)" : "var(--line)",
+                background: view === "practice" ? "var(--brand-soft, rgba(107,76,224,0.08))" : "transparent",
+              }}
+            >
+              <BookOpen size={13} />
+              <span className="hidden sm:inline">Practice Ground</span>
+              <span className="sm:hidden">Practice</span>
+            </button>
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: "var(--brand-soft, rgba(107,76,224,0.1))" }}>
                 <div
@@ -506,27 +525,6 @@ export function LessonPlayer({
               </div>
             </div>
           )}
-          <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
-              Practice
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setView("practice");
-                if (typeof window !== "undefined" && window.innerWidth < 1024) {
-                  setSidebarOpen(false);
-                }
-              }}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left w-full transition-colors hover:bg-black/5"
-              style={view === "practice" ? { background: "var(--brand-soft, rgba(107,76,224,0.06))" } : undefined}
-            >
-              <BookOpen size={15} style={{ color: "var(--brand)" }} />
-              <span className="text-[13px] font-medium truncate flex-1 min-w-0" style={{ color: "var(--ink)" }}>
-                Practice Ground
-              </span>
-            </button>
-          </div>
           {course.guidelinePdfUrl && (
             <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
               <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
