@@ -19,14 +19,21 @@ export const PRACTICE_QUESTION_TYPES: Record<PracticeModule, string[]> = {
   reading: [
     "multiple-choice",
     "true-false-ng",
+    "true-false-not-given",
+    "yes-no-not-given",
     "heading-matching",
+    "matching-headings",
     "matching-features",
+    "matching-information",
+    "matching-sentence-endings",
     "sentence-completion",
     "summary-completion",
     "notes-completion",
     "form-completion",
     "table-completion",
+    "flow-chart-completion",
     "diagram-completion",
+    "diagram-label-completion",
     "fill-in-the-blanks",
     "fill-in-blank",
     "short-answer",
@@ -53,8 +60,13 @@ export const PRACTICE_QUESTION_TYPES: Record<PracticeModule, string[]> = {
 const CHOICE_TYPES = new Set([
   "multiple-choice",
   "true-false-ng",
+  "true-false-not-given",
+  "yes-no-not-given",
   "heading-matching",
+  "matching-headings",
   "matching-features",
+  "matching-information",
+  "matching-sentence-endings",
   "matching",
   "mcq",
 ]);
@@ -68,6 +80,7 @@ export function allowedPracticeTypes(module: string): string[] {
 export type PracticePassage = {
   id: string;
   title?: string;
+  instructions?: string;
   text: string;
 };
 
@@ -83,6 +96,7 @@ export type PracticeQuestion = {
   passageId?: string;
   options?: string[];
   correctAnswer?: string;
+  acceptedAnswers?: string[];
   explanation?: string;
   chart?: unknown;
 };
@@ -97,7 +111,10 @@ export type PracticeSetContent = {
   questions: PracticeQuestion[];
 };
 
-export type PublicPracticeQuestion = Omit<PracticeQuestion, "correctAnswer" | "explanation">;
+export type PublicPracticeQuestion = Omit<
+  PracticeQuestion,
+  "correctAnswer" | "acceptedAnswers" | "explanation"
+>;
 
 export type PublicPracticeSetContent = Omit<PracticeSetContent, "questions"> & {
   questions: PublicPracticeQuestion[];
@@ -160,7 +177,165 @@ function str(value: unknown): string {
 
 function stringList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim());
+}
+
+type SectionOption = { id: string; text: string };
+
+function sectionOptions(value: unknown): SectionOption[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => {
+      if (isRecord(item)) {
+        const id = str(item.id) || str(item.label) || String.fromCharCode(65 + index);
+        return { id, text: str(item.text) || id };
+      }
+      const text = str(item);
+      return { id: String.fromCharCode(65 + index), text };
+    })
+    .filter((option) => Boolean(option.id || option.text));
+}
+
+function matchAnswer(value: unknown, options: SectionOption[]): string {
+  const answer = str(value);
+  if (!answer) return "";
+  const matched = options.find(
+    (option) =>
+      option.id.toLowerCase() === answer.toLowerCase() ||
+      option.text.toLowerCase() === answer.toLowerCase()
+  );
+  return matched ? matched.text : answer;
+}
+
+function sectionChoiceOptions(section: Record<string, unknown>, type: string): SectionOption[] {
+  if (type === "true-false-not-given") {
+    return [
+      { id: "TRUE", text: "TRUE" },
+      { id: "FALSE", text: "FALSE" },
+      { id: "NOT GIVEN", text: "NOT GIVEN" },
+    ];
+  }
+  if (type === "yes-no-not-given") {
+    return [
+      { id: "YES", text: "YES" },
+      { id: "NO", text: "NO" },
+      { id: "NOT GIVEN", text: "NOT GIVEN" },
+    ];
+  }
+  if (type === "matching-headings" || type === "heading-matching") {
+    return sectionOptions(section.headings);
+  }
+  if (type === "matching-features") {
+    return sectionOptions(section.features);
+  }
+  if (type === "matching-sentence-endings") {
+    return sectionOptions(section.endings);
+  }
+  if (type === "summary-completion") {
+    return sectionOptions(section.wordBank);
+  }
+  if (type === "matching-information") {
+    const passage = isRecord(section.passage) ? section.passage : {};
+    return sectionOptions(passage.paragraphs).map((option) => ({ id: option.id, text: option.id }));
+  }
+  return [];
+}
+
+function answerFrom(
+  value: unknown,
+  options: SectionOption[]
+): { correctAnswer: string; acceptedAnswers: string[] } {
+  if (Array.isArray(value)) {
+    const answers = stringList(value).map((answer) => matchAnswer(answer, options));
+    return { correctAnswer: answers[0] ?? "", acceptedAnswers: answers };
+  }
+  const answer = matchAnswer(value, options);
+  return { correctAnswer: answer, acceptedAnswers: answer ? [answer] : [] };
+}
+
+function normalizeSectionBasedContent(raw: Record<string, unknown>): Record<string, unknown> {
+  const tests = Array.isArray(raw.tests) ? raw.tests.filter(isRecord) : [];
+  const passages: Record<string, unknown>[] = [];
+  const questions: Record<string, unknown>[] = [];
+
+  for (const test of tests) {
+    const sections = Array.isArray(test.sections) ? test.sections.filter(isRecord) : [];
+    for (const section of sections) {
+      const sectionId = str(section.id) || `passage-${passages.length + 1}`;
+      const passage = isRecord(section.passage) ? section.passage : {};
+      const paragraphs = Array.isArray(passage.paragraphs) ? passage.paragraphs : [];
+      const labeled = passage.labeled === true;
+      const text = paragraphs
+        .map((item, index) => {
+          if (!isRecord(item)) return "";
+          const label = str(item.id) || String.fromCharCode(65 + index);
+          const body = str(item.text);
+          return labeled ? `${label}\n${body}` : body;
+        })
+        .filter((part) => part.length > 0)
+        .join("\n\n");
+
+      passages.push({
+        id: sectionId,
+        title: str(passage.title) || str(section.title),
+        instructions: str(section.instructions),
+        text,
+      });
+
+      const type = str(section.type) || "multiple-choice";
+      const sharedOptions = sectionChoiceOptions(section, type);
+      const sectionQuestions = Array.isArray(section.questions) ? section.questions : [];
+      for (const item of sectionQuestions) {
+        if (!isRecord(item)) continue;
+        const itemOptions = sectionOptions(item.options);
+        const options = itemOptions.length > 0 ? itemOptions : sharedOptions;
+        const { correctAnswer, acceptedAnswers } = answerFrom(
+          item.answer ?? item.correctAnswer,
+          options
+        );
+        const paragraphId = str(item.paragraphId);
+        const blank = str(item.blank);
+        const prompt =
+          str(item.prompt) ||
+          str(item.question) ||
+          (paragraphId
+            ? `Paragraph ${paragraphId}: ${str(section.instructions) || "Choose the correct answer."}`
+            : "") ||
+          (blank ? `Complete ${blank}. ${str(section.instructions) || ""}`.trim() : "") ||
+          str(section.instructions) ||
+          "Choose the correct answer";
+        questions.push({
+          id: str(item.id),
+          type,
+          question: prompt,
+          passageId: sectionId,
+          options: options.map((option) => option.text),
+          correctAnswer,
+          acceptedAnswers,
+          explanation: str(item.explanation),
+        });
+      }
+    }
+  }
+
+  const versionNumber = Number(str(raw.schemaVersion));
+  const firstTest = tests[0];
+  return {
+    ...(Number.isFinite(versionNumber) && versionNumber > 0 ? { version: versionNumber } : {}),
+    ...(str(firstTest?.module) || str(raw.module)
+      ? { module: str(firstTest?.module) || str(raw.module) }
+      : {}),
+    ...(str(firstTest?.title) || str(raw.title)
+      ? { title: str(firstTest?.title) || str(raw.title) }
+      : {}),
+    ...(str(firstTest?.instructions) || str(raw.instructions)
+      ? { instructions: str(firstTest?.instructions) || str(raw.instructions) }
+      : {}),
+    passages,
+    questions,
+  };
 }
 
 export function validatePracticeContent(
@@ -168,7 +343,11 @@ export function validatePracticeContent(
   skill: string
 ): { content: PracticeSetContent; report: PracticeValidationReport } {
   if (!isRecord(raw)) throw new Error("JSON root must be an object");
-  if (!Array.isArray(raw.questions) || raw.questions.length === 0) {
+  const source =
+    (!Array.isArray(raw.questions) || raw.questions.length === 0) && Array.isArray(raw.tests)
+      ? normalizeSectionBasedContent(raw)
+      : raw;
+  if (!Array.isArray(source.questions) || source.questions.length === 0) {
     throw new Error("JSON must contain a non-empty \"questions\" array");
   }
 
@@ -178,10 +357,10 @@ export function validatePracticeContent(
 
   const passages: PracticePassage[] = [];
   const passageIds = new Set<string>();
-  if (raw.passages !== undefined && !Array.isArray(raw.passages)) {
+  if (source.passages !== undefined && !Array.isArray(source.passages)) {
     errors.push("\"passages\" must be an array");
-  } else if (Array.isArray(raw.passages)) {
-    raw.passages.forEach((item, index) => {
+  } else if (Array.isArray(source.passages)) {
+    source.passages.forEach((item, index) => {
       if (!isRecord(item)) {
         errors.push(`Passage ${index + 1} must be an object`);
         return;
@@ -195,14 +374,15 @@ export function validatePracticeContent(
       passages.push({
         id,
         title: str(item.title),
+        ...(str(item.instructions) ? { instructions: str(item.instructions) } : {}),
         text,
       });
     });
   }
 
   const audios: Record<string, PracticeAudio> = {};
-  if (isRecord(raw.audios)) {
-    for (const [key, value] of Object.entries(raw.audios)) {
+  if (isRecord(source.audios)) {
+    for (const [key, value] of Object.entries(source.audios)) {
       if (!isRecord(value)) continue;
       audios[key] = { url: str(value.url), transcript: str(value.transcript) };
     }
@@ -213,7 +393,7 @@ export function validatePracticeContent(
   const typeCounts: Record<string, number> = {};
   const needsPassage = skill === "reading" || skill === "listening";
 
-  raw.questions.forEach((item, index) => {
+  source.questions.forEach((item, index) => {
     const label = `Question ${index + 1}`;
     if (!isRecord(item)) {
       errors.push(`${label} must be an object`);
@@ -224,7 +404,9 @@ export function validatePracticeContent(
     const question = str(item.question);
     const passageId = str(item.passageId);
     const options = stringList(item.options);
-    const correctAnswer = str(item.correctAnswer);
+    const acceptedAnswers = stringList(item.acceptedAnswers);
+    let correctAnswer = str(item.correctAnswer);
+    if (!correctAnswer && acceptedAnswers.length > 0) correctAnswer = acceptedAnswers[0];
     const explanation = str(item.explanation);
 
     if (!id) errors.push(`${label} has no id`);
@@ -265,6 +447,7 @@ export function validatePracticeContent(
       ...(passageId ? { passageId } : {}),
       ...(item.options !== undefined ? { options } : {}),
       ...(correctAnswer ? { correctAnswer } : {}),
+      ...(acceptedAnswers.length > 0 ? { acceptedAnswers } : {}),
       ...(explanation ? { explanation } : {}),
       ...(isRecord(item.chart) ? { chart: item.chart } : {}),
     });
@@ -272,10 +455,10 @@ export function validatePracticeContent(
 
   return {
     content: {
-      ...(typeof raw.version === "number" ? { version: raw.version } : {}),
-      ...(str(raw.module) ? { module: str(raw.module) } : {}),
-      ...(str(raw.title) ? { title: str(raw.title) } : {}),
-      ...(str(raw.instructions) ? { instructions: str(raw.instructions) } : {}),
+      ...(typeof source.version === "number" ? { version: source.version } : {}),
+      ...(str(source.module) ? { module: str(source.module) } : {}),
+      ...(str(source.title) ? { title: str(source.title) } : {}),
+      ...(str(source.instructions) ? { instructions: str(source.instructions) } : {}),
       ...(passages.length ? { passages } : {}),
       ...(Object.keys(audios).length ? { audios } : {}),
       questions,

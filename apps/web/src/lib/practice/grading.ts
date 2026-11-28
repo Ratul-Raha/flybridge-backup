@@ -8,8 +8,13 @@ import type { PracticeSetContent } from "./schema";
 const CHOICE_TYPES = new Set([
   "multiple-choice",
   "true-false-ng",
+  "true-false-not-given",
+  "yes-no-not-given",
   "heading-matching",
+  "matching-headings",
   "matching-features",
+  "matching-information",
+  "matching-sentence-endings",
   "matching",
   "mcq",
 ]);
@@ -146,14 +151,17 @@ export async function gradePracticeSet(
       };
     }
 
+    const accepted = Array.from(new Set([correctAnswer, ...(question.acceptedAnswers ?? [])])).filter(
+      Boolean
+    );
     const correct = CHOICE_TYPES.has(question.type)
       ? normalize(userAnswer) === normalize(correctAnswer)
-      : gradeShortAnswer(userAnswer, correctAnswer);
+      : accepted.some((answer) => gradeShortAnswer(userAnswer, answer));
 
     return {
       questionId: question.id,
       correct,
-      correctAnswer,
+      correctAnswer: accepted.join(" / ") || correctAnswer,
       explanation: question.explanation ?? "",
       bandScore: 0,
       feedback: "",

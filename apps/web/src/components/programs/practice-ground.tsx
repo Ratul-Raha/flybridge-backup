@@ -25,8 +25,13 @@ import type { ChartData } from "@/lib/chart-data";
 const CHOICE_TYPES = new Set([
   "multiple-choice",
   "true-false-ng",
+  "true-false-not-given",
+  "yes-no-not-given",
   "heading-matching",
+  "matching-headings",
   "matching-features",
+  "matching-information",
+  "matching-sentence-endings",
   "matching",
   "mcq",
   "true-false",
@@ -332,8 +337,13 @@ export function PracticeGround({
                 <summary className="cursor-pointer px-5 py-3 text-[13px] font-semibold" style={{ color: "var(--ink)" }}>
                   {passage.title || passage.id}
                 </summary>
+                {passage.instructions && (
+                  <p className="px-5 text-[12.5px] leading-relaxed" style={{ color: "var(--body)" }}>
+                    {passage.instructions}
+                  </p>
+                )}
                 <div
-                  className="px-5 pb-5 text-[13.5px] leading-[1.75] whitespace-pre-wrap select-none"
+                  className="px-5 pb-5 pt-3 text-[13.5px] leading-[1.75] whitespace-pre-wrap select-none"
                   style={{ color: "var(--ink)" }}
                 >
                   {passage.text}
