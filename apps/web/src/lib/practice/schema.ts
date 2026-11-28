@@ -27,6 +27,8 @@ export const PRACTICE_QUESTION_TYPES: Record<PracticeModule, string[]> = {
     "form-completion",
     "table-completion",
     "diagram-completion",
+    "fill-in-the-blanks",
+    "fill-in-blank",
     "short-answer",
   ],
   listening: [
@@ -40,6 +42,8 @@ export const PRACTICE_QUESTION_TYPES: Record<PracticeModule, string[]> = {
     "table-completion",
     "sentence-completion",
     "summary-completion",
+    "fill-in-the-blanks",
+    "fill-in-blank",
     "short-answer",
   ],
   writing: ["task-1", "task-2"],

@@ -73,7 +73,16 @@ export async function POST(
       }))
       .filter((entry) => entry.questionId);
 
-    const { content } = await loadPracticeSetContent(set);
+    const { content: fullContent } = await loadPracticeSetContent(set);
+    const submittedIds = new Set(answers.map((entry) => entry.questionId));
+    const content = {
+      ...fullContent,
+      questions: fullContent.questions.filter((question) => submittedIds.has(question.id)),
+    };
+    if (content.questions.length === 0) {
+      return NextResponse.json({ error: "No valid answers submitted" }, { status: 400 });
+    }
+
     const provider = typeof body.provider === "string" ? body.provider : undefined;
     const grade = await gradePracticeSet(content, dto.skill, answers, provider);
 

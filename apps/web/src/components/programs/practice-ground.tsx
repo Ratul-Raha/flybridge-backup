@@ -6,7 +6,10 @@ import {
   BookOpen,
   CheckCircle2,
   FileText,
+  Headphones,
   Loader2,
+  Mic,
+  PenLine,
   RotateCcw,
   XCircle,
 } from "lucide-react";
@@ -29,6 +32,13 @@ const CHOICE_TYPES = new Set([
   "true-false",
 ]);
 
+const SKILLS = [
+  { key: "reading", label: "Reading", icon: BookOpen },
+  { key: "listening", label: "Listening", icon: Headphones },
+  { key: "writing", label: "Writing", icon: PenLine },
+  { key: "speaking", label: "Speaking", icon: Mic },
+] as const;
+
 type GradeResult = {
   questionId: string;
   correct: boolean | null;
@@ -50,31 +60,29 @@ type GradeSummary = {
   results: GradeResult[];
 };
 
-type Scope = "lesson" | "module" | "all";
-
 function chartOf(question: PublicPracticeQuestion): ChartData | null {
   const chart = question.chart;
   if (!chart || typeof chart !== "object" || Array.isArray(chart)) return null;
   return chart as ChartData;
 }
 
+function skillLabel(skill: string): string {
+  return SKILLS.find((item) => item.key === skill)?.label ?? formatTypeLabel(skill);
+}
+
 export function PracticeGround({
   courseId,
   courseTitle,
-  moduleIndex,
-  lessonIndex,
-  skill,
+  onExit,
 }: {
   courseId: string;
   courseTitle: string;
-  moduleIndex: number;
-  lessonIndex: number;
-  skill: string;
+  onExit: () => void;
 }) {
   const [sets, setSets] = useState<StudentPracticeSetDto[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
-  const [scope, setScope] = useState<Scope>("module");
-  const [skillFilter, setSkillFilter] = useState("all");
+  const [skill, setSkill] = useState<string | null>(null);
+  const [type, setType] = useState<string | null>(null);
   const [activeSet, setActiveSet] = useState<StudentPracticeSetDto | null>(null);
   const [content, setContent] = useState<PublicPracticeSetContent | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -92,8 +100,7 @@ export function PracticeGround({
         return data.sets as StudentPracticeSetDto[];
       })
       .then((data) => {
-        if (cancelled) return;
-        setSets(Array.isArray(data) ? data : []);
+        if (!cancelled) setSets(Array.isArray(data) ? data : []);
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -106,47 +113,69 @@ export function PracticeGround({
     };
   }, [courseId]);
 
-  const skills = useMemo(
-    () => Array.from(new Set(sets.map((set) => set.skill))).sort(),
-    [sets]
-  );
+  const availableSkills = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const set of sets) {
+      counts.set(set.skill, (counts.get(set.skill) ?? 0) + set.questionCount);
+    }
+    return SKILLS.filter((item) => (counts.get(item.key) ?? 0) > 0).map((item) => ({
+      ...item,
+      count: counts.get(item.key) ?? 0,
+    }));
+  }, [sets]);
 
-  const visibleSets = useMemo(
-    () =>
-      sets.filter((set) => {
-        if (scope === "lesson" && set.lessonIndex !== lessonIndex) return false;
-        if (scope === "module" && set.moduleIndex !== moduleIndex) return false;
-        if (skillFilter !== "all" && set.skill !== skillFilter) return false;
-        return true;
-      }),
-    [sets, scope, moduleIndex, lessonIndex, skillFilter]
-  );
+  const availableTypes = useMemo(() => {
+    if (!skill) return [];
+    const counts = new Map<string, number>();
+    for (const set of sets.filter((entry) => entry.skill === skill)) {
+      for (const [typeKey, count] of Object.entries(set.typeCounts ?? {})) {
+        counts.set(typeKey, (counts.get(typeKey) ?? 0) + (Number(count) || 0));
+      }
+    }
+    return Array.from(counts.entries())
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1] || formatTypeLabel(a[0]).localeCompare(formatTypeLabel(b[0])));
+  }, [sets, skill]);
 
-  const openSet = async (set: StudentPracticeSetDto) => {
+  const loadGroup = async (skillKey: string, typeKey: string) => {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/courses/${courseId}/practice-sets/${set.id}`);
+      const params = new URLSearchParams({ skill: skillKey, type: typeKey });
+      const response = await fetch(`/api/courses/${courseId}/practice/groups?${params}`);
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Failed to open practice set");
+      if (!response.ok) throw new Error(data.error || "Failed to load practice questions");
+      setSkill(skillKey);
+      setType(typeKey);
       setActiveSet(data.set as StudentPracticeSetDto);
       setContent(data.content as PublicPracticeSetContent);
       setAnswers({});
       setGrade(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to open practice set");
+      setError(err instanceof Error ? err.message : "Failed to load practice questions");
     } finally {
       setBusy(false);
     }
   };
 
-  const backToSets = () => {
+  const chooseType = (typeKey: string) => {
+    if (!skill) return;
+    void loadGroup(skill, typeKey);
+  };
+
+  const backToTypes = () => {
+    setType(null);
     setActiveSet(null);
     setContent(null);
     setAnswers({});
     setGrade(null);
     setError("");
+  };
+
+  const backToSkills = () => {
+    setSkill(null);
+    backToTypes();
   };
 
   const submit = async () => {
@@ -178,36 +207,65 @@ export function PracticeGround({
     }
   };
 
-  if (activeSet && content) {
+  if (activeSet && content && skill && type) {
     const resultMap = new Map((grade?.results ?? []).map((result) => [result.questionId, result]));
 
     return (
       <div className="mt-5 flex flex-col gap-5">
-        <button
-          type="button"
-          onClick={backToSets}
-          className="self-start inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
-          style={{ color: "var(--body)" }}
-        >
-          <ArrowLeft size={15} />
-          Back to practice sets
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={backToTypes}
+            className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
+            style={{ color: "var(--body)" }}
+          >
+            <ArrowLeft size={15} />
+            Question types
+          </button>
+          <span style={{ color: "var(--line)" }}>·</span>
+          <button
+            type="button"
+            onClick={onExit}
+            className="text-[13px] font-medium transition-opacity hover:opacity-70"
+            style={{ color: "var(--body)" }}
+          >
+            Back to lessons
+          </button>
+        </div>
 
         <div
           className="rounded-xl border p-5"
           style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] mb-1" style={{ color: "var(--body)" }}>
-            {formatTypeLabel(activeSet.skill)} · Set {activeSet.setNumber}
-          </p>
-          <h2 className="font-display text-[19px] font-semibold" style={{ color: "var(--ink)" }}>
-            {activeSet.title || content.title || "Practice set"}
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
+              {skillLabel(skill)} · {formatTypeLabel(type)}
+            </p>
+            <span
+              className="rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em]"
+              style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+            >
+              Random set
+            </span>
+          </div>
+          <h2 className="font-display text-[19px] font-semibold mt-1" style={{ color: "var(--ink)" }}>
+            {content.title || activeSet.title || `${skillLabel(skill)} practice`}
           </h2>
           {content.instructions && (
             <p className="text-[13px] mt-2" style={{ color: "var(--body)" }}>
               {content.instructions}
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => void loadGroup(skill, type)}
+            disabled={busy}
+            className="mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-medium transition-colors hover:bg-black/5 disabled:opacity-60"
+            style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+          >
+            <RotateCcw size={14} />
+            New random questions
+          </button>
         </div>
 
         {grade && (
@@ -218,7 +276,7 @@ export function PracticeGround({
             {grade.objectiveCount > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--body)" }}>
-                  Objective score
+                  Score
                 </p>
                 <p className="font-display text-[26px] font-semibold tabular-nums" style={{ color: "var(--brand)" }}>
                   {grade.score}%
@@ -262,7 +320,7 @@ export function PracticeGround({
         {content.passages && content.passages.length > 0 && (
           <div className="flex flex-col gap-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "var(--body)" }}>
-              Passages
+              Passage
             </p>
             {content.passages.map((passage) => (
               <details
@@ -331,11 +389,6 @@ export function PracticeGround({
                   >
                     {formatTypeLabel(question.type)}
                   </span>
-                  {question.passageId && (
-                    <span className="text-[11px]" style={{ color: "var(--body)" }}>
-                      {question.passageId}
-                    </span>
-                  )}
                   {result?.correct === true && (
                     <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: "#16a34a" }}>
                       <CheckCircle2 size={14} /> Correct
@@ -366,10 +419,8 @@ export function PracticeGround({
                         key={`${question.id}-${optionIndex}`}
                         className="flex items-start gap-3 rounded-lg border px-4 py-3 text-[13px] cursor-pointer transition-colors"
                         style={{
-                          borderColor:
-                            answer === option ? "var(--brand)" : "var(--line)",
-                          background:
-                            answer === option ? "var(--brand-soft, rgba(107,76,224,0.06))" : "transparent",
+                          borderColor: answer === option ? "var(--brand)" : "var(--line)",
+                          background: answer === option ? "var(--brand-soft, rgba(107,76,224,0.06))" : "transparent",
                           color: "var(--ink)",
                         }}
                       >
@@ -458,8 +509,92 @@ export function PracticeGround({
             style={{ background: "var(--brand)" }}
           >
             {busy ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
-            {busy ? "Grading…" : "Submit practice set"}
+            {busy ? "Grading…" : "Submit answers"}
           </button>
+        )}
+      </div>
+    );
+  }
+
+  if (skill) {
+    return (
+      <div className="mt-5 flex flex-col gap-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={backToSkills}
+            className="inline-flex items-center gap-2 text-[13px] font-medium transition-opacity hover:opacity-70"
+            style={{ color: "var(--body)" }}
+          >
+            <ArrowLeft size={15} />
+            All modules
+          </button>
+          <span style={{ color: "var(--line)" }}>·</span>
+          <button
+            type="button"
+            onClick={onExit}
+            className="text-[13px] font-medium transition-opacity hover:opacity-70"
+            style={{ color: "var(--body)" }}
+          >
+            Back to lessons
+          </button>
+        </div>
+
+        <div>
+          <h2 className="font-display text-[19px] font-semibold" style={{ color: "var(--ink)" }}>
+            {skillLabel(skill)} question types
+          </h2>
+          <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
+            Choose a question type. You’ll get a random related passage and questions from a published set.
+          </p>
+        </div>
+
+        {error && (
+          <p className="rounded-lg border px-4 py-3 text-[13px]" style={{ color: "#dc2626", borderColor: "#fecaca" }}>
+            {error}
+          </p>
+        )}
+
+        {availableTypes.length === 0 ? (
+          <div
+            className="rounded-xl border px-5 py-14 text-center"
+            style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
+          >
+            <p className="text-[14px]" style={{ color: "var(--body)" }}>
+              No question types published for {skillLabel(skill)} yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {availableTypes.map(([typeKey, count]) => (
+              <button
+                key={typeKey}
+                type="button"
+                onClick={() => chooseType(typeKey)}
+                disabled={busy}
+                className="rounded-xl border p-5 text-left transition-colors hover:bg-black/[0.02] disabled:opacity-60"
+                style={{ borderColor: "var(--line)", background: "white" }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className="rounded-full px-3 py-1 font-mono text-[9px] uppercase tracking-[0.1em]"
+                    style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+                  >
+                    Random
+                  </span>
+                  <span className="text-[11px]" style={{ color: "var(--body)" }}>
+                    {count} question{count === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <p className="mt-4 text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {formatTypeLabel(typeKey)}
+                </p>
+                <p className="mt-1 text-[12px]" style={{ color: "var(--body)" }}>
+                  Start practice
+                </p>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     );
@@ -467,13 +602,23 @@ export function PracticeGround({
 
   return (
     <div className="mt-5 flex flex-col gap-5">
-      <div>
-        <h2 className="font-display text-[19px] font-semibold" style={{ color: "var(--ink)" }}>
-          Practice Ground
-        </h2>
-        <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
-          Question sets prepared for {courseTitle}. Answers stay hidden until you submit.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-[19px] font-semibold" style={{ color: "var(--ink)" }}>
+            Practice Ground
+          </h2>
+          <p className="text-[13px] mt-1" style={{ color: "var(--body)" }}>
+            Independent practice for {courseTitle}. Choose a module, then a question type.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onExit}
+          className="rounded-full border px-4 py-2 text-[12.5px] font-medium transition-colors hover:bg-black/5"
+          style={{ color: "var(--ink)", borderColor: "var(--line)" }}
+        >
+          Back to lessons
+        </button>
       </div>
 
       {error && (
@@ -482,127 +627,53 @@ export function PracticeGround({
         </p>
       )}
 
-      <div className="flex flex-wrap gap-1 p-1 rounded-xl w-fit" style={{ background: "var(--bg-soft, rgba(0,0,0,0.03))" }}>
-        {([
-          ["lesson", "This lesson"],
-          ["module", "This module"],
-          ["all", "All course sets"],
-        ] as const).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setScope(value)}
-            className="rounded-lg px-4 py-2 text-[12.5px] font-medium transition-colors"
-            style={
-              scope === value
-                ? { background: "white", color: "var(--ink)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
-                : { color: "var(--body)" }
-            }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {skills.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {["all", ...skills].map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setSkillFilter(value)}
-              className="rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-colors hover:bg-black/5"
-              style={{
-                borderColor: skillFilter === value ? "var(--brand)" : "var(--line)",
-                color: skillFilter === value ? "var(--brand)" : "var(--body)",
-                background: skillFilter === value ? "var(--brand-soft, rgba(107,76,224,0.06))" : "transparent",
-              }}
-            >
-              {value === "all" ? "All skills" : formatTypeLabel(value)}
-            </button>
-          ))}
-        </div>
-      )}
-
       {loadingSets ? (
         <div className="flex items-center gap-2 text-[13px]" style={{ color: "var(--body)" }}>
           <Loader2 size={15} className="animate-spin" />
-          Loading practice sets…
+          Loading practice modules…
         </div>
-      ) : visibleSets.length === 0 ? (
+      ) : availableSkills.length === 0 ? (
         <div
           className="rounded-xl border flex flex-col items-center justify-center gap-3 py-16 text-center px-6"
           style={{ borderColor: "var(--line)", background: "var(--bg-soft, rgba(0,0,0,0.02))" }}
         >
-          <BookOpen size={30} style={{ color: "var(--body)" }} />
+          <FileText size={30} style={{ color: "var(--body)" }} />
           <p className="text-[14px]" style={{ color: "var(--body)" }}>
-            No published practice sets here yet.
+            No published practice sets yet.
           </p>
           <p className="text-[12px] max-w-[420px]" style={{ color: "var(--body)" }}>
-            Try another filter, or check back after your instructor publishes a set for this course.
+            Upload and publish a question set in Quiz Manager to open this module.
           </p>
-          {scope !== "all" && (
-            <button
-              type="button"
-              onClick={() => setScope("all")}
-              className="rounded-full border px-4 py-2 text-[12.5px] font-medium transition-colors hover:bg-black/5"
-              style={{ color: "var(--ink)", borderColor: "var(--line)" }}
-            >
-              View all course sets
-            </button>
-          )}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {visibleSets.map((set) => (
-            <button
-              key={set.id}
-              type="button"
-              onClick={() => void openSet(set)}
-              disabled={busy}
-              className="rounded-xl border p-5 text-left transition-colors hover:bg-black/[0.02] disabled:opacity-60"
-              style={{ borderColor: "var(--line)", background: "white" }}
-            >
-              <div className="flex items-start justify-between gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {availableSkills.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setSkill(item.key)}
+                className="rounded-xl border p-5 text-left transition-colors hover:bg-black/[0.02]"
+                style={{ borderColor: "var(--line)", background: "white" }}
+              >
                 <span
-                  className="rounded-full px-3 py-1 font-mono text-[9px] uppercase tracking-[0.1em]"
-                  style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))", color: "var(--brand)" }}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--brand-soft, rgba(107,76,224,0.08))" }}
                 >
-                  Set {set.setNumber}
+                  <Icon size={20} style={{ color: "var(--brand)" }} />
                 </span>
-                <span className="text-[11px]" style={{ color: "var(--body)" }}>
-                  {formatTypeLabel(set.skill)}
-                </span>
-              </div>
-              <p className="mt-4 text-[14px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
-                {set.title || `Module ${set.moduleIndex + 1} practice`}
-              </p>
-              <p className="mt-1 text-[12px]" style={{ color: "var(--body)" }}>
-                {set.lessonIndex === null
-                  ? `Module ${set.moduleIndex + 1}`
-                  : `Lesson ${set.lessonIndex + 1}`}
-              </p>
-              <div className="mt-4 flex items-center gap-4 text-[11.5px]" style={{ color: "var(--body)" }}>
-                <span className="inline-flex items-center gap-1.5">
-                  <FileText size={13} />
-                  {set.questionCount} questions
-                </span>
-                {set.passageCount > 0 && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <BookOpen size={13} />
-                    {set.passageCount} passage{set.passageCount === 1 ? "" : "s"}
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
+                <p className="mt-4 text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {item.label}
+                </p>
+                <p className="mt-1 text-[12px]" style={{ color: "var(--body)" }}>
+                  {item.count} question{item.count === 1 ? "" : "s"} available
+                </p>
+              </button>
+            );
+          })}
         </div>
       )}
-
-      <p className="text-[11.5px]" style={{ color: "var(--body)" }}>
-        Tip: start with <span className="font-medium">This module</span> for IELTS practice, or{" "}
-        <span className="font-medium">This lesson</span> for lesson-linked courses.
-      </p>
     </div>
   );
 }
