@@ -93,6 +93,28 @@ export type PracticeSetContent = {
   questions: PracticeQuestion[];
 };
 
+export type PublicPracticeQuestion = Omit<PracticeQuestion, "correctAnswer" | "explanation">;
+
+export type PublicPracticeSetContent = Omit<PracticeSetContent, "questions"> & {
+  questions: PublicPracticeQuestion[];
+};
+
+export function stripPracticeAnswers(
+  content: PracticeSetContent
+): PublicPracticeSetContent {
+  return {
+    ...content,
+    questions: content.questions.map((q) => ({
+      id: q.id,
+      type: q.type,
+      question: q.question,
+      ...(q.passageId ? { passageId: q.passageId } : {}),
+      ...(q.options ? { options: q.options } : {}),
+      ...(q.chart ? { chart: q.chart } : {}),
+    })),
+  };
+}
+
 export type PracticeValidationReport = {
   passageCount: number;
   questionCount: number;
@@ -121,6 +143,8 @@ export type PracticeSetDto = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type StudentPracticeSetDto = Omit<PracticeSetDto, "s3Key" | "fileName">;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

@@ -11,11 +11,13 @@ import {
   CheckCircle2,
   HelpCircle,
   Award,
+  BookOpen,
   Lock,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 import { LessonQuiz } from "./lesson-quiz";
+import { PracticeGround } from "./practice-ground";
 import { ProtectedContent } from "./protected-content";
 import { Watermark } from "./watermark";
 import { BengaliText } from "../bengali-text";
@@ -183,7 +185,7 @@ export function LessonPlayer({
   const freeSet = useMemo(() => new Set(freeLessonIndices), [freeLessonIndices]);
   const isLocked = (i: number) => previewMode && !freeSet.has(i);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
-  const [tab, setTab] = useState<"lesson" | "quiz" | "guideline">("lesson");
+  const [tab, setTab] = useState<"lesson" | "quiz" | "practice" | "guideline">("lesson");
   const [grade, setGrade] = useState<GradeData | null>(null);
   const [quizScores, setQuizScores] = useState<QuizScoreEntry[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -502,6 +504,22 @@ export function LessonPlayer({
               </div>
             </div>
           )}
+          <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
+              Practice
+            </p>
+            <button
+              type="button"
+              onClick={() => setTab("practice")}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left w-full transition-colors hover:bg-black/5"
+              style={tab === "practice" ? { background: "var(--brand-soft, rgba(107,76,224,0.06))" } : undefined}
+            >
+              <BookOpen size={15} style={{ color: "var(--brand)" }} />
+              <span className="text-[13px] font-medium truncate flex-1 min-w-0" style={{ color: "var(--ink)" }}>
+                Practice Ground
+              </span>
+            </button>
+          </div>
           {course.guidelinePdfUrl && (
             <div className="px-4 py-4 border-t" style={{ borderColor: "var(--line)" }}>
               <p className="font-mono text-[10px] uppercase tracking-[0.12em] mb-2.5" style={{ color: "var(--body)" }}>
@@ -613,6 +631,19 @@ export function LessonPlayer({
                     Quiz
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setTab("practice")}
+                  className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors"
+                  style={
+                    tab === "practice"
+                      ? { background: "white", color: "var(--ink)", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
+                      : { color: "var(--body)" }
+                  }
+                >
+                  <BookOpen size={14} />
+                  Practice Ground
+                </button>
                 {course.guidelinePdfUrl && (
                   <button
                     type="button"
@@ -656,7 +687,15 @@ export function LessonPlayer({
               </div>
 
               {/* Content area */}
-              {tab === "guideline" && course.guidelinePdfUrl ? (
+              {tab === "practice" ? (
+                <PracticeGround
+                  courseId={course.id}
+                  courseTitle={course.title}
+                  moduleIndex={moduleIndex}
+                  lessonIndex={lessonIndex}
+                  skill={current.skill}
+                />
+              ) : tab === "guideline" && course.guidelinePdfUrl ? (
                 <div className="mt-5 flex flex-col gap-3">
                   <div
                     className="rounded-xl border overflow-hidden"
